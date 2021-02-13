@@ -1,6 +1,6 @@
-package org.jetbrains.plugins.template.services
+package com.github.jensim.megamanipulatior.services
 
-import org.jetbrains.plugins.template.MyBundle
+import com.github.jensim.megamanipulatior.MyBundle
 
 class MyApplicationService {
 
