@@ -1,37 +1,18 @@
 package com.github.jensim.megamanipulatior.toolswindow
 
 import com.github.jensim.megamanipulatior.MyBundle
-import com.intellij.icons.AllIcons
 import com.intellij.openapi.module.ModuleManager
 import com.intellij.openapi.project.Project
-import com.intellij.openapi.ui.DialogPanel
-import com.intellij.openapi.ui.popup.IconButton
-import com.intellij.openapi.ui.popup.JBPopupFactory
 import com.intellij.openapi.wm.ToolWindow
 import com.intellij.openapi.wm.ToolWindowFactory
 import com.intellij.ui.components.noteComponent
 import com.intellij.ui.content.ContentFactory
-import com.intellij.ui.layout.panel
 
-class MyToolWindowFactory : ToolWindowFactory {
-
-    private val panel: DialogPanel = panel {
-        noteRow("Foo bar")
-        row {
-            button("Click me!") {
-                println("I was clicked")
-                JBPopupFactory.getInstance()
-                    .createComponentPopupBuilder(noteComponent("Foo!"), null)
-                    .setCancelButton(IconButton("Close", AllIcons.Windows.CloseSmall))
-                    .createPopup()
-                    .showInFocusCenter()
-            }
-        }
-    }
+object MyToolWindowFactory : ToolWindowFactory {
 
     override fun createToolWindowContent(project: Project, toolWindow: ToolWindow) {
         val contentFactory = ContentFactory.SERVICE.getInstance()
-        val content = contentFactory.createContent(panel, MyBundle.message("tabTitleSettings"), false)
+        val content = contentFactory.createContent(SettingsPanel.content, MyBundle.message("tabTitleSettings"), false)
         toolWindow.contentManager.addContent(content)
         val content2 = contentFactory.createContent(noteComponent("Search"), MyBundle.message("tabTitleSearch"), false)
         toolWindow.contentManager.addContent(content2)
