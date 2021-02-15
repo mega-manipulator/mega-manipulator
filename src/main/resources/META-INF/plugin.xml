@@ -10,6 +10,11 @@
     <extensions defaultExtensionNs="com.intellij">
         <applicationService serviceImplementation="com.github.jensim.megamanipulatior.services.MyApplicationService"/>
         <projectService serviceImplementation="com.github.jensim.megamanipulatior.services.MyProjectService"/>
+        <toolWindow id="Mega Manipulator" secondary="true" icon="AllIcons.General.Modified" anchor="bottom"
+                    factoryClass="com.github.jensim.megamanipulatior.toolswindow.MyToolWindowFactory"/>
+        <moduleType id="mega_manipulator"
+                    implementationClass="com.github.jensim.megamanipulatior.module.MegaManipulatorModuleType"/>
+        <moduleBuilder builderClass="com.github.jensim.megamanipulatior.module.MegaManipulatorModuleBuilder"/>
     </extensions>
 
     <applicationListeners>
