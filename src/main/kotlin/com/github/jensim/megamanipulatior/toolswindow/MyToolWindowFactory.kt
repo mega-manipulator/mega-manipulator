@@ -12,7 +12,7 @@ object MyToolWindowFactory : ToolWindowFactory {
 
     override fun createToolWindowContent(project: Project, toolWindow: ToolWindow) {
         val contentFactory = ContentFactory.SERVICE.getInstance()
-        val content = contentFactory.createContent(SettingsPanel.content, MyBundle.message("tabTitleSettings"), false)
+        val content = contentFactory.createContent(SettingPanel.content, MyBundle.message("tabTitleSettings"), false)
         toolWindow.contentManager.addContent(content)
         val content2 = contentFactory.createContent(noteComponent("Search"), MyBundle.message("tabTitleSearch"), false)
         toolWindow.contentManager.addContent(content2)

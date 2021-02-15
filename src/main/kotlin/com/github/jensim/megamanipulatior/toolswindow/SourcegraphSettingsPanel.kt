@@ -9,7 +9,7 @@ import java.awt.event.KeyListener
 import javax.swing.JLabel
 import javax.swing.JPasswordField
 
-object SettingsPanel {
+object SourcegraphSettingsPanel {
 
     private var sg_username: String = ""
     private val passwordField = JPasswordField("", 30).apply {
