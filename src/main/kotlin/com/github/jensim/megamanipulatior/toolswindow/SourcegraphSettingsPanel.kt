@@ -1,9 +1,11 @@
 package com.github.jensim.megamanipulatior.toolswindow
 
+import com.intellij.credentialStore.CredentialAttributes
+import com.intellij.credentialStore.Credentials
+import com.intellij.ide.passwordSafe.PasswordSafe
+import com.intellij.remoteServer.util.CloudConfigurationUtil.createCredentialAttributes
 import com.intellij.ui.layout.panel
 import com.jetbrains.rd.swing.textProperty
-import java.awt.event.FocusEvent
-import java.awt.event.FocusListener
 import java.awt.event.KeyEvent
 import java.awt.event.KeyListener
 import javax.swing.JLabel
@@ -11,18 +13,14 @@ import javax.swing.JPasswordField
 
 object SourcegraphSettingsPanel {
 
-    private var sg_username: String = ""
+    private val attr: CredentialAttributes = createCredentialAttributes("sourcegrapgh-token", "token")!!
     private const val width: Int = 30
-    private val passwordField = JPasswordField("", width).apply {
+    private val tokenField = JPasswordField("", width).apply {
         addActionListener { println("Password: ${textProperty()}") }
         addKeyListener(object : KeyListener {
-            override fun keyTyped(e: KeyEvent) = println("Typed: Not yet implemented")
-            override fun keyPressed(e: KeyEvent) = println("Pressed: Not yet implemented")
-            override fun keyReleased(e: KeyEvent) = println("Released: Not yet implemented")
-        })
-        addFocusListener(object : FocusListener {
-            override fun focusGained(e: FocusEvent) = println("Focus gained")
-            override fun focusLost(e: FocusEvent) = println("Focus lost")
+            override fun keyTyped(e: KeyEvent) = save()
+            override fun keyPressed(e: KeyEvent) = Unit
+            override fun keyReleased(e: KeyEvent) = Unit
         })
     }
     private val loadingLabel = JLabel("Loading...").apply { isVisible = false }
@@ -33,12 +31,8 @@ object SourcegraphSettingsPanel {
             textField({ "https://sourcegraph.example.com/" }, {}, width)
         }
         row {
-            label("Sourcegraph username")
-            textField({ sg_username }, { sg_username = it }, width)
-        }
-        row {
-            label("Sourcegraph password")
-            component(passwordField)
+            label("Sourcegraph token")
+            component(tokenField)
         }
         row {
             button("Test") {
@@ -47,5 +41,20 @@ object SourcegraphSettingsPanel {
             }
             component(loadingLabel)
         }
+    }
+
+    private fun save() {
+        val credentials = Credentials("token", tokenField.password)
+        PasswordSafe.instance[attr] = credentials
+    }
+
+    private fun load() {
+        PasswordSafe.instance[attr]?.password?.let {
+            tokenField.text = it.toString()
+        }
+    }
+
+    init {
+        load()
     }
 }
