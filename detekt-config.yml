@@ -6,3 +6,5 @@ formatting:
     continuationIndentSize: 8
   ParameterListWrapping:
     indentSize: 8
+  ImportOrdering:
+    layout: 'ascii'

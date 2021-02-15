@@ -12,7 +12,8 @@ import javax.swing.JPasswordField
 object SourcegraphSettingsPanel {
 
     private var sg_username: String = ""
-    private val passwordField = JPasswordField("", 30).apply {
+    private const val width: Int = 30
+    private val passwordField = JPasswordField("", width).apply {
         addActionListener { println("Password: ${textProperty()}") }
         addKeyListener(object : KeyListener {
             override fun keyTyped(e: KeyEvent) = println("Typed: Not yet implemented")
@@ -29,11 +30,11 @@ object SourcegraphSettingsPanel {
     val content = panel {
         row {
             label("Sourcegraph base uri")
-            textField({ "https://sourcegraph.example.com/" }, {}, 30)
+            textField({ "https://sourcegraph.example.com/" }, {}, width)
         }
         row {
             label("Sourcegraph username")
-            textField({ sg_username }, { sg_username = it }, 30)
+            textField({ sg_username }, { sg_username = it }, width)
         }
         row {
             label("Sourcegraph password")
