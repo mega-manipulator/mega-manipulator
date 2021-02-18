@@ -22,6 +22,7 @@ object SettingsFileOperator {
     private val validationFuse = AtomicBoolean()
     private val NOTIFICATION_GROUP = NotificationGroup("Custom Notification Group", NotificationDisplayType.BALLOON, true)
     private const val fileName = "mega-manipulator.yml"
+    var lastSeenChange: Long = 0
     val objectMapper: ObjectMapper by lazy {
         ObjectMapper(YAMLFactory())
             .registerKotlinModule()
@@ -52,15 +53,19 @@ ${objectMapper.writeValueAsString(dummy())}
                     } else {
                         readSettings()
                         if (validationFuse.getAndSet(false)) {
+                            lastSeenChange = settingsFile.lastModified()
                             NOTIFICATION_GROUP.createNotification("Okay validation", NotificationType.INFORMATION)
                                 .notify(project)
                         }
                     }
                 } catch (e: Exception) {
                     validationFuse.set(true)
-                    NOTIFICATION_GROUP.createNotification("Failed validation: ${e.message}", NotificationType.WARNING)
-                        .notify(project)
-                    e.printStackTrace()
+                    if (lastSeenChange < settingsFile.lastModified()) {
+                        lastSeenChange = settingsFile.lastModified()
+                        NOTIFICATION_GROUP.createNotification("Failed validation: ${e.message}", NotificationType.WARNING)
+                            .notify(project)
+                        e.printStackTrace()
+                    }
                 }
                 delay(Duration.ofSeconds(5).toMillis())
             }
@@ -90,7 +95,8 @@ ${objectMapper.writeValueAsString(dummy())}
             CodeHostSettingsWrapper(
                 type = CodeHostType.BITBUCKET_SERVER,
                 BitBucketSettings(
-                    baseUrl = "https://bitbucket.example.com"
+                    baseUrl = "https://bitbucket.example.com",
+                    sourceGraphName = "bitbucket"
                 )
             )
         )
