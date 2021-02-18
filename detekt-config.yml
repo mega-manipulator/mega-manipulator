@@ -5,6 +5,19 @@ formatting:
   Indentation:
     continuationIndentSize: 8
   ParameterListWrapping:
+    active: false
     indentSize: 8
   ImportOrdering:
     layout: 'ascii'
+  MaximumLineLength:
+    active: false
+
+exceptions:
+  TooGenericExceptionCaught:
+    active: false
+
+style:
+  MaxLineLength:
+    active: false
+  MagicNumber:
+    active: false

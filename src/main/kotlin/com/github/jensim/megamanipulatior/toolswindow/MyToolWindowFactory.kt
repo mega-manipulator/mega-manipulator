@@ -1,6 +1,8 @@
 package com.github.jensim.megamanipulatior.toolswindow
 
 import com.github.jensim.megamanipulatior.MyBundle
+import com.github.jensim.megamanipulatior.module.MegaManipulatorModuleType.Companion.MODULE_TYPE_ID
+import com.github.jensim.megamanipulatior.settings.SettingsFileOperator
 import com.intellij.openapi.module.ModuleManager
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.wm.ToolWindow
@@ -12,8 +14,6 @@ object MyToolWindowFactory : ToolWindowFactory {
 
     override fun createToolWindowContent(project: Project, toolWindow: ToolWindow) {
         val contentFactory = ContentFactory.SERVICE.getInstance()
-        val content = contentFactory.createContent(SettingPanel.content, MyBundle.message("tabTitleSettings"), false)
-        toolWindow.contentManager.addContent(content)
         val content2 = contentFactory.createContent(noteComponent("Search"), MyBundle.message("tabTitleSearch"), false)
         toolWindow.contentManager.addContent(content2)
         val content3 = contentFactory.createContent(noteComponent("Clone"), MyBundle.message("tabTitleClone"), false)
@@ -25,14 +25,17 @@ object MyToolWindowFactory : ToolWindowFactory {
         val content6 =
             contentFactory.createContent(noteComponent("Create PRs"), MyBundle.message("tabTitlePRsCreate"), false)
         toolWindow.contentManager.addContent(content6)
-        val content7 =
-            contentFactory.createContent(noteComponent("Manage PRs"), MyBundle.message("tabTitlePRsManage"), false)
+        val content7 = contentFactory.createContent(noteComponent("Manage PRs"), MyBundle.message("tabTitlePRsManage"), false)
         toolWindow.contentManager.addContent(content7)
     }
 
     override fun isApplicable(project: Project): Boolean {
-        return ModuleManager.getInstance(project).modules.any {
-            it.moduleTypeName == "mega_manipulator"
+        val applicable = ModuleManager.getInstance(project).modules.any {
+            it.moduleTypeName == MODULE_TYPE_ID
         } && super.isApplicable(project)
+        if (applicable) {
+            SettingsFileOperator.initFileWatcher()
+        }
+        return applicable
     }
 }

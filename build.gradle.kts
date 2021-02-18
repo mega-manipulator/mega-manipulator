@@ -43,7 +43,21 @@ repositories {
 }
 dependencies {
     detektPlugins("io.gitlab.arturbosch.detekt:detekt-formatting:1.15.0")
+    implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.4.30")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-jdk8:1.4.2")
+    // implementation("io.ktor:ktor-client:1.5.1")
+    implementation("com.fasterxml.jackson.core:jackson-databind:2.12.+")
+    implementation("com.fasterxml.jackson.dataformat:jackson-dataformat-yaml:2.12.+")
+    implementation("com.fasterxml.jackson.module:jackson-module-kotlin:2.12.+")
+
+    // TEST
+    testImplementation("org.hamcrest:hamcrest:2.2")
+    testImplementation("org.hamcrest:hamcrest-library:2.2")
+    testImplementation("org.junit.jupiter:junit-jupiter-api:5.3.1")
+    testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:5.3.1")
+    testImplementation("org.jetbrains.kotlin:kotlin-reflect:1.4.30")
 }
+
 
 // Configure gradle-intellij-plugin plugin.
 // Read more: https://github.com/JetBrains/gradle-intellij-plugin
@@ -89,6 +103,10 @@ tasks {
 
     withType<Detekt> {
         jvmTarget = "1.8"
+    }
+
+    withType<Test>().configureEach {
+        useJUnitPlatform()
     }
 
     patchPluginXml {

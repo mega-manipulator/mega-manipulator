@@ -6,7 +6,13 @@ import com.intellij.openapi.module.ModuleType
 import javax.swing.Icon
 import org.jetbrains.annotations.NotNull
 
-class MegaManipulatorModuleType : ModuleType<MegaManipulatorModuleBuilder>("mega_manipulator") {
+class MegaManipulatorModuleType : ModuleType<MegaManipulatorModuleBuilder>(MODULE_TYPE_ID) {
+
+    companion object {
+
+        @JvmStatic
+        val MODULE_TYPE_ID = "mega_manipulator"
+    }
 
     override fun createModuleBuilder(): MegaManipulatorModuleBuilder {
         return MegaManipulatorModuleBuilder()
