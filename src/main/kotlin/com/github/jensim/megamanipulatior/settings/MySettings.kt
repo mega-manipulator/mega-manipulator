@@ -21,7 +21,18 @@ data class MegaManipulatorSettings(
     }
 }
 
-data class SourceGraphSettings(val baseUrl: String)
+data class SourceGraphSettings(val baseUrl: String) {
+    init {
+        require(baseUrl.startsWith("http://") || baseUrl.startsWith("https://")) {
+            "SourceGraph baseUrl must start with http:// or https://"
+        }
+        listOf<Char>('/', '?', '=', '&').forEach {
+            require(!baseUrl.endsWith(it)) {
+                "SourceGraph baseUrl must not end in '$it'"
+            }
+        }
+    }
+}
 
 enum class CodeHostType {
     BITBUCKET_SERVER,

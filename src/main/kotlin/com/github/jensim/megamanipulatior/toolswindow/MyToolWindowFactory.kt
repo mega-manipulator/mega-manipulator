@@ -1,7 +1,9 @@
 package com.github.jensim.megamanipulatior.toolswindow
 
 import com.github.jensim.megamanipulatior.MyBundle
+import com.github.jensim.megamanipulatior.actions.search.SearchWindow
 import com.github.jensim.megamanipulatior.module.MegaManipulatorModuleType.Companion.MODULE_TYPE_ID
+import com.github.jensim.megamanipulatior.settings.ProjectOperator
 import com.github.jensim.megamanipulatior.settings.SettingsFileOperator
 import com.intellij.openapi.module.ModuleManager
 import com.intellij.openapi.project.Project
@@ -14,7 +16,7 @@ object MyToolWindowFactory : ToolWindowFactory {
 
     override fun createToolWindowContent(project: Project, toolWindow: ToolWindow) {
         val contentFactory = ContentFactory.SERVICE.getInstance()
-        val content2 = contentFactory.createContent(noteComponent("Search"), MyBundle.message("tabTitleSearch"), false)
+        val content2 = contentFactory.createContent(SearchWindow.content, MyBundle.message("tabTitleSearch"), false)
         toolWindow.contentManager.addContent(content2)
         val content3 = contentFactory.createContent(noteComponent("Clone"), MyBundle.message("tabTitleClone"), false)
         toolWindow.contentManager.addContent(content3)
@@ -34,6 +36,7 @@ object MyToolWindowFactory : ToolWindowFactory {
             it.moduleTypeName == MODULE_TYPE_ID
         } && super.isApplicable(project)
         if (applicable) {
+            ProjectOperator.project = project
             SettingsFileOperator.initFileWatcher()
         }
         return applicable

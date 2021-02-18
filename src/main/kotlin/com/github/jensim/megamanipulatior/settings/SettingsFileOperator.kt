@@ -4,11 +4,10 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.fasterxml.jackson.module.kotlin.registerKotlinModule
+import com.github.jensim.megamanipulatior.settings.ProjectOperator.project
 import com.intellij.notification.NotificationDisplayType
 import com.intellij.notification.NotificationGroup
 import com.intellij.notification.NotificationType
-import com.intellij.openapi.project.Project
-import com.intellij.openapi.project.ProjectManager
 import java.io.File
 import java.time.Duration
 import java.util.concurrent.atomic.AtomicBoolean
@@ -26,9 +25,6 @@ object SettingsFileOperator {
     val objectMapper: ObjectMapper by lazy {
         ObjectMapper(YAMLFactory())
             .registerKotlinModule()
-    }
-    private val project: Project by lazy {
-        ProjectManager.getInstance().openProjects.first()
     }
     private val settingsFile: File
         get() = File("${project.basePath}", fileName)

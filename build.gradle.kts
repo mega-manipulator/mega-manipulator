@@ -3,6 +3,10 @@ import org.jetbrains.changelog.closure
 import org.jetbrains.changelog.markdownToHTML
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
+val ktorVersion: String = "1.5.1"
+val jacksonVersion = "2.12.+"
+val kotlinVersion = "1.4.30"
+
 plugins {
     // Java support
     id("java")
@@ -43,19 +47,21 @@ repositories {
 }
 dependencies {
     detektPlugins("io.gitlab.arturbosch.detekt:detekt-formatting:1.15.0")
-    implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.4.30")
+    implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8:$kotlinVersion")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-jdk8:1.4.2")
-    // implementation("io.ktor:ktor-client:1.5.1")
-    implementation("com.fasterxml.jackson.core:jackson-databind:2.12.+")
-    implementation("com.fasterxml.jackson.dataformat:jackson-dataformat-yaml:2.12.+")
-    implementation("com.fasterxml.jackson.module:jackson-module-kotlin:2.12.+")
+    implementation("io.ktor:ktor-client:$ktorVersion")
+    implementation("io.ktor:ktor-client-apache:$ktorVersion")
+    implementation("io.ktor:ktor-client-jackson:$ktorVersion")
+    implementation("com.fasterxml.jackson.core:jackson-databind:$jacksonVersion")
+    implementation("com.fasterxml.jackson.dataformat:jackson-dataformat-yaml:$jacksonVersion")
+    implementation("com.fasterxml.jackson.module:jackson-module-kotlin:$jacksonVersion")
 
     // TEST
     testImplementation("org.hamcrest:hamcrest:2.2")
     testImplementation("org.hamcrest:hamcrest-library:2.2")
     testImplementation("org.junit.jupiter:junit-jupiter-api:5.3.1")
     testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:5.3.1")
-    testImplementation("org.jetbrains.kotlin:kotlin-reflect:1.4.30")
+    testImplementation("org.jetbrains.kotlin:kotlin-reflect:$kotlinVersion")
 }
 
 
