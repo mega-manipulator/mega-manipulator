@@ -16,7 +16,8 @@ internal class SettingsFileOperatorTest {
                     type = CodeHostType.BITBUCKET_SERVER,
                     BitBucketSettings(
                         baseUrl = "https://bitbucket.example.com",
-                        sourceGraphName = "example"
+                        sourceGraphName = "example",
+                        clonePattern = "ssh://git@bitbucket.example.com/{project}/{repo}.git",
                     )
                 )
             )
