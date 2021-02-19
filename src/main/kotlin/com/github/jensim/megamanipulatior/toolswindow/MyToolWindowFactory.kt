@@ -1,10 +1,11 @@
 package com.github.jensim.megamanipulatior.toolswindow
 
 import com.github.jensim.megamanipulatior.MyBundle
+import com.github.jensim.megamanipulatior.actions.apply.ApplyWindow
 import com.github.jensim.megamanipulatior.actions.search.SearchWindow
 import com.github.jensim.megamanipulatior.module.MegaManipulatorModuleType.Companion.MODULE_TYPE_ID
 import com.github.jensim.megamanipulatior.settings.ProjectOperator
-import com.github.jensim.megamanipulatior.settings.SettingsFileOperator
+import com.github.jensim.megamanipulatior.settings.SettingsWindow
 import com.intellij.openapi.module.ModuleManager
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.wm.ToolWindow
@@ -16,11 +17,13 @@ object MyToolWindowFactory : ToolWindowFactory {
 
     override fun createToolWindowContent(project: Project, toolWindow: ToolWindow) {
         val contentFactory = ContentFactory.SERVICE.getInstance()
+        val content1 = contentFactory.createContent(SettingsWindow.content, MyBundle.message("tabTitleSettings"), false)
+        toolWindow.contentManager.addContent(content1)
         val content2 = contentFactory.createContent(SearchWindow.content, MyBundle.message("tabTitleSearch"), false)
         toolWindow.contentManager.addContent(content2)
-        val content3 = contentFactory.createContent(noteComponent("Clone"), MyBundle.message("tabTitleClone"), false)
-        toolWindow.contentManager.addContent(content3)
-        val content4 = contentFactory.createContent(noteComponent("Apply"), MyBundle.message("tabTitleApply"), false)
+        //val content3 = contentFactory.createContent(noteComponent("Clone"), MyBundle.message("tabTitleClone"), false)
+        //toolWindow.contentManager.addContent(content3)
+        val content4 = contentFactory.createContent(ApplyWindow.content, MyBundle.message("tabTitleApply"), false)
         toolWindow.contentManager.addContent(content4)
         val content5 = contentFactory.createContent(noteComponent("Commit"), MyBundle.message("tabTitleCommit"), false)
         toolWindow.contentManager.addContent(content5)
@@ -37,7 +40,6 @@ object MyToolWindowFactory : ToolWindowFactory {
         } && super.isApplicable(project)
         if (applicable) {
             ProjectOperator.project = project
-            SettingsFileOperator.initFileWatcher()
         }
         return applicable
     }

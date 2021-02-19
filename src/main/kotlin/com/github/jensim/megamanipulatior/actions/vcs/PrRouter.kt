@@ -5,7 +5,7 @@ import com.github.jensim.megamanipulatior.settings.SettingsFileOperator
 
 object PrRouter : PrReceiver {
 
-    private fun resolve(codeHost: String): CodeHostType? = SettingsFileOperator.readSettingsOrNull()
+    private fun resolve(codeHost: String): CodeHostType? = SettingsFileOperator.readSettings()
         ?.codeHostSettings?.firstOrNull { it.settings.sourceGraphName == codeHost }?.type
 
     private fun resolveRoute(codeHost: String): PrReceiver = when (resolve(codeHost)) {

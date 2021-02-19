@@ -1,16 +1,15 @@
 package com.github.jensim.megamanipulatior.actions.search
 
+import com.github.jensim.megamanipulatior.actions.git.clone.CloneOperator
 import com.intellij.ui.components.JBList
 import com.intellij.ui.components.JBScrollPane
 import com.intellij.ui.components.JBTextField
 import com.intellij.ui.layout.panel
 import java.awt.event.KeyEvent
 import java.awt.event.KeyListener
-import java.time.Duration
 import javax.swing.JButton
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.time.withTimeout
 
 object SearchWindow {
 
@@ -47,16 +46,21 @@ object SearchWindow {
             override fun keyReleased(e: KeyEvent?) = Unit
         })
         searchButton.addActionListener {
-            println("IM KLIKKED!")//TODO
             searchButton.isEnabled = false
             cloneButton.isEnabled = false
             selector.setListData(emptyArray())
-            GlobalScope.launch {
-                withTimeout(Duration.ofMinutes(1)) {
-                    val result = SearchOperator.search(searchField.text).toTypedArray()
-                    selector.setListData(result)
+
+            val result = SearchOperator.search(searchField.text).toTypedArray()
+            selector.setListData(result)
+            searchButton.isEnabled = true
+        }
+        cloneButton.addActionListener {
+            val selected = selector.selectedValuesList.toSet()
+            if (selected.isNotEmpty()) {
+                GlobalScope.launch {
+                    CloneOperator.clone(selected)
                 }
-                searchButton.isEnabled = true
+                selector.clearSelection()
             }
         }
     }

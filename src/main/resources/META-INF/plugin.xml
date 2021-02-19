@@ -12,6 +12,7 @@
                     factoryClass="com.github.jensim.megamanipulatior.toolswindow.MyToolWindowFactory"/>
         <moduleType id="mega_manipulator"
                     implementationClass="com.github.jensim.megamanipulatior.module.MegaManipulatorModuleType"/>
-        <moduleBuilder builderClass="com.github.jensim.megamanipulatior.module.MegaManipulatorModuleBuilder"/>
+        <moduleBuilder builderClass="com.github.jensim.megamanipulatior.module.MegaManipulatorModuleBuilder"
+        />
     </extensions>
 </idea-plugin>
