@@ -11,6 +11,7 @@ object CommitOperator {
             """
             commit 
             push?
+            git push -u origin branch
         """.trimIndent()
         )
     }

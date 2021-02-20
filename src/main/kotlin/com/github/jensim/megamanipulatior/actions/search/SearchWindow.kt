@@ -8,6 +8,7 @@ import com.intellij.ui.layout.panel
 import java.awt.event.KeyEvent
 import java.awt.event.KeyListener
 import javax.swing.JButton
+import javax.swing.JOptionPane
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 
@@ -58,7 +59,11 @@ object SearchWindow {
             val selected = selector.selectedValuesList.toSet()
             if (selected.isNotEmpty()) {
                 GlobalScope.launch {
-                    CloneOperator.clone(selected)
+                    var branch: String? = null
+                    while (branch == null || branch.isEmpty() || branch.contains(' ')) {
+                        branch = JOptionPane.showInputDialog("Select branch name")
+                    }
+                    CloneOperator.clone(branch, selected)
                 }
                 selector.clearSelection()
             }
