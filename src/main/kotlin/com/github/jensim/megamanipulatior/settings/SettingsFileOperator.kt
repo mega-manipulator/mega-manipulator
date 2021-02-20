@@ -30,7 +30,7 @@ object SettingsFileOperator {
     private val howToFile: File
         get() = File("${project.basePath}", howtoFileName)
 
-    private val okValidationText = "Settings are valid"
+    private const val okValidationText = "Settings are valid"
     private val privateValidationText = AtomicReference("Settings are not yet validated")
     val validationText: String
         get() = privateValidationText.acquire
