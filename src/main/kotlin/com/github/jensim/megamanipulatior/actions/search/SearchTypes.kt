@@ -1,5 +1,6 @@
 package com.github.jensim.megamanipulatior.actions.search
 
+@SuppressWarnings("ConstructorParameterNaming")
 object SearchTypes {
 
     data class GraphQlRequest(val variables: SearchVaraibles) {

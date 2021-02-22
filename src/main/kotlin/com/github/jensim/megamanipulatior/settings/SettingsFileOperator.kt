@@ -10,6 +10,7 @@ import com.intellij.notification.NotificationGroup
 import com.intellij.notification.NotificationType
 import com.intellij.openapi.fileEditor.FileDocumentManager
 import java.io.File
+import java.util.concurrent.atomic.AtomicLong
 import java.util.concurrent.atomic.AtomicReference
 import kotlin.text.Charsets.UTF_8
 
@@ -23,6 +24,8 @@ object SettingsFileOperator {
         ObjectMapper(YAMLFactory())
             .registerKotlinModule()
     }
+    private val lastUpdated: AtomicLong = AtomicLong()
+    private val bufferedSettings: AtomicReference<MegaManipulatorSettings> = AtomicReference(dummy())
     private val settingsFile: File
         get() = File("${project.basePath}", settingsFileName)
     val scriptFile: File
@@ -48,10 +51,7 @@ ${objectMapper.writeValueAsString(dummy())}
             FileDocumentManager.getInstance().saveAllDocuments()
         } catch (e: Exception) {
         }
-        if (!settingsFile.exists()) {
-            println("Creating settings file")
-            writeSettings(dummyYaml)
-        }
+
         if (!scriptFile.exists()) {
             scriptFile.createNewFile()
             scriptFile.writeBytes(
@@ -86,7 +86,7 @@ ${objectMapper.writeValueAsString(dummy())}
                 
                 #### 3. Apply changes
                 
-                * [x] Write a scripted changeset in ${scriptFileName} and have it applied to all cloned repos
+                * [x] Write a scripted changeset in $scriptFileName and have it applied to all cloned repos
                 
                 #### 4. Commit & Push
                 
@@ -104,10 +104,23 @@ ${objectMapper.writeValueAsString(dummy())}
                 """.trimIndent().toByteArray(charset = UTF_8)
             )
         }
-        val yaml = String(settingsFile.readBytes(), UTF_8)
-        val readValue: MegaManipulatorSettings? = objectMapper.readValue(yaml)
-        privateValidationText.set(okValidationText)
-        readValue
+
+        if (!settingsFile.exists()) {
+            println("Creating settings file")
+            writeSettings(dummyYaml)
+        }
+        if (lastUpdated.get() == settingsFile.lastModified()) {
+            bufferedSettings.get()
+        } else {
+            val yaml = String(settingsFile.readBytes(), UTF_8)
+            val readValue: MegaManipulatorSettings? = objectMapper.readValue(yaml)
+            readValue?.let {
+                lastUpdated.set(settingsFile.lastModified())
+                bufferedSettings.set(it)
+            }
+            privateValidationText.set(okValidationText)
+            readValue
+        }
     } catch (e: Exception) {
         e.printStackTrace()
         privateValidationText.set(e.message)
@@ -117,17 +130,40 @@ ${objectMapper.writeValueAsString(dummy())}
     }
 
     private fun dummy() = MegaManipulatorSettings(
-        sourceGraphSettings = SourceGraphSettings(baseUrl = "https://sourcegraph.example.com"),
-        codeHostSettings = listOf(
-            CodeHostSettingsWrapper(
-                type = CodeHostType.BITBUCKET_SERVER,
-                BitBucketSettings(
-                    baseUrl = "https://bitbucket.example.com",
-                    sourceGraphName = "bitbucket",
-                    clonePattern = "ssh://git@bitbucket.example.com/{project}/{repo}.git",
-                )
+        defaultHttpsOverride = HttpsOverride.ALLOW_ANYTHING,
+        searchHostSettings = mapOf(
+            "example-sourcegraph" to SearchHostSettingsWrapper(
+                type = SearchHostType.SOURCEGRAPH,
+                settings = SourceGraphSettings(
+                    baseUrl = "https://sourcegraph.example.com",
+                    httpsOverride = null,
+                    authMethod = AuthMethod.TOKEN,
+                    username = null,
+                ),
+                codeHostSettings = mapOf(
+                    "bitbucket.example.com" to CodeHostSettingsWrapper(
+                        type = CodeHostType.BITBUCKET_SERVER,
+                        BitBucketSettings(
+                            httpsOverride = null,
+                            baseUrl = "https://bitbucket.example.com",
+                            clonePattern = "ssh://git@bitbucket.example.com/{project}/{repo}.git",
+                            authMethod = AuthMethod.TOKEN,
+                            username = null,
+                        ),
+                    ),
+                    "github.com" to CodeHostSettingsWrapper(
+                        type = CodeHostType.GITHUB,
+                        GitHubSettings(
+                            httpsOverride = null,
+                            baseUrl = "https://github.com",
+                            clonePattern = "ssh://git@bitbucket.example.com/{project}/{repo}.git",
+                            authMethod = AuthMethod.TOKEN,
+                            username = null,
+                        ),
+                    )
+                ),
             ),
-        )
+        ),
     )
 
     private fun writeSettings(yaml: String) {

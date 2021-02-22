@@ -4,4 +4,5 @@ data class SearchResult(
     val project: String,
     val repo: String,
     val codeHostName: String,
+    val searchHostName: String,
 )

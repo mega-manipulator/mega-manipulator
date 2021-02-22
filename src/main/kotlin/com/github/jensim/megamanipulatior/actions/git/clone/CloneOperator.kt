@@ -25,14 +25,12 @@ object CloneOperator {
         val noConf = mutableListOf<SearchResult>()
         val futures: List<Deferred<Any>> = repos.map { repo ->
             GlobalScope.async {
-                settings.codeHostSettings.firstOrNull { codeHost ->
-                    codeHost.settings.sourceGraphName == repo.codeHostName
-                }?.let {
-                    val cloneUrl = it.settings.cloneUrl(repo.project, repo.repo)
-                    val dir = File(basePath, "clones/${repo.codeHostName}/${repo.project}/${repo.repo}")
+                settings.resolveSettings(repo.searchHostName, repo.codeHostName)?.let { (_, codeHostSettings) ->
+                    val cloneUrl = codeHostSettings.cloneUrl(repo.project, repo.repo)
+                    val dir = File(basePath, "clones/${repo.searchHostName}/${repo.codeHostName}/${repo.project}/${repo.repo}")
                     dir.mkdirs()
                     if (File(dir, ".git").exists()) {
-                        //TODO Checkout branch from default branch
+                        // TODO Checkout branch from default branch
                         println("Dir already cloned ${dir.absolutePath}")
                     } else {
                         requestSemaphore.withPermit {

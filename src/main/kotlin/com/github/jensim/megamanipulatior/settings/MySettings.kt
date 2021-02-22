@@ -3,20 +3,42 @@ package com.github.jensim.megamanipulatior.settings
 import com.fasterxml.jackson.annotation.JsonSubTypes
 import com.fasterxml.jackson.annotation.JsonTypeInfo
 
+enum class HttpsOverride {
+    ALLOW_SELF_SIGNED_CERT,
+    ALLOW_ANYTHING,
+}
+
+enum class AuthMethod {
+    TOKEN,
+    USERNAME_PASSWORD,
+}
+
 data class MegaManipulatorSettings(
-    val sourceGraphSettings: SourceGraphSettings,
-    val codeHostSettings: List<CodeHostSettingsWrapper>
+    val defaultHttpsOverride: HttpsOverride?,
+    val searchHostSettings: Map<String, SearchHostSettingsWrapper>,
 ) {
     init {
-        require(codeHostSettings.isNotEmpty()) {
+        require(searchHostSettings.isNotEmpty()) {
             """
-            |Please add one or code host settings.
-            |Available types are ${CodeHostType.values()} 
+            |Please add one or search host settings.
+            |Available types are ${SearchHostType.values()} 
             |""".trimMargin()
         }
-        val names = codeHostSettings.map { it.settings.sourceGraphName }
-        require(names.size == names.distinct().size) {
-            "sourceGraphName have to be unique"
+    }
+
+    fun resolveHttpsOverride(searchHostName: String): HttpsOverride? = searchHostSettings[searchHostName]
+        ?.settings?.httpsOverride ?: defaultHttpsOverride
+
+    fun resolveHttpsOverride(searchHostName: String, codeHostName: String): HttpsOverride? = searchHostSettings[searchHostName]
+        ?.codeHostSettings?.get(codeHostName)?.settings?.httpsOverride ?: defaultHttpsOverride
+
+    fun resolveSettings(searchHostName: String): SearchHostSettings = TODO()
+
+    fun resolveSettings(searchHostName: String, codeHostName: String): Pair<SearchHostSettings, CodeHostSettings>? {
+        return searchHostSettings[searchHostName]?.settings?.let { first ->
+            searchHostSettings[searchHostName]?.codeHostSettings?.get(codeHostName)?.settings?.let { second ->
+                Pair(first, second)
+            }
         }
     }
 }
@@ -32,22 +54,73 @@ private fun validateBaseUrl(baseUrl: String) {
     }
 }
 
-data class SourceGraphSettings(val baseUrl: String) {
+enum class SearchHostType {
+    SOURCEGRAPH
+}
+
+data class SearchHostSettingsWrapper(
+    val type: SearchHostType,
+    @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "type", include = JsonTypeInfo.As.EXTERNAL_PROPERTY)
+    @JsonSubTypes(
+        value = [
+            JsonSubTypes.Type(value = SourceGraphSettings::class, name = "SOURCEGRAPH"),
+        ]
+    )
+    val settings: SearchHostSettings,
+    val codeHostSettings: Map<String, CodeHostSettingsWrapper>,
+
+    ) {
     init {
+        require(codeHostSettings.isNotEmpty()) {
+            """
+            |Please add one or code host settings.
+            |Available types are ${CodeHostType.values()} 
+            |""".trimMargin()
+        }
+    }
+}
+
+sealed class SearchHostSettings(
+    open val baseUrl: String,
+    open val httpsOverride: HttpsOverride?,
+    open val authMethod: AuthMethod,
+    open val username: String?
+) {
+    fun validate() {
         validateBaseUrl(baseUrl)
+        if (authMethod == AuthMethod.USERNAME_PASSWORD) {
+            require(!username.isNullOrEmpty()) { "$baseUrl: username is required for auth method USERNAME_PASSWORD" }
+        }
+    }
+}
+
+data class SourceGraphSettings(
+    override val baseUrl: String,
+    override val httpsOverride: HttpsOverride?,
+    override val authMethod: AuthMethod,
+    override val username: String?
+) : SearchHostSettings(
+    baseUrl,
+    httpsOverride,
+    authMethod,
+    username
+) {
+    init {
+        validate()
     }
 }
 
 enum class CodeHostType {
     BITBUCKET_SERVER,
-    GIT_LAB,
     GITHUB,
 }
 
 sealed class CodeHostSettings(
     open val baseUrl: String,
-    open val sourceGraphName: String,
-    open val clonePattern: String
+    open val clonePattern: String,
+    open val httpsOverride: HttpsOverride?,
+    open val authMethod: AuthMethod,
+    open val username: String?,
 ) {
     internal fun validate() {
         validateBaseUrl(baseUrl)
@@ -55,6 +128,9 @@ sealed class CodeHostSettings(
             require(clonePattern.contains("{$word}")) {
                 "clonePattern must contain {$word}, try something like ssh://git@bitbucket.example.com/{project}/{repo}.git"
             }
+        }
+        if (authMethod == AuthMethod.USERNAME_PASSWORD) {
+            require(!username.isNullOrEmpty()) { "$baseUrl: username is required for auth method USERNAME_PASSWORD" }
         }
     }
 
@@ -65,26 +141,16 @@ sealed class CodeHostSettings(
 
 data class BitBucketSettings(
     override val baseUrl: String,
-    override val sourceGraphName: String,
     override val clonePattern: String,
+    override val httpsOverride: HttpsOverride?,
+    override val authMethod: AuthMethod,
+    override val username: String?,
 ) : CodeHostSettings(
     baseUrl,
-    sourceGraphName,
     clonePattern,
-) {
-    init {
-        validate()
-    }
-}
-
-data class GitLabSettings(
-    override val baseUrl: String,
-    override val sourceGraphName: String,
-    override val clonePattern: String,
-) : CodeHostSettings(
-    baseUrl,
-    sourceGraphName,
-    clonePattern,
+    httpsOverride,
+    authMethod,
+    username,
 ) {
     init {
         validate()
@@ -93,12 +159,16 @@ data class GitLabSettings(
 
 data class GitHubSettings(
     override val baseUrl: String,
-    override val sourceGraphName: String,
     override val clonePattern: String,
+    override val httpsOverride: HttpsOverride?,
+    override val authMethod: AuthMethod,
+    override val username: String?,
 ) : CodeHostSettings(
     baseUrl,
-    sourceGraphName,
     clonePattern,
+    httpsOverride,
+    authMethod,
+    username,
 ) {
     init {
         validate()
@@ -111,7 +181,6 @@ data class CodeHostSettingsWrapper(
     @JsonSubTypes(
         value = [
             JsonSubTypes.Type(value = BitBucketSettings::class, name = "BITBUCKET_SERVER"),
-            JsonSubTypes.Type(value = GitLabSettings::class, name = "GIT_LAB"),
             JsonSubTypes.Type(value = GitHubSettings::class, name = "GITHUB"),
         ]
     )

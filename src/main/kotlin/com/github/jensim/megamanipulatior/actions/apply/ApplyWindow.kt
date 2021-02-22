@@ -1,6 +1,8 @@
 package com.github.jensim.megamanipulatior.actions.apply
 
+import com.github.jensim.megamanipulatior.toolswindow.ToolWindowTab
 import com.intellij.openapi.fileEditor.FileDocumentManager
+import com.intellij.openapi.ui.DialogPanel
 import com.intellij.ui.components.JBList
 import com.intellij.ui.components.JBScrollPane
 import com.intellij.ui.components.JBTextArea
@@ -9,14 +11,14 @@ import javax.swing.JButton
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 
-object ApplyWindow {
+object ApplyWindow : ToolWindowTab {
 
     private val resultList = JBList<ApplyOutput>()
     private val scrollableResult = JBScrollPane(resultList)
     private val details = JBTextArea()
     private val scrollableDetails = JBScrollPane(details)
     private val button = JButton("Apply")
-    val content = panel {
+    override val content: DialogPanel = panel {
         row {
             component(button)
         }
@@ -50,4 +52,10 @@ object ApplyWindow {
             }
         }
     }
+
+    override fun refresh() {
+        // TODO("not implemented")
+    }
+
+    override val index: Int = 2
 }

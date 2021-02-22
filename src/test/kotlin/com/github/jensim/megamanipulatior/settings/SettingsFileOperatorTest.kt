@@ -10,18 +10,32 @@ internal class SettingsFileOperatorTest {
     fun serializeDeserialize() {
         // given
         val testData = MegaManipulatorSettings(
-            sourceGraphSettings = SourceGraphSettings(baseUrl = "https://sourcegraph.example.com"),
-            codeHostSettings = listOf(
-                CodeHostSettingsWrapper(
-                    type = CodeHostType.BITBUCKET_SERVER,
-                    BitBucketSettings(
-                        baseUrl = "https://bitbucket.example.com",
-                        sourceGraphName = "example",
-                        clonePattern = "ssh://git@bitbucket.example.com/{project}/{repo}.git",
+            null,
+            searchHostSettings = mapOf(
+                "sg" to SearchHostSettingsWrapper(
+                    type = SearchHostType.SOURCEGRAPH,
+                    settings = SourceGraphSettings(
+                        baseUrl = "https://sourcegraph.example.com",
+                        httpsOverride = null,
+                        authMethod = AuthMethod.USERNAME_PASSWORD,
+                        username = "null",
+                    ),
+                    codeHostSettings = mapOf(
+                        "bb" to CodeHostSettingsWrapper(
+                            type = CodeHostType.BITBUCKET_SERVER,
+                            BitBucketSettings(
+                                baseUrl = "https://bitbucket.example.com",
+                                clonePattern = "ssh://git@bitbucket.example.com/{project}/{repo}.git",
+                                httpsOverride = null,
+                                authMethod = AuthMethod.TOKEN,
+                                username = null,
+                            )
+                        )
                     )
-                )
-            )
+                ),
+            ),
         )
+
         // when
         val yaml = SettingsFileOperator.objectMapper.writeValueAsString(testData)
         val deserialized: MegaManipulatorSettings = SettingsFileOperator.objectMapper.readValue(yaml)
@@ -35,8 +49,19 @@ internal class SettingsFileOperatorTest {
     fun failIfTooFewEntries() {
         // given
         val testData = MegaManipulatorSettings(
-            sourceGraphSettings = SourceGraphSettings(baseUrl = "https://sourcegraph.example.com"),
-            codeHostSettings = listOf()
+            null,
+            searchHostSettings = mapOf(
+                "sg" to SearchHostSettingsWrapper(
+                    type = SearchHostType.SOURCEGRAPH,
+                    settings = SourceGraphSettings(
+                        baseUrl = "https://sourcegraph.example.com",
+                        httpsOverride = null,
+                        authMethod = AuthMethod.USERNAME_PASSWORD,
+                        username = null
+                    ),
+                    codeHostSettings = mapOf()
+                ),
+            ),
         )
         // when
         val yaml = SettingsFileOperator.objectMapper.writeValueAsString(testData)
