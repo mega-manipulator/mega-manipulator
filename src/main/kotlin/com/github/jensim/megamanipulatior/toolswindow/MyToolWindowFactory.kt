@@ -11,6 +11,7 @@ import com.intellij.ui.content.ContentFactory
 import com.intellij.ui.content.ContentManagerEvent
 import com.intellij.ui.content.ContentManagerListener
 
+
 object MyToolWindowFactory : ToolWindowFactory {
 
     private val tabs = listOf<Pair<String, ToolWindowTab>>(

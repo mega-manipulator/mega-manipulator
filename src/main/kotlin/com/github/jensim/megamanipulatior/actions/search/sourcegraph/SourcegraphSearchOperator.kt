@@ -12,7 +12,6 @@ import com.github.jensim.megamanipulatior.settings.SourceGraphSettings
 import com.intellij.notification.NotificationType
 import com.jetbrains.rd.util.printlnError
 import io.ktor.client.HttpClient
-import io.ktor.client.request.headers
 import io.ktor.client.request.post
 import java.time.Duration
 import kotlinx.coroutines.runBlocking
@@ -28,27 +27,15 @@ object SourcegraphSearchOperator {
              * Paginate on result
              */
             val httpsOverride: HttpsOverride? = SettingsFileOperator.readSettings()?.resolveHttpsOverride(searchHostName)
-            val client: HttpClient = HttpClientProvider.getClient(httpsOverride)
             val password = when (settings.authMethod) {
                 AuthMethod.TOKEN -> PasswordsOperator.getOrAskForPassword("token", settings.baseUrl)
                 AuthMethod.USERNAME_PASSWORD -> PasswordsOperator.getOrAskForPassword(settings.username!!, settings.baseUrl)
             }
+            val client: HttpClient = HttpClientProvider.getClient(httpsOverride, settings.authMethod, settings.username, password)
             val response: SearchTypes.GraphQLResponse = runBlocking {
                 withTimeout(Duration.ofMinutes(2)) {
                     client.post("$baseUrl/.api/graphql?Search=") {
                         body = SearchTypes.GraphQlRequest(SearchTypes.SearchVaraibles(search))
-                        headers {
-                            append("Content-Type", "application/json")
-                            append("Accept", "application/json")
-                            when (settings.authMethod) {
-                                AuthMethod.TOKEN -> {
-                                    append("Authorization", "token $password")
-                                }
-                                AuthMethod.USERNAME_PASSWORD -> {
-                                    TODO()
-                                }
-                            }
-                        }
                     }
                 }
             }

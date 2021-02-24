@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.fasterxml.jackson.module.kotlin.registerKotlinModule
+import com.github.jensim.megamanipulatior.files.FilesOperator
 import com.github.jensim.megamanipulatior.settings.ProjectOperator.project
 import com.intellij.notification.NotificationDisplayType
 import com.intellij.notification.NotificationGroup
@@ -30,8 +31,6 @@ object SettingsFileOperator {
         get() = File("${project.basePath}", settingsFileName)
     val scriptFile: File
         get() = File("${project.basePath}", scriptFileName)
-    private val howToFile: File
-        get() = File("${project.basePath}", howtoFileName)
 
     private const val okValidationText = "Settings are valid"
     private val privateValidationText = AtomicReference("Settings are not yet validated")
@@ -51,58 +50,22 @@ ${objectMapper.writeValueAsString(dummy())}
             FileDocumentManager.getInstance().saveAllDocuments()
         } catch (e: Exception) {
         }
-
-        if (!scriptFile.exists()) {
-            scriptFile.createNewFile()
-            scriptFile.writeBytes(
-                """
-                #!/bin/bash
-                echo 'Hello world'
-                
-                """.trimIndent().toByteArray(charset = UTF_8)
-            )
-            scriptFile.setExecutable(true)
-        }
-        if (!howToFile.exists()) {
-            howToFile.createNewFile()
-            howToFile.writeBytes(
-                """
-                # Mega Manipulator
-                
-                One stop shop for making changes, big or small, in a lot of places at once
-                
-                ## How to
-                
-                #### 1. Validate config
-                
-                * [x] Validate configuration, and give user feedback
-                
-                #### 2. Search
-                
-                * [x] Search for repos using Sourcegraph
-                * [ ] Search for repos using etsy/hound
-                * [x] Clone repos
-                * [ ] Select a branchName for all cloned repos and switch to that branch
-                
-                #### 3. Apply changes
-                
-                * [x] Write a scripted changeset in $scriptFileName and have it applied to all cloned repos
-                
-                #### 4. Commit & Push
-                
-                * [ ] Commit 
-                
-                #### 5. Create PRs
-                
-                * [ ] Define a title and body for all the branches, and lean back as we 
-                
-                #### 6. Manage PRs
-                
-                * [ ] Reword a bunch of PRs at the same time
-                * [ ] Add reviewers
-                * [ ] Remove PRs
-                """.trimIndent().toByteArray(charset = UTF_8)
-            )
+        try {
+            FilesOperator.findBaseFiles().forEach { baseFile ->
+                val file = File(project.basePath, baseFile.nameWithPath)
+                if (!file.exists()) {
+                    file.parentFile.mkdirs()
+                    file.createNewFile()
+                    file.writeBytes(baseFile.content)
+                    if (baseFile.nameWithPath.endsWith(".bash")) {
+                        file.setExecutable(true)
+                    }
+                } else {
+                    println("File ${baseFile.nameWithPath} already exists..")
+                }
+            }
+        } catch (e: Exception) {
+            e.printStackTrace()
         }
 
         if (!settingsFile.exists()) {
