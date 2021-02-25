@@ -1,13 +1,16 @@
 package com.github.jensim.megamanipulatior.http
 
+import com.fasterxml.jackson.databind.DeserializationFeature
 import com.github.jensim.megamanipulatior.settings.AuthMethod
+import com.github.jensim.megamanipulatior.settings.CodeHostSettings
 import com.github.jensim.megamanipulatior.settings.HttpsOverride
+import com.github.jensim.megamanipulatior.settings.PasswordsOperator
+import com.github.jensim.megamanipulatior.settings.SettingsFileOperator
+import com.intellij.util.Base64
 import io.ktor.client.HttpClient
 import io.ktor.client.HttpClientConfig
 import io.ktor.client.engine.apache.Apache
 import io.ktor.client.engine.apache.ApacheEngineConfig
-import io.ktor.client.features.auth.Auth
-import io.ktor.client.features.auth.providers.basic
 import io.ktor.client.features.defaultRequest
 import io.ktor.client.features.json.JacksonSerializer
 import io.ktor.client.features.json.JsonFeature
@@ -26,7 +29,10 @@ object HttpClientProvider {
 
     private fun bakeClient(installs: HttpClientConfig<ApacheEngineConfig>.() -> Unit): HttpClient = HttpClient(Apache) {
         install(JsonFeature) {
-            serializer = JacksonSerializer()
+            serializer = JacksonSerializer {
+                disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES)
+            }
+
         }
         installs()
     }
@@ -59,6 +65,15 @@ object HttpClientProvider {
         }
     }
 
+    fun getClient(searchHostName: String, codeHostName: String, settings: CodeHostSettings): HttpClient {
+        val httpsOverride: HttpsOverride? = SettingsFileOperator.readSettings()?.resolveHttpsOverride(searchHostName, codeHostName)
+        val password = when (settings.authMethod) {
+            AuthMethod.TOKEN -> PasswordsOperator.getOrAskForPassword("token", settings.baseUrl)
+            AuthMethod.USERNAME_PASSWORD -> PasswordsOperator.getOrAskForPassword(settings.username!!, settings.baseUrl)
+        }
+        return getClient(httpsOverride, settings.authMethod, settings.username, password)
+    }
+
     fun getClient(httpsOverride: HttpsOverride?, authMethod: AuthMethod, username: String? = null, password: String): HttpClient {
         return bakeClient {
             when (httpsOverride) {
@@ -73,16 +88,11 @@ object HttpClientProvider {
     }
 
     private fun HttpClientConfig<ApacheEngineConfig>.installBasicAuth(username: String, password: String) {
-        install(Auth) {
-            basic {
-                this.username = username
-                this.password = password
-            }
-            defaultRequest {
-                headers {
-                    append("Content-Type", "application/json")
-                    append("Accept", "application/json")
-                }
+        defaultRequest {
+            headers {
+                append("Content-Type", "application/json")
+                append("Accept", "application/json")
+                append("Authorization", "Basic ${Base64.encode("$username:$password".toByteArray())}")
             }
         }
     }

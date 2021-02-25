@@ -1,11 +1,9 @@
 package com.github.jensim.megamanipulatior.settings
 
-import com.fasterxml.jackson.databind.ObjectMapper
-import com.fasterxml.jackson.dataformat.yaml.YAMLFactory
 import com.fasterxml.jackson.module.kotlin.readValue
-import com.fasterxml.jackson.module.kotlin.registerKotlinModule
 import com.github.jensim.megamanipulatior.files.FilesOperator
 import com.github.jensim.megamanipulatior.settings.ProjectOperator.project
+import com.github.jensim.megamanipulatior.settings.SerializationHolder.yamlObjectMapper
 import com.intellij.notification.NotificationDisplayType
 import com.intellij.notification.NotificationGroup
 import com.intellij.notification.NotificationType
@@ -20,11 +18,7 @@ object SettingsFileOperator {
     private val NOTIFICATION_GROUP = NotificationGroup("SettingsFileOperator", NotificationDisplayType.BALLOON, true)
     private const val settingsFileName = "mega-manipulator.yml"
     private const val scriptFileName = "mega-manipulator.bash"
-    private const val howtoFileName = "mega-manipulator.md"
-    val objectMapper: ObjectMapper by lazy {
-        ObjectMapper(YAMLFactory())
-            .registerKotlinModule()
-    }
+
     private val lastUpdated: AtomicLong = AtomicLong()
     private val bufferedSettings: AtomicReference<MegaManipulatorSettings> = AtomicReference(dummy())
     private val settingsFile: File
@@ -41,7 +35,7 @@ object SettingsFileOperator {
 # Please edit this file to set up the plugin
 # Removing the file will reset the file to the example state
 
-${objectMapper.writeValueAsString(dummy())}
+${yamlObjectMapper.writeValueAsString(dummy())}
 """
     }
 
@@ -76,7 +70,7 @@ ${objectMapper.writeValueAsString(dummy())}
             bufferedSettings.get()
         } else {
             val yaml = String(settingsFile.readBytes(), UTF_8)
-            val readValue: MegaManipulatorSettings? = objectMapper.readValue(yaml)
+            val readValue: MegaManipulatorSettings? = yamlObjectMapper.readValue(yaml)
             readValue?.let {
                 lastUpdated.set(settingsFile.lastModified())
                 bufferedSettings.set(it)

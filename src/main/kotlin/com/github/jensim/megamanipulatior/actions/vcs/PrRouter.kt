@@ -42,13 +42,15 @@ object PrRouter {
         null -> TODO("Not configured code host")
     }
 
-    fun getAllPrs(): List<PullRequest> = SettingsFileOperator.readSettings()?.searchHostSettings?.values
-        ?.flatMap { it.codeHostSettings.values.map { it.settings } }.orEmpty().flatMap {
+    fun getAllPrs(searchHost: String, codeHost: String): List<PullRequest>? {
+        val settings = SettingsFileOperator.readSettings()
+        return SettingsFileOperator.readSettings()?.searchHostSettings?.get(searchHost)?.codeHostSettings?.get(codeHost)?.settings?.let {
             when (it) {
-                is BitBucketSettings -> BitbucketPrReceiver.getAllPrs(it)
+                is BitBucketSettings -> BitbucketPrReceiver.getAllPrs(searchHost, codeHost, it)
                 is GitHubSettings -> TODO("Not implemented!")
             }
         }
+    }
 
     fun closePr(pullRequest: PullRequest) = when (val settings = resolve(pullRequest.searchHostName, pullRequest.codeHostName)) {
         is BitBucketSettings -> BitbucketPrReceiver.closePr(settings, pullRequest)

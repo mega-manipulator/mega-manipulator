@@ -3,6 +3,7 @@ package com.github.jensim.megamanipulatior.toolswindow
 import com.github.jensim.megamanipulatior.MyBundle
 import com.github.jensim.megamanipulatior.actions.apply.ApplyWindow
 import com.github.jensim.megamanipulatior.actions.search.SearchWindow
+import com.github.jensim.megamanipulatior.actions.vcs.PullRequestWindow
 import com.github.jensim.megamanipulatior.settings.SettingsWindow
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.wm.ToolWindow
@@ -19,7 +20,7 @@ object MyToolWindowFactory : ToolWindowFactory {
         "tabTitleSearch" to SearchWindow,
         "tabTitleApply" to ApplyWindow,
         //"tabTitlePRsCreate" to noteComponent("Create PRs"),
-        //"tabTitlePRsManage" to noteComponent("Manage PRs"),
+        "tabTitlePRsManage" to PullRequestWindow,
     )
 
     override fun createToolWindowContent(project: Project, toolWindow: ToolWindow) {

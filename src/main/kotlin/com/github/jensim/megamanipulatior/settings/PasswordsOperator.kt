@@ -44,7 +44,7 @@ object PasswordsOperator {
             JOptionPane.showConfirmDialog(null, content)
         }
         val username = username ?: usernameField.text
-        val password = passwordField.password.concatToString()
+        val password = passwordField.password.concatToString().trim()
 
         setPassword(username, password, baseUrl)
         return password
