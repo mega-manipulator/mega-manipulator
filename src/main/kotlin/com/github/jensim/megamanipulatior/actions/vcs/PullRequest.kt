@@ -7,6 +7,7 @@ data class PullRequest(
     val searchHostName: String,
     val project: String,
     val repo: String,
+    val repoId: String,
     val branchFrom: BranchRef,
     val branchTo: BranchRef,
     val title: String,

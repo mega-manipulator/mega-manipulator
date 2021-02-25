@@ -2,6 +2,7 @@ package com.github.jensim.megamanipulatior.toolswindow
 
 import com.github.jensim.megamanipulatior.MyBundle
 import com.github.jensim.megamanipulatior.actions.apply.ApplyWindow
+import com.github.jensim.megamanipulatior.actions.git.GitWindow
 import com.github.jensim.megamanipulatior.actions.search.SearchWindow
 import com.github.jensim.megamanipulatior.actions.vcs.PullRequestWindow
 import com.github.jensim.megamanipulatior.settings.SettingsWindow
@@ -19,7 +20,7 @@ object MyToolWindowFactory : ToolWindowFactory {
         "tabTitleSettings" to SettingsWindow,
         "tabTitleSearch" to SearchWindow,
         "tabTitleApply" to ApplyWindow,
-        //"tabTitlePRsCreate" to noteComponent("Create PRs"),
+        "tabTitleClones" to GitWindow,
         "tabTitlePRsManage" to PullRequestWindow,
     )
 

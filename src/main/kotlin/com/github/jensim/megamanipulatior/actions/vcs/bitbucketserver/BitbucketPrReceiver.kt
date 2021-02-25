@@ -1,6 +1,5 @@
 package com.github.jensim.megamanipulatior.actions.vcs.bitbucketserver
 
-import com.github.jensim.megamanipulatior.actions.git.GitOperator
 import com.github.jensim.megamanipulatior.actions.search.SearchResult
 import com.github.jensim.megamanipulatior.actions.vcs.BranchRef
 import com.github.jensim.megamanipulatior.actions.vcs.PrReceiver
@@ -10,6 +9,7 @@ import com.github.jensim.megamanipulatior.http.HttpClientProvider
 import com.github.jensim.megamanipulatior.settings.BitBucketSettings
 import io.ktor.client.HttpClient
 import io.ktor.client.request.get
+import io.ktor.client.request.post
 import java.io.File
 import java.time.Duration
 import kotlinx.coroutines.runBlocking
@@ -22,19 +22,11 @@ object BitbucketPrReceiver : PrReceiver<BitBucketSettings> {
         TODO("Not yet implemented")
     }
 
-    override fun getDefaultReviewers(settings: BitBucketSettings, repo: SearchResult): List<String> {
-        val branch = GitOperator.getBranch(repo) ?: return emptyList()
+    override fun getDefaultReviewers(settings: BitBucketSettings, pullRequest: PullRequest): List<String> {
+        val client: HttpClient = HttpClientProvider.getClient(pullRequest.searchHostName, pullRequest.codeHostName, settings)
         return runBlocking {
-            val client: HttpClient = HttpClientProvider.getClient(repo.searchHostName, repo.codeHostName, settings)
-            val defaultBranch = getDefaultBranch(settings, repo)
-            if (defaultBranch == branch) {
-                emptyList()
-            } else {
-                val bbRepo: BitBucketRepo = getRepo(client, settings, repo)
-                val reviewers: List<BitBucketParticipant> = client.get("${settings.baseUrl}/rest/default-reviewers/1.0/projects/${bbRepo.project}/repos/${bbRepo.slug}/reviewers?sourceRepoId=${bbRepo.id}&targetRepoId=${bbRepo.id}&sourceRefId${branch}&targetRefId${defaultBranch}")
-                reviewers.map { it.user.name }
-            }
-        }
+            client.get<List<BitBucketUser>>("${settings.baseUrl}/rest/default-reviewers/1.0/projects/${pullRequest.project}/repos/${pullRequest.repo}/reviewers?sourceRepoId=${pullRequest.repoId}&targetRepoId=${pullRequest.repoId}&sourceRefId=${pullRequest.branchFrom.branchName}&targetRefId=${pullRequest.branchTo.branchName}")
+        }.map { it.name }
     }
 
     private suspend fun getRepo(client: HttpClient, settings: BitBucketSettings, repo: SearchResult): BitBucketRepo {
@@ -77,6 +69,7 @@ object BitbucketPrReceiver : PrReceiver<BitBucketSettings> {
                         ),
                         project = it.toRef.repository.project.key,
                         repo = it.toRef.repository.slug,
+                        repoId = it.toRef.repository.id.toString(),
                         reviewers = it.reviewers.map {
                             Reviewer(
                                 name = it.user.name,
@@ -99,7 +92,15 @@ object BitbucketPrReceiver : PrReceiver<BitBucketSettings> {
         TODO("not implemented")
     }
 
-    override fun closePr(settings: BitBucketSettings, pullRequest: PullRequest): PullRequest? = TODO("Not yet implemented")
+    override fun closePr(settings: BitBucketSettings, pullRequest: PullRequest): PullRequest {
+        val client = HttpClientProvider.getClient(pullRequest.searchHostName, pullRequest.codeHostName, settings)
+        runBlocking {
+            client.post<Unit>("${settings.baseUrl}/rest/api/1.0/projects/${pullRequest.project}/repos/${pullRequest.repo}/pull-requests/${pullRequest.id}/decline?version=${pullRequest.version}") {
+                body = "{}"
+            }
+        }
+        return pullRequest
+    }
 
     /*
     pull requests

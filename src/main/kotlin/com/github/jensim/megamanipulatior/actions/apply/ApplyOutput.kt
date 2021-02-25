@@ -8,13 +8,13 @@ data class ApplyOutput(
 ) {
     override fun toString(): String = dir
     fun getFullDescription() = """
-        DIR: $dir
-        EXIT_CODE: $exitCode
-        === STD_OUT ===
-        $std
-        ===============
-        === STD_ERR ===
-        $err
-        ===============
-        """.trimIndent()
+DIR: $dir
+EXIT_CODE: $exitCode
+=== STD_OUT ===
+$std
+===============
+=== STD_ERR ===
+$err
+===============
+""".trimIndent()
 }

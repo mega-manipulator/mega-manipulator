@@ -18,8 +18,8 @@ object PrRouter {
         null -> TODO("Not configured code host")
     }
 
-    fun getDefaultReviewers(repo: SearchResult): List<String> = when (val settings = resolve(repo.searchHostName, repo.codeHostName)) {
-        is BitBucketSettings -> BitbucketPrReceiver.getDefaultReviewers(settings, repo)
+    fun getDefaultReviewers(pullRequest: PullRequest): List<String> = when (val settings = resolve(pullRequest.searchHostName, pullRequest.codeHostName)) {
+        is BitBucketSettings -> BitbucketPrReceiver.getDefaultReviewers(settings, pullRequest)
         is GitHubSettings -> TODO("Not implemented!")
         null -> TODO("Not configured code host")
     }

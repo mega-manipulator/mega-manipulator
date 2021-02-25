@@ -7,7 +7,7 @@ import com.github.jensim.megamanipulatior.settings.CodeHostSettings
 interface PrReceiver<T : CodeHostSettings> {
 
     fun getDefaultBranch(settings: T, repo: SearchResult): String
-    fun getDefaultReviewers(settings: T, repo: SearchResult): List<String>
+    fun getDefaultReviewers(settings: T, pullRequest: PullRequest): List<String>
     fun getPr(settings: T, pullRequest: PullRequest): PullRequest?
     fun createPr(settings: T, pullRequest: PullRequest): PullRequest?
     fun updatePr(settings: T, pullRequest: PullRequest): PullRequest?

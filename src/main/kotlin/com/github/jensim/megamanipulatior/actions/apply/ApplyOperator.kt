@@ -14,7 +14,7 @@ object ApplyOperator {
         if (!SettingsFileOperator.scriptFile.exists()) {
             return emptyList()
         }
-        val gitDirs: List<File> = LocalRepoOperator.getLocalRepos()
+        val gitDirs: List<File> = LocalRepoOperator.getLocalRepoFiles()
 
         val scriptPath = SettingsFileOperator.scriptFile.absolutePath
         val futures: List<Deferred<ApplyOutput>> = gitDirs.mapNotNull {
