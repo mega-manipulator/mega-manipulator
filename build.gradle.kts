@@ -48,7 +48,7 @@ repositories {
 dependencies {
     detektPlugins("io.gitlab.arturbosch.detekt:detekt-formatting:1.15.0")
     implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8:$kotlinVersion")
-    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-jdk8:1.4.2")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-jdk8:1.4.2-native-mt")
 
     implementation("io.ktor:ktor-client:$ktorVersion")
     implementation("io.ktor:ktor-client-apache:$ktorVersion")
