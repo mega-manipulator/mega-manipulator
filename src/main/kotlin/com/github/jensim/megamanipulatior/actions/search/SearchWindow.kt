@@ -12,8 +12,6 @@ import java.awt.event.KeyEvent
 import java.awt.event.KeyListener
 import javax.swing.JButton
 import javax.swing.JOptionPane
-import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.launch
 
 object SearchWindow : ToolWindowTab {
 
@@ -47,7 +45,6 @@ object SearchWindow : ToolWindowTab {
                     searchButton.doClick()
                 }
             }
-
             override fun keyPressed(e: KeyEvent?) = Unit
             override fun keyReleased(e: KeyEvent?) = Unit
         })
@@ -55,22 +52,20 @@ object SearchWindow : ToolWindowTab {
             searchButton.isEnabled = false
             cloneButton.isEnabled = false
             selector.setListData(emptyArray())
-            searchHostSelect.selectedItem?.let { searchHostName ->
-                val result = SearchOperator.search(searchHostName as String, searchField.text).toTypedArray()
-                selector.setListData(result)
-            }
+            val result: Array<SearchResult> = searchHostSelect.selectedItem?.let { searchHostName ->
+                SearchOperator.search(searchHostName as String, searchField.text)
+            }.orEmpty().toTypedArray()
+            selector.setListData(result)
             searchButton.isEnabled = true
         }
         cloneButton.addActionListener {
             val selected = selector.selectedValuesList.toSet()
             if (selected.isNotEmpty()) {
-                GlobalScope.launch {
-                    var branch: String? = null
-                    while (branch == null || branch.isEmpty() || branch.contains(' ')) {
-                        branch = JOptionPane.showInputDialog("Select branch name")
-                    }
-                    CloneOperator.clone(branch, selected)
+                val branch: String? = JOptionPane.showInputDialog("Select branch name")
+                if (branch == null || branch.isEmpty() || branch.contains(' ')) {
+                    return@addActionListener
                 }
+                CloneOperator.clone(branch, selected)
                 selector.clearSelection()
             }
         }

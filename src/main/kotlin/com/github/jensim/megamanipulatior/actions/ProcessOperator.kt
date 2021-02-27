@@ -6,11 +6,10 @@ import java.util.concurrent.CompletableFuture
 
 object ProcessOperator {
 
-    fun runCommand(workingDir: File, command: String): CompletableFuture<ApplyOutput>? {
-        val parts = command.split("\\s".toRegex())
+    fun runCommand(workingDir: File, command: Array<String>): CompletableFuture<ApplyOutput>? {
         val tempOutput = File.createTempFile("mega-manipulator-apply-out", "txt")
         val tempErrOutput = File.createTempFile("mega-manipulator-apply-err", "txt")
-        val proc = ProcessBuilder(*parts.toTypedArray())
+        val proc = ProcessBuilder(*command)
             .directory(workingDir)
             .redirectError(tempOutput)
             .redirectOutput(tempOutput)

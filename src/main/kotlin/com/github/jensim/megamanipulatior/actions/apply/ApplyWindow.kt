@@ -1,15 +1,16 @@
 package com.github.jensim.megamanipulatior.actions.apply
 
 import com.github.jensim.megamanipulatior.toolswindow.ToolWindowTab
+import com.github.jensim.megamanipulatior.ui.GeneralListCellRenderer.addCellRenderer
+import com.github.jensim.megamanipulatior.ui.uiOperation
 import com.intellij.openapi.fileEditor.FileDocumentManager
 import com.intellij.openapi.ui.DialogPanel
 import com.intellij.ui.components.JBList
 import com.intellij.ui.components.JBScrollPane
 import com.intellij.ui.components.JBTextArea
 import com.intellij.ui.layout.panel
+import java.awt.Color
 import javax.swing.JButton
-import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.launch
 
 object ApplyWindow : ToolWindowTab {
 
@@ -30,20 +31,28 @@ object ApplyWindow : ToolWindowTab {
 
     init {
         details.isEditable = false
-        button.addActionListener {
-            button.isEnabled = false
-            resultList.clearSelection()
-            resultList.setListData(emptyArray())
-            details.text = ""
-            try {
-                FileDocumentManager.getInstance().saveAllDocuments()
-            } catch (e: Exception) {
-                e.printStackTrace().toString()
+        resultList.addCellRenderer({
+            if (it.exitCode != 0) {
+                Color.ORANGE
+            } else {
+                null
             }
-            GlobalScope.launch {
+        }) { it.dir }
+        button.addActionListener {
+            uiOperation(title = "Applying changes") {
+                button.isEnabled = false
+                resultList.clearSelection()
+                resultList.setListData(emptyArray())
+                details.text = ""
+                try {
+                    FileDocumentManager.getInstance().saveAllDocuments()
+                } catch (e: Exception) {
+                    e.printStackTrace().toString()
+                }
                 val result = ApplyOperator.apply()
                 resultList.setListData(result.toTypedArray())
                 button.isEnabled = true
+
             }
         }
         resultList.addListSelectionListener {
@@ -54,7 +63,8 @@ object ApplyWindow : ToolWindowTab {
     }
 
     override fun refresh() {
-        // TODO("not implemented")
+        // not implemented
+        // Not needed?
     }
 
     override val index: Int = 2

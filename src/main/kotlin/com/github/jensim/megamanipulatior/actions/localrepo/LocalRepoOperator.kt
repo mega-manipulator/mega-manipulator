@@ -23,13 +23,27 @@ object LocalRepoOperator {
             .collect(Collectors.toList())
     }
 
+    fun getLocalRepos(): List<SearchResult> = getLocalRepoFiles().map {
+        SearchResult(
+            repo = it.name,
+            project = it.parentFile.name,
+            codeHostName = it.parentFile.parentFile.name,
+            searchHostName = it.parentFile.parentFile.parentFile.name
+        )
+    }
+
     fun getLocalRepositories(): List<Repository> = getLocalRepoFiles().map { gitDir ->
         FileRepositoryBuilder.create(gitDir)
     }
 
 
     fun getBranch(searchResult: SearchResult): String? {
-        val dir = File("${project.basePath}/clones/${searchResult.searchHostName}/${searchResult.codeHostName}/${searchResult.project}/${searchResult.repo}/.git")
+        val dir = File("${project.basePath}/clones/${searchResult.searchHostName}/${searchResult.codeHostName}/${searchResult.project}/${searchResult.repo}")
+        return getBranch(dir)
+    }
+
+    fun getBranch(repoDir: File): String? {
+        val dir = File(repoDir, ".git")
         return try {
             FileRepositoryBuilder().apply {
                 gitDir = dir

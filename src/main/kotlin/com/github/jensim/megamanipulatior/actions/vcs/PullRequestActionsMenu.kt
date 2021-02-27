@@ -1,8 +1,9 @@
 package com.github.jensim.megamanipulatior.actions.vcs
 
-import com.github.jensim.megamanipulatior.settings.SerializationHolder
+import com.github.jensim.megamanipulatior.actions.NotificationsOperator
 import com.github.jensim.megamanipulatior.ui.DialogGenerator.showConfirm
-import com.github.jensim.megamanipulatior.ui.uiProtectedOperation
+import com.github.jensim.megamanipulatior.ui.mapConcurrentWithProgress
+import com.intellij.notification.NotificationType
 import javax.swing.JMenuItem
 import javax.swing.JPopupMenu
 
@@ -16,46 +17,36 @@ class PullRequestActionsMenu(
 
     init {
         val declineMenuItem = JMenuItem("Decline PRs").apply {
-            addActionListener {
+            addActionListener { _ ->
                 showConfirm("Decline selected PRs", "No undo path available im afraid..\nDecline selected PRs?") {
-                    prProvider().forEach {
-                        // TODO
-                        uiProtectedOperation(onFailMsg = { "Failed declining pr\n${SerializationHolder.yamlObjectMapper.writeValueAsString(it)}" }, action = {
-                            PrRouter.closePr(it)
-                            println("Declined ${it.project} ${it.repo} ${it.title}")
-                        })
+                    prProvider().mapConcurrentWithProgress(title = "Declining prs", cancelable = true) { pullRequest ->
+                        PrRouter.closePr(pullRequest)
                     }
                 }
             }
         }
-        val alterMenuItem = JMenuItem("Alter PRs title and descripton").apply {
+        val alterMenuItem = JMenuItem("Alter PRs title and description").apply {
             addActionListener {
                 showConfirm("Not yet implemented", "Not yet implemented") {
-                    prProvider().forEach {
-                        // TODO
-                        println("Alter ${it.project} ${it.repo} ${it.title}")
-                    }
+                    // TODO
                 }
             }
         }
         val setReviewersMenuItem = JMenuItem("Update reviewers").apply {
             addActionListener {
                 showConfirm("Not yet implemented", "Not yet implemented") {
-                    prProvider().forEach {
-                        // TODO
-                        println("Update reviewers ${it.project} ${it.repo} ${it.title}")
-                    }
+                    // TODO
                 }
             }
         }
         val defaultReviewersMenuItem = JMenuItem("Add default reviewers").apply {
             addActionListener { _ ->
                 showConfirm("Not fully implemented", "Not fully implemented") {
-                    prProvider().forEach { pr ->
+                    prProvider().mapConcurrentWithProgress(title = "Add default reviewers", cancelable = true) { pr ->
                         val codeHostName = codeHostName
                         val searchHostName = searchHostName
                         if (codeHostName == null || searchHostName == null) {
-                            return@forEach
+                            return@mapConcurrentWithProgress
                         }
                         println("Add default reviewers ${pr.project} ${pr.repo} ${pr.title}")
                         val existingReviewers: List<String> = pr.reviewers.map { it.name }
@@ -64,10 +55,11 @@ class PullRequestActionsMenu(
                         val diffMissing = defaultReviewers - existingReviewers
                         if (diffMissing.isNotEmpty()) {
                             // TODO
-                            showConfirm(
-                                "Not yet implemented =)",
-                                "missing:\n${diffMissing.joinToString("\n") { "* $it" }}"
-                            ) {}
+                            NotificationsOperator.show(
+                                title = "Not yet implemented =)",
+                                body = "missing:\n${diffMissing.joinToString("\n") { "* $it" }}",
+                                type = NotificationType.WARNING
+                            )
                         }
                     }
                 }

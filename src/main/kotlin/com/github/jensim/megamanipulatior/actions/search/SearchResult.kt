@@ -5,4 +5,6 @@ data class SearchResult(
     val repo: String,
     val codeHostName: String,
     val searchHostName: String,
-)
+) {
+    fun asPathString(): String = "${searchHostName}/${codeHostName}/${project}/${repo}"
+}

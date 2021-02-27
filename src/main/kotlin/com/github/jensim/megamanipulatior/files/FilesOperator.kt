@@ -1,5 +1,10 @@
 package com.github.jensim.megamanipulatior.files
 
+import com.github.jensim.megamanipulatior.actions.NotificationsOperator
+import com.github.jensim.megamanipulatior.settings.ProjectOperator
+import com.intellij.notification.NotificationType
+import com.intellij.openapi.fileEditor.FileDocumentManager
+import java.io.File
 import java.net.JarURLConnection
 import java.net.URL
 import java.util.jar.JarEntry
@@ -11,8 +16,45 @@ object FilesOperator {
         val content: ByteArray,
     )
 
+    fun makeUpBaseFiles() {
+        try {
+            FileDocumentManager.getInstance().saveAllDocuments()
+        } catch (e: Exception) {
+        }
+        try {
+            findBaseFiles().forEach { baseFile ->
+                val file = File(ProjectOperator.project.basePath, baseFile.nameWithPath)
+                try {
+                    if (!file.exists()) {
+                        file.parentFile.mkdirs()
+                        file.createNewFile()
+                        file.writeBytes(baseFile.content)
+                        if (baseFile.nameWithPath.endsWith(".bash")) {
+                            file.setExecutable(true)
+                        }
+                    } else {
+                        println("file already exists ${file.path}")
+                    }
+                } catch (e: Exception) {
+                    NotificationsOperator.show(
+                        title = "Failed creating file",
+                        body = "${file.path}\n${e.stackTrace.joinToString("\n")}",
+                        type = NotificationType.WARNING
+                    )
+                    e.printStackTrace()
+                }
+            }
+        } catch (e: Exception) {
+            NotificationsOperator.show(
+                title = "Failed reading base files",
+                body = e.stackTrace.joinToString("\n"),
+                type = NotificationType.WARNING
+            )
+            e.printStackTrace()
+        }
+    }
 
-    fun findBaseFiles(): List<VirtFile> = findAllClasspathFiles("base-files")
+    private fun findBaseFiles(): List<VirtFile> = findAllClasspathFiles("base-files")
         .plus(VirtFile(".gitignore", "clones\n".toByteArray()))
 
     private fun findAllClasspathFiles(dir: String): List<VirtFile> {

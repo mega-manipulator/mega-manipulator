@@ -5,6 +5,7 @@ import com.github.jensim.megamanipulatior.actions.apply.ApplyWindow
 import com.github.jensim.megamanipulatior.actions.git.GitWindow
 import com.github.jensim.megamanipulatior.actions.search.SearchWindow
 import com.github.jensim.megamanipulatior.actions.vcs.PullRequestWindow
+import com.github.jensim.megamanipulatior.files.FilesOperator
 import com.github.jensim.megamanipulatior.settings.SettingsWindow
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.wm.ToolWindow
@@ -37,6 +38,7 @@ object MyToolWindowFactory : ToolWindowFactory {
             override fun selectionChanged(event: ContentManagerEvent) {
                 super.selectionChanged(event)
                 tabs.find { it.second.index == event.index }?.second?.refresh()
+                FilesOperator.makeUpBaseFiles()
             }
         })
 

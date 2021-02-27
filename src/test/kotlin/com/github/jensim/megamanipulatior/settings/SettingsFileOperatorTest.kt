@@ -10,7 +10,8 @@ internal class SettingsFileOperatorTest {
     fun serializeDeserialize() {
         // given
         val testData = MegaManipulatorSettings(
-            null,
+            forceSingleThreaded = false,
+            defaultHttpsOverride = null,
             searchHostSettings = mapOf(
                 "sg" to SearchHostSettingsWrapper(
                     type = SearchHostType.SOURCEGRAPH,
@@ -37,8 +38,8 @@ internal class SettingsFileOperatorTest {
         )
 
         // when
-        val yaml = SettingsFileOperator.objectMapper.writeValueAsString(testData)
-        val deserialized: MegaManipulatorSettings = SettingsFileOperator.objectMapper.readValue(yaml)
+        val yaml = SerializationHolder.yamlObjectMapper.writeValueAsString(testData)
+        val deserialized: MegaManipulatorSettings = SerializationHolder.yamlObjectMapper.readValue(yaml)
 
         // then
         assertEquals(deserialized, testData)
@@ -49,7 +50,8 @@ internal class SettingsFileOperatorTest {
     fun failIfTooFewEntries() {
         // given
         val testData = MegaManipulatorSettings(
-            null,
+            forceSingleThreaded = false,
+            defaultHttpsOverride = null,
             searchHostSettings = mapOf(
                 "sg" to SearchHostSettingsWrapper(
                     type = SearchHostType.SOURCEGRAPH,
@@ -64,8 +66,8 @@ internal class SettingsFileOperatorTest {
             ),
         )
         // when
-        val yaml = SettingsFileOperator.objectMapper.writeValueAsString(testData)
-        val deserialized: MegaManipulatorSettings = SettingsFileOperator.objectMapper.readValue(yaml)
+        val yaml = SerializationHolder.yamlObjectMapper.writeValueAsString(testData)
+        val deserialized: MegaManipulatorSettings = SerializationHolder.yamlObjectMapper.readValue(yaml)
 
         // then
         assertEquals(deserialized, testData)

@@ -4,24 +4,45 @@ import com.github.jensim.megamanipulatior.actions.ProcessOperator
 import com.github.jensim.megamanipulatior.actions.apply.ApplyOutput
 import com.github.jensim.megamanipulatior.actions.git.commit.CommitOperator
 import com.github.jensim.megamanipulatior.actions.localrepo.LocalRepoOperator
+import com.github.jensim.megamanipulatior.actions.localrepo.LocalRepoOperator.getLocalRepos
+import com.github.jensim.megamanipulatior.actions.vcs.PrRouter
 import com.github.jensim.megamanipulatior.settings.ProjectOperator.project
 import com.github.jensim.megamanipulatior.toolswindow.ToolWindowTab
 import com.github.jensim.megamanipulatior.ui.DialogGenerator
 import com.github.jensim.megamanipulatior.ui.GeneralListCellRenderer.addCellRenderer
+import com.github.jensim.megamanipulatior.ui.mapConcurrentWithProgress
+import com.github.jensim.megamanipulatior.ui.uiOperation
 import com.github.jensim.megamanipulatior.ui.uiProtectedOperation
 import com.intellij.ui.components.JBList
 import com.intellij.ui.components.JBScrollPane
 import com.intellij.ui.components.JBTextArea
+import com.intellij.ui.components.JBTextField
 import com.intellij.ui.layout.panel
+import java.awt.Color
 import java.io.File
 import java.util.concurrent.TimeUnit
 import javax.swing.JComponent
 import javax.swing.JOptionPane
+import javax.swing.JOptionPane.OK_CANCEL_OPTION
+import javax.swing.JOptionPane.OK_OPTION
+import javax.swing.JOptionPane.QUESTION_MESSAGE
 import javax.swing.ListSelectionModel
 
 object GitWindow : ToolWindowTab {
 
-    private val repoList = JBList<Pair<String, String>>()
+    private val prTitle = JBTextField()
+    private val prDescription = JBTextArea()
+    private val prPanel = panel {
+        row {
+            label("Title")
+            component(prTitle)
+        }
+        row {
+            label("Description")
+            component(prDescription)
+        }
+    }
+    private val repoList = JBList<Pair<String, ApplyOutput>>()
     private val scrollLeft = JBScrollPane(repoList)
     private val outComeInfo = JBTextArea()
     private val scrollRight = JBScrollPane(outComeInfo)
@@ -33,13 +54,13 @@ object GitWindow : ToolWindowTab {
                     refresh()
                 }
                 button("Set branch") {
-                    uiProtectedOperation(onFailMsg = { "Failed switching branches" }) {
+                    uiOperation(title = "Switching branches") {
                         val branch: String? = JOptionPane.showInputDialog("This will not reset the repos to origin/default-branch first!!\nSelect branch name")
                         if (branch == null || branch.isEmpty() || branch.contains(' ')) {
                             throw IllegalArgumentException("Invalid branch name")
                         }
                         LocalRepoOperator.getLocalRepoFiles().forEach { dir ->
-                            ProcessOperator.runCommand(dir, "git checkout -b $branch")
+                            ProcessOperator.runCommand(dir, arrayOf("git", "checkout", "-b", "$branch"))
                         }
                         refresh()
                     }
@@ -51,16 +72,24 @@ object GitWindow : ToolWindowTab {
                     repoList.setListData(CommitOperator.push().toList().toTypedArray())
                 }
                 button("Create PRs") {
-                    // TODO
-                    DialogGenerator.showConfirm("TODO", "Not yet implemented") {}
+                    uiOperation(title = "Creating PRs") {
+                        val response: Int = JOptionPane.showConfirmDialog(null, prPanel, "Define PR", OK_CANCEL_OPTION, QUESTION_MESSAGE)
+                        if (response == OK_OPTION) {
+                            getLocalRepos().mapConcurrentWithProgress(title = "Creating PRs", cancelable = true) {
+                                PrRouter.createPr(prTitle.text, prDescription.text, it)
+                            }
+                        }
+                    }
                 }
             }
             button("Clean away local repos") {
-                DialogGenerator.showConfirm("Are you sure?!", "This will remove the entire clones dir from disk, no recovery available!") {
+                DialogGenerator.showConfirm(title = "Are you sure?!", message = "This will remove the entire clones dir from disk, no recovery available!") {
                     val output: ApplyOutput = project.basePath?.let { dir ->
-                        ProcessOperator.runCommand(File(dir), "rm -rf clones")?.get(20, TimeUnit.SECONDS)
-                    } ?: ApplyOutput("....", "Unable to perform clean operation", "Unable to perform clean operation", 1)
-                    repoList.setListData(arrayOf(Pair("RM", output.getFullDescription())))
+                        uiProtectedOperation(title = "Remove all local clones") {
+                            ProcessOperator.runCommand(File(dir), arrayOf("rm", "-rf", "clones/*"))?.get(2, TimeUnit.MINUTES)
+                        }
+                    } ?: ApplyOutput(dir = ".", std = "Unable to perform clean operation", err = "Unable to perform clean operation", exitCode = 1)
+                    repoList.setListData(arrayOf(Pair("RM", output)))
                 }
             }
         }
@@ -71,23 +100,30 @@ object GitWindow : ToolWindowTab {
     }
 
     init {
-        repoList.addCellRenderer { it.first }
+        repoList.addCellRenderer({ (_, output) ->
+            if (output.exitCode != 0) {
+                Color.ORANGE
+            } else {
+                null
+            }
+        }) { it.first }
         repoList.selectionMode = ListSelectionModel.SINGLE_SELECTION
         repoList.addListSelectionListener {
             outComeInfo.text = ""
             repoList.selectedValuesList?.firstOrNull()?.let {
-                outComeInfo.text = it.second
+                outComeInfo.text = it.second.getFullDescription()
             }
         }
     }
 
     override fun refresh() {
-        uiProtectedOperation(onFailMsg = { "Failed listing branches" }) {
-            repoList.setListData(
-                LocalRepoOperator.getLocalRepoFiles()
-                    .map { Pair(it.path, ProcessOperator.runCommand(it, "git branch -v")?.get()?.getFullDescription() ?: "Failed") }
-                    .toTypedArray())
-        }
+        val result: List<Pair<String, ApplyOutput>> = LocalRepoOperator.getLocalRepoFiles().mapConcurrentWithProgress(
+            title = "Listing branches",
+            cancelable = true
+        ) {
+            ProcessOperator.runCommand(it, arrayOf("git", "branch", "-v"))?.get()
+        }.map { it.first.path to (it.second ?: ApplyOutput.dummy(dir = it.first.path, err = "Failed reading branch")) }
+        repoList.setListData(result.toTypedArray())
     }
 
     override val index: Int = 3
