@@ -7,23 +7,15 @@ import com.intellij.openapi.progress.ProgressIndicator
 import com.intellij.openapi.progress.ProgressManager
 import com.intellij.openapi.progress.Task
 import com.intellij.openapi.progress.impl.BackgroundableProcessIndicator
-import java.util.concurrent.Executors
-import kotlin.coroutines.CoroutineContext
 import kotlinx.coroutines.Deferred
-import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.Job
-import kotlinx.coroutines.asCoroutineDispatcher
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.cancel
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.sync.Semaphore
 import kotlinx.coroutines.withTimeout
 
-@ExperimentalCoroutinesApi
 inline fun <T> uiProtectedOperation(
     title: String,
     crossinline action: suspend () -> T
@@ -181,7 +173,7 @@ fun <T> Collection<T>.asyncWithProgress(
                         }
                     }
                 }
-                watchForCancellation(futures, indicator)
+                // TODO watchForCancellation(futures, indicator)
                 try {
                     futures.awaitAll()
                 } catch (e: Exception) {
@@ -192,26 +184,4 @@ fun <T> Collection<T>.asyncWithProgress(
     }
     val indicator = BackgroundableProcessIndicator(task)
     ProgressManager.getInstance().runProcessWithProgressAsynchronously(task, indicator)
-}
-
-private val watchContext: CoroutineContext = Executors.newSingleThreadExecutor().asCoroutineDispatcher()
-fun watchForCancellation(futures: List<Job?>, indicator: ProgressIndicator) {
-    GlobalScope.launch(context = watchContext) {
-        try {
-            while (indicator?.isRunning == true) {
-                delay(500)
-                if (indicator?.isRunning == true && indicator?.isCanceled == true) {
-                    futures?.forEach { future ->
-                        try {
-                            future?.cancel("User cancelled operation")
-                        } catch (e: Exception) {
-                            e.printStackTrace()
-                        }
-                    }
-                }
-            }
-        } catch (e: Exception) {
-            e.printStackTrace()
-        }
-    }
 }
