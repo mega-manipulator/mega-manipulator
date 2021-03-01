@@ -14,9 +14,6 @@ import io.ktor.client.HttpClient
 import io.ktor.client.request.get
 import io.ktor.client.request.post
 import java.io.File
-import java.time.Duration
-import kotlinx.coroutines.runBlocking
-import kotlinx.coroutines.time.withTimeout
 
 object BitbucketPrReceiver : PrReceiver<BitBucketSettings> {
 
@@ -25,11 +22,10 @@ object BitbucketPrReceiver : PrReceiver<BitBucketSettings> {
             .displayId
     }
 
-    override fun getDefaultReviewers(settings: BitBucketSettings, pullRequest: PullRequest): List<String> {
+    override suspend fun getDefaultReviewers(settings: BitBucketSettings, pullRequest: PullRequest): List<String> {
         val client: HttpClient = HttpClientProvider.getClient(pullRequest.searchHostName, pullRequest.codeHostName, settings)
-        return runBlocking {
-            client.get<List<BitBucketUser>>("${settings.baseUrl}/rest/default-reviewers/1.0/projects/${pullRequest.project}/repos/${pullRequest.repo}/reviewers?sourceRepoId=${pullRequest.repoId}&targetRepoId=${pullRequest.repoId}&sourceRefId=${pullRequest.branchFrom.branchName}&targetRefId=${pullRequest.branchTo.branchName}")
-        }.map { it.name }
+        return client.get<List<BitBucketUser>>("${settings.baseUrl}/rest/default-reviewers/1.0/projects/${pullRequest.project}/repos/${pullRequest.repo}/reviewers?sourceRepoId=${pullRequest.repoId}&targetRepoId=${pullRequest.repoId}&sourceRefId=${pullRequest.branchFrom.branchName}&targetRefId=${pullRequest.branchTo.branchName}")
+            .map { it.name }
     }
 
     private suspend fun getDefaultReviewers(client: HttpClient, settings: BitBucketSettings, repo: SearchResult, fromBranchRef: String, toBranchRef: String): List<String> {
@@ -42,40 +38,40 @@ object BitbucketPrReceiver : PrReceiver<BitBucketSettings> {
         return client.get("${settings.baseUrl}/rest/api/1.0/projects/${repo.project}/repos/${repo.repo}")
     }
 
-    override fun getPr(searchHostName: String, codeHostName: String, settings: BitBucketSettings, repo: SearchResult): PullRequest? = TODO("Not yet implemented")
-    override fun getPr(settings: BitBucketSettings, pullRequest: PullRequest): PullRequest? = TODO("Not yet implemented")
+    override suspend fun getPr(searchHostName: String, codeHostName: String, settings: BitBucketSettings, repo: SearchResult): PullRequest? = TODO("Not yet implemented")
+    override suspend fun getPr(settings: BitBucketSettings, pullRequest: PullRequest): PullRequest? = TODO("Not yet implemented")
 
-    override fun createPr(title: String, description: String, settings: BitBucketSettings, repo: SearchResult): PullRequest? {
+    override suspend fun createPr(title: String, description: String, settings: BitBucketSettings, repo: SearchResult): PullRequest? {
         val client: HttpClient = HttpClientProvider.getClient(repo.searchHostName, repo.codeHostName, settings)
-        val pr: BitBucketDashboardPullRequest = runBlocking {
-            val defaultBranch = client
-                .get<BitBucketDefaultBranch>("${settings.baseUrl}/rest/api/1.0/projects/${repo.project}/repos/${repo.repo}/default-branch")
-                .id
-            val localBranch: String = LocalRepoOperator.getBranch(repo)!!
-            val reviewers = getDefaultReviewers(client, settings, repo, localBranch, defaultBranch)
-                .map { BitBucketPrReviewer(BitBucketPrUser(name = it)) }
-            client.post("${settings.baseUrl}/rest/api/1.0/projects/${repo.project}/repos/${repo.repo}/pull-requests") {
-                body = BitBucketPullRequestRequest(
-                    title = "TODO",
-                    description = "TODO",
-                    fromRef = BitBucketPrBranchRef(
-                        id = localBranch,
-                        repository = BitBucketPrRepo(
-                            slug = repo.repo,
-                            project = BitBucketProject(key = repo.project)
-                        )
-                    ),
-                    toRef = BitBucketPrBranchRef(
-                        id = defaultBranch,
-                        repository = BitBucketPrRepo(
-                            slug = repo.repo,
-                            project = BitBucketProject(key = repo.project)
-                        )
-                    ),
-                    reviewers = reviewers,
-                )
-            }
+
+        val defaultBranch = client
+            .get<BitBucketDefaultBranch>("${settings.baseUrl}/rest/api/1.0/projects/${repo.project}/repos/${repo.repo}/default-branch")
+            .id
+        val localBranch: String = LocalRepoOperator.getBranch(repo)!!
+        val reviewers = getDefaultReviewers(client, settings, repo, localBranch, defaultBranch)
+            .map { BitBucketPrReviewer(BitBucketPrUser(name = it)) }
+        val pr: BitBucketDashboardPullRequest = client.post("${settings.baseUrl}/rest/api/1.0/projects/${repo.project}/repos/${repo.repo}/pull-requests") {
+            body = BitBucketPullRequestRequest(
+                title = "TODO",
+                description = "TODO",
+                fromRef = BitBucketPrBranchRef(
+                    id = localBranch,
+                    repository = BitBucketPrRepo(
+                        slug = repo.repo,
+                        project = BitBucketProject(key = repo.project)
+                    )
+                ),
+                toRef = BitBucketPrBranchRef(
+                    id = defaultBranch,
+                    repository = BitBucketPrRepo(
+                        slug = repo.repo,
+                        project = BitBucketProject(key = repo.project)
+                    )
+                ),
+                reviewers = reviewers,
+            )
         }
+
         return PullRequest(
             id = "${pr.id}",
             version = "${pr.version}",
@@ -105,18 +101,15 @@ object BitbucketPrReceiver : PrReceiver<BitBucketSettings> {
         )
     }
 
-    override fun updatePr(settings: BitBucketSettings, pullRequest: PullRequest): PullRequest? = TODO("Not yet implemented")
+    override suspend fun updatePr(settings: BitBucketSettings, pullRequest: PullRequest): PullRequest? = TODO("Not yet implemented")
 
-    override fun getAllPrs(searchHostName: String, codeHostName: String, settings: BitBucketSettings): List<PullRequest> {
+    override suspend fun getAllPrs(searchHostName: String, codeHostName: String, settings: BitBucketSettings): List<PullRequest> {
         val client: HttpClient = HttpClientProvider.getClient(searchHostName, codeHostName, settings)
         val collector = ArrayList<PullRequest>()
         var start = 0L
         while (true) {
-            val response: BitBucketDashboardPullRequestResponse = runBlocking {
-                withTimeout(Duration.ofMinutes(2)) {
-                    client.get("${settings.baseUrl}/rest/api/1.0/dashboard/pull-requests?state=OPEN&role=AUTHOR&start=$start&limit=100")
-                }
-            }
+            val response: BitBucketDashboardPullRequestResponse = client
+                .get("${settings.baseUrl}/rest/api/1.0/dashboard/pull-requests?state=OPEN&role=AUTHOR&start=$start&limit=100")
             collector.addAll(
                 response.values.map {
                     PullRequest(
@@ -161,22 +154,20 @@ object BitbucketPrReceiver : PrReceiver<BitBucketSettings> {
         TODO("not implemented")
     }
 
-    override fun closePr(settings: BitBucketSettings, pullRequest: PullRequest): PullRequest {
+    override suspend fun closePr(settings: BitBucketSettings, pullRequest: PullRequest): PullRequest {
         val client = HttpClientProvider.getClient(pullRequest.searchHostName, pullRequest.codeHostName, settings)
-        runBlocking {
-            try {
-                val urlString = "${settings.baseUrl}/rest/api/1.0/projects/${pullRequest.project}/repos/${pullRequest.repo}/pull-requests/${pullRequest.id}/decline?version=${pullRequest.version}"
-                client.post<Unit>(urlString) {
-                    body = emptyMap<String, String>()
-                }
-            } catch (e: Exception) {
-                e.printStackTrace()
-                NotificationsOperator.show(
-                    title = "Failed declining PR",
-                    body = "${e.message}",
-                    type = NotificationType.ERROR
-                )
+        try {
+            val urlString = "${settings.baseUrl}/rest/api/1.0/projects/${pullRequest.project}/repos/${pullRequest.repo}/pull-requests/${pullRequest.id}/decline?version=${pullRequest.version}"
+            client.post<Unit>(urlString) {
+                body = emptyMap<String, String>()
             }
+        } catch (e: Exception) {
+            e.printStackTrace()
+            NotificationsOperator.show(
+                title = "Failed declining PR",
+                body = "${e.message}",
+                type = NotificationType.ERROR
+            )
         }
         return pullRequest
     }

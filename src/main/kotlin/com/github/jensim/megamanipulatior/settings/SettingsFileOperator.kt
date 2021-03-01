@@ -4,9 +4,7 @@ import com.fasterxml.jackson.module.kotlin.readValue
 import com.github.jensim.megamanipulatior.actions.NotificationsOperator
 import com.github.jensim.megamanipulatior.settings.ProjectOperator.project
 import com.github.jensim.megamanipulatior.settings.SerializationHolder.yamlObjectMapper
-import com.github.jensim.megamanipulatior.ui.uiOperation
-import com.intellij.notification.NotificationDisplayType
-import com.intellij.notification.NotificationGroup
+import com.github.jensim.megamanipulatior.ui.uiProtectedOperation
 import com.intellij.notification.NotificationType.WARNING
 import com.intellij.openapi.fileEditor.FileDocumentManager
 import java.io.File
@@ -16,7 +14,6 @@ import kotlin.text.Charsets.UTF_8
 
 object SettingsFileOperator {
 
-    private val NOTIFICATION_GROUP = NotificationGroup("SettingsFileOperator", NotificationDisplayType.BALLOON, true)
     private const val settingsFileName = "mega-manipulator.yml"
     private const val scriptFileName = "mega-manipulator.bash"
 
@@ -45,11 +42,12 @@ ${yamlObjectMapper.writeValueAsString(dummy())}
         if (System.currentTimeMillis() - lastPeek.get() < 250) {
             return bufferedSettings.get()
         }
-        uiOperation("Syncing settings") {
+        uiProtectedOperation("Syncing settings") {
             try {
                 try {
                     FileDocumentManager.getInstance().saveAllDocuments()
                 } catch (e: Exception) {
+                    e.printStackTrace()
                 }
                 if (!settingsFile.exists()) {
                     println("Creating settings file")

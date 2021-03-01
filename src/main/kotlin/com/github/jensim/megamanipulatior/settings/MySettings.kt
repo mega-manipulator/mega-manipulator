@@ -14,7 +14,7 @@ enum class AuthMethod {
 }
 
 data class MegaManipulatorSettings(
-    val forceSingleThreaded: Boolean = false,
+    val concurrency: Int = 5,
     val defaultHttpsOverride: HttpsOverride?,
     val searchHostSettings: Map<String, SearchHostSettingsWrapper>,
 ) {

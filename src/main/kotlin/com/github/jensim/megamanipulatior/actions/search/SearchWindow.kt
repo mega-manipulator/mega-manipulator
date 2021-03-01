@@ -3,6 +3,7 @@ package com.github.jensim.megamanipulatior.actions.search
 import com.github.jensim.megamanipulatior.actions.git.clone.CloneOperator
 import com.github.jensim.megamanipulatior.settings.SettingsFileOperator
 import com.github.jensim.megamanipulatior.toolswindow.ToolWindowTab
+import com.github.jensim.megamanipulatior.ui.uiProtectedOperation
 import com.intellij.openapi.ui.ComboBox
 import com.intellij.ui.components.JBList
 import com.intellij.ui.components.JBScrollPane
@@ -53,7 +54,9 @@ object SearchWindow : ToolWindowTab {
             cloneButton.isEnabled = false
             selector.setListData(emptyArray())
             val result: Array<SearchResult> = searchHostSelect.selectedItem?.let { searchHostName ->
-                SearchOperator.search(searchHostName as String, searchField.text)
+                uiProtectedOperation("Seraching") {
+                    SearchOperator.search(searchHostName as String, searchField.text)
+                }
             }.orEmpty().toTypedArray()
             selector.setListData(result)
             searchButton.isEnabled = true

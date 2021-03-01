@@ -50,11 +50,6 @@ object PasswordsOperator {
         return password
     }
 
-    fun getOrAskForPassword(username: String, baseUrl: String): String {
-        return getPassword(username, baseUrl)
-            ?: promptForPassword(username, baseUrl)
-    }
-
     fun isPasswordSet(username: String, baseUrl: String): Boolean = getPassword(username, baseUrl) != null
 
     fun deletePasswords(username: String, baseUrl: String) {
@@ -67,7 +62,7 @@ object PasswordsOperator {
         }
     }
 
-    private fun getPassword(username: String, baseUrl: String): String? {
+    fun getPassword(username: String, baseUrl: String): String? {
         val username = "${serviceUsername}___${username}___${baseUrl}"
         val credentialAttributes: CredentialAttributes? = createCredentialAttributes(service, username)
         return if (credentialAttributes == null) {

@@ -5,40 +5,32 @@ import com.github.jensim.megamanipulatior.actions.ProcessOperator
 import com.github.jensim.megamanipulatior.actions.search.SearchResult
 import com.github.jensim.megamanipulatior.settings.ProjectOperator
 import com.github.jensim.megamanipulatior.settings.SettingsFileOperator
-import com.github.jensim.megamanipulatior.ui.SingleThreadContext
 import com.github.jensim.megamanipulatior.ui.mapConcurrentWithProgress
 import com.intellij.notification.NotificationType
 import com.intellij.notification.NotificationType.WARNING
 import java.io.File
-import kotlin.coroutines.CoroutineContext
-import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.future.asDeferred
 
 object CloneOperator {
 
     fun clone(branch: String, repos: Set<SearchResult>) {
 
         val settings = SettingsFileOperator.readSettings()!!
-        val context: CoroutineContext = if (settings.forceSingleThreaded) {
-            SingleThreadContext
-        } else {
-            Dispatchers.Default
-        }
         val basePath = ProjectOperator.project.basePath
         val noConf = mutableListOf<SearchResult>()
-        repos.mapConcurrentWithProgress(title = "Cloning repos", coroutineContext = context, cancelable = true) { repo ->
+        repos.mapConcurrentWithProgress(title = "Cloning repos") { repo ->
             settings.resolveSettings(repo.searchHostName, repo.codeHostName)?.let { (_, codeHostSettings) ->
                 val cloneUrl = codeHostSettings.cloneUrl(repo.project, repo.repo)
                 val dir = File(basePath, "clones/${repo.asPathString()}")
                 dir.mkdirs()
                 if (File(dir, ".git").exists()) {
-                    // TODO
                     NotificationsOperator.show(
                         title = "Repo already cloned",
                         body = "Repo ${repo.asPathString()} already cloned.\nWill not do anything.",
                         type = WARNING
                     )
                 } else {
-                    val p1 = ProcessOperator.runCommand(dir.parentFile, arrayOf("git", "clone", cloneUrl))?.get()
+                    val p1 = ProcessOperator.runCommand(dir.parentFile, arrayOf("git", "clone", cloneUrl))?.asDeferred()?.await()
                     if (p1?.exitCode != 0) {
                         NotificationsOperator.show(
                             "Clone failed",
@@ -46,7 +38,7 @@ object CloneOperator {
                             NotificationType.ERROR
                         )
                     } else {
-                        val p2 = ProcessOperator.runCommand(dir, arrayOf("git", "checkout", "-b", branch))?.get()
+                        val p2 = ProcessOperator.runCommand(dir, arrayOf("git", "checkout", "-b", branch))?.asDeferred()?.await()
                         if (p2?.exitCode != 0) {
                             NotificationsOperator.show(
                                 "Branch switch failed",

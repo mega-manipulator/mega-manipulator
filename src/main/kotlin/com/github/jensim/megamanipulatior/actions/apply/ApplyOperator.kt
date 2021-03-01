@@ -5,27 +5,19 @@ import com.github.jensim.megamanipulatior.actions.localrepo.LocalRepoOperator
 import com.github.jensim.megamanipulatior.settings.SettingsFileOperator
 import com.github.jensim.megamanipulatior.ui.mapConcurrentWithProgress
 import java.io.File
-import kotlin.coroutines.CoroutineContext
-import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.future.asDeferred
 
 object ApplyOperator {
-
     fun apply(): List<ApplyOutput> {
         if (!SettingsFileOperator.scriptFile.exists()) {
             return emptyList()
         }
         val gitDirs: List<File> = LocalRepoOperator.getLocalRepoFiles()
 
-        val dispatcher: CoroutineContext = if (SettingsFileOperator.readSettings()?.forceSingleThreaded == true) {
-            Dispatchers.Main
-        } else {
-            Dispatchers.Default
-        }
         val scriptPath = SettingsFileOperator.scriptFile.absolutePath
-        return gitDirs.mapConcurrentWithProgress(title = "Applying changes from script file", coroutineContext = dispatcher, cancelable = true) { dir ->
-            ProcessOperator.runCommand(dir, arrayOf("/bin/bash", scriptPath))?.get() ?: ApplyOutput.dummy(dir = dir.path)
-        }.map { (dir, output) ->
-            output ?: ApplyOutput.dummy(dir.path)
-        }
+        val settings = SettingsFileOperator.readSettings()!!
+        return gitDirs.mapConcurrentWithProgress(title = "Applying changes from script file", concurrent = settings.concurrency) { dir ->
+            ProcessOperator.runCommand(dir, arrayOf("/bin/bash", scriptPath))?.asDeferred()?.await()
+        }.map { (dir, out) -> out ?: ApplyOutput.dummy(dir.path) }
     }
 }

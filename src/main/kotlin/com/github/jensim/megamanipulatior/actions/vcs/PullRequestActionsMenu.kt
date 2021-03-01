@@ -19,7 +19,7 @@ class PullRequestActionsMenu(
         val declineMenuItem = JMenuItem("Decline PRs").apply {
             addActionListener { _ ->
                 showConfirm("Decline selected PRs", "No undo path available im afraid..\nDecline selected PRs?") {
-                    prProvider().mapConcurrentWithProgress(title = "Declining prs", cancelable = true) { pullRequest ->
+                    prProvider().mapConcurrentWithProgress(title = "Declining prs") { pullRequest ->
                         PrRouter.closePr(pullRequest)
                     }
                 }
@@ -42,7 +42,7 @@ class PullRequestActionsMenu(
         val defaultReviewersMenuItem = JMenuItem("Add default reviewers").apply {
             addActionListener { _ ->
                 showConfirm("Not fully implemented", "Not fully implemented") {
-                    prProvider().mapConcurrentWithProgress(title = "Add default reviewers", cancelable = true) { pr ->
+                    prProvider().mapConcurrentWithProgress(title = "Add default reviewers") { pr ->
                         val codeHostName = codeHostName
                         val searchHostName = searchHostName
                         if (codeHostName == null || searchHostName == null) {

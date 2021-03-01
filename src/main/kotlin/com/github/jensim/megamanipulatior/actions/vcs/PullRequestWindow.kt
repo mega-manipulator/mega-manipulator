@@ -4,6 +4,7 @@ import com.github.jensim.megamanipulatior.settings.SerializationHolder
 import com.github.jensim.megamanipulatior.settings.SettingsFileOperator
 import com.github.jensim.megamanipulatior.toolswindow.ToolWindowTab
 import com.github.jensim.megamanipulatior.ui.GeneralListCellRenderer.addCellRenderer
+import com.github.jensim.megamanipulatior.ui.uiProtectedOperation
 import com.intellij.openapi.ui.ComboBox
 import com.intellij.ui.components.JBList
 import com.intellij.ui.components.JBScrollPane
@@ -88,9 +89,10 @@ object PullRequestWindow : ToolWindowTab {
     private fun fetchPRs() {
         prList.setListData(emptyArray())
         (codeHostSelect.selectedItem as CodeHostSelect?)?.let { selected ->
-            PrRouter.getAllPrs(selected.searchHostName, selected.codeHostName)?.let {
-                prList.setListData(it.toTypedArray())
+            val prs: List<PullRequest>? = uiProtectedOperation("Fetching PRs") {
+                PrRouter.getAllPrs(selected.searchHostName, selected.codeHostName)
             }
+            prList.setListData(prs?.toTypedArray())
         }
     }
 }

@@ -10,7 +10,6 @@ internal class SettingsFileOperatorTest {
     fun serializeDeserialize() {
         // given
         val testData = MegaManipulatorSettings(
-            forceSingleThreaded = false,
             defaultHttpsOverride = null,
             searchHostSettings = mapOf(
                 "sg" to SearchHostSettingsWrapper(
@@ -50,7 +49,6 @@ internal class SettingsFileOperatorTest {
     fun failIfTooFewEntries() {
         // given
         val testData = MegaManipulatorSettings(
-            forceSingleThreaded = false,
             defaultHttpsOverride = null,
             searchHostSettings = mapOf(
                 "sg" to SearchHostSettingsWrapper(

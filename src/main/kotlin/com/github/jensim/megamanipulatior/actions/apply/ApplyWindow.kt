@@ -2,7 +2,7 @@ package com.github.jensim.megamanipulatior.actions.apply
 
 import com.github.jensim.megamanipulatior.toolswindow.ToolWindowTab
 import com.github.jensim.megamanipulatior.ui.GeneralListCellRenderer.addCellRenderer
-import com.github.jensim.megamanipulatior.ui.uiOperation
+import com.github.jensim.megamanipulatior.ui.uiProtectedOperation
 import com.intellij.openapi.fileEditor.FileDocumentManager
 import com.intellij.openapi.ui.DialogPanel
 import com.intellij.ui.components.JBList
@@ -39,7 +39,7 @@ object ApplyWindow : ToolWindowTab {
             }
         }) { it.dir }
         button.addActionListener {
-            uiOperation(title = "Applying changes") {
+            uiProtectedOperation(title = "Applying changes") {
                 button.isEnabled = false
                 resultList.clearSelection()
                 resultList.setListData(emptyArray())

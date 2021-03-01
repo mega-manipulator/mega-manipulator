@@ -11,7 +11,6 @@ import com.github.jensim.megamanipulatior.toolswindow.ToolWindowTab
 import com.github.jensim.megamanipulatior.ui.DialogGenerator
 import com.github.jensim.megamanipulatior.ui.GeneralListCellRenderer.addCellRenderer
 import com.github.jensim.megamanipulatior.ui.mapConcurrentWithProgress
-import com.github.jensim.megamanipulatior.ui.uiOperation
 import com.github.jensim.megamanipulatior.ui.uiProtectedOperation
 import com.intellij.ui.components.JBList
 import com.intellij.ui.components.JBScrollPane
@@ -20,13 +19,13 @@ import com.intellij.ui.components.JBTextField
 import com.intellij.ui.layout.panel
 import java.awt.Color
 import java.io.File
-import java.util.concurrent.TimeUnit
 import javax.swing.JComponent
 import javax.swing.JOptionPane
 import javax.swing.JOptionPane.OK_CANCEL_OPTION
 import javax.swing.JOptionPane.OK_OPTION
 import javax.swing.JOptionPane.QUESTION_MESSAGE
 import javax.swing.ListSelectionModel
+import kotlinx.coroutines.future.asDeferred
 
 object GitWindow : ToolWindowTab {
 
@@ -54,12 +53,12 @@ object GitWindow : ToolWindowTab {
                     refresh()
                 }
                 button("Set branch") {
-                    uiOperation(title = "Switching branches") {
+                    uiProtectedOperation(title = "Switching branches") {
                         val branch: String? = JOptionPane.showInputDialog("This will not reset the repos to origin/default-branch first!!\nSelect branch name")
                         if (branch == null || branch.isEmpty() || branch.contains(' ')) {
                             throw IllegalArgumentException("Invalid branch name")
                         }
-                        LocalRepoOperator.getLocalRepoFiles().forEach { dir ->
+                        LocalRepoOperator.getLocalRepoFiles().mapConcurrentWithProgress("Che") { dir ->
                             ProcessOperator.runCommand(dir, arrayOf("git", "checkout", "-b", "$branch"))
                         }
                         refresh()
@@ -72,10 +71,10 @@ object GitWindow : ToolWindowTab {
                     repoList.setListData(CommitOperator.push().toList().toTypedArray())
                 }
                 button("Create PRs") {
-                    uiOperation(title = "Creating PRs") {
+                    uiProtectedOperation(title = "Creating PRs") {
                         val response: Int = JOptionPane.showConfirmDialog(null, prPanel, "Define PR", OK_CANCEL_OPTION, QUESTION_MESSAGE)
                         if (response == OK_OPTION) {
-                            getLocalRepos().mapConcurrentWithProgress(title = "Creating PRs", cancelable = true) {
+                            getLocalRepos().mapConcurrentWithProgress(title = "Creating PRs") {
                                 PrRouter.createPr(prTitle.text, prDescription.text, it)
                             }
                         }
@@ -86,7 +85,7 @@ object GitWindow : ToolWindowTab {
                 DialogGenerator.showConfirm(title = "Are you sure?!", message = "This will remove the entire clones dir from disk, no recovery available!") {
                     val output: ApplyOutput = project.basePath?.let { dir ->
                         uiProtectedOperation(title = "Remove all local clones") {
-                            ProcessOperator.runCommand(File(dir), arrayOf("rm", "-rf", "clones/*"))?.get(2, TimeUnit.MINUTES)
+                            ProcessOperator.runCommand(File(dir), arrayOf("rm", "-rf", "clones/*"))?.asDeferred()?.await()
                         }
                     } ?: ApplyOutput(dir = ".", std = "Unable to perform clean operation", err = "Unable to perform clean operation", exitCode = 1)
                     repoList.setListData(arrayOf(Pair("RM", output)))
@@ -118,10 +117,9 @@ object GitWindow : ToolWindowTab {
 
     override fun refresh() {
         val result: List<Pair<String, ApplyOutput>> = LocalRepoOperator.getLocalRepoFiles().mapConcurrentWithProgress(
-            title = "Listing branches",
-            cancelable = true
+            title = "Listing branches"
         ) {
-            ProcessOperator.runCommand(it, arrayOf("git", "branch", "-v"))?.get()
+            ProcessOperator.runCommand(it, arrayOf("git", "branch", "-v"))?.asDeferred()?.await()
         }.map { it.first.path to (it.second ?: ApplyOutput.dummy(dir = it.first.path, err = "Failed reading branch")) }
         repoList.setListData(result.toTypedArray())
     }

@@ -6,7 +6,7 @@ import com.github.jensim.megamanipulatior.actions.localrepo.LocalRepoOperator
 import com.github.jensim.megamanipulatior.ui.DialogGenerator
 import com.github.jensim.megamanipulatior.ui.mapConcurrentWithProgress
 import java.io.File
-import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.future.asDeferred
 
 object CommitOperator {
 
@@ -29,12 +29,12 @@ object CommitOperator {
                     workTitle += " & pushing"
                 }
                 val dirs = LocalRepoOperator.getLocalRepoFiles()
-                dirs.mapConcurrentWithProgress(title = workTitle, coroutineContext = Dispatchers.Default, cancelable = true) { dir: File ->
-                    result["commit_${dir.path}"] = ProcessOperator.runCommand(dir, arrayOf("git", "commit", "-m", commitMessage))?.get()
+                dirs.mapConcurrentWithProgress(title = workTitle) { dir: File ->
+                    result["commit_${dir.path}"] = ProcessOperator.runCommand(dir, arrayOf("git", "commit", "-m", commitMessage))?.asDeferred()?.await()
                         ?: ApplyOutput.dummy(dir = dir.path)
                     if (push) {
                         result["push_${dir.path}"] = LocalRepoOperator.getBranch(dir)?.let { branch ->
-                            ProcessOperator.runCommand(dir, arrayOf("git", "push", "--set-upstream", "origin", branch))?.get()
+                            ProcessOperator.runCommand(dir, arrayOf("git", "push", "--set-upstream", "origin", branch))?.asDeferred()?.await()
                         } ?: ApplyOutput.dummy(dir = dir.path)
                     }
                 }
@@ -53,9 +53,9 @@ object CommitOperator {
         val result = HashMap<String, ApplyOutput>()
         DialogGenerator.showConfirm("Push", "Push local commits to origin") {
             val dirs = LocalRepoOperator.getLocalRepoFiles()
-            dirs.mapConcurrentWithProgress("Pushing", coroutineContext = Dispatchers.Default, cancelable = true) { dir ->
+            dirs.mapConcurrentWithProgress("Pushing") { dir ->
                 result["push_${dir.path}"] = LocalRepoOperator.getBranch(dir)?.let { branch ->
-                    ProcessOperator.runCommand(dir, arrayOf("git", "push", "--set-upstream", "origin", branch))?.get()
+                    ProcessOperator.runCommand(dir, arrayOf("git", "push", "--set-upstream", "origin", branch))?.asDeferred()?.await()
                 } ?: ApplyOutput.dummy(dir = dir.path)
             }
         }
