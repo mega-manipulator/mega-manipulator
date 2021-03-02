@@ -9,7 +9,6 @@ import com.github.jensim.megamanipulatior.ui.mapConcurrentWithProgress
 import com.intellij.notification.NotificationType
 import com.intellij.notification.NotificationType.WARNING
 import java.io.File
-import kotlinx.coroutines.future.asDeferred
 
 object CloneOperator {
 
@@ -18,7 +17,11 @@ object CloneOperator {
         val settings = SettingsFileOperator.readSettings()!!
         val basePath = ProjectOperator.project.basePath
         val noConf = mutableListOf<SearchResult>()
-        repos.mapConcurrentWithProgress(title = "Cloning repos") { repo ->
+        repos.mapConcurrentWithProgress(
+            title = "Cloning repos",
+            extraText1 = "Cloning repos",
+            extraText2 = { it.asPathString() }
+        ) { repo ->
             settings.resolveSettings(repo.searchHostName, repo.codeHostName)?.let { (_, codeHostSettings) ->
                 val cloneUrl = codeHostSettings.cloneUrl(repo.project, repo.repo)
                 val dir = File(basePath, "clones/${repo.asPathString()}")
@@ -30,19 +33,19 @@ object CloneOperator {
                         type = WARNING
                     )
                 } else {
-                    val p1 = ProcessOperator.runCommand(dir.parentFile, arrayOf("git", "clone", cloneUrl))?.asDeferred()?.await()
-                    if (p1?.exitCode != 0) {
+                    val p1 = ProcessOperator.runCommandAsync(dir.parentFile, arrayOf("git", "clone", cloneUrl)).await()
+                    if (p1.exitCode != 0) {
                         NotificationsOperator.show(
                             "Clone failed",
-                            "Clone in dir ${p1?.dir} failed with code ${p1?.exitCode} and output ${p1?.std}",
+                            "Clone in dir ${p1.dir} failed with code ${p1.exitCode} and output ${p1.std}",
                             NotificationType.ERROR
                         )
                     } else {
-                        val p2 = ProcessOperator.runCommand(dir, arrayOf("git", "checkout", "-b", branch))?.asDeferred()?.await()
-                        if (p2?.exitCode != 0) {
+                        val p2 = ProcessOperator.runCommandAsync(dir, arrayOf("git", "checkout", "-b", branch)).await()
+                        if (p2.exitCode != 0) {
                             NotificationsOperator.show(
                                 "Branch switch failed",
-                                "Branch switch in dir ${p2?.dir} failed with code ${p2?.exitCode} and output ${p2?.std}",
+                                "Branch switch in dir ${p2.dir} failed with code ${p2.exitCode} and output ${p2.std}",
                                 NotificationType.ERROR
                             )
                         }

@@ -1,5 +1,6 @@
 package com.github.jensim.megamanipulatior.actions.apply
 
+import com.github.jensim.megamanipulatior.settings.ProjectOperator.project
 import com.github.jensim.megamanipulatior.toolswindow.ToolWindowTab
 import com.github.jensim.megamanipulatior.ui.GeneralListCellRenderer.addCellRenderer
 import com.github.jensim.megamanipulatior.ui.uiProtectedOperation
@@ -10,6 +11,7 @@ import com.intellij.ui.components.JBScrollPane
 import com.intellij.ui.components.JBTextArea
 import com.intellij.ui.layout.panel
 import java.awt.Color
+import java.io.File
 import javax.swing.JButton
 
 object ApplyWindow : ToolWindowTab {
@@ -63,8 +65,7 @@ object ApplyWindow : ToolWindowTab {
     }
 
     override fun refresh() {
-        // not implemented
-        // Not needed?
+        button.isEnabled = project.basePath?.let { File(it) }?.list()?.isNotEmpty() == true
     }
 
     override val index: Int = 2

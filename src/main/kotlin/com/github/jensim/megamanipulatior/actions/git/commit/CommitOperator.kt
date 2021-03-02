@@ -6,7 +6,6 @@ import com.github.jensim.megamanipulatior.actions.localrepo.LocalRepoOperator
 import com.github.jensim.megamanipulatior.ui.DialogGenerator
 import com.github.jensim.megamanipulatior.ui.mapConcurrentWithProgress
 import java.io.File
-import kotlinx.coroutines.future.asDeferred
 
 object CommitOperator {
 
@@ -30,11 +29,11 @@ object CommitOperator {
                 }
                 val dirs = LocalRepoOperator.getLocalRepoFiles()
                 dirs.mapConcurrentWithProgress(title = workTitle) { dir: File ->
-                    result["commit_${dir.path}"] = ProcessOperator.runCommand(dir, arrayOf("git", "commit", "-m", commitMessage))?.asDeferred()?.await()
+                    result["commit_${dir.path}"] = ProcessOperator.runCommandAsync(dir, arrayOf("git", "commit", "-m", commitMessage)).await()
                         ?: ApplyOutput.dummy(dir = dir.path)
                     if (push) {
                         result["push_${dir.path}"] = LocalRepoOperator.getBranch(dir)?.let { branch ->
-                            ProcessOperator.runCommand(dir, arrayOf("git", "push", "--set-upstream", "origin", branch))?.asDeferred()?.await()
+                            ProcessOperator.runCommandAsync(dir, arrayOf("git", "push", "--set-upstream", "origin", branch)).await()
                         } ?: ApplyOutput.dummy(dir = dir.path)
                     }
                 }
@@ -55,7 +54,7 @@ object CommitOperator {
             val dirs = LocalRepoOperator.getLocalRepoFiles()
             dirs.mapConcurrentWithProgress("Pushing") { dir ->
                 result["push_${dir.path}"] = LocalRepoOperator.getBranch(dir)?.let { branch ->
-                    ProcessOperator.runCommand(dir, arrayOf("git", "push", "--set-upstream", "origin", branch))?.asDeferred()?.await()
+                    ProcessOperator.runCommandAsync(dir, arrayOf("git", "push", "--set-upstream", "origin", branch)).await()
                 } ?: ApplyOutput.dummy(dir = dir.path)
             }
         }

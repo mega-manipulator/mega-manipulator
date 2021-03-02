@@ -7,11 +7,11 @@ import com.intellij.openapi.progress.ProgressIndicator
 import com.intellij.openapi.progress.ProgressManager
 import com.intellij.openapi.progress.Task
 import com.intellij.openapi.progress.impl.BackgroundableProcessIndicator
+import java.util.concurrent.CancellationException
 import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
-import kotlinx.coroutines.cancel
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.sync.Semaphore
 import kotlinx.coroutines.withTimeout
@@ -45,7 +45,7 @@ inline fun <T> uiProtectedOperation(
                     deferred.getCompleted()
                 } catch (e: Exception) {
                     try {
-                        deferred.cancel()
+                        deferred.cancel(cause = CancellationException("Action cancelled"))
                     } catch (e: Exception) {
                         e.printStackTrace()
                     }
@@ -75,6 +75,8 @@ inline fun <T> uiProtectedOperation(
 
 inline fun <T, U> Collection<T>.mapConcurrentWithProgress(
     title: String,
+    extraText1: String? = null,
+    crossinline extraText2: (T) -> String? = { null },
     concurrent: Int = 5,
     crossinline mappingFunction: suspend (T) -> U
 ): List<Pair<T, U?>> {
@@ -82,6 +84,10 @@ inline fun <T, U> Collection<T>.mapConcurrentWithProgress(
     val task = object : Task.WithResult<List<Pair<T, U?>>, Exception>(project, title, true) {
         override fun compute(indicator: ProgressIndicator): List<Pair<T, U?>> {
             indicator.isIndeterminate = false
+            extraText1?.let { text ->
+                indicator.text = text
+            }
+
             indicator.fraction = 0.0
             return runBlocking {
                 val semaphore = Semaphore(permits = concurrent)
@@ -90,6 +96,9 @@ inline fun <T, U> Collection<T>.mapConcurrentWithProgress(
                         try {
                             if (!indicator.isCanceled) {
                                 semaphore.acquire()
+                                extraText2(t)?.let { text ->
+                                    indicator.text2 = text
+                                }
                                 mappingFunction(t)
                             } else {
                                 null
@@ -119,7 +128,7 @@ inline fun <T, U> Collection<T>.mapConcurrentWithProgress(
                             it.second?.getCompleted()
                         } catch (e: Exception) {
                             try {
-                                it.second?.cancel("Job not completed in time or cancelled")
+                                it.second?.cancel(cause = CancellationException("Job not completed in time or cancelled"))
                             } catch (e: Exception) {
                                 e.printStackTrace()
                             }
@@ -145,7 +154,7 @@ inline fun <T, U> Collection<T>.mapConcurrentWithProgress(
     }
 }
 
-fun <T> Collection<T>.asyncWithProgress(
+private fun <T> Collection<T>.asyncWithProgress(
     title: String,
     concurrent: Int = 5,
     mappingFunction: suspend (T) -> Unit

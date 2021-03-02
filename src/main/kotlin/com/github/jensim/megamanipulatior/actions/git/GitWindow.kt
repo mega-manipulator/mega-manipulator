@@ -25,7 +25,6 @@ import javax.swing.JOptionPane.OK_CANCEL_OPTION
 import javax.swing.JOptionPane.OK_OPTION
 import javax.swing.JOptionPane.QUESTION_MESSAGE
 import javax.swing.ListSelectionModel
-import kotlinx.coroutines.future.asDeferred
 
 object GitWindow : ToolWindowTab {
 
@@ -59,7 +58,7 @@ object GitWindow : ToolWindowTab {
                             throw IllegalArgumentException("Invalid branch name")
                         }
                         LocalRepoOperator.getLocalRepoFiles().mapConcurrentWithProgress("Che") { dir ->
-                            ProcessOperator.runCommand(dir, arrayOf("git", "checkout", "-b", "$branch"))
+                            ProcessOperator.runCommandAsync(dir, arrayOf("git", "checkout", "-b", "$branch"))
                         }
                         refresh()
                     }
@@ -85,7 +84,7 @@ object GitWindow : ToolWindowTab {
                 DialogGenerator.showConfirm(title = "Are you sure?!", message = "This will remove the entire clones dir from disk, no recovery available!") {
                     val output: ApplyOutput = project.basePath?.let { dir ->
                         uiProtectedOperation(title = "Remove all local clones") {
-                            ProcessOperator.runCommand(File(dir), arrayOf("rm", "-rf", "clones/*"))?.asDeferred()?.await()
+                            ProcessOperator.runCommandAsync(File(dir), arrayOf("rm", "-rf", "clones")).await()
                         }
                     } ?: ApplyOutput(dir = ".", std = "Unable to perform clean operation", err = "Unable to perform clean operation", exitCode = 1)
                     repoList.setListData(arrayOf(Pair("RM", output)))
@@ -119,7 +118,7 @@ object GitWindow : ToolWindowTab {
         val result: List<Pair<String, ApplyOutput>> = LocalRepoOperator.getLocalRepoFiles().mapConcurrentWithProgress(
             title = "Listing branches"
         ) {
-            ProcessOperator.runCommand(it, arrayOf("git", "branch", "-v"))?.asDeferred()?.await()
+            ProcessOperator.runCommandAsync(it, arrayOf("git", "branch", "-v")).await()
         }.map { it.first.path to (it.second ?: ApplyOutput.dummy(dir = it.first.path, err = "Failed reading branch")) }
         repoList.setListData(result.toTypedArray())
     }
