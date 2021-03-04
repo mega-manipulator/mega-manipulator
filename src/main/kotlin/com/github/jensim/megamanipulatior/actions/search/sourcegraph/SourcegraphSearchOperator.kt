@@ -7,6 +7,7 @@ import com.github.jensim.megamanipulatior.http.HttpClientProvider.getClient
 import com.github.jensim.megamanipulatior.settings.SourceGraphSettings
 import com.intellij.notification.NotificationType
 import com.jetbrains.rd.util.printlnError
+import io.ktor.client.features.timeout
 import io.ktor.client.request.post
 
 object SourcegraphSearchOperator {
@@ -21,6 +22,10 @@ object SourcegraphSearchOperator {
             val client = getClient(searchHostName, settings)
             val response: SearchTypes.GraphQLResponse = client.post("$baseUrl/.api/graphql?Search=") {
                 body = SearchTypes.GraphQlRequest(SearchTypes.SearchVaraibles(search))
+                timeout {
+                    socketTimeoutMillis = 5 * 60 * 1000
+                    requestTimeoutMillis = 5 * 60 * 1000
+                }
             }
             response.errors?.let {
                 printlnError("ERROR $it")

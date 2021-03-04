@@ -14,6 +14,7 @@ import io.ktor.client.HttpClient
 import io.ktor.client.HttpClientConfig
 import io.ktor.client.engine.apache.Apache
 import io.ktor.client.engine.apache.ApacheEngineConfig
+import io.ktor.client.features.HttpTimeout
 import io.ktor.client.features.defaultRequest
 import io.ktor.client.features.json.JacksonSerializer
 import io.ktor.client.features.json.JsonFeature
@@ -96,6 +97,7 @@ object HttpClientProvider {
 
     fun getClient(httpsOverride: HttpsOverride?, authMethod: AuthMethod, username: String? = null, password: String): HttpClient {
         return bakeClient {
+            install(HttpTimeout)
             when (httpsOverride) {
                 HttpsOverride.ALLOW_SELF_SIGNED_CERT -> trustSelfSignedClient()
                 HttpsOverride.ALLOW_ANYTHING -> trustAnyClient()

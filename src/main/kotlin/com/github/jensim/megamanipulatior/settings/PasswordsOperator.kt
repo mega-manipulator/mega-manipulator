@@ -1,5 +1,6 @@
 package com.github.jensim.megamanipulatior.settings
 
+import com.fasterxml.jackson.module.kotlin.readValue
 import com.github.jensim.megamanipulatior.actions.NotificationsOperator
 import com.intellij.credentialStore.CredentialAttributes
 import com.intellij.credentialStore.Credentials
@@ -9,14 +10,21 @@ import com.intellij.remoteServer.util.CloudConfigurationUtil.createCredentialAtt
 import com.intellij.ui.components.JBPasswordField
 import com.intellij.ui.components.JBTextField
 import com.intellij.ui.layout.panel
+import java.util.concurrent.ConcurrentHashMap
 import javax.annotation.concurrent.NotThreadSafe
 import javax.swing.JOptionPane
+import javax.swing.JOptionPane.OK_CANCEL_OPTION
+import javax.swing.JOptionPane.OK_OPTION
+import javax.swing.JOptionPane.QUESTION_MESSAGE
 
 @NotThreadSafe
 object PasswordsOperator {
 
     private const val service = "mega-manipulator"
     private val serviceUsername: String by lazy { System.getProperty("user.name") ?: service }
+    private val passwordSetMap: MutableMap<String, Boolean> = ConcurrentHashMap()
+
+    private fun usernameToKey(username: String, baseUrl: String) = "${username}___${baseUrl}"
 
     fun promptForPassword(username: String? = null, baseUrl: String): String {
         val usernameField = JBTextField(30)
@@ -40,8 +48,14 @@ object PasswordsOperator {
                 component(passwordField)
             }
         }
-        while ((username == null || usernameField.text.isNullOrEmpty()) && passwordField.password.concatToString().isNullOrEmpty()) {
-            JOptionPane.showConfirmDialog(null, content)
+        val ans = JOptionPane.showConfirmDialog(null, content, "Password please", OK_CANCEL_OPTION, QUESTION_MESSAGE, null)
+        if (ans != OK_OPTION || (username == null && usernameField.text.isNullOrEmpty()) || passwordField.password.concatToString().isNullOrEmpty()) {
+            NotificationsOperator.show(
+                title = "Password not set",
+                body = "Password was not entered ",
+                type = NotificationType.WARNING
+            )
+            return ""
         }
         val username = username ?: usernameField.text
         val password = passwordField.password.concatToString().trim()
@@ -50,37 +64,66 @@ object PasswordsOperator {
         return password
     }
 
-    fun isPasswordSet(username: String, baseUrl: String): Boolean = getPassword(username, baseUrl) != null
+    fun isPasswordSet(username: String, baseUrl: String): Boolean = usernameToKey(username, baseUrl).let { userKey ->
+        passwordSetMap.computeIfAbsent(usernameToKey(username, baseUrl)) { getPassword(username, baseUrl) != null }
+    }
 
     fun deletePasswords(username: String, baseUrl: String) {
         val username = "${serviceUsername}___${username}___${baseUrl}"
         val credentialAttributes: CredentialAttributes? = createCredentialAttributes(service, username)
         if (credentialAttributes == null) {
-            NotificationsOperator.show("Failed deleting password", "Could not create CredentialAttributes", NotificationType.WARNING)
+            NotificationsOperator.show(
+                title = "Failed deleting password",
+                body = "Could not create CredentialAttributes",
+                type = NotificationType.WARNING
+            )
         } else {
             PasswordSafe.instance.set(credentialAttributes, null)
         }
     }
 
     fun getPassword(username: String, baseUrl: String): String? {
-        val username = "${serviceUsername}___${username}___${baseUrl}"
-        val credentialAttributes: CredentialAttributes? = createCredentialAttributes(service, username)
+        return getPassword(usernameToKey(username, baseUrl))
+    }
+
+    private fun getPassword(usernameKey: String): String? {
+        val credentialAttributes: CredentialAttributes? = createCredentialAttributes(service, serviceUsername)
         return if (credentialAttributes == null) {
             NotificationsOperator.show("Failed setting password", "Could not create CredentialAttributes", NotificationType.WARNING)
             null
         } else {
-            PasswordSafe.instance.getPassword(credentialAttributes)
+            PasswordSafe.instance.getPassword(credentialAttributes)?.let { passMapStr ->
+                val passMap: Map<String, String> = SerializationHolder.jsonObjectMapper.readValue(passMapStr)
+                passMap[usernameKey]
+            }
         }
     }
 
-    fun setPassword(username: String, password: String, baseUrl: String) {
-        val username = "${serviceUsername}___${username}___${baseUrl}"
-        val credentialAttributes: CredentialAttributes? = createCredentialAttributes(service, username)
+    private fun setPassword(username: String, password: String, baseUrl: String) {
+        setPassword(usernameToKey(username, baseUrl), password)
+    }
+
+    private fun setPassword(usernameKey: String, password: String) {
+        val credentialAttributes: CredentialAttributes? = createCredentialAttributes(service, serviceUsername)
         if (credentialAttributes == null) {
             NotificationsOperator.show("Failed setting password", "Could not create CredentialAttributes", NotificationType.WARNING)
         } else {
-            val credentials = Credentials(username, password)
-            PasswordSafe.instance.set(credentialAttributes, credentials)
+            val preexisting: String? = PasswordSafe.instance.getPassword(credentialAttributes)
+            if (preexisting == null) {
+                val passwordsMap = mapOf(usernameKey to password)
+                val passMapStr = SerializationHolder.jsonObjectMapper.writeValueAsString(passwordsMap)
+                val credentials = Credentials(serviceUsername, passMapStr)
+                PasswordSafe.instance.set(credentialAttributes, credentials)
+            } else {
+                PasswordSafe.instance.getPassword(credentialAttributes)?.let { passMapStr: String ->
+                    val passMap: MutableMap<String, String> = SerializationHolder.jsonObjectMapper.readValue(passMapStr)
+                    passMap[usernameKey] = password
+                    val passMapStrMod = SerializationHolder.jsonObjectMapper.writeValueAsString(passMap)
+                    val credentials = Credentials(serviceUsername, passMapStrMod)
+                    PasswordSafe.instance.set(credentialAttributes, credentials)
+                }
+            }
         }
+        passwordSetMap.clear()
     }
 }

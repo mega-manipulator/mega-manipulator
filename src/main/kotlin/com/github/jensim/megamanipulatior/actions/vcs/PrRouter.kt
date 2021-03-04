@@ -12,16 +12,9 @@ object PrRouter {
     private fun resolve(searchHost: String, codeHost: String): CodeHostSettings? = SettingsFileOperator.readSettings()
         ?.searchHostSettings?.get(searchHost)?.codeHostSettings?.get(codeHost)?.settings
 
-    suspend fun getDefaultReviewers(pullRequest: PullRequest): List<String> = when (val settings = resolve(pullRequest.searchHostName, pullRequest.codeHostName)) {
-        is BitBucketSettings -> BitbucketPrReceiver.getDefaultReviewers(settings, pullRequest)
-        is GitHubSettings -> TODO("Not implemented!")
-        null -> TODO("Not configured code host")
-    }
-
-    suspend fun getPr(pullRequest: PullRequest): PullRequest? = when (val settings = resolve(pullRequest.searchHostName, pullRequest.codeHostName)) {
-        is BitBucketSettings -> BitbucketPrReceiver.getPr(settings, pullRequest)
-        is GitHubSettings -> TODO("Not implemented!")
-        null -> TODO("Not configured code host")
+    suspend fun addDefaultReviewers(pullRequest: PullRequest): PullRequest = when (val settings = resolve(pullRequest.searchHostName, pullRequest.codeHostName)) {
+        is BitBucketSettings -> BitbucketPrReceiver.addDefaultReviewers(settings, pullRequest)
+        else -> TODO("Not implemented!")
     }
 
     suspend fun createPr(title: String, description: String, repo: SearchResult): PullRequest? = when (val settings = resolve(repo.searchHostName, repo.codeHostName)) {

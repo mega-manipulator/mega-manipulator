@@ -16,6 +16,9 @@ object LocalRepoOperator {
 
     fun getLocalRepoFiles(): List<File> {
         val clonesDir = File(project.basePath, "clones")
+        if (!clonesDir.exists()) {
+            return emptyList()
+        }
         val clonesPath = clonesDir.toPath()
 
         return Files.find(clonesDir.toPath(), depth, { path: Path, _: BasicFileAttributes -> isLikelyCloneDir(clonesPath, path) })
@@ -35,7 +38,6 @@ object LocalRepoOperator {
     fun getLocalRepositories(): List<Repository> = getLocalRepoFiles().map { gitDir ->
         FileRepositoryBuilder.create(gitDir)
     }
-
 
     fun getBranch(searchResult: SearchResult): String? {
         val dir = File("${project.basePath}/clones/${searchResult.searchHostName}/${searchResult.codeHostName}/${searchResult.project}/${searchResult.repo}")

@@ -56,6 +56,7 @@ data class BitBucketProject(
 )
 
 data class BitBucketPullRequestRequest(
+    val id: Long?,
     // https://docs.atlassian.com/bitbucket-server/rest/7.10.0/bitbucket-rest.html#idp293
     val title: String, //": "Talking Nerdy",
     val description: String, //": "It’s a kludge, but put the tuple from the database in the cache.",
