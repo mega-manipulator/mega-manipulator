@@ -12,25 +12,30 @@ object PrRouter {
     private fun resolve(searchHost: String, codeHost: String): CodeHostSettings? = SettingsFileOperator.readSettings()
         ?.searchHostSettings?.get(searchHost)?.codeHostSettings?.get(codeHost)?.settings
 
-    suspend fun addDefaultReviewers(pullRequest: PullRequest): PullRequest = when (val settings = resolve(pullRequest.searchHostName, pullRequest.codeHostName)) {
-        is BitBucketSettings -> BitbucketPrReceiver.addDefaultReviewers(settings, pullRequest)
-        else -> TODO("Not implemented!")
+    suspend fun addDefaultReviewers(pullRequest: PullRequest): PullRequest {
+        val settings = resolve(pullRequest.searchHostName(), pullRequest.codeHostName())
+        return when {
+            settings is BitBucketSettings && pullRequest is BitBucketPullRequestWrapper -> BitbucketPrReceiver.addDefaultReviewers(settings, pullRequest)
+            else -> throw IllegalArgumentException("Provided types does not match expectations")
+        }
     }
 
-    suspend fun createPr(title: String, description: String, repo: SearchResult): PullRequest? = when (val settings = resolve(repo.searchHostName, repo.codeHostName)) {
-        is BitBucketSettings -> BitbucketPrReceiver.createPr(title, description, settings, repo)
-        is GitHubSettings -> TODO("Not implemented!")
-        null -> TODO("Not configured code host")
+    suspend fun createPr(title: String, description: String, repo: SearchResult): PullRequest {
+        return when (val settings = resolve(repo.searchHostName, repo.codeHostName)) {
+            is BitBucketSettings -> BitbucketPrReceiver.createPr(title, description, settings, repo)
+            else -> throw IllegalArgumentException("Provided types does not match expectations")
+        }
     }
 
-    suspend fun updatePr(pullRequest: PullRequest): PullRequest? = when (val settings = resolve(pullRequest.searchHostName, pullRequest.codeHostName)) {
-        is BitBucketSettings -> BitbucketPrReceiver.updatePr(settings, pullRequest)
-        is GitHubSettings -> TODO("Not implemented!")
-        null -> TODO("Not configured code host")
+    suspend fun updatePr(pullRequest: PullRequest): PullRequest {
+        val settings = resolve(pullRequest.searchHostName(), pullRequest.codeHostName())
+        return when {
+            settings is BitBucketSettings && pullRequest is BitBucketPullRequestWrapper -> BitbucketPrReceiver.updatePr(settings, pullRequest)
+            else -> throw IllegalArgumentException("Provided types does not match expectations")
+        }
     }
 
     suspend fun getAllPrs(searchHost: String, codeHost: String): List<PullRequest>? {
-        val settings = SettingsFileOperator.readSettings()
         return SettingsFileOperator.readSettings()?.searchHostSettings?.get(searchHost)?.codeHostSettings?.get(codeHost)?.settings?.let {
             when (it) {
                 is BitBucketSettings -> BitbucketPrReceiver.getAllPrs(searchHost, codeHost, it)
@@ -39,9 +44,11 @@ object PrRouter {
         }
     }
 
-    suspend fun closePr(pullRequest: PullRequest) = when (val settings = resolve(pullRequest.searchHostName, pullRequest.codeHostName)) {
-        is BitBucketSettings -> BitbucketPrReceiver.closePr(settings, pullRequest)
-        is GitHubSettings -> Unit//TODO("Not implemented!")
-        null -> Unit//TODO("Not configured code host")
+    suspend fun closePr(pullRequest: PullRequest) {
+        val settings = resolve(pullRequest.searchHostName(), pullRequest.codeHostName())
+        when {
+            settings is BitBucketSettings && pullRequest is BitBucketPullRequestWrapper -> BitbucketPrReceiver.closePr(settings, pullRequest)
+            else -> throw IllegalArgumentException("Provided types does not match expectations")
+        }
     }
 }

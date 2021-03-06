@@ -4,24 +4,22 @@ data class BitBucketDashboardPullRequestResponse(
     val isLastPage: Boolean,
     val size: Long,
     val limit: Long,
-    val values: List<BitBucketDashboardPullRequest>,
+    val values: List<BitBucketPullRequest>,
 )
 
-data class BitBucketDashboardPullRequest(
-    val id: Long,
-    val version: Int,
+data class BitBucketPullRequest(
+    val id: Long? = null,
+    val version: Int? = null,
     val title: String,
     val description: String,
-    val state: String,
+    val state: String = "OPEN",
+    val open: Boolean = true,
+    val closed: Boolean = false,
+    val locked: Boolean = false,
     val fromRef: BitBucketBranchRef,
     val toRef: BitBucketBranchRef,
-    val locked: Boolean,
-    val author: BitBucketAuthor,
+    val author: BitBucketParticipant? = null,
     val reviewers: List<BitBucketParticipant>,
-)
-
-data class BitBucketAuthor(
-    val user: BitBucketUser
 )
 
 data class BitBucketParticipant(
@@ -30,8 +28,8 @@ data class BitBucketParticipant(
 
 data class BitBucketUser(
     val name: String,
-    val displayName: String,
-    val emailAddress: String,
+    val displayName: String? = null,
+    val emailAddress: String? = null,
 )
 
 data class BitBucketBranchRef(
@@ -46,43 +44,11 @@ data class BitBucketDefaultBranch(
 )
 
 data class BitBucketRepo(
-    val id: Long,
+    val id: Long? = null,
     val slug: String,
     val project: BitBucketProject,
 )
 
 data class BitBucketProject(
     val key: String
-)
-
-data class BitBucketPullRequestRequest(
-    val id: Long?,
-    // https://docs.atlassian.com/bitbucket-server/rest/7.10.0/bitbucket-rest.html#idp293
-    val title: String, //": "Talking Nerdy",
-    val description: String, //": "It’s a kludge, but put the tuple from the database in the cache.",
-    val state: String = "OPEN",
-    val open: Boolean = true,
-    val closed: Boolean = false,
-    val locked: Boolean = false,
-    val fromRef: BitBucketPrBranchRef,
-    val toRef: BitBucketPrBranchRef,
-    val reviewers: List<BitBucketPrReviewer>
-)
-
-data class BitBucketPrBranchRef(
-    val id: String,
-    val repository: BitBucketPrRepo,
-)
-
-data class BitBucketPrRepo(
-    val slug: String,
-    val project: BitBucketProject,
-)
-
-data class BitBucketPrReviewer(
-    val user: BitBucketPrUser
-)
-
-data class BitBucketPrUser(
-    val name: String
 )

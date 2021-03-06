@@ -8,15 +8,15 @@ import com.intellij.ui.layout.panel
 
 class EditPullRequestDialog(pullRequests: List<PullRequest>) : CreatePullRequestDialog() {
     override val title: String = "Edit pull request"
-    private val preEqistingSelect: ComboBox<PullRequest?> = ComboBox(pullRequests.toTypedArray()).also { select ->
+    private val preExistingSelect: ComboBox<PullRequest?> = ComboBox(pullRequests.toTypedArray()).also { select ->
         select.addActionListener { _ ->
-            prTitle = select.item?.title
-            prDescription = select.item?.body
+            prTitle = select.item?.title()
+            prDescription = select.item?.body()
         }
-        select.addCellRenderer { "${it.project.fixedLength(5)}/${it.repo.fixedLength(5)} ${it.title.fixedLength(12)} ${it.body.fixedLength(12)}" }
+        select.addCellRenderer { "${it.project().fixedLength(5)}/${it.repo().fixedLength(5)} ${it.title().fixedLength(12)} ${it.body().fixedLength(12)}" }
     }
     override val panel: DialogPanel = panel {
-        row(label = "Template from") { component(preEqistingSelect) }
+        row(label = "Template from") { component(preExistingSelect) }
         row(label = "PR Title") { component(titleField) }
         row(label = "PR Description") { component(descriptionScrollArea) }
     }

@@ -22,7 +22,7 @@ class PullRequestActionsMenu(
                 showConfirm("Decline selected PRs", "No undo path available im afraid..\nDecline selected PRs?") {
                     prProvider().mapConcurrentWithProgress(
                         title = "Declining prs",
-                        extraText2 = { "${it.codeHostName}/${it.project}/${it.repo} ${it.branchFrom}" },
+                        extraText2 = { "${it.codeHostName()}/${it.project()}/${it.repo()} ${it.fromBranch()}" },
                     ) { pullRequest ->
                         PrRouter.closePr(pullRequest)
                     }
@@ -41,9 +41,9 @@ class PullRequestActionsMenu(
                         prs.mapConcurrentWithProgress(
                             title = "Reword PRs",
                             extraText1 = "Setting new title and body for Pull requests",
-                            extraText2 = { "${it.codeHostName}/${it.project}/${it.repo} ${it.branchFrom}" }
+                            extraText2 = { "${it.codeHostName()}/${it.project()}/${it.repo()} ${it.fromBranch()}" }
                         ) { pr ->
-                            PrRouter.updatePr(pr.copy(title = dialog.prTitle!!, body = dialog.prDescription!!))
+                            PrRouter.updatePr(pr.alterCopy(title = dialog.prTitle!!, body = dialog.prDescription!!))
                         }
                         postActionHook()
                     } else {
@@ -60,7 +60,7 @@ class PullRequestActionsMenu(
                 ) {
                     prProvider().mapConcurrentWithProgress(
                         title = "Add default reviewers",
-                        extraText2 = { "${it.codeHostName}/${it.project}/${it.repo} ${it.branchFrom}" },
+                        extraText2 = { "${it.codeHostName()}/${it.project()}/${it.repo()} ${it.fromBranch()}" },
                     ) { pr ->
                         val codeHostName = codeHostName
                         val searchHostName = searchHostName

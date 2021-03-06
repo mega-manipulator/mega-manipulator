@@ -1,27 +1,18 @@
 package com.github.jensim.megamanipulatior.actions.vcs
 
-data class PullRequest(
-    val id: String,
-    val version: String?,
-    val codeHostName: String,
-    val searchHostName: String,
-    val project: String,
-    val repo: String,
-    val repoId: String,
-    val branchFrom: BranchRef,
-    val branchTo: BranchRef,
-    val title: String,
-    val body: String,
-    val reviewers: List<Reviewer>
-)
-
-data class Reviewer(
-    val name: String,
-    val displayName: String,
-)
-
-data class BranchRef(
-    val branchName: String,
-    val repo: String,
-    val project: String,
-)
+interface PullRequest {
+    fun codeHostName(): String
+    fun searchHostName(): String
+    fun project(): String
+    fun repo(): String
+    fun title(): String
+    fun body(): String
+    fun fromBranch(): String
+    fun toBranch(): String
+    fun alterCopy(
+        codeHostName: String? = null,
+        searchHostName: String? = null,
+        title: String? = null,
+        body: String? = null,
+    ): PullRequest
+}
