@@ -2,14 +2,10 @@ package com.github.jensim.megamanipulatior.actions.vcs
 
 import com.github.jensim.megamanipulatior.actions.NotificationsOperator
 import com.github.jensim.megamanipulatior.ui.DialogGenerator.showConfirm
+import com.github.jensim.megamanipulatior.ui.EditPullRequestDialog
 import com.github.jensim.megamanipulatior.ui.mapConcurrentWithProgress
 import com.intellij.notification.NotificationType
-import com.intellij.openapi.ui.ComboBox
-import com.intellij.ui.components.JBTextArea
-import com.intellij.ui.components.JBTextField
-import com.intellij.ui.layout.panel
 import javax.swing.JMenuItem
-import javax.swing.JOptionPane
 import javax.swing.JPopupMenu
 
 class PullRequestActionsMenu(
@@ -34,42 +30,25 @@ class PullRequestActionsMenu(
                 }
             }
         }
-        val alterMenuItem = JMenuItem("Alter PRs title and description").apply {
+        val alterMenuItem = JMenuItem("Reword PRs").apply {
             addActionListener {
                 val prs = prProvider()
                 if (prs.isEmpty()) {
                     NotificationsOperator.show("No PRs selected", "Please select at least one PR to use this", NotificationType.WARNING)
                 } else {
-                    val select: ComboBox<PullRequest> = ComboBox(prs.toTypedArray())
-                    val titleField = JBTextField()
-                    val bodyField = JBTextArea()
-                    val panel = panel {
-                        row { label("Template from"); component(select) }
-                        row { label("New title"); component(titleField) }
-                        row { label("New body");component(bodyField) }
-                    }
-                    val ans = JOptionPane.showConfirmDialog(null, panel, "Alter PRs", JOptionPane.OK_CANCEL_OPTION, JOptionPane.QUESTION_MESSAGE, null)
-                    if (ans == JOptionPane.OK_OPTION) {
+                    val dialog = EditPullRequestDialog(prs)
+                    if (dialog.showAndGet()) {
                         prs.mapConcurrentWithProgress(
                             title = "Reword PRs",
                             extraText1 = "Setting new title and body for Pull requests",
                             extraText2 = { "${it.codeHostName}/${it.project}/${it.repo} ${it.branchFrom}" }
                         ) { pr ->
-                            PrRouter.updatePr(pr.copy(title = titleField.text, body = bodyField.text))
+                            PrRouter.updatePr(pr.copy(title = dialog.prTitle!!, body = dialog.prDescription!!))
                         }
                         postActionHook()
+                    } else {
+                        NotificationsOperator.show("No PRs edited", "Cancelled or missing data")
                     }
-                }
-            }
-        }
-        val setReviewersMenuItem = JMenuItem("Update reviewers").apply {
-            addActionListener {
-                showConfirm(
-                    title = "Not yet implemented",
-                    message = "Clicking OK will only refresh..."
-                ) {
-                    // TODO
-                    postActionHook()
                 }
             }
         }
@@ -97,7 +76,6 @@ class PullRequestActionsMenu(
 
         add(declineMenuItem)
         add(alterMenuItem)
-        add(setReviewersMenuItem)
         add(defaultReviewersMenuItem)
     }
 }

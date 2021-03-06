@@ -8,6 +8,7 @@ import com.github.jensim.megamanipulatior.actions.localrepo.LocalRepoOperator.ge
 import com.github.jensim.megamanipulatior.actions.vcs.PrRouter
 import com.github.jensim.megamanipulatior.settings.ProjectOperator.project
 import com.github.jensim.megamanipulatior.toolswindow.ToolWindowTab
+import com.github.jensim.megamanipulatior.ui.CreatePullRequestDialog
 import com.github.jensim.megamanipulatior.ui.DialogGenerator
 import com.github.jensim.megamanipulatior.ui.GeneralListCellRenderer.addCellRenderer
 import com.github.jensim.megamanipulatior.ui.mapConcurrentWithProgress
@@ -15,31 +16,15 @@ import com.github.jensim.megamanipulatior.ui.uiProtectedOperation
 import com.intellij.ui.components.JBList
 import com.intellij.ui.components.JBScrollPane
 import com.intellij.ui.components.JBTextArea
-import com.intellij.ui.components.JBTextField
 import com.intellij.ui.layout.panel
 import java.awt.Color
 import java.io.File
 import javax.swing.JComponent
 import javax.swing.JOptionPane
-import javax.swing.JOptionPane.OK_CANCEL_OPTION
-import javax.swing.JOptionPane.OK_OPTION
-import javax.swing.JOptionPane.QUESTION_MESSAGE
 import javax.swing.ListSelectionModel
 
 object GitWindow : ToolWindowTab {
 
-    private val prTitle = JBTextField()
-    private val prDescription = JBTextArea()
-    private val prPanel = panel {
-        row {
-            label("Title")
-            component(prTitle)
-        }
-        row {
-            label("Description")
-            component(prDescription)
-        }
-    }
     private val repoList = JBList<Pair<String, ApplyOutput>>()
     private val scrollLeft = JBScrollPane(repoList)
     private val outComeInfo = JBTextArea()
@@ -70,14 +55,36 @@ object GitWindow : ToolWindowTab {
                     repoList.setListData(CommitOperator.push().toList().toTypedArray())
                 }
                 button("Create PRs") {
-                    uiProtectedOperation(title = "Creating PRs") {
-                        val response: Int = JOptionPane.showConfirmDialog(null, prPanel, "Define PR", OK_CANCEL_OPTION, QUESTION_MESSAGE)
-                        if (response == OK_OPTION) {
-                            getLocalRepos().mapConcurrentWithProgress(title = "Creating PRs") {
-                                PrRouter.createPr(prTitle.text, prDescription.text, it)
+                    val dialog = CreatePullRequestDialog()
+                    if (dialog.showAndGet()) {
+                        val prTitle = dialog.prTitle
+                        val prDescription = dialog.prDescription
+                        if (!prTitle.isNullOrBlank() && !prDescription.isNullOrBlank()) {
+                            getLocalRepos().mapConcurrentWithProgress(
+                                title = "Creating PRs",
+                                extraText1 = prTitle,
+                                extraText2 = { it.asPathString() }
+                            ) {
+                                PrRouter.createPr(prTitle, prDescription, it)
                             }
                         }
                     }
+                    /*val titleKey= "PR Title"
+                    val bodyKey = "PR Body"
+
+                    DialogGenerator.askForInputs(
+                        title = "Create PRs",
+                        message = "Create PRs",
+                        values = listOf(titleKey to JBTextField(), bodyKey to JBTextArea())
+                    ){ answers ->
+                        uiProtectedOperation(title = "Creating PRs") {
+                            if (!answers[titleKey].isNullOrEmpty() && !answers[bodyKey].isNullOrEmpty()){
+                                getLocalRepos().mapConcurrentWithProgress(title = "Creating PRs") {
+                                    PrRouter.createPr(prTitle.text, prDescription.text, it)
+                                }
+                            }
+                        }
+                    }*/
                 }
             }
             button("Clean away local repos") {

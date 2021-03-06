@@ -1,10 +1,10 @@
 package com.github.jensim.megamanipulatior.settings
 
 import com.fasterxml.jackson.module.kotlin.readValue
-import kotlin.test.assertEquals
+import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 
-internal class SettingsFileOperatorTest {
+class SettingsFileOperatorTest {
 
     @Test
     fun serializeDeserialize() {

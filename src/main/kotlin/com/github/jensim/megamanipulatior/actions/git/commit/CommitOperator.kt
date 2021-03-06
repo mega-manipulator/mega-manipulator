@@ -29,9 +29,10 @@ object CommitOperator {
                 }
                 val dirs = LocalRepoOperator.getLocalRepoFiles()
                 dirs.mapConcurrentWithProgress(title = workTitle) { dir: File ->
+                    ProcessOperator.runCommandAsync(dir, arrayOf("git", "add", "--all")).await()
                     result["commit_${dir.path}"] = ProcessOperator.runCommandAsync(dir, arrayOf("git", "commit", "-m", commitMessage)).await()
-                        ?: ApplyOutput.dummy(dir = dir.path)
-                    if (push) {
+
+                    if (push && result["commit_${dir.path}"]?.exitCode == 0) {
                         result["push_${dir.path}"] = LocalRepoOperator.getBranch(dir)?.let { branch ->
                             ProcessOperator.runCommandAsync(dir, arrayOf("git", "push", "--set-upstream", "origin", branch)).await()
                         } ?: ApplyOutput.dummy(dir = dir.path)

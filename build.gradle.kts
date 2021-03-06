@@ -5,13 +5,13 @@ import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 val ktorVersion: String = "1.5.1"
 val jacksonVersion = "2.12.+"
-val kotlinVersion = "1.4.30"
+val kotlinVersion = "1.4.31"
 
 plugins {
     // Java support
     id("java")
     // Kotlin support
-    id("org.jetbrains.kotlin.jvm") version "1.4.30"
+    id("org.jetbrains.kotlin.jvm") version "1.4.31"
     // gradle-intellij-plugin - read more: https://github.com/JetBrains/gradle-intellij-plugin
     id("org.jetbrains.intellij") version "0.6.5"
     // gradle-changelog-plugin - read more: https://github.com/JetBrains/gradle-changelog-plugin
@@ -60,6 +60,7 @@ dependencies {
     implementation("com.fasterxml.jackson.module:jackson-module-kotlin:$jacksonVersion")
 
     implementation("org.eclipse.jgit:org.eclipse.jgit:5.10.0.202012080955-r")
+    implementation("org.apache.logging.log4j:log4j-slf4j-impl:2.14.0")
 
     // TEST
     testImplementation("org.hamcrest:hamcrest:2.2")

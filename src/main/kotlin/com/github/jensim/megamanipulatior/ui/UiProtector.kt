@@ -194,3 +194,5 @@ private fun <T> Collection<T>.asyncWithProgress(
     val indicator = BackgroundableProcessIndicator(task)
     ProgressManager.getInstance().runProcessWithProgressAsynchronously(task, indicator)
 }
+
+fun String.fixedLength(len: Int) = take(len).padEnd(len, ' ')
