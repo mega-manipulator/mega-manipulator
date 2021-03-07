@@ -29,7 +29,7 @@ object BitbucketPrReceiver {
 
     private suspend fun getDefaultReviewers(client: HttpClient, settings: BitBucketSettings, repo: SearchResult, fromBranchRef: String, toBranchRef: String): List<BitBucketUser> {
         val bitBucketRepo: BitBucketRepo = getRepo(client, settings, repo)
-        return client.get<List<BitBucketUser>>("${settings.baseUrl}/rest/default-reviewers/1.0/projects/${repo.project}/repos/${repo.repo}/reviewers?sourceRepoId=${bitBucketRepo.id}&targetRepoId=${bitBucketRepo.id}&sourceRefId=${fromBranchRef}&targetRefId=${toBranchRef}")
+        return client.get("${settings.baseUrl}/rest/default-reviewers/1.0/projects/${repo.project}/repos/${repo.repo}/reviewers?sourceRepoId=${bitBucketRepo.id}&targetRepoId=${bitBucketRepo.id}&sourceRefId=${fromBranchRef}&targetRefId=${toBranchRef}")
     }
 
     private suspend fun getRepo(client: HttpClient, settings: BitBucketSettings, repo: SearchResult): BitBucketRepo {
@@ -75,7 +75,9 @@ object BitbucketPrReceiver {
 
     private suspend fun updatePr(client: HttpClient, settings: BitBucketSettings, pullRequest: BitBucketPullRequestWrapper): PullRequest {
         val pr: BitBucketPullRequest = client.put("${settings.baseUrl}/rest/api/1.0/projects/${pullRequest.project()}/repos/${pullRequest.repo()}/pull-requests/${pullRequest.bitbucketPR.id}") {
-            body = pullRequest.bitbucketPR
+            body = pullRequest.bitbucketPR.copy(
+                author = null,
+            )
         }
         return BitBucketPullRequestWrapper(
             searchHost = pullRequest.searchHost,

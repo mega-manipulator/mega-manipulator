@@ -1,5 +1,6 @@
 package com.github.jensim.megamanipulatior.http
 
+import com.fasterxml.jackson.annotation.JsonInclude
 import com.fasterxml.jackson.databind.DeserializationFeature
 import com.github.jensim.megamanipulatior.actions.NotificationsOperator
 import com.github.jensim.megamanipulatior.settings.AuthMethod
@@ -35,8 +36,8 @@ object HttpClientProvider {
         install(JsonFeature) {
             serializer = JacksonSerializer {
                 disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES)
+                setSerializationInclusion(JsonInclude.Include.NON_NULL)
             }
-
         }
         installs()
     }
