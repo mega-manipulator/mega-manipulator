@@ -4,7 +4,6 @@ import com.fasterxml.jackson.module.kotlin.readValue
 import com.github.jensim.megamanipulatior.actions.NotificationsOperator
 import com.github.jensim.megamanipulatior.settings.ProjectOperator.project
 import com.github.jensim.megamanipulatior.settings.SerializationHolder.yamlObjectMapper
-import com.github.jensim.megamanipulatior.ui.uiProtectedOperation
 import com.intellij.notification.NotificationType.WARNING
 import com.intellij.openapi.fileEditor.FileDocumentManager
 import java.io.File
@@ -42,39 +41,37 @@ ${yamlObjectMapper.writeValueAsString(dummy())}
         if (System.currentTimeMillis() - lastPeek.get() < 250) {
             return bufferedSettings.get()
         }
-        uiProtectedOperation("Syncing settings") {
+        try {
             try {
-                try {
-                    FileDocumentManager.getInstance().saveAllDocuments()
-                } catch (e: Exception) {
-                    e.printStackTrace()
-                }
-                if (!settingsFile.exists()) {
-                    println("Creating settings file")
-                    writeSettings(dummyYaml)
-                }
-                if (lastUpdated.get() == settingsFile.lastModified()) {
-                    lastPeek.set(System.currentTimeMillis())
-                    bufferedSettings.get()
-                } else {
-                    val yaml = String(settingsFile.readBytes(), UTF_8)
-                    val readValue: MegaManipulatorSettings? = yamlObjectMapper.readValue(yaml)
-                    readValue?.let {
-                        lastUpdated.set(settingsFile.lastModified())
-                        bufferedSettings.set(it)
-                        lastPeek.set(System.currentTimeMillis())
-                    }
-                    privateValidationText.set(okValidationText)
-                }
+                FileDocumentManager.getInstance().saveAllDocuments()
             } catch (e: Exception) {
                 e.printStackTrace()
-                privateValidationText.set(e.message)
-                NotificationsOperator.show(
-                    title = "Failed settings validation",
-                    body = "Failed settings validation: ${e.message}",
-                    type = WARNING
-                )
             }
+            if (!settingsFile.exists()) {
+                println("Creating settings file")
+                writeSettings(dummyYaml)
+            }
+            if (lastUpdated.get() == settingsFile.lastModified()) {
+                lastPeek.set(System.currentTimeMillis())
+                bufferedSettings.get()
+            } else {
+                val yaml = String(settingsFile.readBytes(), UTF_8)
+                val readValue: MegaManipulatorSettings? = yamlObjectMapper.readValue(yaml)
+                readValue?.let {
+                    lastUpdated.set(settingsFile.lastModified())
+                    bufferedSettings.set(it)
+                    lastPeek.set(System.currentTimeMillis())
+                }
+                privateValidationText.set(okValidationText)
+            }
+        } catch (e: Exception) {
+            e.printStackTrace()
+            privateValidationText.set(e.message)
+            NotificationsOperator.show(
+                title = "Failed settings validation",
+                body = "Failed settings validation: ${e.message}",
+                type = WARNING
+            )
         }
         return bufferedSettings.get()
     }
