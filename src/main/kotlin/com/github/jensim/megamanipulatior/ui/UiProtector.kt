@@ -16,9 +16,9 @@ import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.sync.Semaphore
 import kotlinx.coroutines.withTimeout
 
-inline fun <T> uiProtectedOperation(
+fun <T> uiProtectedOperation(
     title: String,
-    crossinline action: suspend () -> T
+    action: suspend () -> T
 ): T? {
     val task = object : Task.WithResult<T, Exception>(project, title, true) {
         override fun compute(indicator: ProgressIndicator): T? = runBlocking {
@@ -73,12 +73,12 @@ inline fun <T> uiProtectedOperation(
     }
 }
 
-inline fun <T, U> Collection<T>.mapConcurrentWithProgress(
+fun <T, U> Collection<T>.mapConcurrentWithProgress(
     title: String,
     extraText1: String? = null,
-    crossinline extraText2: (T) -> String? = { null },
+    extraText2: (T) -> String? = { null },
     concurrent: Int = 5,
-    crossinline mappingFunction: suspend (T) -> U
+    mappingFunction: suspend (T) -> U
 ): List<Pair<T, U?>> {
     val all: Collection<T> = this
     val task = object : Task.WithResult<List<Pair<T, U?>>, Exception>(project, title, true) {
@@ -104,6 +104,11 @@ inline fun <T, U> Collection<T>.mapConcurrentWithProgress(
                                 null
                             }
                         } catch (e: Exception) {
+                            NotificationsOperator.show(
+                                title = "Failed with [$index]",
+                                body = "${e.message}\n${e.stackTrace.joinToString("\n")}",
+                                type = NotificationType.ERROR
+                            )
                             null
                         } finally {
                             semaphore.release()
