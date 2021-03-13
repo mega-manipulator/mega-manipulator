@@ -4,13 +4,20 @@ One stop shop for making changes, big or small, in a lot of places at once
 
 ## How to
 
+* Search
+* Apply changes
+* Draft PRs
+* Profit
+
+## ToDo's
+
 #### 1. Validate config
 
 * [x] Validate configuration, and give user feedback
 
 #### 2. Search
 
-* [x] Search for repos using Sourcegraph
+* [x] Search for repos using SourceGraph
 * [x] Allow multiple search hosts
 * [ ] Search for repos using etsy/hound
 * [x] Clone repos
@@ -20,19 +27,38 @@ One stop shop for making changes, big or small, in a lot of places at once
 
 * [x] Write a scripted change-set in `mega-manipulator.bash` and have it applied to all cloned repos
 * [x] Split output from each repo
-* [ ] Color by exit code
+* [x] Color by exit code
 
 #### 4. Commit & Push
 
-* [ ] Commit
+* [x] Commit
+* [ ] Push
+* [x] Push to forks
+* [ ] Lazy create forks
+* [ ] Eager create forks
+* [ ] Cross code hosts
 
 #### 5. Create PRs
 
-* [ ] Define a title and body for all the branches, and lean back as we
+* [x] Define a title and body for all the branches, and lean back as we
+* [x] Cross code hosts
 
 #### 6. Manage PRs
 
-* [ ] List PRs
-* [ ] Reword a bunch of PRs at the same time
-* [ ] Add reviewers
-* [ ] Remove PRs
+* [x] List PRs
+* [x] Reword a bunch of PRs at the same time
+* [x] Add reviewers
+* [x] Remove PRs
+    * [ ] Drop forks
+    * [ ] Drop branches
+* [ ] Clone from PRs
+    * [ ] set up forked remotes
+* [ ] Drop stale forked repos
+* [ ] 
+
+#### 7. CodeHosts
+
+* [x] BitBucket Server
+* [ ] GitHub.com
+* [ ] GitLab
+* [ ] ...
