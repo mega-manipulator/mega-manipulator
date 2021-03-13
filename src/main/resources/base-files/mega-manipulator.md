@@ -14,6 +14,7 @@ One stop shop for making changes, big or small, in a lot of places at once
 #### 1. Validate config
 
 * [x] Validate configuration, and give user feedback
+* [ ] Create special project type not to sully intellij in other use-cases
 
 #### 2. Search
 
