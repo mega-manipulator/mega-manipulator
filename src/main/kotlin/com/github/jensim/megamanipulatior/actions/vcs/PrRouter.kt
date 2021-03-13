@@ -27,6 +27,13 @@ object PrRouter {
         }
     }
 
+    suspend fun createFork(repo: SearchResult): String? {
+        return when (val settings = resolve(repo.searchHostName, repo.codeHostName)) {
+            is BitBucketSettings -> BitbucketPrReceiver.createFork(settings, repo)
+            else -> throw IllegalArgumentException("Provided types does not match expectations")
+        }
+    }
+
     suspend fun updatePr(pullRequest: PullRequest): PullRequest {
         val settings = resolve(pullRequest.searchHostName(), pullRequest.codeHostName())
         return when {
@@ -51,4 +58,6 @@ object PrRouter {
             else -> throw IllegalArgumentException("Provided types does not match expectations")
         }
     }
+
+    suspend fun getPrivateForkReposWithoutPRs(searchHost: String, codeHost: String): List<Nothing> = TODO()
 }

@@ -14,10 +14,10 @@ data class BitBucketPullRequestWrapper(
 ) : PullRequestWrapper(searchHost, codeHost) {
     override fun codeHostName(): String = codeHost
     override fun searchHostName(): String = searchHost
-    override fun project(): String = bitbucketPR.toRef.repository.project.key
+    override fun project(): String = bitbucketPR.toRef.repository.project!!.key
     override fun repo(): String = bitbucketPR.toRef.repository.slug
     override fun title(): String = bitbucketPR.title
-    override fun body(): String = bitbucketPR.description
+    override fun body(): String = bitbucketPR.description ?: ""
     override fun fromBranch(): String = bitbucketPR.fromRef.id
     override fun toBranch(): String = bitbucketPR.toRef.id
     override fun alterCopy(

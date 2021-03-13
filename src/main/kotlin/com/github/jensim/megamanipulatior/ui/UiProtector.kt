@@ -29,6 +29,11 @@ fun <T> uiProtectedOperation(
                         action()
                     } catch (e: Exception) {
                         e.printStackTrace()
+                        NotificationsOperator.show(
+                            title = "Failed executing task $title",
+                            body = "Exception caught executing task: ${e.message}\n${e.stackTrace.joinToString("\n")}",
+                            type = NotificationType.ERROR
+                        )
                         null
                     }
                 }

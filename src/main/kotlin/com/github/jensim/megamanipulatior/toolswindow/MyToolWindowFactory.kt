@@ -2,6 +2,7 @@ package com.github.jensim.megamanipulatior.toolswindow
 
 import com.github.jensim.megamanipulatior.MyBundle
 import com.github.jensim.megamanipulatior.actions.apply.ApplyWindow
+import com.github.jensim.megamanipulatior.actions.forks.ForksWindow
 import com.github.jensim.megamanipulatior.actions.git.GitWindow
 import com.github.jensim.megamanipulatior.actions.search.SearchWindow
 import com.github.jensim.megamanipulatior.actions.vcs.PullRequestWindow
@@ -23,6 +24,7 @@ object MyToolWindowFactory : ToolWindowFactory {
         "tabTitleApply" to ApplyWindow,
         "tabTitleClones" to GitWindow,
         "tabTitlePRsManage" to PullRequestWindow,
+        "tabTitleForks" to ForksWindow,
     )
 
     override fun createToolWindowContent(project: Project, toolWindow: ToolWindow) {

@@ -96,6 +96,8 @@ ${yamlObjectMapper.writeValueAsString(dummy())}
                             clonePattern = "ssh://git@bitbucket.example.com/{project}/{repo}.git",
                             authMethod = AuthMethod.TOKEN,
                             username = null,
+                            forkSetting = ForkSetting.PLAIN_BRANCH,
+                            forkRepoPrefix = null,
                         ),
                     ),
                     "github.com" to CodeHostSettingsWrapper(
@@ -106,6 +108,8 @@ ${yamlObjectMapper.writeValueAsString(dummy())}
                             clonePattern = "ssh://git@bitbucket.example.com/{project}/{repo}.git",
                             authMethod = AuthMethod.TOKEN,
                             username = null,
+                            forkSetting = ForkSetting.PLAIN_BRANCH,
+                            forkRepoPrefix = null,
                         ),
                     )
                 ),

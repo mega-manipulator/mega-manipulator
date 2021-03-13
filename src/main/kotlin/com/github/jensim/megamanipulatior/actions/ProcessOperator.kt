@@ -1,6 +1,7 @@
 package com.github.jensim.megamanipulatior.actions
 
 import com.github.jensim.megamanipulatior.actions.apply.ApplyOutput
+import com.github.jensim.megamanipulatior.ui.trimProjectPath
 import java.io.File
 import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.future.asDeferred
@@ -21,7 +22,7 @@ object ProcessOperator {
                 std = tempOutput.readText(),
                 err = tempErrOutput.readText(),
                 exitCode = it.exitValue(),
-                dir = workingDir.absolutePath,
+                dir = workingDir.trimProjectPath(),
             )
         }.asDeferred()
     }

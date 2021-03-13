@@ -1,17 +1,25 @@
 package com.github.jensim.megamanipulatior.actions.vcs.bitbucketserver
 
-data class BitBucketDashboardPullRequestResponse(
-    val isLastPage: Boolean,
-    val size: Long,
-    val limit: Long,
-    val values: List<BitBucketPullRequest>,
+data class BitBucketMessage(
+    // val context: String?
+    val message: String,
+    val exceptionName: String?
+)
+
+data class BitBucketPage<T>(
+    val start: Int?,
+    val size: Int?,
+    val limit: Int?,
+    val isLastPage: Boolean?,
+    val values: List<T>?,
+    val message: String?,
 )
 
 data class BitBucketPullRequest(
     val id: Long? = null,
     val version: Int? = null,
     val title: String,
-    val description: String,
+    val description: String?,
     val state: String = "OPEN",
     val open: Boolean = true,
     val closed: Boolean = false,
@@ -46,7 +54,34 @@ data class BitBucketDefaultBranch(
 data class BitBucketRepo(
     val id: Long? = null,
     val slug: String,
-    val project: BitBucketProject,
+    val scmId: String? = null,
+    val project: BitBucketProject? = null,
+    val links: BitBucketRepoLinks? = null,
+)
+
+data class BitBucketForkRequest(
+    val slug: String,
+    val name: String? = null,
+    val project: BitBucketProjectRequest,
+    val defaultBranch: String? = null,
+)
+
+data class BitBucketProjectRequest(
+    val key: String
+)
+
+data class BitBucketRepoLinks(
+    val clone: List<BitBucketCloneLink>,
+    val self: List<BitBucketPlainLink>,
+)
+
+data class BitBucketCloneLink(
+    val href: String,
+    val name: String,
+)
+
+data class BitBucketPlainLink(
+    val href: String
 )
 
 data class BitBucketProject(

@@ -9,6 +9,7 @@ import com.github.jensim.megamanipulatior.http.HttpClientProvider
 import com.github.jensim.megamanipulatior.settings.BitBucketSettings
 import com.intellij.notification.NotificationType
 import io.ktor.client.HttpClient
+import io.ktor.client.request.delete
 import io.ktor.client.request.get
 import io.ktor.client.request.post
 import io.ktor.client.request.put
@@ -91,17 +92,24 @@ object BitbucketPrReceiver {
         val collector = ArrayList<PullRequest>()
         var start = 0L
         while (true) {
-            val response: BitBucketDashboardPullRequestResponse = client
-                .get("${settings.baseUrl}/rest/api/1.0/dashboard/pull-requests?state=OPEN&role=AUTHOR&start=$start&limit=100")
+            val response: BitBucketPage<BitBucketPullRequest> = try {
+                client.get("${settings.baseUrl}/rest/api/1.0/dashboard/pull-requests?state=OPEN&role=AUTHOR&start=$start&limit=100")
+            } catch (e: Exception) {
+                e.printStackTrace()
+                break
+            }
+            response.message?.let {
+                println("Message received $it")
+            }
             collector.addAll(
-                response.values.map {
+                response.values.orEmpty().map {
                     BitBucketPullRequestWrapper(searchHostName, codeHostName, it)
                 }
             )
-            if (response.isLastPage) {
+            if (response.isLastPage != false) {
                 break
             } else {
-                start += response.size
+                start += response.size ?: 0
             }
         }
         return collector
@@ -123,6 +131,55 @@ object BitbucketPrReceiver {
             )
         }
         return pullRequest
+    }
+
+    suspend fun createFork(settings: BitBucketSettings, repo: SearchResult): String? {
+        val client: HttpClient = HttpClientProvider.getClient(repo.searchHostName, repo.codeHostName, settings)
+        val bbRepo: BitBucketRepo = try {
+            // If repo already exists..
+            client.get("${settings.baseUrl}/rest/api/1.0/users/~${settings.username!!}/repos/${settings.forkRepoPrefix}${repo.repo}")
+        } catch (e: Exception) {
+            // Repo does not exist - lets fork
+            client.post("${settings.baseUrl}/rest/api/1.0/projects/${repo.project}/repos/${repo.repo}") {
+                body = BitBucketForkRequest(
+                    slug = "${settings.forkRepoPrefix}${repo.repo}",
+                    project = BitBucketProjectRequest(key = "~${settings.username}")
+                )
+            }
+        }
+        return bbRepo.links?.clone?.firstOrNull { it.name == "ssh" }?.href
+    }
+
+    /**
+     * Get all the repos prefixed with the fork-repo-prefix, that do not have open outgoing PRs connected to them
+     */
+    suspend fun getPrivateForkReposWithoutPRs(searchHostName: String, codeHostName: String, settings: BitBucketSettings): List<BitBucketRepo> {
+        val client: HttpClient = HttpClientProvider.getClient(searchHostName, codeHostName, settings)
+        var start = 0
+        val collector = HashSet<BitBucketRepo>()
+        while (true) {
+            val page: BitBucketPage<BitBucketRepo> = client.get("${settings.baseUrl}/rest/api/1.0/users/~${settings.username!!}/repos?start=$start")
+            page.values.orEmpty()
+                .filter { it.slug.startsWith(settings.forkRepoPrefix!!) }
+                .forEach { collector.add(it) }
+            if (page.isLastPage != false) break
+            start += page.size ?: 0
+        }
+        return collector.filter {
+            val page: BitBucketPage<BitBucketPullRequest> = client.get("${settings.baseUrl}/rest/api/1.0/projects/${it.project?.key}/repos/${it.slug}/pull-requests?direction=OUTGOING&state=OPEN")
+            page.size == 0
+        }
+    }
+
+    /**
+     * Schedule a repo for deletion, input should be a repo from getPrivateForkReposWithoutPRs
+     * @see getPrivateForkReposWithoutPRs
+     */
+    suspend fun deletePrivateRepo(searchHostName: String, codeHostName: String, settings: BitBucketSettings, repo: String) {
+        val client: HttpClient = HttpClientProvider.getClient(searchHostName, codeHostName, settings)
+        client.delete<BitBucketMessage>("${settings.baseUrl}/rest/api/1.0/users/~${settings.username}/repos/${settings.forkRepoPrefix}${repo}") {
+            body = emptyMap<String, String>()
+        }
     }
 
     /*

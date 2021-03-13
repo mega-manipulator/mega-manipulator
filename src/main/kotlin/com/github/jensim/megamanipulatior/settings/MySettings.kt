@@ -2,6 +2,7 @@ package com.github.jensim.megamanipulatior.settings
 
 import com.fasterxml.jackson.annotation.JsonSubTypes
 import com.fasterxml.jackson.annotation.JsonTypeInfo
+import java.io.File
 
 enum class HttpsOverride {
     ALLOW_SELF_SIGNED_CERT,
@@ -11,6 +12,23 @@ enum class HttpsOverride {
 enum class AuthMethod {
     TOKEN,
     USERNAME_PASSWORD,
+}
+
+enum class ForkSetting {
+    /**
+     * Will require write access to the repo
+     */
+    PLAIN_BRANCH,
+
+    /**
+     * When not permitted to push into origin, attempt fork strategy
+     */
+    LAZY_FORK,
+
+    /**
+     * Fork before push, for every repo
+     */
+    EAGER_FORK,
 }
 
 data class MegaManipulatorSettings(
@@ -33,7 +51,13 @@ data class MegaManipulatorSettings(
     fun resolveHttpsOverride(searchHostName: String, codeHostName: String): HttpsOverride? = searchHostSettings[searchHostName]
         ?.codeHostSettings?.get(codeHostName)?.settings?.httpsOverride ?: defaultHttpsOverride
 
-    fun resolveSettings(searchHostName: String): SearchHostSettings = TODO()
+    // fun resolveSettings(searchHostName: String): SearchHostSettings = TODO()
+
+    fun resolveSettings(repoDir: File): Pair<SearchHostSettings, CodeHostSettings>? {
+        val codeHostDir: String = repoDir.parentFile.parentFile.name
+        val searchHostDir: String = repoDir.parentFile.parentFile.parentFile.name
+        return resolveSettings(searchHostDir, codeHostDir)
+    }
 
     fun resolveSettings(searchHostName: String, codeHostName: String): Pair<SearchHostSettings, CodeHostSettings>? {
         return searchHostSettings[searchHostName]?.settings?.let { first ->
@@ -122,6 +146,8 @@ sealed class CodeHostSettings(
     open val httpsOverride: HttpsOverride?,
     open val authMethod: AuthMethod,
     open val username: String?,
+    open val forkSetting: ForkSetting,
+    open val forkRepoPrefix: String?,
 ) {
     internal fun validate() {
         validateBaseUrl(baseUrl)
@@ -133,11 +159,20 @@ sealed class CodeHostSettings(
         if (authMethod == AuthMethod.USERNAME_PASSWORD) {
             require(!username.isNullOrEmpty()) { "$baseUrl: username is required for auth method USERNAME_PASSWORD" }
         }
+        if (forkSetting != ForkSetting.PLAIN_BRANCH) {
+            require(username != null) { "username is required if forkSetting is not ${ForkSetting.PLAIN_BRANCH.name}" }
+            require(forkRepoPrefix != null) { "forkRepoPrefix is required if forkSetting is not ${ForkSetting.PLAIN_BRANCH.name}" }
+        }
     }
 
     fun cloneUrl(project: String, repo: String) = clonePattern
         .replace("{project}", project)
         .replace("{repo}", repo)
+}
+
+enum class CloneType {
+    SSH,
+    HTTPS // TODO
 }
 
 data class BitBucketSettings(
@@ -146,12 +181,16 @@ data class BitBucketSettings(
     override val httpsOverride: HttpsOverride?,
     override val authMethod: AuthMethod,
     override val username: String?,
+    override val forkSetting: ForkSetting,
+    override val forkRepoPrefix: String?,
 ) : CodeHostSettings(
     baseUrl,
     clonePattern,
     httpsOverride,
     authMethod,
     username,
+    forkSetting,
+    forkRepoPrefix
 ) {
     init {
         validate()
@@ -164,12 +203,16 @@ data class GitHubSettings(
     override val httpsOverride: HttpsOverride?,
     override val authMethod: AuthMethod,
     override val username: String?,
+    override val forkSetting: ForkSetting,
+    override val forkRepoPrefix: String?,
 ) : CodeHostSettings(
     baseUrl,
     clonePattern,
     httpsOverride,
     authMethod,
     username,
+    forkSetting,
+    forkRepoPrefix,
 ) {
     init {
         validate()

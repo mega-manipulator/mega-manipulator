@@ -12,6 +12,7 @@ import com.github.jensim.megamanipulatior.ui.CreatePullRequestDialog
 import com.github.jensim.megamanipulatior.ui.DialogGenerator
 import com.github.jensim.megamanipulatior.ui.GeneralListCellRenderer.addCellRenderer
 import com.github.jensim.megamanipulatior.ui.mapConcurrentWithProgress
+import com.github.jensim.megamanipulatior.ui.trimProjectPath
 import com.github.jensim.megamanipulatior.ui.uiProtectedOperation
 import com.intellij.ui.components.JBList
 import com.intellij.ui.components.JBScrollPane
@@ -23,10 +24,15 @@ import javax.swing.JComponent
 import javax.swing.JOptionPane
 import javax.swing.ListSelectionModel
 
+private typealias StepResult = Pair<String, ApplyOutput>
+private typealias DirResult = Pair<String, List<StepResult>>
+
 object GitWindow : ToolWindowTab {
 
-    private val repoList = JBList<Pair<String, ApplyOutput>>()
+    private val repoList = JBList<DirResult>()
     private val scrollLeft = JBScrollPane(repoList)
+    private val stepList = JBList<StepResult>()
+    private val scrollMid = JBScrollPane(stepList)
     private val outComeInfo = JBTextArea()
     private val scrollRight = JBScrollPane(outComeInfo)
 
@@ -69,22 +75,6 @@ object GitWindow : ToolWindowTab {
                             }
                         }
                     }
-                    /*val titleKey= "PR Title"
-                    val bodyKey = "PR Body"
-
-                    DialogGenerator.askForInputs(
-                        title = "Create PRs",
-                        message = "Create PRs",
-                        values = listOf(titleKey to JBTextField(), bodyKey to JBTextArea())
-                    ){ answers ->
-                        uiProtectedOperation(title = "Creating PRs") {
-                            if (!answers[titleKey].isNullOrEmpty() && !answers[bodyKey].isNullOrEmpty()){
-                                getLocalRepos().mapConcurrentWithProgress(title = "Creating PRs") {
-                                    PrRouter.createPr(prTitle.text, prDescription.text, it)
-                                }
-                            }
-                        }
-                    }*/
                 }
             }
             button("Clean away local repos") {
@@ -94,39 +84,41 @@ object GitWindow : ToolWindowTab {
                             ProcessOperator.runCommandAsync(File(dir), arrayOf("rm", "-rf", "clones")).await()
                         }
                     } ?: ApplyOutput(dir = ".", std = "Unable to perform clean operation", err = "Unable to perform clean operation", exitCode = 1)
-                    repoList.setListData(arrayOf(Pair("RM", output)))
+                    repoList.setListData(arrayOf(Pair("Clean", listOf("rm" to output))))
                 }
             }
         }
         row {
             component(scrollLeft)
+            component(scrollMid)
             component(scrollRight)
         }
     }
 
     init {
-        repoList.addCellRenderer({ (_, output) ->
-            if (output.exitCode != 0) {
-                Color.ORANGE
-            } else {
-                null
-            }
-        }) { it.first }
+        repoList.addCellRenderer({ if (it.second.any { it.second.exitCode != 0 }) Color.ORANGE else null }) { it.first }
         repoList.selectionMode = ListSelectionModel.SINGLE_SELECTION
         repoList.addListSelectionListener {
+            repoList.selectedValue?.let {
+                stepList.setListData(it.second.toTypedArray())
+            }
+        }
+        stepList.addCellRenderer({ if (it.second.exitCode != 0) Color.ORANGE else null }) { it.first }
+        stepList.selectionMode = ListSelectionModel.SINGLE_SELECTION
+        stepList.addListSelectionListener {
             outComeInfo.text = ""
-            repoList.selectedValuesList?.firstOrNull()?.let {
+            stepList.selectedValuesList?.firstOrNull()?.let {
                 outComeInfo.text = it.second.getFullDescription()
             }
         }
     }
 
     override fun refresh() {
-        val result: List<Pair<String, ApplyOutput>> = LocalRepoOperator.getLocalRepoFiles().mapConcurrentWithProgress(
+        val result: List<DirResult> = LocalRepoOperator.getLocalRepoFiles().mapConcurrentWithProgress(
             title = "Listing branches"
         ) {
             ProcessOperator.runCommandAsync(it, arrayOf("git", "branch", "-v")).await()
-        }.map { it.first.path to (it.second ?: ApplyOutput.dummy(dir = it.first.path, err = "Failed reading branch")) }
+        }.map { it.first.trimProjectPath() to listOf("list branches" to (it.second ?: ApplyOutput.dummy(dir = it.first.path, err = "Failed reading branch"))) }
         repoList.setListData(result.toTypedArray())
     }
 
