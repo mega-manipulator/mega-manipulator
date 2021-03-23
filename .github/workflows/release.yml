@@ -1,5 +1,5 @@
 # GitHub Actions Workflow created for handling the release process based on the draft release prepared
-# with the Build workflow. Running the publishPlugin task requires the PUBLISH_TOKEN secret provided.
+# with the Build workflow. Running the publishPlugin task requires the IDEA_TOKEN secret provided.
 
 name: Release
 on:
@@ -29,7 +29,7 @@ jobs:
       # Publish the plugin to the Marketplace
       - name: Publish Plugin
         env:
-          PUBLISH_TOKEN: ${{ secrets.PUBLISH_TOKEN }}
+          PUBLISH_TOKEN: ${{ secrets.IDEA_TOKEN }}
         run: ./gradlew publishPlugin
 
   # Patch changelog, commit and push to the current repository
