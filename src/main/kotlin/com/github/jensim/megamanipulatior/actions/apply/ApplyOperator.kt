@@ -21,7 +21,7 @@ object ApplyOperator {
             extraText2 = { "${it.parentFile.parentFile.name}/${it.parentFile.name}/${it.name}" },
             concurrent = settings.concurrency
         ) { dir ->
-            ProcessOperator.runCommandAsync(dir, arrayOf("/bin/bash", scriptPath)).await()
+            ProcessOperator.runCommandAsync(dir, listOf("/bin/bash", scriptPath)).await()
         }.map { (dir, out) -> out ?: ApplyOutput.dummy(dir.path) }
     }
 }

@@ -7,7 +7,6 @@ import com.intellij.openapi.progress.ProgressIndicator
 import com.intellij.openapi.progress.ProgressManager
 import com.intellij.openapi.progress.Task
 import com.intellij.openapi.progress.impl.BackgroundableProcessIndicator
-import java.util.concurrent.CancellationException
 import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.async
@@ -15,6 +14,7 @@ import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.sync.Semaphore
 import kotlinx.coroutines.withTimeout
+import java.util.concurrent.CancellationException
 
 fun <T> uiProtectedOperation(
     title: String,
@@ -87,6 +87,7 @@ fun <T, U> Collection<T>.mapConcurrentWithProgress(
 ): List<Pair<T, U?>> {
     val all: Collection<T> = this
     val task = object : Task.WithResult<List<Pair<T, U?>>, Exception>(project, title, true) {
+        @Suppress("LongMethod")
         override fun compute(indicator: ProgressIndicator): List<Pair<T, U?>> {
             indicator.isIndeterminate = false
             extraText1?.let { text ->

@@ -21,3 +21,10 @@ style:
     active: false
   MagicNumber:
     active: false
+  LoopWithTooManyJumpStatements:
+    maxJumpCount: 2
+
+complexity:
+  LongParameterList:
+    ignoreDefaultParameters: true
+

@@ -20,11 +20,11 @@ import io.ktor.client.features.defaultRequest
 import io.ktor.client.features.json.JacksonSerializer
 import io.ktor.client.features.json.JsonFeature
 import io.ktor.client.request.headers
-import java.security.cert.X509Certificate
 import org.apache.http.conn.ssl.NoopHostnameVerifier
 import org.apache.http.conn.ssl.TrustSelfSignedStrategy
 import org.apache.http.conn.ssl.TrustStrategy
 import org.apache.http.ssl.SSLContextBuilder
+import java.security.cert.X509Certificate
 
 object HttpClientProvider {
 

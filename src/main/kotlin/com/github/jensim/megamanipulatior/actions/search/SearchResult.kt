@@ -19,5 +19,5 @@ data class SearchResult(
         }
     }
 
-    fun asPathString(): String = "${searchHostName}/${codeHostName}/${project}/${repo}"
+    fun asPathString(): String = "$searchHostName/$codeHostName/$project/$repo"
 }

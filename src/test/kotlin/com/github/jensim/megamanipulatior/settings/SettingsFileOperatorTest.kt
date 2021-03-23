@@ -29,6 +29,8 @@ class SettingsFileOperatorTest {
                                 httpsOverride = null,
                                 authMethod = AuthMethod.TOKEN,
                                 username = null,
+                                forkSetting = ForkSetting.PLAIN_BRANCH,
+                                forkRepoPrefix = null,
                             )
                         )
                     )

@@ -73,7 +73,6 @@ object GeneralListCellRenderer {
                     "error endering"
                 }
 
-
                 return this
             }
         }

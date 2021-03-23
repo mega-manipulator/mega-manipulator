@@ -37,9 +37,9 @@ object CommitOperator {
                 }
                 val dirs = LocalRepoOperator.getLocalRepoFiles()
                 dirs.mapConcurrentWithProgress(title = workTitle) { dir: File ->
-                    ProcessOperator.runCommandAsync(dir, arrayOf("git", "add", "--all")).await()
+                    ProcessOperator.runCommandAsync(dir, listOf("git", "add", "--all")).await()
                     val log = result.computeIfAbsent(dir.path) { ArrayList() }
-                    val commit = ProcessOperator.runCommandAsync(dir, arrayOf("git", "commit", "-m", commitMessage)).await()
+                    val commit = ProcessOperator.runCommandAsync(dir, listOf("git", "commit", "-m", commitMessage)).await()
                         .also { output -> log += "commit" to output }
                     if (push && commit.exitCode == 0) {
                         push(settings, dir, log)

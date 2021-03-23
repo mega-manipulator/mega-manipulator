@@ -40,7 +40,6 @@ object DialogGenerator {
                         component(v)
                     }
                 }
-
             }
             when (JOptionPane.showConfirmDialog(null, panel, title, optionType, messageType, null)) {
                 OK_OPTION -> onOk(inputs.mapValues { it.value.text })

@@ -94,7 +94,7 @@ data class SearchHostSettingsWrapper(
     val settings: SearchHostSettings,
     val codeHostSettings: Map<String, CodeHostSettingsWrapper>,
 
-    ) {
+) {
     init {
         require(codeHostSettings.isNotEmpty()) {
             """
@@ -140,7 +140,8 @@ enum class CodeHostType {
     GITHUB,
 }
 
-sealed class CodeHostSettings(
+sealed class CodeHostSettings
+@SuppressWarnings("LongParameterList") constructor(
     open val baseUrl: String,
     open val clonePattern: String,
     open val httpsOverride: HttpsOverride?,

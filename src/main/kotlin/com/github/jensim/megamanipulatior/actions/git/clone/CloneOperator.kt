@@ -33,7 +33,7 @@ object CloneOperator {
                         type = WARNING
                     )
                 } else {
-                    val p1 = ProcessOperator.runCommandAsync(dir.parentFile, arrayOf("git", "clone", cloneUrl)).await()
+                    val p1 = ProcessOperator.runCommandAsync(dir.parentFile, listOf("git", "clone", cloneUrl)).await()
                     if (p1.exitCode != 0) {
                         NotificationsOperator.show(
                             "Clone failed",
@@ -41,7 +41,7 @@ object CloneOperator {
                             NotificationType.ERROR
                         )
                     } else {
-                        val p2 = ProcessOperator.runCommandAsync(dir, arrayOf("git", "checkout", "-b", branch)).await()
+                        val p2 = ProcessOperator.runCommandAsync(dir, listOf("git", "checkout", "-b", branch)).await()
                         if (p2.exitCode != 0) {
                             NotificationsOperator.show(
                                 "Branch switch failed",

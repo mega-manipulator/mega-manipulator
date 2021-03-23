@@ -12,7 +12,6 @@ import javax.swing.JComponent
 
 object ForksWindow : ToolWindowTab {
 
-
     private val codeHostSelect = CodeHostSelector()
     private val staleForkList = JBList<String>()
     private val scroll = JBScrollPane(staleForkList)
@@ -28,7 +27,7 @@ object ForksWindow : ToolWindowTab {
             component(codeHostSelect)
             button("Load forks without OPEN PRs") {
                 // TODO
-                uiProtectedOperation("") {
+                uiProtectedOperation("Load forks without OPEN PRs") {
                     PrRouter.getPrivateForkReposWithoutPRs(TODO(), TODO())
                 }
                 NotificationsOperator.show("To do", "Not built yet")

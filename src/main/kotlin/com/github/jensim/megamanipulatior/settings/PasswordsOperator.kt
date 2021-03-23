@@ -24,8 +24,9 @@ object PasswordsOperator {
     private val serviceUsername: String by lazy { System.getProperty("user.name") ?: service }
     private val passwordSetMap: MutableMap<String, Boolean> = ConcurrentHashMap()
 
-    private fun usernameToKey(username: String, baseUrl: String) = "${username}___${baseUrl}"
+    private fun usernameToKey(username: String, baseUrl: String) = "${username}___$baseUrl"
 
+    @SuppressWarnings(value = ["ComplexCondition"])
     fun promptForPassword(username: String? = null, baseUrl: String): String {
         val usernameField = JBTextField(30)
         val passwordField = JBPasswordField().apply { columns = 30 }
@@ -49,19 +50,29 @@ object PasswordsOperator {
             }
         }
         val ans = JOptionPane.showConfirmDialog(null, content, "Password please", OK_CANCEL_OPTION, QUESTION_MESSAGE, null)
-        if (ans != OK_OPTION || (username == null && usernameField.text.isNullOrEmpty()) || passwordField.password.concatToString().isNullOrEmpty()) {
+        return if (ans != OK_OPTION) {
+            ""
+        } else if (username == null && usernameField.text.isNullOrEmpty()) {
             NotificationsOperator.show(
-                title = "Password not set",
-                body = "Password was not entered ",
+                title = "Username not set",
+                body = "Username was not entered",
                 type = NotificationType.WARNING
             )
-            return ""
-        }
-        val username = username ?: usernameField.text
-        val password = passwordField.password.concatToString().trim()
+            ""
+        } else if (passwordField.password.concatToString().isNullOrEmpty()) {
+            NotificationsOperator.show(
+                title = "Password not set",
+                body = "Password was not entered",
+                type = NotificationType.WARNING
+            )
+            ""
+        } else {
+            val username = username ?: usernameField.text
+            val password = passwordField.password.concatToString().trim()
 
-        setPassword(username, password, baseUrl)
-        return password
+            setPassword(username, password, baseUrl)
+            password
+        }
     }
 
     fun isPasswordSet(username: String, baseUrl: String): Boolean = usernameToKey(username, baseUrl).let { userKey ->
@@ -69,7 +80,7 @@ object PasswordsOperator {
     }
 
     fun deletePasswords(username: String, baseUrl: String) {
-        val username = "${serviceUsername}___${username}___${baseUrl}"
+        val username = "${serviceUsername}___${username}___$baseUrl"
         val credentialAttributes: CredentialAttributes? = createCredentialAttributes(service, username)
         if (credentialAttributes == null) {
             NotificationsOperator.show(

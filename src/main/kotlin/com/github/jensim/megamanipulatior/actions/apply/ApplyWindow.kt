@@ -54,7 +54,6 @@ object ApplyWindow : ToolWindowTab {
                 val result = ApplyOperator.apply()
                 resultList.setListData(result.toTypedArray())
                 button.isEnabled = true
-
             }
         }
         resultList.addListSelectionListener {

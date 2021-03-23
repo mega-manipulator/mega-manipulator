@@ -4,13 +4,13 @@ import com.github.jensim.megamanipulatior.actions.ProcessOperator
 import com.github.jensim.megamanipulatior.actions.apply.ApplyOutput
 import com.github.jensim.megamanipulatior.actions.search.SearchResult
 import com.github.jensim.megamanipulatior.settings.ProjectOperator.project
+import org.eclipse.jgit.lib.Repository
+import org.eclipse.jgit.storage.file.FileRepositoryBuilder
 import java.io.File
 import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.attribute.BasicFileAttributes
 import java.util.stream.Collectors
-import org.eclipse.jgit.lib.Repository
-import org.eclipse.jgit.storage.file.FileRepositoryBuilder
 
 object LocalRepoOperator {
 
@@ -49,9 +49,9 @@ object LocalRepoOperator {
     suspend fun push(repoDir: File): ApplyOutput {
         val branch = getBranch(repoDir)!!
         return if (hasFork(repoDir)) {
-            ProcessOperator.runCommandAsync(repoDir, arrayOf("git", "push", "--set-upstream", "fork", branch)).await()
+            ProcessOperator.runCommandAsync(repoDir, listOf("git", "push", "--set-upstream", "fork", branch)).await()
         } else {
-            ProcessOperator.runCommandAsync(repoDir, arrayOf("git", "push", "--set-upstream", "origin", branch)).await()
+            ProcessOperator.runCommandAsync(repoDir, listOf("git", "push", "--set-upstream", "origin", branch)).await()
         }
     }
 
@@ -67,7 +67,7 @@ object LocalRepoOperator {
     }
 
     suspend fun addForkRemote(repoDir: File, url: String): ApplyOutput {
-        return ProcessOperator.runCommandAsync(repoDir, arrayOf("git", "remote", "add", "fork", url)).await()
+        return ProcessOperator.runCommandAsync(repoDir, listOf("git", "remote", "add", "fork", url)).await()
     }
 
     fun getBranch(repoDir: File): String? {

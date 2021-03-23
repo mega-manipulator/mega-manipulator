@@ -118,6 +118,5 @@ object SearchTypes {
         }
     }
 }
-""".trimIndent()
-
+    """.trimIndent()
 }

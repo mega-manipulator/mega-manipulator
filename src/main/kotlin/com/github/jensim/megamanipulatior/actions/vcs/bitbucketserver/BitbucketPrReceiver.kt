@@ -14,6 +14,7 @@ import io.ktor.client.request.get
 import io.ktor.client.request.post
 import io.ktor.client.request.put
 
+@SuppressWarnings("TooManyFunctions")
 object BitbucketPrReceiver {
 
     private suspend fun getDefaultReviewers(client: HttpClient, settings: BitBucketSettings, pullRequest: BitBucketPullRequestWrapper): List<BitBucketUser> {
@@ -30,7 +31,7 @@ object BitbucketPrReceiver {
 
     private suspend fun getDefaultReviewers(client: HttpClient, settings: BitBucketSettings, repo: SearchResult, fromBranchRef: String, toBranchRef: String): List<BitBucketUser> {
         val bitBucketRepo: BitBucketRepo = getRepo(client, settings, repo)
-        return client.get("${settings.baseUrl}/rest/default-reviewers/1.0/projects/${repo.project}/repos/${repo.repo}/reviewers?sourceRepoId=${bitBucketRepo.id}&targetRepoId=${bitBucketRepo.id}&sourceRefId=${fromBranchRef}&targetRefId=${toBranchRef}")
+        return client.get("${settings.baseUrl}/rest/default-reviewers/1.0/projects/${repo.project}/repos/${repo.repo}/reviewers?sourceRepoId=${bitBucketRepo.id}&targetRepoId=${bitBucketRepo.id}&sourceRefId=$fromBranchRef&targetRefId=$toBranchRef")
     }
 
     private suspend fun getRepo(client: HttpClient, settings: BitBucketSettings, repo: SearchResult): BitBucketRepo {
@@ -87,6 +88,7 @@ object BitbucketPrReceiver {
         )
     }
 
+    @Suppress("style.LoopWithTooManyJumpStatements")
     suspend fun getAllPrs(searchHostName: String, codeHostName: String, settings: BitBucketSettings): List<PullRequest> {
         val client: HttpClient = HttpClientProvider.getClient(searchHostName, codeHostName, settings)
         val collector = ArrayList<PullRequest>()
@@ -177,7 +179,7 @@ object BitbucketPrReceiver {
      */
     suspend fun deletePrivateRepo(searchHostName: String, codeHostName: String, settings: BitBucketSettings, repo: String) {
         val client: HttpClient = HttpClientProvider.getClient(searchHostName, codeHostName, settings)
-        client.delete<BitBucketMessage>("${settings.baseUrl}/rest/api/1.0/users/~${settings.username}/repos/${settings.forkRepoPrefix}${repo}") {
+        client.delete<BitBucketMessage>("${settings.baseUrl}/rest/api/1.0/users/~${settings.username}/repos/${settings.forkRepoPrefix}$repo") {
             body = emptyMap<String, String>()
         }
     }
