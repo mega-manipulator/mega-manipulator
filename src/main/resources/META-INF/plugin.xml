@@ -2,7 +2,6 @@
     <id>com.github.jensim.megamanipulatior</id>
     <name>mega-manipulatior</name>
     <vendor>jensim</vendor>
-    <id>16377</id>
 
     <!-- Product and plugin compatibility requirements -->
     <!-- https://plugins.jetbrains.com/docs/intellij/plugin-compatibility.html -->
