@@ -4,6 +4,7 @@ import com.github.jensim.megamanipulator.actions.NotificationsOperator
 import com.github.jensim.megamanipulator.settings.ProjectOperator
 import com.intellij.notification.NotificationType
 import com.intellij.openapi.fileEditor.FileDocumentManager
+import com.intellij.openapi.vfs.LocalFileSystem
 import java.io.File
 import java.net.JarURLConnection
 import java.net.URL
@@ -15,6 +16,16 @@ object FilesOperator {
         val nameWithPath: String,
         val content: ByteArray,
     )
+
+    fun refreshConf(){
+        val tree = File(ProjectOperator.project?.basePath!!, "config").walkTopDown().onEnter { it.isDirectory }.iterator().asSequence().toList()
+        LocalFileSystem.getInstance().refreshIoFiles(tree)
+    }
+
+    fun refreshClones(){
+        val tree = File(ProjectOperator.project?.basePath!!, "clones").walkTopDown().onEnter { it.isDirectory }.iterator().asSequence().toList()
+        LocalFileSystem.getInstance().refreshIoFiles(tree)
+    }
 
     fun makeUpBaseFiles() {
         try {
@@ -47,9 +58,7 @@ object FilesOperator {
                 if (baseFile.nameWithPath.endsWith(".bash")) {
                     file.setExecutable(true)
                 }
-            } else {
-                println("file already exists ${file.path}")
-            }
+            } // else { println("file already exists ${file.path}") }
         } catch (e: Exception) {
             NotificationsOperator.show(
                 title = "Failed creating file",

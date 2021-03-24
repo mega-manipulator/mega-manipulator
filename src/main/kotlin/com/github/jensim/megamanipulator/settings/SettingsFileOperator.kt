@@ -40,6 +40,7 @@ object SettingsFileOperator {
             } catch (e: Exception) {
                 e.printStackTrace()
             }
+            FilesOperator.refreshConf()
             if (!settingsFile.exists()) {
                 println("Creating settings file")
                 FilesOperator.makeUpBaseFiles()

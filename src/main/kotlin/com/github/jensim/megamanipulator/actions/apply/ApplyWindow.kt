@@ -41,20 +41,18 @@ object ApplyWindow : ToolWindowTab {
             }
         }) { it.dir }
         button.addActionListener {
-            uiProtectedOperation(title = "Applying changes") {
-                button.isEnabled = false
-                resultList.clearSelection()
-                resultList.setListData(emptyArray())
-                details.text = ""
-                try {
-                    FileDocumentManager.getInstance().saveAllDocuments()
-                } catch (e: Exception) {
-                    e.printStackTrace().toString()
-                }
-                val result = ApplyOperator.apply()
-                resultList.setListData(result.toTypedArray())
-                button.isEnabled = true
+            button.isEnabled = false
+            resultList.clearSelection()
+            resultList.setListData(emptyArray())
+            details.text = ""
+            try {
+                FileDocumentManager.getInstance().saveAllDocuments()
+            } catch (e: Exception) {
+                e.printStackTrace().toString()
             }
+            val result = ApplyOperator.apply()
+            resultList.setListData(result.toTypedArray())
+            button.isEnabled = true
         }
         resultList.addListSelectionListener {
             resultList.selectedValuesList.firstOrNull()?.let {
