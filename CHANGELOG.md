@@ -1,6 +1,6 @@
 <!-- Keep a Changelog guide -> https://keepachangelog.com -->
 
-# mega-manipulatior Changelog
+# mega-manipulator Changelog
 
 ## [Unreleased]
 ### Added

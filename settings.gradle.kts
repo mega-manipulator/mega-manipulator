@@ -1,1 +1,1 @@
-rootProject.name = "mega-manipulatior"
+rootProject.name = "mega-manipulator"

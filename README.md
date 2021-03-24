@@ -1,8 +1,8 @@
-# mega-manipulatior
+# mega-manipulator
 
 # Work in progress
 
-![Build](https://github.com/jensim/mega-manipulatior/workflows/Build/badge.svg)
+![Build](https://github.com/jensim/mega-manipulator/workflows/Build/badge.svg)
 [![Version](https://img.shields.io/jetbrains/plugin/v/16378.svg)](https://plugins.jetbrains.com/plugin/16378)
 [![Downloads](https://img.shields.io/jetbrains/plugin/d/16378.svg)](https://plugins.jetbrains.com/plugin/16378)
 
@@ -54,12 +54,12 @@ Spend less time making small, or big, changes
 - Using IDE built-in plugin system:
 
   <kbd>Settings/Preferences</kbd> > <kbd>Plugins</kbd> > <kbd>Marketplace</kbd> > <kbd>Search for "
-  mega-manipulatior"</kbd> >
+  mega-manipulator"</kbd> >
   <kbd>Install Plugin</kbd>
 
 - Manually:
 
-  Download the [latest release](https://github.com/jensim/mega-manipulatior/releases/latest) and install it manually using
+  Download the [latest release](https://github.com/jensim/mega-manipulator/releases/latest) and install it manually using
   <kbd>Settings/Preferences</kbd> > <kbd>Plugins</kbd> > <kbd>⚙️</kbd> > <kbd>Install plugin from disk...</kbd>
 
 

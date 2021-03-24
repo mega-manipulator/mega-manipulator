@@ -1,6 +1,6 @@
 <idea-plugin>
-    <id>com.github.jensim.megamanipulatior</id>
-    <name>mega-manipulatior</name>
+    <id>com.github.jensim.megamanipulator</id>
+    <name>mega-manipulator</name>
     <vendor>jensim</vendor>
 
     <!-- Product and plugin compatibility requirements -->
@@ -9,6 +9,9 @@
 
     <extensions defaultExtensionNs="com.intellij">
         <toolWindow id="Mega Manipulator" secondary="true" icon="AllIcons.General.Modified" anchor="bottom"
-                    factoryClass="com.github.jensim.megamanipulatior.toolswindow.MyToolWindowFactory"/>
+                    factoryClass="com.github.jensim.megamanipulator.toolswindow.MyToolWindowFactory"/>
+        <moduleType id="mega-manipulator"
+                    implementationClass="com.github.jensim.megamanipulator.project.MegaManipulatorModuleType"/>
+        <moduleBuilder builderClass="com.github.jensim.megamanipulator.project.MegaManipulatorModuleBuilder"/>
     </extensions>
 </idea-plugin>
