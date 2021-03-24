@@ -4,11 +4,12 @@ import com.fasterxml.jackson.module.kotlin.readValue
 import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
+import java.io.File
 
 class SettingsFileOperatorTest {
 
     @Test
-    fun serializeDeserialize() {
+    fun `serialize deserialize`() {
         // given
         val testData = MegaManipulatorSettings(
             defaultHttpsOverride = null,
@@ -49,7 +50,7 @@ class SettingsFileOperatorTest {
     }
 
     @Test
-    fun failIfTooFewEntries() {
+    fun `fail if too few entries`() {
         Assertions.assertThrows(IllegalArgumentException::class.java) {
             MegaManipulatorSettings(
                     defaultHttpsOverride = null,
@@ -67,5 +68,11 @@ class SettingsFileOperatorTest {
                     ),
             )
         }
+    }
+
+    @Test
+    internal fun `test default settings`() {
+        val defaultFileContent = File("src/main/resources/base-files/mega-manipulator.yml").readText()
+        SerializationHolder.yamlObjectMapper.readValue<MegaManipulatorSettings>(defaultFileContent)
     }
 }

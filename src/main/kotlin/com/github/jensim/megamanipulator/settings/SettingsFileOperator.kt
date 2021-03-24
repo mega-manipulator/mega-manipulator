@@ -2,6 +2,7 @@ package com.github.jensim.megamanipulator.settings
 
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.github.jensim.megamanipulator.actions.NotificationsOperator
+import com.github.jensim.megamanipulator.files.FilesOperator
 import com.github.jensim.megamanipulator.settings.ProjectOperator.project
 import com.github.jensim.megamanipulator.settings.SerializationHolder.yamlObjectMapper
 import com.intellij.notification.NotificationType.WARNING
@@ -18,7 +19,7 @@ object SettingsFileOperator {
 
     private val lastPeek = AtomicLong(0L)
     private val lastUpdated: AtomicLong = AtomicLong(0L)
-    private val bufferedSettings: AtomicReference<MegaManipulatorSettings> = AtomicReference(dummy())
+    private val bufferedSettings: AtomicReference<MegaManipulatorSettings?> = AtomicReference(null)
     private val settingsFile: File
         get() = File(project?.basePath!!, settingsFileName)
     val scriptFile: File
@@ -28,14 +29,6 @@ object SettingsFileOperator {
     private val privateValidationText = AtomicReference("Settings are not yet validated")
     val validationText: String
         get() = privateValidationText.acquire
-    private val dummyYaml: String by lazy {
-        """
-# Please edit this file to set up the plugin
-# Removing the file will reset the file to the example state
-
-${yamlObjectMapper.writeValueAsString(dummy())}
-"""
-    }
 
     internal fun readSettings(): MegaManipulatorSettings? {
         if (System.currentTimeMillis() - lastPeek.get() < 250) {
@@ -49,7 +42,7 @@ ${yamlObjectMapper.writeValueAsString(dummy())}
             }
             if (!settingsFile.exists()) {
                 println("Creating settings file")
-                writeSettings(dummyYaml)
+                FilesOperator.makeUpBaseFiles()
             }
             if (lastUpdated.get() == settingsFile.lastModified()) {
                 lastPeek.set(System.currentTimeMillis())
@@ -74,53 +67,5 @@ ${yamlObjectMapper.writeValueAsString(dummy())}
             )
         }
         return bufferedSettings.get()
-    }
-
-    private fun dummy() = MegaManipulatorSettings(
-        defaultHttpsOverride = HttpsOverride.ALLOW_ANYTHING,
-        searchHostSettings = mapOf(
-            "example-sourcegraph" to SearchHostSettingsWrapper(
-                type = SearchHostType.SOURCEGRAPH,
-                settings = SourceGraphSettings(
-                    baseUrl = "https://sourcegraph.example.com",
-                    httpsOverride = null,
-                    authMethod = AuthMethod.TOKEN,
-                    username = null,
-                ),
-                codeHostSettings = mapOf(
-                    "bitbucket.example.com" to CodeHostSettingsWrapper(
-                        type = CodeHostType.BITBUCKET_SERVER,
-                        BitBucketSettings(
-                            httpsOverride = null,
-                            baseUrl = "https://bitbucket.example.com",
-                            clonePattern = "ssh://git@bitbucket.example.com/{project}/{repo}.git",
-                            authMethod = AuthMethod.TOKEN,
-                            username = null,
-                            forkSetting = ForkSetting.PLAIN_BRANCH,
-                            forkRepoPrefix = null,
-                        ),
-                    ),
-                    "github.com" to CodeHostSettingsWrapper(
-                        type = CodeHostType.GITHUB,
-                        GitHubSettings(
-                            httpsOverride = null,
-                            baseUrl = "https://github.com",
-                            clonePattern = "ssh://git@bitbucket.example.com/{project}/{repo}.git",
-                            authMethod = AuthMethod.TOKEN,
-                            username = null,
-                            forkSetting = ForkSetting.PLAIN_BRANCH,
-                            forkRepoPrefix = null,
-                        ),
-                    )
-                ),
-            ),
-        ),
-    )
-
-    private fun writeSettings(yaml: String) {
-        if (!settingsFile.exists()) {
-            settingsFile.createNewFile()
-        }
-        settingsFile.writeBytes(yaml.toByteArray(charset = UTF_8))
     }
 }

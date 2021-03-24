@@ -2,7 +2,6 @@ package com.github.jensim.megamanipulator.project
 
 import com.github.jensim.megamanipulator.files.FilesOperator
 import com.github.jensim.megamanipulator.settings.ProjectOperator
-import com.github.jensim.megamanipulator.settings.SettingsFileOperator
 import com.intellij.ide.util.projectWizard.ModuleBuilder
 import com.intellij.openapi.externalSystem.service.project.manage.ExternalProjectsManagerImpl
 import com.intellij.openapi.module.ModuleType
@@ -28,7 +27,6 @@ class MegaManipulatorModuleBuilder : ModuleBuilder() {
         val contentEntry = modifiableRootModel.addContentEntry(contentEntryFile)
 
         FilesOperator.makeUpBaseFiles()
-        SettingsFileOperator.readSettings()
 
         val confDir = createDirIfNotExists(modifiableRootModel.project, "config")
         contentEntry.addSourceFolder(confDir, false)
