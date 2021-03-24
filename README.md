@@ -3,8 +3,8 @@
 # Work in progress
 
 ![Build](https://github.com/jensim/mega-manipulator/workflows/Build/badge.svg)
-[![Version](https://img.shields.io/jetbrains/plugin/v/16378.svg)](https://plugins.jetbrains.com/plugin/16378)
-[![Downloads](https://img.shields.io/jetbrains/plugin/d/16378.svg)](https://plugins.jetbrains.com/plugin/16378)
+[![Version](https://img.shields.io/jetbrains/plugin/v/16396.svg)](https://plugins.jetbrains.com/plugin/16396)
+[![Downloads](https://img.shields.io/jetbrains/plugin/d/16396.svg)](https://plugins.jetbrains.com/plugin/16396)
 
 ## Template ToDo list
 
