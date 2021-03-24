@@ -17,12 +17,12 @@ object FilesOperator {
         val content: ByteArray,
     )
 
-    fun refreshConf(){
+    fun refreshConf() {
         val tree = File(ProjectOperator.project?.basePath!!, "config").walkTopDown().onEnter { it.isDirectory }.iterator().asSequence().toList()
         LocalFileSystem.getInstance().refreshIoFiles(tree)
     }
 
-    fun refreshClones(){
+    fun refreshClones() {
         val tree = File(ProjectOperator.project?.basePath!!, "clones").walkTopDown().onEnter { it.isDirectory }.iterator().asSequence().toList()
         LocalFileSystem.getInstance().refreshIoFiles(tree)
     }

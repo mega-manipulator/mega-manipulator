@@ -3,7 +3,6 @@ package com.github.jensim.megamanipulator.actions.apply
 import com.github.jensim.megamanipulator.settings.ProjectOperator.project
 import com.github.jensim.megamanipulator.toolswindow.ToolWindowTab
 import com.github.jensim.megamanipulator.ui.GeneralListCellRenderer.addCellRenderer
-import com.github.jensim.megamanipulator.ui.uiProtectedOperation
 import com.intellij.openapi.fileEditor.FileDocumentManager
 import com.intellij.openapi.ui.DialogPanel
 import com.intellij.ui.components.JBList

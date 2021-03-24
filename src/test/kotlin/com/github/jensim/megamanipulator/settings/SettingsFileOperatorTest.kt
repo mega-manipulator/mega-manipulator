@@ -53,19 +53,19 @@ class SettingsFileOperatorTest {
     fun `fail if too few entries`() {
         Assertions.assertThrows(IllegalArgumentException::class.java) {
             MegaManipulatorSettings(
-                    defaultHttpsOverride = null,
-                    searchHostSettings = mapOf(
-                            "sg" to SearchHostSettingsWrapper(
-                                    type = SearchHostType.SOURCEGRAPH,
-                                    settings = SourceGraphSettings(
-                                            baseUrl = "https://sourcegraph.example.com",
-                                            httpsOverride = null,
-                                            authMethod = AuthMethod.USERNAME_PASSWORD,
-                                            username = "null"
-                                    ),
-                                    codeHostSettings = mapOf()
-                            ),
+                defaultHttpsOverride = null,
+                searchHostSettings = mapOf(
+                    "sg" to SearchHostSettingsWrapper(
+                        type = SearchHostType.SOURCEGRAPH,
+                        settings = SourceGraphSettings(
+                            baseUrl = "https://sourcegraph.example.com",
+                            httpsOverride = null,
+                            authMethod = AuthMethod.USERNAME_PASSWORD,
+                            username = "null"
+                        ),
+                        codeHostSettings = mapOf()
                     ),
+                ),
             )
         }
     }

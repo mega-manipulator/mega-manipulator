@@ -5,12 +5,10 @@ import com.github.jensim.megamanipulator.actions.ProcessOperator
 import com.github.jensim.megamanipulator.actions.search.SearchResult
 import com.github.jensim.megamanipulator.files.FilesOperator
 import com.github.jensim.megamanipulator.settings.ProjectOperator
-import com.github.jensim.megamanipulator.settings.ProjectOperator.project
 import com.github.jensim.megamanipulator.settings.SettingsFileOperator
 import com.github.jensim.megamanipulator.ui.mapConcurrentWithProgress
 import com.intellij.notification.NotificationType
 import com.intellij.notification.NotificationType.WARNING
-import com.intellij.openapi.vfs.LocalFileSystem
 import java.io.File
 
 object CloneOperator {
