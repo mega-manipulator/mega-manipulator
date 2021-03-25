@@ -6,6 +6,10 @@ import com.github.jensim.megamanipulator.ui.EditPullRequestDialog
 import com.github.jensim.megamanipulator.ui.mapConcurrentWithProgress
 import com.intellij.notification.NotificationType
 import javax.swing.JMenuItem
+import javax.swing.JOptionPane
+import javax.swing.JOptionPane.OK_CANCEL_OPTION
+import javax.swing.JOptionPane.OK_OPTION
+import javax.swing.JOptionPane.QUESTION_MESSAGE
 import javax.swing.JPopupMenu
 
 class PullRequestActionsMenu(
@@ -20,11 +24,16 @@ class PullRequestActionsMenu(
         val declineMenuItem = JMenuItem("Decline PRs").apply {
             addActionListener { _ ->
                 showConfirm("Decline selected PRs", "No undo path available im afraid..\nDecline selected PRs?") {
-                    prProvider().mapConcurrentWithProgress(
-                        title = "Declining prs",
-                        extraText2 = { "${it.codeHostName()}/${it.project()}/${it.repo()} ${it.fromBranch()}" },
-                    ) { pullRequest ->
-                        PrRouter.closePr(pullRequest)
+                    val ans = JOptionPane.showConfirmDialog(null, "Also drop source branches and forks?", "Drop source?", OK_CANCEL_OPTION, QUESTION_MESSAGE, null)
+                    val doDrop = ans == OK_OPTION
+                    val exit = listOf(OK_OPTION, OK_CANCEL_OPTION).contains(ans)
+                    if (!exit) {
+                        prProvider().mapConcurrentWithProgress(
+                                title = "Declining prs",
+                                extraText2 = { "${it.codeHostName()}/${it.project()}/${it.repo()} ${it.fromBranch()}" },
+                        ) { pullRequest: PullRequest ->
+                            PrRouter.closePr(doDrop, pullRequest)
+                        }
                     }
                     postActionHook()
                 }
@@ -56,7 +65,7 @@ class PullRequestActionsMenu(
             addActionListener { _ ->
                 showConfirm(
                     title = "Add default reviewers",
-                    message = "Add defult reviewers"
+                        message = "Add default reviewers"
                 ) {
                     prProvider().mapConcurrentWithProgress(
                         title = "Add default reviewers",

@@ -21,16 +21,18 @@ data class BitBucketPullRequestWrapper(
     override fun fromBranch(): String = bitbucketPR.fromRef.id
     override fun toBranch(): String = bitbucketPR.toRef.id
     override fun alterCopy(
-        codeHostName: String?,
-        searchHostName: String?,
-        title: String?,
-        body: String?,
+            codeHostName: String?,
+            searchHostName: String?,
+            title: String?,
+            body: String?,
     ): BitBucketPullRequestWrapper = copy(
-        codeHost = codeHostName ?: codeHostName(),
-        searchHost = searchHostName ?: searchHostName(),
-        bitbucketPR = bitbucketPR.copy(
-            title = title ?: title(),
-            description = body ?: body(),
-        ),
+            codeHost = codeHostName ?: codeHostName(),
+            searchHost = searchHostName ?: searchHostName(),
+            bitbucketPR = bitbucketPR.copy(
+                    title = title ?: title(),
+                    description = body ?: body(),
+            ),
     )
+
+    override fun isFork(): Boolean = bitbucketPR.toRef.repository.slug != bitbucketPR.fromRef.repository.slug
 }

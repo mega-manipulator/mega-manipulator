@@ -118,22 +118,41 @@ object BitbucketPrReceiver {
         return collector
     }
 
-    suspend fun closePr(settings: BitBucketSettings, pullRequest: BitBucketPullRequestWrapper): PullRequest {
-        val client = HttpClientProvider.getClient(pullRequest.searchHostName(), pullRequest.codeHostName(), settings)
+    suspend fun closePr(dropForkOrBranch: Boolean, settings: BitBucketSettings, pullRequest: BitBucketPullRequestWrapper): PullRequest {
+        val client: HttpClient = HttpClientProvider.getClient(pullRequest.searchHostName(), pullRequest.codeHostName(), settings)
         try {
             val urlString = "${settings.baseUrl}/rest/api/1.0/projects/${pullRequest.project()}/repos/${pullRequest.repo()}/pull-requests/${pullRequest.bitbucketPR.id}/decline?version=${pullRequest.bitbucketPR.version}"
             client.post<Unit>(urlString) {
                 body = emptyMap<String, String>()
             }
+            if (dropForkOrBranch) {
+                if (pullRequest.isFork()) {
+                    val repository = pullRequest.bitbucketPR.fromRef.repository
+                    // Get open PRs
+                    val page: BitBucketPage<BitBucketPullRequest> = client.get("${settings.baseUrl}/rest/api/1.0/projects/${repository.project?.key!!}/repos/${repository.slug}/pull-requests?direction=OUTGOING&state=OPEN")
+                    if ((page.size ?: 0) == 0) {
+                        deletePrivateRepo(BitBucketForkRepo(pullRequest.searchHost, pullRequest.codeHost, repository), settings)
+                    }
+                } else {
+                    removeRemoteBranch(settings, pullRequest, client)
+                }
+            }
         } catch (e: Exception) {
             e.printStackTrace()
             NotificationsOperator.show(
-                title = "Failed declining PR",
-                body = "${e.message}",
-                type = NotificationType.ERROR
+                    title = "Failed declining PR",
+                    body = "${e.message}",
+                    type = NotificationType.ERROR
             )
         }
         return pullRequest
+    }
+
+    private suspend fun removeRemoteBranch(settings: BitBucketSettings, pullRequest: BitBucketPullRequestWrapper, client: HttpClient) {
+        // https://docs.atlassian.com/bitbucket-server/rest/5.8.0/bitbucket-branch-rest.html#idm45555984542992
+        client.delete<Void>("${settings.baseUrl}/rest/branch-utils/1.0/projects/${pullRequest.project()}/repos/${pullRequest.repo()}/branches") {
+            body = mapOf<String, Any>("name" to pullRequest.bitbucketPR.fromRef.id, "dryRun" to false)
+        }
     }
 
     suspend fun createFork(settings: BitBucketSettings, repo: SearchResult): String? {

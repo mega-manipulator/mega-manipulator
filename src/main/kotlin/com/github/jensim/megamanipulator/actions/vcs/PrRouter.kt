@@ -51,10 +51,10 @@ object PrRouter {
         }
     }
 
-    suspend fun closePr(pullRequest: PullRequest) {
+    suspend fun closePr(dropForkOrBranch: Boolean, pullRequest: PullRequest) {
         val settings = resolve(pullRequest.searchHostName(), pullRequest.codeHostName())
         when {
-            settings is BitBucketSettings && pullRequest is BitBucketPullRequestWrapper -> BitbucketPrReceiver.closePr(settings, pullRequest)
+            settings is BitBucketSettings && pullRequest is BitBucketPullRequestWrapper -> BitbucketPrReceiver.closePr(dropForkOrBranch, settings, pullRequest)
             else -> throw IllegalArgumentException("Provided types does not match expectations")
         }
     }

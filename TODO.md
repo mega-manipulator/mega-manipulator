@@ -42,7 +42,7 @@
 * [x] Add reviewers
 * [x] Remove PRs
   * [x] Drop forks
-  * [ ] Drop branches
+  * [x] Drop branches
 * [ ] Clone from PRs
   * [ ] set up forked remotes
 * [ ] Drop stale forked repos

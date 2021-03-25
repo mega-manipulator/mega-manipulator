@@ -10,9 +10,11 @@ interface PullRequest {
     fun fromBranch(): String
     fun toBranch(): String
     fun alterCopy(
-        codeHostName: String? = null,
-        searchHostName: String? = null,
-        title: String? = null,
-        body: String? = null,
+            codeHostName: String? = null,
+            searchHostName: String? = null,
+            title: String? = null,
+            body: String? = null,
     ): PullRequest
+
+    fun isFork(): Boolean
 }
