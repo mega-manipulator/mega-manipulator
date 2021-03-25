@@ -1,14 +1,14 @@
 package com.github.jensim.megamanipulator.ui
 
-import com.github.jensim.megamanipulator.actions.vcs.PullRequest
+import com.github.jensim.megamanipulator.actions.vcs.PullRequestWrapper
 import com.github.jensim.megamanipulator.ui.GeneralListCellRenderer.addCellRenderer
 import com.intellij.openapi.ui.ComboBox
 import com.intellij.openapi.ui.DialogPanel
 import com.intellij.ui.layout.panel
 
-class EditPullRequestDialog(pullRequests: List<PullRequest>) : CreatePullRequestDialog() {
+class EditPullRequestDialog(pullRequests: List<PullRequestWrapper>) : CreatePullRequestDialog() {
     override val title: String = "Edit pull request"
-    private val preExistingSelect: ComboBox<PullRequest?> = ComboBox(pullRequests.toTypedArray()).also { select ->
+    private val preExistingSelect: ComboBox<PullRequestWrapper?> = ComboBox(pullRequests.toTypedArray()).also { select ->
         select.addActionListener { _ ->
             prTitle = select.item?.title()
             prDescription = select.item?.body()

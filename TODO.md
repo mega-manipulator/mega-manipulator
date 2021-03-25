@@ -43,8 +43,8 @@
 * [x] Remove PRs
   * [x] Drop forks
   * [x] Drop branches
-* [ ] Clone from PRs
-  * [ ] set up forked remotes
+* [x] Clone from PRs
+  * [x] set up forked remotes
 * [ ] Drop stale forked repos
 * [ ] 
 

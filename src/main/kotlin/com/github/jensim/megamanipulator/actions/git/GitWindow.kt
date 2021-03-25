@@ -49,7 +49,7 @@ object GitWindow : ToolWindowTab {
                         if (branch == null || branch.isEmpty() || branch.contains(' ')) {
                             throw IllegalArgumentException("Invalid branch name")
                         }
-                        LocalRepoOperator.getLocalRepoFiles().mapConcurrentWithProgress("Che") { dir ->
+                        LocalRepoOperator.getLocalRepoFiles().mapConcurrentWithProgress("Checkout branch $branch") { dir ->
                             ProcessOperator.runCommandAsync(dir, listOf("git", "checkout", "-b", "$branch"))
                         }
                         refresh()

@@ -12,7 +12,7 @@ object PrRouter {
     private fun resolve(searchHost: String, codeHost: String): CodeHostSettings? = SettingsFileOperator.readSettings()
         ?.searchHostSettings?.get(searchHost)?.codeHostSettings?.get(codeHost)?.settings
 
-    suspend fun addDefaultReviewers(pullRequest: PullRequest): PullRequest {
+    suspend fun addDefaultReviewers(pullRequest: PullRequestWrapper): PullRequestWrapper {
         val settings = resolve(pullRequest.searchHostName(), pullRequest.codeHostName())
         return when {
             settings is BitBucketSettings && pullRequest is BitBucketPullRequestWrapper -> BitbucketPrReceiver.addDefaultReviewers(settings, pullRequest)
@@ -20,7 +20,7 @@ object PrRouter {
         }
     }
 
-    suspend fun createPr(title: String, description: String, repo: SearchResult): PullRequest {
+    suspend fun createPr(title: String, description: String, repo: SearchResult): PullRequestWrapper {
         return when (val settings = resolve(repo.searchHostName, repo.codeHostName)) {
             is BitBucketSettings -> BitbucketPrReceiver.createPr(title, description, settings, repo)
             else -> throw IllegalArgumentException("Provided types does not match expectations")
@@ -34,7 +34,7 @@ object PrRouter {
         }
     }
 
-    suspend fun updatePr(pullRequest: PullRequest): PullRequest {
+    suspend fun updatePr(pullRequest: PullRequestWrapper): PullRequestWrapper {
         val settings = resolve(pullRequest.searchHostName(), pullRequest.codeHostName())
         return when {
             settings is BitBucketSettings && pullRequest is BitBucketPullRequestWrapper -> BitbucketPrReceiver.updatePr(settings, pullRequest)
@@ -42,7 +42,7 @@ object PrRouter {
         }
     }
 
-    suspend fun getAllPrs(searchHost: String, codeHost: String): List<PullRequest>? {
+    suspend fun getAllPrs(searchHost: String, codeHost: String): List<PullRequestWrapper>? {
         return SettingsFileOperator.readSettings()?.searchHostSettings?.get(searchHost)?.codeHostSettings?.get(codeHost)?.settings?.let {
             when (it) {
                 is BitBucketSettings -> BitbucketPrReceiver.getAllPrs(searchHost, codeHost, it)
@@ -51,7 +51,7 @@ object PrRouter {
         }
     }
 
-    suspend fun closePr(dropForkOrBranch: Boolean, pullRequest: PullRequest) {
+    suspend fun closePr(dropForkOrBranch: Boolean, pullRequest: PullRequestWrapper) {
         val settings = resolve(pullRequest.searchHostName(), pullRequest.codeHostName())
         when {
             settings is BitBucketSettings && pullRequest is BitBucketPullRequestWrapper -> BitbucketPrReceiver.closePr(dropForkOrBranch, settings, pullRequest)

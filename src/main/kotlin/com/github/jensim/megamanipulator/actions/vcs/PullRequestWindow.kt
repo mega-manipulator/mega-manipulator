@@ -19,7 +19,7 @@ object PullRequestWindow : ToolWindowTab {
     override val index: Int = 4
 
     private val codeHostSelect = CodeHostSelector()
-    private val prList = JBList<PullRequest>()
+    private val prList = JBList<PullRequestWrapper>()
     private val prScroll = JBScrollPane(prList)
     private val peekArea = JBTextArea()
     private val peekScroll = JBScrollPane(peekArea)
@@ -77,7 +77,7 @@ object PullRequestWindow : ToolWindowTab {
     private fun fetchPRs() {
         prList.setListData(emptyArray())
         (codeHostSelect.selectedItem)?.let { selected ->
-            val prs: List<PullRequest>? = uiProtectedOperation("Fetching PRs") {
+            val prs: List<PullRequestWrapper>? = uiProtectedOperation("Fetching PRs") {
                 PrRouter.getAllPrs(selected.searchHostName, selected.codeHostName)
             }
             prList.setListData(prs?.toTypedArray())

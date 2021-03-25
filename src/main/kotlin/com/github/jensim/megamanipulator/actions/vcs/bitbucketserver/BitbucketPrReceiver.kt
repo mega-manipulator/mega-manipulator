@@ -5,7 +5,7 @@ import com.github.jensim.megamanipulator.actions.localrepo.LocalRepoOperator
 import com.github.jensim.megamanipulator.actions.search.SearchResult
 import com.github.jensim.megamanipulator.actions.vcs.BitBucketForkRepo
 import com.github.jensim.megamanipulator.actions.vcs.BitBucketPullRequestWrapper
-import com.github.jensim.megamanipulator.actions.vcs.PullRequest
+import com.github.jensim.megamanipulator.actions.vcs.PullRequestWrapper
 import com.github.jensim.megamanipulator.http.HttpClientProvider
 import com.github.jensim.megamanipulator.settings.BitBucketSettings
 import com.intellij.notification.NotificationType
@@ -22,7 +22,7 @@ object BitbucketPrReceiver {
         return client.get("${settings.baseUrl}/rest/default-reviewers/1.0/projects/${pullRequest.project()}/repos/${pullRequest.repo()}/reviewers?sourceRepoId=${pullRequest.bitbucketPR.fromRef.repository.id}&targetRepoId=${pullRequest.bitbucketPR.toRef.repository.id}&sourceRefId=${pullRequest.bitbucketPR.fromRef.id}&targetRefId=${pullRequest.bitbucketPR.toRef.id}")
     }
 
-    suspend fun addDefaultReviewers(settings: BitBucketSettings, pullRequest: BitBucketPullRequestWrapper): PullRequest {
+    suspend fun addDefaultReviewers(settings: BitBucketSettings, pullRequest: BitBucketPullRequestWrapper): PullRequestWrapper {
         val client: HttpClient = HttpClientProvider.getClient(pullRequest.searchHostName(), pullRequest.codeHostName(), settings)
         val defaultReviewers = getDefaultReviewers(client, settings, pullRequest).map { BitBucketParticipant(BitBucketUser(it.name)) }
         val all = (pullRequest.bitbucketPR.reviewers + defaultReviewers).distinct()
@@ -39,27 +39,27 @@ object BitbucketPrReceiver {
         return client.get("${settings.baseUrl}/rest/api/1.0/projects/${repo.project}/repos/${repo.repo}")
     }
 
-    suspend fun createPr(title: String, description: String, settings: BitBucketSettings, repo: SearchResult): PullRequest {
+    suspend fun createPr(title: String, description: String, settings: BitBucketSettings, repo: SearchResult): PullRequestWrapper {
         val client: HttpClient = HttpClientProvider.getClient(repo.searchHostName, repo.codeHostName, settings)
 
         val defaultBranch = client.get<BitBucketDefaultBranch>("${settings.baseUrl}/rest/api/1.0/projects/${repo.project}/repos/${repo.repo}/default-branch").id
         val localBranch: String = LocalRepoOperator.getBranch(repo)!!
         val reviewers = getDefaultReviewers(client, settings, repo, localBranch, defaultBranch)
-            .map { BitBucketParticipant(BitBucketUser(name = it.name)) }
+                .map { BitBucketParticipant(BitBucketUser(name = it.name)) }
         val pr: BitBucketPullRequest = client.post("${settings.baseUrl}/rest/api/1.0/projects/${repo.project}/repos/${repo.repo}/pull-requests") {
             body = BitBucketPullRequest(
-                title = title,
-                description = description,
-                fromRef = BitBucketBranchRef(
-                    id = localBranch,
-                    repository = BitBucketRepo(
-                        slug = repo.repo,
-                        project = BitBucketProject(key = repo.project),
-                    )
-                ),
-                toRef = BitBucketBranchRef(
-                    id = defaultBranch,
-                    repository = BitBucketRepo(
+                    title = title,
+                    description = description,
+                    fromRef = BitBucketBranchRef(
+                            id = localBranch,
+                            repository = BitBucketRepo(
+                                    slug = repo.repo,
+                                    project = BitBucketProject(key = repo.project),
+                            )
+                    ),
+                    toRef = BitBucketBranchRef(
+                            id = defaultBranch,
+                            repository = BitBucketRepo(
                         slug = repo.repo,
                         project = BitBucketProject(key = repo.project),
                     )
@@ -71,28 +71,28 @@ object BitbucketPrReceiver {
         return BitBucketPullRequestWrapper(searchHost = repo.searchHostName, codeHost = repo.codeHostName, pr)
     }
 
-    suspend fun updatePr(settings: BitBucketSettings, pullRequest: BitBucketPullRequestWrapper): PullRequest {
+    suspend fun updatePr(settings: BitBucketSettings, pullRequest: BitBucketPullRequestWrapper): PullRequestWrapper {
         val client: HttpClient = HttpClientProvider.getClient(pullRequest.searchHostName(), pullRequest.codeHostName(), settings)
         return updatePr(client, settings, pullRequest)
     }
 
-    private suspend fun updatePr(client: HttpClient, settings: BitBucketSettings, pullRequest: BitBucketPullRequestWrapper): PullRequest {
+    private suspend fun updatePr(client: HttpClient, settings: BitBucketSettings, pullRequest: BitBucketPullRequestWrapper): PullRequestWrapper {
         val pr: BitBucketPullRequest = client.put("${settings.baseUrl}/rest/api/1.0/projects/${pullRequest.project()}/repos/${pullRequest.repo()}/pull-requests/${pullRequest.bitbucketPR.id}") {
             body = pullRequest.bitbucketPR.copy(
-                author = null,
+                    author = null,
             )
         }
         return BitBucketPullRequestWrapper(
-            searchHost = pullRequest.searchHost,
-            codeHost = pullRequest.codeHost,
-            bitbucketPR = pr
+                searchHost = pullRequest.searchHost,
+                codeHost = pullRequest.codeHost,
+                bitbucketPR = pr
         )
     }
 
     @Suppress("style.LoopWithTooManyJumpStatements")
-    suspend fun getAllPrs(searchHostName: String, codeHostName: String, settings: BitBucketSettings): List<PullRequest> {
+    suspend fun getAllPrs(searchHostName: String, codeHostName: String, settings: BitBucketSettings): List<PullRequestWrapper> {
         val client: HttpClient = HttpClientProvider.getClient(searchHostName, codeHostName, settings)
-        val collector = ArrayList<PullRequest>()
+        val collector = ArrayList<PullRequestWrapper>()
         var start = 0L
         while (true) {
             val response: BitBucketPage<BitBucketPullRequest> = try {
@@ -118,7 +118,7 @@ object BitbucketPrReceiver {
         return collector
     }
 
-    suspend fun closePr(dropForkOrBranch: Boolean, settings: BitBucketSettings, pullRequest: BitBucketPullRequestWrapper): PullRequest {
+    suspend fun closePr(dropForkOrBranch: Boolean, settings: BitBucketSettings, pullRequest: BitBucketPullRequestWrapper): PullRequestWrapper {
         val client: HttpClient = HttpClientProvider.getClient(pullRequest.searchHostName(), pullRequest.codeHostName(), settings)
         try {
             val urlString = "${settings.baseUrl}/rest/api/1.0/projects/${pullRequest.project()}/repos/${pullRequest.repo()}/pull-requests/${pullRequest.bitbucketPR.id}/decline?version=${pullRequest.bitbucketPR.version}"

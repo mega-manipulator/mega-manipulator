@@ -1,6 +1,8 @@
 package com.github.jensim.megamanipulator.actions.vcs
 
 import com.github.jensim.megamanipulator.actions.NotificationsOperator
+import com.github.jensim.megamanipulator.actions.git.clone.CloneOperator
+import com.github.jensim.megamanipulator.files.FilesOperator
 import com.github.jensim.megamanipulator.ui.DialogGenerator.showConfirm
 import com.github.jensim.megamanipulator.ui.EditPullRequestDialog
 import com.github.jensim.megamanipulator.ui.mapConcurrentWithProgress
@@ -13,8 +15,8 @@ import javax.swing.JOptionPane.QUESTION_MESSAGE
 import javax.swing.JPopupMenu
 
 class PullRequestActionsMenu(
-    private val prProvider: () -> List<PullRequest>,
-    private val postActionHook: () -> Unit,
+        private val prProvider: () -> List<PullRequestWrapper>,
+        private val postActionHook: () -> Unit,
 ) : JPopupMenu() {
 
     var codeHostName: String? = null
@@ -31,7 +33,7 @@ class PullRequestActionsMenu(
                         prProvider().mapConcurrentWithProgress(
                                 title = "Declining prs",
                                 extraText2 = { "${it.codeHostName()}/${it.project()}/${it.repo()} ${it.fromBranch()}" },
-                        ) { pullRequest: PullRequest ->
+                        ) { pullRequest: PullRequestWrapper ->
                             PrRouter.closePr(doDrop, pullRequest)
                         }
                     }
@@ -82,9 +84,21 @@ class PullRequestActionsMenu(
                 }
             }
         }
+        val cloneMenuItem = JMenuItem("Clone PRs").apply {
+            addActionListener {
+                val prs = prProvider()
+                showConfirm(title = "Clone...", message = "Clone ${prs.size} selected PR branches") {
+                    prs.mapConcurrentWithProgress(title = "Clone PRs", "") { pullRequest ->
+                        CloneOperator.clone(pullRequest)
+                    }
+                    FilesOperator.refreshClones()
+                }
+            }
+        }
 
         add(declineMenuItem)
         add(alterMenuItem)
         add(defaultReviewersMenuItem)
+        add(cloneMenuItem)
     }
 }
