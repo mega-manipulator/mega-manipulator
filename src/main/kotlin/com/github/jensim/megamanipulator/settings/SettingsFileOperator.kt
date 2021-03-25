@@ -38,7 +38,7 @@ object SettingsFileOperator {
             try {
                 FileDocumentManager.getInstance().saveAllDocuments()
             } catch (e: Exception) {
-                e.printStackTrace()
+                // e.printStackTrace()
             }
             FilesOperator.refreshConf()
             if (!settingsFile.exists()) {

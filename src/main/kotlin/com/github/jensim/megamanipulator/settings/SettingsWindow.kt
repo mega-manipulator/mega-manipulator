@@ -1,11 +1,13 @@
 package com.github.jensim.megamanipulator.settings
 
+import com.github.jensim.megamanipulator.files.FilesOperator
 import com.github.jensim.megamanipulator.toolswindow.ToolWindowTab
 import com.github.jensim.megamanipulator.ui.GeneralListCellRenderer.addCellRenderer
 import com.intellij.ui.components.JBLabel
 import com.intellij.ui.components.JBList
 import com.intellij.ui.layout.panel
 import java.awt.Color
+import java.awt.Component
 import javax.swing.JButton
 import javax.swing.JComponent
 import javax.swing.ListSelectionModel
@@ -44,6 +46,18 @@ object SettingsWindow : ToolWindowTab {
         row {
             component(label)
             component(hostConfigSelect)
+        }
+        row {
+            button("Toggle clones index") {
+                val b: Component = it.source as Component
+                b.isEnabled = false
+                try {
+                    ProjectOperator.toggleExcludeClones()
+                    FilesOperator.refreshClones()
+                } finally {
+                    b.isEnabled = true
+                }
+            }
         }
     }
 

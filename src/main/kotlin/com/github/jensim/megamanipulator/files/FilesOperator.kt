@@ -13,18 +13,23 @@ import java.util.jar.JarEntry
 object FilesOperator {
 
     class VirtFile(
-        val nameWithPath: String,
-        val content: ByteArray,
+            val nameWithPath: String,
+            val content: ByteArray,
     )
 
     fun refreshConf() {
-        val tree = File(ProjectOperator.project?.basePath!!, "config").walkTopDown().onEnter { it.isDirectory }.iterator().asSequence().toList()
-        LocalFileSystem.getInstance().refreshIoFiles(tree)
+        refresh("config")
     }
 
     fun refreshClones() {
-        val tree = File(ProjectOperator.project?.basePath!!, "clones").walkTopDown().onEnter { it.isDirectory }.iterator().asSequence().toList()
-        LocalFileSystem.getInstance().refreshIoFiles(tree)
+        refresh("clones")
+    }
+
+    private fun refresh(dir: String) {
+        val projectRoot = File(ProjectOperator.project?.basePath!!)
+        val root = File(projectRoot, dir)
+        val tree = root.walkTopDown().onEnter { it.isDirectory }.iterator().asSequence().toList()
+        LocalFileSystem.getInstance().refreshIoFiles(tree + root + projectRoot)
     }
 
     fun makeUpBaseFiles() {

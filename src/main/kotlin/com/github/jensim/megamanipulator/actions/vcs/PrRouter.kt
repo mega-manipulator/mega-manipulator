@@ -59,5 +59,21 @@ object PrRouter {
         }
     }
 
-    suspend fun getPrivateForkReposWithoutPRs(searchHost: String, codeHost: String): List<Nothing> = TODO()
+    suspend fun getPrivateForkReposWithoutPRs(searchHost: String, codeHost: String): List<ForkRepoWrapper>? {
+        return SettingsFileOperator.readSettings()?.searchHostSettings?.get(searchHost)?.codeHostSettings?.get(codeHost)?.settings?.let {
+            when (it) {
+                is BitBucketSettings -> BitbucketPrReceiver.getPrivateForkReposWithoutPRs(searchHost, codeHost, it)
+                is GitHubSettings -> TODO("Not implemented!")
+            }
+        }
+    }
+
+    suspend fun deletePrivateRepo(fork: ForkRepoWrapper) {
+        SettingsFileOperator.readSettings()?.searchHostSettings?.get(fork.getSearchHost())?.codeHostSettings?.get(fork.getCodeHost())?.settings?.let {
+            when {
+                it is BitBucketSettings && fork is BitBucketForkRepo -> BitbucketPrReceiver.deletePrivateRepo(fork, it)
+                else -> TODO("Not implemented!")
+            }
+        }
+    }
 }

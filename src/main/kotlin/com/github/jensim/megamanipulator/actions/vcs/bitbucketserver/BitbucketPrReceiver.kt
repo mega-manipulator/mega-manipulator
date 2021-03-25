@@ -3,6 +3,7 @@ package com.github.jensim.megamanipulator.actions.vcs.bitbucketserver
 import com.github.jensim.megamanipulator.actions.NotificationsOperator
 import com.github.jensim.megamanipulator.actions.localrepo.LocalRepoOperator
 import com.github.jensim.megamanipulator.actions.search.SearchResult
+import com.github.jensim.megamanipulator.actions.vcs.BitBucketForkRepo
 import com.github.jensim.megamanipulator.actions.vcs.BitBucketPullRequestWrapper
 import com.github.jensim.megamanipulator.actions.vcs.PullRequest
 import com.github.jensim.megamanipulator.http.HttpClientProvider
@@ -155,31 +156,31 @@ object BitbucketPrReceiver {
     /**
      * Get all the repos prefixed with the fork-repo-prefix, that do not have open outgoing PRs connected to them
      */
-    suspend fun getPrivateForkReposWithoutPRs(searchHostName: String, codeHostName: String, settings: BitBucketSettings): List<BitBucketRepo> {
+    suspend fun getPrivateForkReposWithoutPRs(searchHostName: String, codeHostName: String, settings: BitBucketSettings): List<BitBucketForkRepo> {
         val client: HttpClient = HttpClientProvider.getClient(searchHostName, codeHostName, settings)
         var start = 0
         val collector = HashSet<BitBucketRepo>()
         while (true) {
             val page: BitBucketPage<BitBucketRepo> = client.get("${settings.baseUrl}/rest/api/1.0/users/~${settings.username!!}/repos?start=$start")
             page.values.orEmpty()
-                .filter { it.slug.startsWith(settings.forkRepoPrefix!!) }
-                .forEach { collector.add(it) }
+                    .filter { it.slug.startsWith(settings.forkRepoPrefix!!) }
+                    .forEach { collector.add(it) }
             if (page.isLastPage != false) break
             start += page.size ?: 0
         }
         return collector.filter {
             val page: BitBucketPage<BitBucketPullRequest> = client.get("${settings.baseUrl}/rest/api/1.0/projects/${it.project?.key}/repos/${it.slug}/pull-requests?direction=OUTGOING&state=OPEN")
             page.size == 0
-        }
+        }.map { BitBucketForkRepo(searchHostName, codeHostName, it) }
     }
 
     /**
      * Schedule a repo for deletion, input should be a repo from getPrivateForkReposWithoutPRs
      * @see getPrivateForkReposWithoutPRs
      */
-    suspend fun deletePrivateRepo(searchHostName: String, codeHostName: String, settings: BitBucketSettings, repo: String) {
-        val client: HttpClient = HttpClientProvider.getClient(searchHostName, codeHostName, settings)
-        client.delete<BitBucketMessage>("${settings.baseUrl}/rest/api/1.0/users/~${settings.username}/repos/${settings.forkRepoPrefix}$repo") {
+    suspend fun deletePrivateRepo(fork: BitBucketForkRepo, settings: BitBucketSettings) {
+        val client: HttpClient = HttpClientProvider.getClient(fork.getSearchHost(), fork.getCodeHost(), settings)
+        client.delete<BitBucketMessage>("${settings.baseUrl}/rest/api/1.0/users/~${settings.username}/repos/${settings.forkRepoPrefix}${fork.getRepo()}") {
             body = emptyMap<String, String>()
         }
     }

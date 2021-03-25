@@ -6,6 +6,8 @@ import com.intellij.ide.util.projectWizard.ModuleBuilder
 import com.intellij.openapi.externalSystem.service.project.manage.ExternalProjectsManagerImpl
 import com.intellij.openapi.module.ModuleType
 import com.intellij.openapi.project.Project
+import com.intellij.openapi.projectRoots.Sdk
+import com.intellij.openapi.projectRoots.SdkTypeId
 import com.intellij.openapi.roots.ModifiableRootModel
 import com.intellij.openapi.util.io.FileUtil
 import com.intellij.openapi.vfs.LocalFileSystem
@@ -49,33 +51,17 @@ class MegaManipulatorModuleBuilder : ModuleBuilder() {
         }
     }
 
-    override fun isOpenProjectSettingsAfter(): Boolean {
-        return false
-    }
+    override fun isOpenProjectSettingsAfter(): Boolean = false
+    override fun canCreateModule(): Boolean = true
+    override fun getPresentableName(): String = "Mega Manipulator"
+    override fun getGroupName(): String = presentableName
+    override fun isTemplateBased(): Boolean = true
 
-    override fun canCreateModule(): Boolean {
-        return true
-    }
-
-    override fun getPresentableName(): String {
-        return "Mega Manipulator"
-    }
-
-    override fun getGroupName(): String {
-        return presentableName
-    }
-
-    override fun isTemplateBased(): Boolean {
-        return true
-    }
-
-    override fun getDescription(): String {
-        return """Search and replace:<br>
-            |Replace make large scale changes to your source code across multiple repos<br>
-            |&nbsp;* Search - using SourceGraph OSS<br>
-            |&nbsp;* Replace - using scrips or doing changes manually<br>
-            |&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;My personal favorite is comby.dev, try it out and fall in love!""".trimMargin()
-    }
+    override fun getDescription(): String = """Search and replace:<br>
+        |Replace make large scale changes to your source code across multiple repos<br>
+        |&nbsp;* Search - using SourceGraph OSS<br>
+        |&nbsp;* Replace - using scrips or doing changes manually<br>
+        |&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;My personal favorite is comby.dev, try it out and fall in love!""".trimMargin()
 
     private fun createAndGetContentEntry(): VirtualFile {
         val path = FileUtil.toSystemIndependentName(this.contentEntryPath!!)
@@ -86,4 +72,7 @@ class MegaManipulatorModuleBuilder : ModuleBuilder() {
     override fun createProject(name: String?, path: String?): Project? {
         return ExternalProjectsManagerImpl.setupCreatedProject(super.createProject(name, path))
     }
+
+    override fun isSuitableSdk(sdk: Sdk?): Boolean = true
+    override fun isSuitableSdkType(sdkType: SdkTypeId?): Boolean = true
 }

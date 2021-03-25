@@ -6,6 +6,7 @@ import com.github.jensim.megamanipulator.actions.git.commit.CommitOperator
 import com.github.jensim.megamanipulator.actions.localrepo.LocalRepoOperator
 import com.github.jensim.megamanipulator.actions.localrepo.LocalRepoOperator.getLocalRepos
 import com.github.jensim.megamanipulator.actions.vcs.PrRouter
+import com.github.jensim.megamanipulator.files.FilesOperator
 import com.github.jensim.megamanipulator.settings.ProjectOperator.project
 import com.github.jensim.megamanipulator.toolswindow.ToolWindowTab
 import com.github.jensim.megamanipulator.ui.CreatePullRequestDialog
@@ -43,8 +44,8 @@ object GitWindow : ToolWindowTab {
                     refresh()
                 }
                 button("Set branch") {
+                    val branch: String? = JOptionPane.showInputDialog("This will not reset the repos to origin/default-branch first!!\nSelect branch name")
                     uiProtectedOperation(title = "Switching branches") {
-                        val branch: String? = JOptionPane.showInputDialog("This will not reset the repos to origin/default-branch first!!\nSelect branch name")
                         if (branch == null || branch.isEmpty() || branch.contains(' ')) {
                             throw IllegalArgumentException("Invalid branch name")
                         }
@@ -85,6 +86,7 @@ object GitWindow : ToolWindowTab {
                         }
                     } ?: ApplyOutput(dir = ".", std = "Unable to perform clean operation", err = "Unable to perform clean operation", exitCode = 1)
                     repoList.setListData(arrayOf(Pair("Clean", listOf("rm" to output))))
+                    FilesOperator.refreshClones()
                 }
             }
         }
@@ -101,6 +103,7 @@ object GitWindow : ToolWindowTab {
         repoList.addListSelectionListener {
             repoList.selectedValue?.let {
                 stepList.setListData(it.second.toTypedArray())
+                if (it.second.isNotEmpty()) stepList.selectedIndex = 0
             }
         }
         stepList.addCellRenderer({ if (it.second.exitCode != 0) Color.ORANGE else null }) { it.first }
