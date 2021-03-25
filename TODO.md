@@ -1,7 +1,7 @@
 # ToDo's
 
 ## Major
-* [ ] Create special project type not to sully intellij in other use-cases
+* [x] Create special project type not to sully intellij in other use-cases
 
 ## Validate config
 
@@ -24,11 +24,11 @@
 ## Commit & Push
 
 * [x] Commit
-* [ ] Push
+* [x] Push
 * [x] Push to forks
-* [ ] Lazy create forks
-* [ ] Eager create forks
-* [ ] Cross code hosts
+* [x] Lazy create forks
+* [x] Eager create forks
+* [x] Cross code hosts
 
 ## Create PRs
 
@@ -41,7 +41,7 @@
 * [x] Reword a bunch of PRs at the same time
 * [x] Add reviewers
 * [x] Remove PRs
-  * [ ] Drop forks
+  * [x] Drop forks
   * [ ] Drop branches
 * [ ] Clone from PRs
   * [ ] set up forked remotes
