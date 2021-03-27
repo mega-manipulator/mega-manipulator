@@ -1,6 +1,7 @@
 package com.github.jensim.megamanipulator.actions.vcs
 
 import com.github.jensim.megamanipulator.actions.vcs.bitbucketserver.BitBucketPullRequest
+import com.github.jensim.megamanipulator.actions.vcs.githubcom.GithubComPullRequest
 
 sealed class PullRequestWrapper {
     abstract fun codeHostName(): String
@@ -11,12 +12,6 @@ sealed class PullRequestWrapper {
     abstract fun body(): String
     abstract fun fromBranch(): String
     abstract fun toBranch(): String
-    abstract fun alterCopy(
-            codeHostName: String? = null,
-            searchHostName: String? = null,
-            title: String? = null,
-            body: String? = null,
-    ): PullRequestWrapper
 
     abstract fun isFork(): Boolean
     abstract fun cloneUrlFrom(): String?
@@ -36,14 +31,10 @@ data class BitBucketPullRequestWrapper(
     override fun body(): String = bitbucketPR.description ?: ""
     override fun fromBranch(): String = bitbucketPR.fromRef.id.removePrefix("refs/heads/")
     override fun toBranch(): String = bitbucketPR.toRef.id.removePrefix("refs/heads/")
-    override fun alterCopy(
-            codeHostName: String?,
-            searchHostName: String?,
+    fun alterCopy(
             title: String?,
             body: String?,
     ): BitBucketPullRequestWrapper = copy(
-            codeHost = codeHostName ?: codeHostName(),
-            searchHost = searchHostName ?: searchHostName(),
             bitbucketPR = bitbucketPR.copy(
                     title = title ?: title(),
                     description = body ?: body(),
@@ -56,4 +47,22 @@ data class BitBucketPullRequestWrapper(
 
     override fun cloneUrlTo(): String? = bitbucketPR.toRef.repository.links?.clone
             ?.firstOrNull { it.name == "ssh" }?.href
+}
+
+data class GithubComPullRequestWrapper(
+        val searchHost: String,
+        val codeHost: String,
+        val pullRequest: GithubComPullRequest,
+) : PullRequestWrapper() {
+    override fun codeHostName(): String = codeHost
+    override fun searchHostName(): String = searchHost
+    override fun project(): String = pullRequest.base?.repo?.owner?.login ?: "<?>"
+    override fun repo(): String = pullRequest.base?.repo?.name ?: "<?>"
+    override fun title(): String = pullRequest.title
+    override fun body(): String = pullRequest.body
+    override fun fromBranch(): String = pullRequest.head?.ref ?: "<?>"
+    override fun toBranch(): String = pullRequest.base?.ref ?: "<?>"
+    override fun isFork(): Boolean = pullRequest.head?.repo?.fork ?: false && (pullRequest.base?.repo?.id != pullRequest.head?.repo?.id)
+    override fun cloneUrlFrom(): String = pullRequest.head?.repo?.ssh_url ?: "<?>"
+    override fun cloneUrlTo(): String = pullRequest.base?.repo?.ssh_url ?: "<?>"
 }

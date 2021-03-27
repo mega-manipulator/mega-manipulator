@@ -125,10 +125,10 @@ data class SourceGraphSettings(
     override val authMethod: AuthMethod,
     override val username: String?
 ) : SearchHostSettings(
-    baseUrl,
-    httpsOverride,
-    authMethod,
-    username
+        baseUrl = baseUrl,
+        httpsOverride = httpsOverride,
+        authMethod = authMethod,
+        username = username
 ) {
     init {
         validate()
@@ -143,7 +143,6 @@ enum class CodeHostType {
 sealed class CodeHostSettings
 @SuppressWarnings("LongParameterList") constructor(
     open val baseUrl: String,
-    open val clonePattern: String,
     open val httpsOverride: HttpsOverride?,
     open val authMethod: AuthMethod,
     open val username: String?,
@@ -152,11 +151,6 @@ sealed class CodeHostSettings
 ) {
     internal fun validate() {
         validateBaseUrl(baseUrl)
-        for (word in listOf("project", "repo")) {
-            require(clonePattern.contains("{$word}")) {
-                "clonePattern must contain {$word}, try something like ssh://git@bitbucket.example.com/{project}/{repo}.git"
-            }
-        }
         if (authMethod == AuthMethod.USERNAME_PASSWORD) {
             require(!username.isNullOrEmpty()) { "$baseUrl: username is required for auth method USERNAME_PASSWORD" }
         }
@@ -165,33 +159,22 @@ sealed class CodeHostSettings
             require(forkRepoPrefix != null) { "forkRepoPrefix is required if forkSetting is not ${ForkSetting.PLAIN_BRANCH.name}" }
         }
     }
-
-    fun cloneUrl(project: String, repo: String) = clonePattern
-        .replace("{project}", project)
-        .replace("{repo}", repo)
-}
-
-enum class CloneType {
-    SSH,
-    HTTPS // TODO
 }
 
 data class BitBucketSettings(
-    override val baseUrl: String,
-    override val clonePattern: String,
-    override val httpsOverride: HttpsOverride?,
-    override val authMethod: AuthMethod,
-    override val username: String?,
-    override val forkSetting: ForkSetting,
-    override val forkRepoPrefix: String?,
+        override val baseUrl: String,
+        override val httpsOverride: HttpsOverride?,
+        override val authMethod: AuthMethod = AuthMethod.TOKEN,
+        override val username: String?,
+        override val forkSetting: ForkSetting = ForkSetting.LAZY_FORK,
+        override val forkRepoPrefix: String = "mm_",
 ) : CodeHostSettings(
-    baseUrl,
-    clonePattern,
-    httpsOverride,
-    authMethod,
-    username,
-    forkSetting,
-    forkRepoPrefix
+        baseUrl = baseUrl,
+        httpsOverride = httpsOverride,
+        authMethod = authMethod,
+        username = username,
+        forkSetting = forkSetting,
+        forkRepoPrefix = forkRepoPrefix
 ) {
     init {
         validate()
@@ -199,21 +182,17 @@ data class BitBucketSettings(
 }
 
 data class GitHubSettings(
-    override val baseUrl: String,
-    override val clonePattern: String,
-    override val httpsOverride: HttpsOverride?,
-    override val authMethod: AuthMethod,
-    override val username: String?,
-    override val forkSetting: ForkSetting,
-    override val forkRepoPrefix: String?,
+        override val httpsOverride: HttpsOverride? = null,
+        override val username: String? = null,
+        override val forkSetting: ForkSetting = ForkSetting.LAZY_FORK,
+        override val forkRepoPrefix: String = "mm_",
 ) : CodeHostSettings(
-    baseUrl,
-    clonePattern,
-    httpsOverride,
-    authMethod,
-    username,
-    forkSetting,
-    forkRepoPrefix,
+        baseUrl = "https://api.github.com",
+        httpsOverride = httpsOverride,
+        authMethod = AuthMethod.TOKEN,
+        username = username,
+        forkSetting = forkSetting,
+        forkRepoPrefix = forkRepoPrefix,
 ) {
     init {
         validate()

@@ -2,7 +2,7 @@
 concurrency: 5
 # [ALLOW_SELF_SIGNED_CERT, ALLOW_ANYTHING, null]
 # Fallback behaviour if not set for the code/search-host
-defaultHttpsOverride: "ALLOW_ANYTHING"
+defaultHttpsOverride: ALLOW_SELF_SIGNED_CERT
 
 searchHostSettings:
   # Arbitrary naming, multiple search hosts are allowed
@@ -12,7 +12,7 @@ searchHostSettings:
     settings:
       baseUrl: https://sourcegraph.example.com
       # [ALLOW_SELF_SIGNED_CERT, ALLOW_ANYTHING, null]
-      httpsOverride: ALLOW_SELF_SIGNED_CERT
+      httpsOverride: ALLOW_ANYTHING
       # [USERNAME_PASSWORD, TOKEN]
       authMethod: USERNAME_PASSWORD
       # Username or null for TOKEN auth method
@@ -20,21 +20,26 @@ searchHostSettings:
     # Code host definitions, linked to a search host.
     codeHostSettings:
       # After a search hit is found, the name will be mapped using the key here
-      bb:
-        # [BITBUCKET_SERVER], more to come
+      "bitbucketserver.example.com":
+        # [
+        # BITBUCKET_SERVER, # https://bitbucketserver.example.com/plugins/servlet/access-tokens/manage
+        # GITHUB # https://github.com/settings/tokens/new
+        # ]
         type: BITBUCKET_SERVER
         settings:
-          #
           baseUrl: https://bitbucket.example.com
-          # {project} & {repo} placeholders will be picked from the instructions in the
-          clonePattern: ssh://git@bitbucket.example.com/{project}/{repo}.git
           # [ALLOW_SELF_SIGNED_CERT, ALLOW_ANYTHING, null]
           httpsOverride: ALLOW_ANYTHING
           # [USERNAME_PASSWORD, TOKEN]
+          # Not all methods are applicable to all code host types
           authMethod: USERNAME_PASSWORD
           # Username or null for TOKEN auth method
-          username: user
+          username: username
           # [LAZY_FORK, EAGER_FORK, null]
           forkSetting: LAZY_FORK
           # Any prefix, to avoid naming collisions when forking your private repos or already forked repos
           forkRepoPrefix: mm_
+      "github.com":
+        type: GITHUB
+        settings:
+          username: username

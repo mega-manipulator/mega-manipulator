@@ -2,7 +2,6 @@ package com.github.jensim.megamanipulator.settings
 
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.github.jensim.megamanipulator.actions.NotificationsOperator
-import com.github.jensim.megamanipulator.files.FilesOperator
 import com.github.jensim.megamanipulator.settings.ProjectOperator.project
 import com.github.jensim.megamanipulator.settings.SerializationHolder.yamlObjectMapper
 import com.intellij.notification.NotificationType.WARNING
@@ -39,11 +38,6 @@ object SettingsFileOperator {
                 FileDocumentManager.getInstance().saveAllDocuments()
             } catch (e: Exception) {
                 // e.printStackTrace()
-            }
-            FilesOperator.refreshConf()
-            if (!settingsFile.exists()) {
-                println("Creating settings file")
-                FilesOperator.makeUpBaseFiles()
             }
             if (lastUpdated.get() == settingsFile.lastModified()) {
                 lastPeek.set(System.currentTimeMillis())

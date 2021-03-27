@@ -1,6 +1,7 @@
 package com.github.jensim.megamanipulator.settings
 
 import com.github.jensim.megamanipulator.files.FilesOperator
+import com.github.jensim.megamanipulator.settings.AuthMethod.USERNAME_PASSWORD
 import com.github.jensim.megamanipulator.toolswindow.ToolWindowTab
 import com.github.jensim.megamanipulator.ui.GeneralListCellRenderer.addCellRenderer
 import com.intellij.ui.components.JBLabel
@@ -28,10 +29,9 @@ object SettingsWindow : ToolWindowTab {
 
     ) {
         override fun toString(): String = "$hostType: $hostNaming"
-        fun test(): Boolean = PasswordsOperator.isPasswordSet(username, baseUri)
-        fun set() {
-            PasswordsOperator.promptForPassword(username = username, baseUrl = baseUri)
-        }
+        private fun userOrToken(): String = if (authMethod == USERNAME_PASSWORD) username else "token"
+        fun test(): Boolean = PasswordsOperator.isPasswordSet(userOrToken(), baseUri)
+        fun set() = PasswordsOperator.promptForPassword(username = userOrToken(), baseUrl = baseUri)
     }
 
     private val label = JBLabel()
@@ -77,17 +77,18 @@ object SettingsWindow : ToolWindowTab {
 
     override fun refresh() {
         configButton.isEnabled = false
-
+        FilesOperator.makeUpBaseFiles()
+        FilesOperator.refreshConf()
         hostConfigSelect.setListData(emptyArray())
         val settings: MegaManipulatorSettings? = SettingsFileOperator.readSettings()
         label.text = SettingsFileOperator.validationText
         configButton.isEnabled = true
         if (settings != null) {
             val arrayOf: Array<ConfigHostHolder> =
-                (
-                    settings.searchHostSettings.map {
-                        ConfigHostHolder(
-                            hostType = HostType.SEARCH,
+                    (
+                            settings.searchHostSettings.map {
+                                ConfigHostHolder(
+                                        hostType = HostType.SEARCH,
                             authMethod = it.value.settings.authMethod,
                             baseUri = it.value.settings.baseUrl,
                             username = it.value.settings.username ?: "token",

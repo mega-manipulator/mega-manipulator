@@ -4,10 +4,10 @@ import com.github.jensim.megamanipulator.actions.NotificationsOperator
 import com.github.jensim.megamanipulator.actions.ProcessOperator
 import com.github.jensim.megamanipulator.actions.localrepo.LocalRepoOperator
 import com.github.jensim.megamanipulator.actions.search.SearchResult
+import com.github.jensim.megamanipulator.actions.vcs.PrRouter
 import com.github.jensim.megamanipulator.actions.vcs.PullRequestWrapper
 import com.github.jensim.megamanipulator.files.FilesOperator
 import com.github.jensim.megamanipulator.settings.ProjectOperator
-import com.github.jensim.megamanipulator.settings.SettingsFileOperator
 import com.github.jensim.megamanipulator.ui.mapConcurrentWithProgress
 import com.github.jensim.megamanipulator.ui.trimProjectPath
 import com.intellij.notification.NotificationType
@@ -17,20 +17,19 @@ import java.io.File
 object CloneOperator {
 
     fun clone(branch: String, repos: Set<SearchResult>) {
-
-        val settings = SettingsFileOperator.readSettings()!!
         val basePath = ProjectOperator.project?.basePath!!
         val noConf = mutableListOf<SearchResult>()
+
+        FilesOperator.refreshConf()
         repos.mapConcurrentWithProgress(
-            title = "Cloning repos",
-            extraText1 = "Cloning repos",
-            extraText2 = { it.asPathString() }
+                title = "Cloning repos",
+                extraText1 = "Cloning repos",
+                extraText2 = { it.asPathString() }
         ) { repo ->
-            settings.resolveSettings(repo.searchHostName, repo.codeHostName)?.let { (_, codeHostSettings) ->
-                val cloneUrl = codeHostSettings.cloneUrl(repo.project, repo.repo)
-                val dir = File(basePath, "clones/${repo.asPathString()}")
-                clone(dir, cloneUrl, branch)
-            } ?: noConf.add(repo)
+            val vcsRepo = PrRouter.getRepo(repo)
+            val cloneUrl = vcsRepo?.getCloneUrl()!!
+            val dir = File(basePath, "clones/${repo.asPathString()}")
+            clone(dir, cloneUrl, branch)
         }
         FilesOperator.refreshClones()
         if (noConf.isEmpty()) {
@@ -44,7 +43,7 @@ object CloneOperator {
         val basePath = ProjectOperator.project?.basePath!!
         val fullPath = "$basePath/clones/${pullRequest.searchHostName()}/${pullRequest.codeHostName()}/${pullRequest.project()}/${pullRequest.repo()}"
         val dir = File(fullPath)
-        clone(dir, pullRequest.cloneUrlTo()!!, pullRequest.fromBranch())
+        clone(dir, pullRequest.cloneUrlFrom()!!, pullRequest.fromBranch())
         if (pullRequest.isFork()) {
             LocalRepoOperator.addForkRemote(dir, pullRequest.cloneUrlFrom()!!)
         }
@@ -67,13 +66,16 @@ object CloneOperator {
                         NotificationType.ERROR
                 )
             } else {
-                val p2 = ProcessOperator.runCommandAsync(dir, listOf("git", "checkout", "-b", branch)).await()
+                val p2 = ProcessOperator.runCommandAsync(dir, listOf("git", "checkout", branch)).await()
                 if (p2.exitCode != 0) {
-                    NotificationsOperator.show(
-                            "Branch switch failed",
-                            "Branch switch in dir ${p2.dir} failed with code ${p2.exitCode} and output ${p2.std}",
-                            NotificationType.ERROR
-                    )
+                    val p3 = ProcessOperator.runCommandAsync(dir, listOf("git", "checkout", "-b", branch)).await()
+                    if (p3.exitCode != 0) {
+                        NotificationsOperator.show(
+                                "Branch switch failed",
+                                "Branch switch in dir ${p3.dir} failed with code ${p3.exitCode} and output ${p3.std}",
+                                NotificationType.ERROR
+                        )
+                    }
                 }
             }
         }

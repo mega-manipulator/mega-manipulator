@@ -9,6 +9,7 @@ import com.github.jensim.megamanipulator.ui.mapConcurrentWithProgress
 import com.intellij.notification.NotificationType
 import javax.swing.JMenuItem
 import javax.swing.JOptionPane
+import javax.swing.JOptionPane.CANCEL_OPTION
 import javax.swing.JOptionPane.OK_CANCEL_OPTION
 import javax.swing.JOptionPane.OK_OPTION
 import javax.swing.JOptionPane.QUESTION_MESSAGE
@@ -28,7 +29,7 @@ class PullRequestActionsMenu(
                 showConfirm("Decline selected PRs", "No undo path available im afraid..\nDecline selected PRs?") {
                     val ans = JOptionPane.showConfirmDialog(null, "Also drop source branches and forks?", "Drop source?", OK_CANCEL_OPTION, QUESTION_MESSAGE, null)
                     val doDrop = ans == OK_OPTION
-                    val exit = listOf(OK_OPTION, OK_CANCEL_OPTION).contains(ans)
+                    val exit = !listOf(OK_OPTION, CANCEL_OPTION).contains(ans)
                     if (!exit) {
                         prProvider().mapConcurrentWithProgress(
                                 title = "Declining prs",
@@ -54,7 +55,7 @@ class PullRequestActionsMenu(
                             extraText1 = "Setting new title and body for Pull requests",
                             extraText2 = { "${it.codeHostName()}/${it.project()}/${it.repo()} ${it.fromBranch()}" }
                         ) { pr ->
-                            PrRouter.updatePr(pr.alterCopy(title = dialog.prTitle!!, body = dialog.prDescription!!))
+                            PrRouter.updatePr(dialog.prTitle!!, dialog.prDescription!!, pr)
                         }
                         postActionHook()
                     } else {

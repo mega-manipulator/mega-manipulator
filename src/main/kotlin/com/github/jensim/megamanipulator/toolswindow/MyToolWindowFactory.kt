@@ -41,6 +41,8 @@ object MyToolWindowFactory : ToolWindowFactory {
         toolWindow.addContentManagerListener(object : ContentManagerListener {
             override fun selectionChanged(event: ContentManagerEvent) {
                 super.selectionChanged(event)
+                FilesOperator.makeUpBaseFiles()
+                FilesOperator.refreshConf()
                 tabs.find { it.second.index == event.index }?.second?.refresh()
                 FilesOperator.makeUpBaseFiles()
             }

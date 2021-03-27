@@ -1,8 +1,8 @@
 package com.github.jensim.megamanipulator.actions.forks
 
 import com.github.jensim.megamanipulator.actions.NotificationsOperator
-import com.github.jensim.megamanipulator.actions.vcs.ForkRepoWrapper
 import com.github.jensim.megamanipulator.actions.vcs.PrRouter
+import com.github.jensim.megamanipulator.actions.vcs.RepoWrapper
 import com.github.jensim.megamanipulator.toolswindow.ToolWindowTab
 import com.github.jensim.megamanipulator.ui.CodeHostSelector
 import com.github.jensim.megamanipulator.ui.GeneralListCellRenderer.addCellRenderer
@@ -19,11 +19,11 @@ object ForksWindow : ToolWindowTab {
     override val index: Int = 5
 
     private val codeHostSelect = CodeHostSelector()
-    private val staleForkList = JBList<ForkRepoWrapper>()
+    private val staleForkList = JBList<RepoWrapper>()
     private val scroll = JBScrollPane(staleForkList)
 
     init {
-        staleForkList.addCellRenderer { it.asDisplayString() }
+        staleForkList.addCellRenderer { it.asPathString() }
     }
 
     override fun refresh() {
@@ -39,7 +39,7 @@ object ForksWindow : ToolWindowTab {
                 codeHostSelect.selectedItem?.let { item ->
                     uiProtectedOperation("Load forks without OPEN PRs") {
                         PrRouter.getPrivateForkReposWithoutPRs(item.searchHostName, item.codeHostName)
-                    }?.let { result: List<ForkRepoWrapper> ->
+                    }?.let { result: List<RepoWrapper> ->
                         staleForkList.setListData(result.toTypedArray())
                         if (result.isEmpty()) {
                             NotificationsOperator.show(
@@ -54,7 +54,7 @@ object ForksWindow : ToolWindowTab {
             button("Delete remote forks") {
                 staleForkList.selectedValuesList.mapConcurrentWithProgress(
                         title = "Delete forks",
-                        extraText2 = { it.asDisplayString() }
+                        extraText2 = { it.asPathString() }
                 ) { fork ->
                     PrRouter.deletePrivateRepo(fork)
                 }

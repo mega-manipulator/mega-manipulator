@@ -23,7 +23,7 @@ object PullRequestWindow : ToolWindowTab {
     private val prScroll = JBScrollPane(prList)
     private val peekArea = JBTextArea()
     private val peekScroll = JBScrollPane(peekArea)
-    private val menu = PullRequestActionsMenu(prProvider = { prList.selectedValuesList }, postActionHook = this::refresh)
+    private val menu = PullRequestActionsMenu(prProvider = { prList.selectedValuesList }, postActionHook = {})
     private val menuOpenButton = JButton("Actions")
     override val content: JComponent = panel {
         row {
@@ -71,7 +71,6 @@ object PullRequestWindow : ToolWindowTab {
         peekArea.text = ""
         prList.setListData(emptyArray())
         codeHostSelect.load()
-        fetchPRs()
     }
 
     private fun fetchPRs() {
