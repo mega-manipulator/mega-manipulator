@@ -21,7 +21,7 @@ import java.util.concurrent.atomic.AtomicInteger
 object GithubComClient {
 
     fun addDefaultReviewers(settings: GitHubSettings, pullRequest: GithubComPullRequestWrapper): GithubComPullRequestWrapper {
-        throw UnsupportedOperationException("Might never implement  ¯\\_(ツ)_/¯")
+        throw UnsupportedOperationException("Might never implement  ¯\\_(ツ)_/¯ ${settings.username}@${pullRequest.searchHost}/${pullRequest.codeHost}")
     }
 
     suspend fun createPr(title: String, description: String, settings: GitHubSettings, repo: SearchResult): GithubComPullRequestWrapper {

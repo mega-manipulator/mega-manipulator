@@ -45,7 +45,7 @@ object FilesOperator {
         } catch (e: Exception) {
             NotificationsOperator.show(
                 title = "Failed reading base files",
-                body = e.stackTrace.joinToString("\n"),
+                body = e.stackTrace.joinToString("<br>"),
                 type = NotificationType.WARNING
             )
             e.printStackTrace()
@@ -67,7 +67,7 @@ object FilesOperator {
         } catch (e: Exception) {
             NotificationsOperator.show(
                 title = "Failed creating file",
-                body = "${file.path}\n${e.stackTrace.joinToString("\n")}",
+                body = "${file.path}\n${e.stackTrace.joinToString("<br>")}",
                 type = NotificationType.WARNING
             )
             e.printStackTrace()

@@ -6,11 +6,9 @@ import com.intellij.notification.NotificationType
 import com.intellij.openapi.progress.ProgressIndicator
 import com.intellij.openapi.progress.ProgressManager
 import com.intellij.openapi.progress.Task
-import com.intellij.openapi.progress.impl.BackgroundableProcessIndicator
 import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.async
-import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.sync.Semaphore
 import kotlinx.coroutines.withTimeout
@@ -31,7 +29,7 @@ fun <T> uiProtectedOperation(
                         e.printStackTrace()
                         NotificationsOperator.show(
                             title = "Failed executing task $title",
-                            body = "Exception caught executing task: ${e.message}\n${e.stackTrace.joinToString("\n")}",
+                            body = "Exception caught executing task:<br>${e.message}<br>${e.stackTrace.joinToString("<br>")}",
                             type = NotificationType.ERROR
                         )
                         null
@@ -59,7 +57,7 @@ fun <T> uiProtectedOperation(
             } catch (e: Exception) {
                 NotificationsOperator.show(
                     title = "Failed executing task $title",
-                    body = "Exception caught executing task: ${e.message}\n${e.stackTrace.joinToString("\n")}",
+                    body = "Exception caught executing task: ${e.message}<br>${e.stackTrace.joinToString("<br>")}",
                     type = NotificationType.ERROR
                 )
                 null
@@ -72,7 +70,7 @@ fun <T> uiProtectedOperation(
         e.printStackTrace()
         NotificationsOperator.show(
             title = "Exception running task $title",
-            body = "${e.message}\n${e.stackTrace.joinToString("\n")}"
+            body = "${e.message}\n${e.stackTrace.joinToString("<br>")}"
         )
         null
     }
@@ -112,7 +110,7 @@ fun <T, U> Collection<T>.mapConcurrentWithProgress(
                         } catch (e: Exception) {
                             NotificationsOperator.show(
                                 title = "Failed with [$index]",
-                                body = "${e.message}\n${e.stackTrace.joinToString("\n")}",
+                                body = "${e.message}\n${e.stackTrace.joinToString("<br>")}",
                                 type = NotificationType.ERROR
                             )
                             null
@@ -159,51 +157,10 @@ fun <T, U> Collection<T>.mapConcurrentWithProgress(
         e.printStackTrace()
         NotificationsOperator.show(
             title = "Exception running task $title",
-            body = "${e.message}\n${e.stackTrace.joinToString("\n")}"
+            body = "${e.message}\n${e.stackTrace.joinToString("<br>")}"
         )
         all.map { it to null }
     }
-}
-
-private fun <T> Collection<T>.asyncWithProgress(
-    title: String,
-    concurrent: Int = 5,
-    mappingFunction: suspend (T) -> Unit
-) {
-    TODO("Need to implement better wait func")
-    val all: Collection<T> = this
-    val task = object : Task.Backgroundable(project, title, true) {
-        override fun run(indicator: ProgressIndicator) {
-            indicator.isIndeterminate = false
-            indicator.fraction = 0.0
-            runBlocking {
-                val semaphore = Semaphore(permits = concurrent)
-                val futures: List<Deferred<Unit>> = all.mapIndexed { index, t ->
-                    GlobalScope.async {
-                        try {
-                            if (!indicator?.isCanceled) {
-                                semaphore.acquire()
-                                indicator.fraction = (index + 1.0) / size
-                                mappingFunction(t)
-                            }
-                        } catch (e: Exception) {
-                            e.printStackTrace()
-                        } finally {
-                            semaphore.release()
-                        }
-                    }
-                }
-                // TODO watchForCancellation(futures, indicator)
-                try {
-                    futures.awaitAll()
-                } catch (e: Exception) {
-                    e.printStackTrace()
-                }
-            }
-        }
-    }
-    val indicator = BackgroundableProcessIndicator(task)
-    ProgressManager.getInstance().runProcessWithProgressAsynchronously(task, indicator)
 }
 
 fun String.fixedLength(len: Int) = take(len).padEnd(len, ' ')
