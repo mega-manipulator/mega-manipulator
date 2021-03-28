@@ -15,6 +15,10 @@ formatting:
 exceptions:
   TooGenericExceptionCaught:
     active: false
+  SwallowedException:
+    active: false
+  PrintStackTrace:
+    active: false
 
 style:
   MaxLineLength:
