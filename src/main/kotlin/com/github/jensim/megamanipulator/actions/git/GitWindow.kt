@@ -118,10 +118,17 @@ object GitWindow : ToolWindowTab {
 
     override fun refresh() {
         val result: List<DirResult> = LocalRepoOperator.getLocalRepoFiles().mapConcurrentWithProgress(
-            title = "Listing branches"
-        ) {
-            ProcessOperator.runCommandAsync(it, listOf("git", "branch", "-v")).await()
-        }.map { it.first.trimProjectPath() to listOf("list branches" to (it.second ?: ApplyOutput.dummy(dir = it.first.path, err = "Failed reading branch"))) }
+                title = "Listing branches"
+        ) { dir ->
+            listOf(
+                    "log" to ProcessOperator.runCommandAsync(dir, listOf("git", "log", "--graph", "--pretty=format:'%h -%d %s (%cr) <%an>'", "--abbrev-commit", "--date=relative", "-10")),
+                    "branches" to ProcessOperator.runCommandAsync(dir, listOf("git", "branch", "-v")),
+                    "remotes" to ProcessOperator.runCommandAsync(dir, listOf("git", "remote", "-v")),
+            ).map { it.first to it.second.await() }
+        }.map {
+            it.first.trimProjectPath() to (it.second
+                    ?: listOf("Operation failed" to ApplyOutput.dummy(dir = it.first.path, err = "Failed git operation")))
+        }
         repoList.setListData(result.toTypedArray())
     }
 

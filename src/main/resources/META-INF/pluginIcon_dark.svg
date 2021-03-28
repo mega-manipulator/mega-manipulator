@@ -20,7 +20,7 @@
   </metadata>
   <g id="layer1">
     <text xml:space="preserve"
-          style="font-style:normal;font-weight:normal;font-size:40px;line-height:1.25;font-family:sans-serif;fill:#000000;fill-opacity:1;stroke:none"
+          style="font-style:normal;font-weight:normal;font-size:40px;line-height:1.25;font-family:sans-serif;fill:#ffffff;fill-opacity:1;stroke:none;"
           x="-1.3797973"
           y="37.552273"
           id="text28">
@@ -29,14 +29,14 @@
              y="37.552273">m</tspan>
     </text>
     <text xml:space="preserve"
-          style="font-style:normal;font-weight:normal;font-size:13.3333px;line-height:1.25;font-family:sans-serif;fill:#000000;fill-opacity:1;stroke:none"
+          style="font-style:normal;font-weight:normal;font-size:13.33329999999999949px;line-height:1.25;font-family:sans-serif;fill:#ffffff;fill-opacity:1;stroke:none;"
           x="30.082489"
           y="11.994927"
           id="text32">
       <tspan id="tspan30"
              x="30.082489"
              y="11.994927"
-             style="font-size:13.3333px">2</tspan>
+             style="font-size:13.33329999999999949px;fill:#ffffff;fill-opacity:1;">2</tspan>
     </text>
   </g>
 </svg>

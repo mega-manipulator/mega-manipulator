@@ -4,6 +4,9 @@
 * [ ] Clone from PRs
 * [ ] Drop stale forked repos
 * [ ] Drop stale - non-default branches (merged or old)
+* [ ] Validate authentication
+* [ ] Validate authorization
+* [ ]
 
 ## CodeHosts
 
