@@ -49,7 +49,7 @@ repositories {
 dependencies {
     detektPlugins("io.gitlab.arturbosch.detekt:detekt-formatting:1.16.0")
     implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8:$kotlinVersion")
-    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-jdk8:1.4.2")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-jdk8:1.4.3-native-mt")
     implementation("org.jetbrains.kotlin:kotlin-reflect:$kotlinVersion")
     implementation(group = "org.jetbrains.kotlin", name = "kotlin-bom", version = kotlinVersion, ext = "pom")
 
