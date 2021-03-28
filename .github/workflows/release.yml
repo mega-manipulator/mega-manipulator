@@ -30,7 +30,7 @@ jobs:
       - name: Publish Plugin
         env:
           PUBLISH_TOKEN: ${{ secrets.IDEA_TOKEN }}
-        run: ./gradlew publishPlugin
+        run: ./gradlew publishPlugin --stacktrace --info
 
   # Patch changelog, commit and push to the current repository
   changelog:
@@ -53,7 +53,7 @@ jobs:
 
       # Update Unreleased section with the current version
       - name: Patch Changelog
-        run: ./gradlew patchChangelog
+        run: ./gradlew patchChangelog --stacktrace --info
 
       # Commit patched Changelog
       - name: Commit files
