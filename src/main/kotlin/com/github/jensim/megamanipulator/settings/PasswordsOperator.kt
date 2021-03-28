@@ -67,21 +67,21 @@ object PasswordsOperator {
             )
             ""
         } else {
-            val username = username ?: usernameField.text
+            val resolvedUsername = username ?: usernameField.text
             val password = passwordField.password.concatToString().trim()
 
-            setPassword(username, password, baseUrl)
+            setPassword(resolvedUsername, password, baseUrl)
             password
         }
     }
 
     fun isPasswordSet(username: String, baseUrl: String): Boolean = usernameToKey(username, baseUrl).let { userKey ->
-        passwordSetMap.computeIfAbsent(usernameToKey(username, baseUrl)) { getPassword(username, baseUrl) != null }
+        passwordSetMap.computeIfAbsent(userKey) { getPassword(username, baseUrl) != null }
     }
 
     fun deletePasswords(username: String, baseUrl: String) {
-        val username = "${serviceUsername}___${username}___$baseUrl"
-        val credentialAttributes: CredentialAttributes? = createCredentialAttributes(service, username)
+        val unambiguousUsername = "${serviceUsername}___${username}___$baseUrl"
+        val credentialAttributes: CredentialAttributes? = createCredentialAttributes(service, unambiguousUsername)
         if (credentialAttributes == null) {
             NotificationsOperator.show(
                 title = "Failed deleting password",
