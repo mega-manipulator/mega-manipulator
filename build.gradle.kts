@@ -5,7 +5,7 @@ import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 val ktorVersion: String = "1.5.1"
 val jacksonVersion = "2.12.+"
-val kotlinVersion = "1.4.31"
+val kotlinVersion = "1.4.32"
 
 plugins {
     // Java support
