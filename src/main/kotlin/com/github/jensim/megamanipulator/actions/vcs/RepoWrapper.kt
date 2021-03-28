@@ -13,9 +13,9 @@ sealed class RepoWrapper {
 }
 
 data class BitBucketRepoWrapping(
-        private val searchHost: String,
-        private val codeHost: String,
-        val repo: BitBucketRepo,
+    private val searchHost: String,
+    private val codeHost: String,
+    val repo: BitBucketRepo,
 ) : RepoWrapper() {
     override fun getSearchHost(): String = searchHost
     override fun getCodeHost(): String = codeHost
@@ -25,9 +25,9 @@ data class BitBucketRepoWrapping(
 }
 
 data class GithubComRepoWrapping(
-        private val searchHost: String,
-        private val codeHost: String,
-        val repo: GithubComRepo,
+    private val searchHost: String,
+    private val codeHost: String,
+    val repo: GithubComRepo,
 ) : RepoWrapper() {
     override fun getSearchHost(): String = searchHost
     override fun getCodeHost(): String = codeHost

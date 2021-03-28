@@ -125,10 +125,10 @@ data class SourceGraphSettings(
     override val authMethod: AuthMethod,
     override val username: String?
 ) : SearchHostSettings(
-        baseUrl = baseUrl,
-        httpsOverride = httpsOverride,
-        authMethod = authMethod,
-        username = username
+    baseUrl = baseUrl,
+    httpsOverride = httpsOverride,
+    authMethod = authMethod,
+    username = username
 ) {
     init {
         validate()
@@ -162,19 +162,19 @@ sealed class CodeHostSettings
 }
 
 data class BitBucketSettings(
-        override val baseUrl: String,
-        override val httpsOverride: HttpsOverride?,
-        override val authMethod: AuthMethod = AuthMethod.TOKEN,
-        override val username: String?,
-        override val forkSetting: ForkSetting = ForkSetting.LAZY_FORK,
-        override val forkRepoPrefix: String = "mm_",
+    override val baseUrl: String,
+    override val httpsOverride: HttpsOverride?,
+    override val authMethod: AuthMethod = AuthMethod.TOKEN,
+    override val username: String?,
+    override val forkSetting: ForkSetting = ForkSetting.LAZY_FORK,
+    override val forkRepoPrefix: String = "mm_",
 ) : CodeHostSettings(
-        baseUrl = baseUrl,
-        httpsOverride = httpsOverride,
-        authMethod = authMethod,
-        username = username,
-        forkSetting = forkSetting,
-        forkRepoPrefix = forkRepoPrefix
+    baseUrl = baseUrl,
+    httpsOverride = httpsOverride,
+    authMethod = authMethod,
+    username = username,
+    forkSetting = forkSetting,
+    forkRepoPrefix = forkRepoPrefix
 ) {
     init {
         validate()
@@ -182,17 +182,17 @@ data class BitBucketSettings(
 }
 
 data class GitHubSettings(
-        override val httpsOverride: HttpsOverride? = null,
-        override val username: String? = null,
-        override val forkSetting: ForkSetting = ForkSetting.LAZY_FORK,
-        override val forkRepoPrefix: String = "mm_",
+    override val httpsOverride: HttpsOverride? = null,
+    override val username: String? = null,
+    override val forkSetting: ForkSetting = ForkSetting.LAZY_FORK,
+    override val forkRepoPrefix: String = "mm_",
 ) : CodeHostSettings(
-        baseUrl = "https://api.github.com",
-        httpsOverride = httpsOverride,
-        authMethod = AuthMethod.TOKEN,
-        username = username,
-        forkSetting = forkSetting,
-        forkRepoPrefix = forkRepoPrefix,
+    baseUrl = "https://api.github.com",
+    httpsOverride = httpsOverride,
+    authMethod = AuthMethod.TOKEN,
+    username = username,
+    forkSetting = forkSetting,
+    forkRepoPrefix = forkRepoPrefix,
 ) {
     init {
         validate()

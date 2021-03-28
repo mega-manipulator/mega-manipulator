@@ -22,9 +22,9 @@ object CloneOperator {
 
         FilesOperator.refreshConf()
         repos.mapConcurrentWithProgress(
-                title = "Cloning repos",
-                extraText1 = "Cloning repos",
-                extraText2 = { it.asPathString() }
+            title = "Cloning repos",
+            extraText1 = "Cloning repos",
+            extraText2 = { it.asPathString() }
         ) { repo ->
             val vcsRepo = PrRouter.getRepo(repo)
             val cloneUrl = vcsRepo?.getCloneUrl()!!
@@ -53,17 +53,17 @@ object CloneOperator {
         dir.mkdirs()
         if (File(dir, ".git").exists()) {
             NotificationsOperator.show(
-                    title = "Repo already cloned",
-                    body = "Repo ${dir.trimProjectPath()} already cloned.\nWill not do anything.",
-                    type = WARNING
+                title = "Repo already cloned",
+                body = "Repo ${dir.trimProjectPath()} already cloned.\nWill not do anything.",
+                type = WARNING
             )
         } else {
             val p1 = ProcessOperator.runCommandAsync(dir.parentFile, listOf("git", "clone", cloneUrl)).await()
             if (p1.exitCode != 0) {
                 NotificationsOperator.show(
-                        "Clone failed",
-                        "Clone in dir ${p1.dir} failed with code ${p1.exitCode} and output ${p1.std}",
-                        NotificationType.ERROR
+                    "Clone failed",
+                    "Clone in dir ${p1.dir} failed with code ${p1.exitCode} and output ${p1.std}",
+                    NotificationType.ERROR
                 )
             } else {
                 val p2 = ProcessOperator.runCommandAsync(dir, listOf("git", "checkout", branch)).await()
@@ -71,9 +71,9 @@ object CloneOperator {
                     val p3 = ProcessOperator.runCommandAsync(dir, listOf("git", "checkout", "-b", branch)).await()
                     if (p3.exitCode != 0) {
                         NotificationsOperator.show(
-                                "Branch switch failed",
-                                "Branch switch in dir ${p3.dir} failed with code ${p3.exitCode} and output ${p3.std}",
-                                NotificationType.ERROR
+                            "Branch switch failed",
+                            "Branch switch in dir ${p3.dir} failed with code ${p3.exitCode} and output ${p3.std}",
+                            NotificationType.ERROR
                         )
                     }
                 }

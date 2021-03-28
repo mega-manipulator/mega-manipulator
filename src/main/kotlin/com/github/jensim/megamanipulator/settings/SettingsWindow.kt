@@ -85,10 +85,10 @@ object SettingsWindow : ToolWindowTab {
         configButton.isEnabled = true
         if (settings != null) {
             val arrayOf: Array<ConfigHostHolder> =
-                    (
-                            settings.searchHostSettings.map {
-                                ConfigHostHolder(
-                                        hostType = HostType.SEARCH,
+                (
+                    settings.searchHostSettings.map {
+                        ConfigHostHolder(
+                            hostType = HostType.SEARCH,
                             authMethod = it.value.settings.authMethod,
                             baseUri = it.value.settings.baseUrl,
                             username = it.value.settings.username ?: "token",

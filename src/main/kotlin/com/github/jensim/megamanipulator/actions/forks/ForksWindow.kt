@@ -43,9 +43,9 @@ object ForksWindow : ToolWindowTab {
                         staleForkList.setListData(result.toTypedArray())
                         if (result.isEmpty()) {
                             NotificationsOperator.show(
-                                    title = "No result",
-                                    body = "Maybe you have zero forks without PRs?",
-                                    type = NotificationType.INFORMATION
+                                title = "No result",
+                                body = "Maybe you have zero forks without PRs?",
+                                type = NotificationType.INFORMATION
                             )
                         }
                     }
@@ -53,8 +53,8 @@ object ForksWindow : ToolWindowTab {
             }
             button("Delete remote forks") {
                 staleForkList.selectedValuesList.mapConcurrentWithProgress(
-                        title = "Delete forks",
-                        extraText2 = { it.asPathString() }
+                    title = "Delete forks",
+                    extraText2 = { it.asPathString() }
                 ) { fork ->
                     PrRouter.deletePrivateRepo(fork)
                 }

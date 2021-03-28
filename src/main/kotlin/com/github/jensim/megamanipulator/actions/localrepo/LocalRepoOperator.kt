@@ -4,12 +4,12 @@ import com.github.jensim.megamanipulator.actions.ProcessOperator
 import com.github.jensim.megamanipulator.actions.apply.ApplyOutput
 import com.github.jensim.megamanipulator.actions.search.SearchResult
 import com.github.jensim.megamanipulator.settings.ProjectOperator.project
+import org.eclipse.jgit.storage.file.FileRepositoryBuilder
 import java.io.File
 import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.attribute.BasicFileAttributes
 import java.util.stream.Collectors
-import org.eclipse.jgit.storage.file.FileRepositoryBuilder
 
 object LocalRepoOperator {
 
@@ -65,9 +65,9 @@ object LocalRepoOperator {
         val dir = File("${project?.basePath!!}/clones/${repo.searchHostName}/${repo.codeHostName}/${repo.project}/${repo.repo}")
         return try {
             ProcessOperator.runCommandAsync(dir, listOf("git", "remote", "-v")).await().std.lines()
-                    .filter { it.startsWith(remote) && it.endsWith("(push)") }
-                    .map { it.split(" ", "\t").filter { it.isNotEmpty() }[1] }
-                    .firstOrNull()
+                .filter { it.startsWith(remote) && it.endsWith("(push)") }
+                .map { it.split(" ", "\t").filter { it.isNotEmpty() }[1] }
+                .firstOrNull()
         } catch (e: Exception) {
             null
         }

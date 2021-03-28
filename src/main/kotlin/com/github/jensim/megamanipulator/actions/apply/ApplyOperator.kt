@@ -18,10 +18,10 @@ object ApplyOperator {
         val scriptPath = SettingsFileOperator.scriptFile.absolutePath
         val settings = SettingsFileOperator.readSettings()!!
         return gitDirs.mapConcurrentWithProgress(
-                title = "Applying changes from script file",
-                extraText1 = "Cancelling this will not terminate running processes",
-                extraText2 = { "${it.parentFile.parentFile.name}/${it.parentFile.name}/${it.name}" },
-                concurrent = settings.concurrency
+            title = "Applying changes from script file",
+            extraText1 = "Cancelling this will not terminate running processes",
+            extraText2 = { "${it.parentFile.parentFile.name}/${it.parentFile.name}/${it.name}" },
+            concurrent = settings.concurrency
         ) { dir ->
             ProcessOperator.runCommandAsync(dir, listOf("/bin/bash", scriptPath)).await()
         }.map { (dir, out) -> out ?: ApplyOutput.dummy(dir.path) }.also {

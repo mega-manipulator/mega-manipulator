@@ -11,12 +11,12 @@ import io.ktor.client.request.delete
 import io.ktor.client.request.get
 import io.ktor.client.request.patch
 import io.ktor.client.request.post
-import java.util.concurrent.atomic.AtomicInteger
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.toList
+import java.util.concurrent.atomic.AtomicInteger
 
 object GithubComClient {
 
@@ -32,8 +32,10 @@ object GithubComClient {
         val headRepo = fork?.second ?: repo.repo
         val ghrepo: GithubComRepo = client.get("${settings.baseUrl}/repos/${repo.project}/${repo.repo}")
         val pr: GithubComPullRequest = client.post("${settings.baseUrl}/repos/${repo.project}/${repo.repo}/pulls") {
-            body = mapOf("title" to title, body to description, "draft" to false, "maintainer_can_modify" to true,
-                    "head" to "$headProject/$headRepo:$localBranch", "base" to ghrepo.default_branch)
+            body = mapOf(
+                "title" to title, body to description, "draft" to false, "maintainer_can_modify" to true,
+                "head" to "$headProject/$headRepo:$localBranch", "base" to ghrepo.default_branch
+            )
         }
         return GithubComPullRequestWrapper(repo.searchHostName, repo.codeHostName, pr)
     }
@@ -77,8 +79,8 @@ object GithubComClient {
             }
         }
         return seq.toList().toList()
-                .mapNotNull { it.pull_request?.url }
-                .map { GithubComPullRequestWrapper(searchHost, codeHost, client.get(it)) }
+            .mapNotNull { it.pull_request?.url }
+            .map { GithubComPullRequestWrapper(searchHost, codeHost, client.get(it)) }
     }
 
     suspend fun closePr(dropForkOrBranch: Boolean, settings: GitHubSettings, pullRequest: GithubComPullRequestWrapper) {
@@ -110,8 +112,8 @@ object GithubComClient {
             }
         }
         return repoFlow.map { GithubComRepoWrapping(searchHost, codeHost, it) }
-                .filter { it.repo.fork && it.repo.open_issues_count == 0L }
-                .toList()
+            .filter { it.repo.fork && it.repo.open_issues_count == 0L }
+            .toList()
     }
 
     suspend fun deletePrivateRepo(fork: GithubComRepoWrapping, settings: GitHubSettings) {

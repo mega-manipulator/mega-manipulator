@@ -53,26 +53,26 @@ object BitbucketServerClient {
         val fromProject = fork?.first ?: repo.project
         val fromRepo = fork?.second ?: repo.repo
         val reviewers = getDefaultReviewers(client, settings, repo, localBranch, defaultBranch)
-                .map { BitBucketParticipant(BitBucketUser(name = it.name)) }
+            .map { BitBucketParticipant(BitBucketUser(name = it.name)) }
         val pr: BitBucketPullRequest = client.post("${settings.baseUrl}/rest/api/1.0/projects/${repo.project}/repos/${repo.repo}/pull-requests") {
             body = BitBucketPullRequest(
-                    title = title,
-                    description = description,
-                    fromRef = BitBucketBranchRef(
-                            id = localBranch,
-                            repository = BitBucketRepo(
-                                    slug = fromRepo,
-                                    project = BitBucketProject(key = fromProject),
-                            )
-                    ),
-                    toRef = BitBucketBranchRef(
-                            id = defaultBranch,
-                            repository = BitBucketRepo(
-                                    slug = repo.repo,
-                                    project = BitBucketProject(key = repo.project),
-                            )
-                    ),
-                    reviewers = reviewers,
+                title = title,
+                description = description,
+                fromRef = BitBucketBranchRef(
+                    id = localBranch,
+                    repository = BitBucketRepo(
+                        slug = fromRepo,
+                        project = BitBucketProject(key = fromProject),
+                    )
+                ),
+                toRef = BitBucketBranchRef(
+                    id = defaultBranch,
+                    repository = BitBucketRepo(
+                        slug = repo.repo,
+                        project = BitBucketProject(key = repo.project),
+                    )
+                ),
+                reviewers = reviewers,
             )
         }
 
@@ -88,13 +88,13 @@ object BitbucketServerClient {
     private suspend fun updatePr(client: HttpClient, settings: BitBucketSettings, pullRequest: BitBucketPullRequestWrapper): PullRequestWrapper {
         val pr: BitBucketPullRequest = client.put("${settings.baseUrl}/rest/api/1.0/projects/${pullRequest.project()}/repos/${pullRequest.repo()}/pull-requests/${pullRequest.bitbucketPR.id}") {
             body = pullRequest.bitbucketPR.copy(
-                    author = null,
+                author = null,
             )
         }
         return BitBucketPullRequestWrapper(
-                searchHost = pullRequest.searchHost,
-                codeHost = pullRequest.codeHost,
-                bitbucketPR = pr
+            searchHost = pullRequest.searchHost,
+            codeHost = pullRequest.codeHost,
+            bitbucketPR = pr
         )
     }
 
@@ -149,9 +149,9 @@ object BitbucketServerClient {
         } catch (e: Exception) {
             e.printStackTrace()
             NotificationsOperator.show(
-                    title = "Failed declining PR",
-                    body = "${e.message}",
-                    type = NotificationType.ERROR
+                title = "Failed declining PR",
+                body = "${e.message}",
+                type = NotificationType.ERROR
             )
         }
         return pullRequest
@@ -179,8 +179,8 @@ object BitbucketServerClient {
             null
         } ?: client.post("${settings.baseUrl}/rest/api/1.0/projects/${repo.project}/repos/${repo.repo}") {
             body = BitBucketForkRequest(
-                    slug = "${settings.forkRepoPrefix}${repo.repo}",
-                    project = BitBucketProjectRequest(key = "~${settings.username}")
+                slug = "${settings.forkRepoPrefix}${repo.repo}",
+                project = BitBucketProjectRequest(key = "~${settings.username}")
             )
         }
         return bbRepo.links?.clone?.firstOrNull { it.name == "ssh" }?.href
@@ -196,8 +196,8 @@ object BitbucketServerClient {
         while (true) {
             val page: BitBucketPage<BitBucketRepo> = client.get("${settings.baseUrl}/rest/api/1.0/users/~${settings.username!!}/repos?start=$start")
             page.values.orEmpty()
-                    .filter { it.slug.startsWith(settings.forkRepoPrefix) }
-                    .forEach { collector.add(it) }
+                .filter { it.slug.startsWith(settings.forkRepoPrefix) }
+                .forEach { collector.add(it) }
             if (page.isLastPage != false) break
             start += page.size ?: 0
         }

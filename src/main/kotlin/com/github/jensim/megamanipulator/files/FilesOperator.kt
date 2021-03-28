@@ -13,8 +13,8 @@ import java.util.jar.JarEntry
 object FilesOperator {
 
     class VirtFile(
-            val nameWithPath: String,
-            val content: ByteArray,
+        val nameWithPath: String,
+        val content: ByteArray,
     )
 
     fun refreshConf() {

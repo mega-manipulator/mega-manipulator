@@ -1,10 +1,10 @@
 package com.github.jensim.megamanipulator.settings
 
 import com.fasterxml.jackson.module.kotlin.readValue
-import java.io.File
 import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
+import java.io.File
 
 class SettingsFileOperatorTest {
 
@@ -26,12 +26,12 @@ class SettingsFileOperatorTest {
                         "bb" to CodeHostSettingsWrapper(
                             type = CodeHostType.BITBUCKET_SERVER,
                             BitBucketSettings(
-                                    baseUrl = "https://bitbucket.example.com",
-                                    httpsOverride = null,
-                                    authMethod = AuthMethod.TOKEN,
-                                    username = null,
-                                    forkSetting = ForkSetting.PLAIN_BRANCH,
-                                    forkRepoPrefix = "null_",
+                                baseUrl = "https://bitbucket.example.com",
+                                httpsOverride = null,
+                                authMethod = AuthMethod.TOKEN,
+                                username = null,
+                                forkSetting = ForkSetting.PLAIN_BRANCH,
+                                forkRepoPrefix = "null_",
                             )
                         )
                     )

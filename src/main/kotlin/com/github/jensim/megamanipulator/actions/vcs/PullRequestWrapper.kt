@@ -21,9 +21,9 @@ sealed class PullRequestWrapper {
 }
 
 data class BitBucketPullRequestWrapper(
-        val searchHost: String,
-        val codeHost: String,
-        val bitbucketPR: BitBucketPullRequest,
+    val searchHost: String,
+    val codeHost: String,
+    val bitbucketPR: BitBucketPullRequest,
 ) : PullRequestWrapper() {
     override fun codeHostName(): String = codeHost
     override fun searchHostName(): String = searchHost
@@ -34,27 +34,27 @@ data class BitBucketPullRequestWrapper(
     override fun fromBranch(): String = bitbucketPR.fromRef.id.removePrefix("refs/heads/")
     override fun toBranch(): String = bitbucketPR.toRef.id.removePrefix("refs/heads/")
     fun alterCopy(
-            title: String?,
-            body: String?,
+        title: String?,
+        body: String?,
     ): BitBucketPullRequestWrapper = copy(
-            bitbucketPR = bitbucketPR.copy(
-                    title = title ?: title(),
-                    description = body ?: body(),
-            ),
+        bitbucketPR = bitbucketPR.copy(
+            title = title ?: title(),
+            description = body ?: body(),
+        ),
     )
 
     override fun isFork(): Boolean = bitbucketPR.toRef.repository.slug != bitbucketPR.fromRef.repository.slug
     override fun cloneUrlFrom(): String? = bitbucketPR.fromRef.repository.links?.clone
-            ?.firstOrNull { it.name == "ssh" }?.href
+        ?.firstOrNull { it.name == "ssh" }?.href
 
     override fun cloneUrlTo(): String? = bitbucketPR.toRef.repository.links?.clone
-            ?.firstOrNull { it.name == "ssh" }?.href
+        ?.firstOrNull { it.name == "ssh" }?.href
 }
 
 data class GithubComPullRequestWrapper(
-        val searchHost: String,
-        val codeHost: String,
-        val pullRequest: GithubComPullRequest,
+    val searchHost: String,
+    val codeHost: String,
+    val pullRequest: GithubComPullRequest,
 ) : PullRequestWrapper() {
     override fun codeHostName(): String = codeHost
     override fun searchHostName(): String = searchHost

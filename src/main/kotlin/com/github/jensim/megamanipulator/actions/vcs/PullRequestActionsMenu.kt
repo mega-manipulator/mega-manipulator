@@ -16,8 +16,8 @@ import javax.swing.JOptionPane.QUESTION_MESSAGE
 import javax.swing.JPopupMenu
 
 class PullRequestActionsMenu(
-        private val prProvider: () -> List<PullRequestWrapper>,
-        private val postActionHook: () -> Unit,
+    private val prProvider: () -> List<PullRequestWrapper>,
+    private val postActionHook: () -> Unit,
 ) : JPopupMenu() {
 
     var codeHostName: String? = null
@@ -32,8 +32,8 @@ class PullRequestActionsMenu(
                     val exit = !listOf(OK_OPTION, CANCEL_OPTION).contains(ans)
                     if (!exit) {
                         prProvider().mapConcurrentWithProgress(
-                                title = "Declining prs",
-                                extraText2 = { "${it.codeHostName()}/${it.project()}/${it.repo()} ${it.fromBranch()}" },
+                            title = "Declining prs",
+                            extraText2 = { "${it.codeHostName()}/${it.project()}/${it.repo()} ${it.fromBranch()}" },
                         ) { pullRequest: PullRequestWrapper ->
                             PrRouter.closePr(doDrop, pullRequest)
                         }
@@ -68,7 +68,7 @@ class PullRequestActionsMenu(
             addActionListener { _ ->
                 showConfirm(
                     title = "Add default reviewers",
-                        message = "Add default reviewers"
+                    message = "Add default reviewers"
                 ) {
                     prProvider().mapConcurrentWithProgress(
                         title = "Add default reviewers",
