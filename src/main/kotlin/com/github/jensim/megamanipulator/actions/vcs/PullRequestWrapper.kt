@@ -1,3 +1,5 @@
+@file:SuppressWarnings("TooManyFunctions")
+
 package com.github.jensim.megamanipulator.actions.vcs
 
 import com.github.jensim.megamanipulator.actions.vcs.bitbucketserver.BitBucketPullRequest

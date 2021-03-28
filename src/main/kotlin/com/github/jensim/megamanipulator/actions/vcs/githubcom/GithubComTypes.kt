@@ -1,10 +1,12 @@
+@file:SuppressWarnings("ConstructorParameterNaming")
+
 package com.github.jensim.megamanipulator.actions.vcs.githubcom
 
 data class GithubComRepo(
-        //https://api.github.com/users/jensim/repos?page=1
+        // https://api.github.com/users/jensim/repos?page=1
         val id: Long, // 1296269,
-        val name: String, //"Hello-World",
-        val full_name: String, //"octocat/Hello-World",
+        val name: String, // "Hello-World",
+        val full_name: String, // "octocat/Hello-World",
         val owner: GithubComUser,
         val private: Boolean,
         val description: String?,
@@ -22,15 +24,15 @@ data class GithubComRepo(
 data class GithubComUser(
         val login: String, // "octocat",
         val id: Long, // 1296269,
-        val type: String, //Organization, User
+        val type: String, // Organization, User
 )
 
 data class GithubComLicence(
-        val key: String?, //": "apache-2.0",
-        val name: String?, //": "Apache License 2.0",
-        val spdx_id: String?, //": "Apache-2.0",
-        val url: String?, //": "https://api.github.com/licenses/apache-2.0",
-        val node_id: String?, //": "MDc6TGljZW5zZTI="
+        val key: String?, // ": "apache-2.0",
+        val name: String?, // ": "Apache License 2.0",
+        val spdx_id: String?, // ": "Apache-2.0",
+        val url: String?, // ": "https://api.github.com/licenses/apache-2.0",
+        val node_id: String?, // ": "MDc6TGljZW5zZTI="
 )
 
 data class GithubComPullRequest(

@@ -33,7 +33,7 @@ object GithubComClient {
         val ghrepo: GithubComRepo = client.get("${settings.baseUrl}/repos/${repo.project}/${repo.repo}")
         val pr: GithubComPullRequest = client.post("${settings.baseUrl}/repos/${repo.project}/${repo.repo}/pulls") {
             body = mapOf("title" to title, body to description, "draft" to false, "maintainer_can_modify" to true,
-                    "head" to "${headProject}/${headRepo}:${localBranch}", "base" to ghrepo.default_branch)
+                    "head" to "$headProject/$headRepo:$localBranch", "base" to ghrepo.default_branch)
         }
         return GithubComPullRequestWrapper(repo.searchHostName, repo.codeHostName, pr)
     }

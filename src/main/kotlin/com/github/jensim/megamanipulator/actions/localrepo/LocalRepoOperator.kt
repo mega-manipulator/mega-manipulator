@@ -9,7 +9,6 @@ import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.attribute.BasicFileAttributes
 import java.util.stream.Collectors
-import org.eclipse.jgit.lib.Repository
 import org.eclipse.jgit.storage.file.FileRepositoryBuilder
 
 object LocalRepoOperator {
@@ -35,10 +34,6 @@ object LocalRepoOperator {
             codeHostName = it.parentFile.parentFile.name,
             searchHostName = it.parentFile.parentFile.parentFile.name
         )
-    }
-
-    fun getLocalRepositories(): List<Repository> = getLocalRepoFiles().map { gitDir ->
-        FileRepositoryBuilder.create(gitDir)
     }
 
     fun getBranch(searchResult: SearchResult): String? {
