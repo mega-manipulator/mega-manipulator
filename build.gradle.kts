@@ -3,7 +3,7 @@ import org.jetbrains.changelog.closure
 import org.jetbrains.changelog.markdownToHTML
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
-val ktorVersion: String = "1.5.1"
+val ktorVersion: String = "1.5.2"
 val jacksonVersion = "2.12.+"
 val kotlinVersion = "1.4.32"
 
@@ -49,7 +49,7 @@ repositories {
 dependencies {
     detektPlugins("io.gitlab.arturbosch.detekt:detekt-formatting:1.16.0")
     implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8:$kotlinVersion")
-    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-jdk8:1.4.2")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-jdk8:1.4.3")
     implementation("org.jetbrains.kotlin:kotlin-reflect:$kotlinVersion")
     implementation(group = "org.jetbrains.kotlin", name = "kotlin-bom", version = kotlinVersion, ext = "pom")
 
