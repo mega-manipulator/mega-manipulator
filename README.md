@@ -10,7 +10,16 @@
 
 # Mega Manipulator
 
-One stop shop for making changes, big or small, in a lot of places at once
+One stop shop for making changes, big or small, in a lot of places at once.
+See this as an alternative to sourcegraph campaigns, without the docker layer inbetween you and the changes you want to make.
+
+Use sourcegraph queries to find target repos.
+Then a forEach approach is provided for eache of the following actions:
+Apply changes (using scripts),
+Commit,
+Push,
+Fork (lazy, eager, never),
+PR.
 
 ## Search
 
