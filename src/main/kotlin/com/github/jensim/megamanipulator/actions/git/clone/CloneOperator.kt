@@ -45,7 +45,7 @@ object CloneOperator {
         val dir = File(fullPath)
         clone(dir, pullRequest.cloneUrlFrom()!!, pullRequest.fromBranch())
         if (pullRequest.isFork()) {
-            LocalRepoOperator.promoteOriginToForkRemote(dir,pullRequest.cloneUrlTo()!!)
+            LocalRepoOperator.promoteOriginToForkRemote(dir, pullRequest.cloneUrlTo()!!)
         }
     }
 

@@ -19,7 +19,7 @@ class SettingsFileOperatorTest {
                     settings = SourceGraphSettings(
                         baseUrl = "https://sourcegraph.example.com",
                         httpsOverride = null,
-                        authMethod = AuthMethod.USERNAME_PASSWORD,
+                        authMethod = AuthMethod.ACCESS_TOKEN,
                         username = "null",
                     ),
                     codeHostSettings = mapOf(
@@ -28,8 +28,8 @@ class SettingsFileOperatorTest {
                             BitBucketSettings(
                                 baseUrl = "https://bitbucket.example.com",
                                 httpsOverride = null,
-                                authMethod = AuthMethod.TOKEN,
-                                username = null,
+                                authMethod = AuthMethod.ACCESS_TOKEN,
+                                username = "null",
                                 forkSetting = ForkSetting.PLAIN_BRANCH,
                                 forkRepoPrefix = "null_",
                             )
@@ -59,7 +59,7 @@ class SettingsFileOperatorTest {
                         settings = SourceGraphSettings(
                             baseUrl = "https://sourcegraph.example.com",
                             httpsOverride = null,
-                            authMethod = AuthMethod.USERNAME_PASSWORD,
+                            authMethod = AuthMethod.ACCESS_TOKEN,
                             username = "null"
                         ),
                         codeHostSettings = mapOf()

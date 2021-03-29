@@ -13,8 +13,8 @@ searchHostSettings:
       baseUrl: https://sourcegraph.example.com
       # [ALLOW_SELF_SIGNED_CERT, ALLOW_ANYTHING, null]
       httpsOverride: ALLOW_ANYTHING
-      # [USERNAME_PASSWORD, TOKEN]
-      authMethod: USERNAME_PASSWORD
+      # [ACCESS_TOKEN]
+      authMethod: ACCESS_TOKEN
       # Username or null for TOKEN auth method
       username: username
     # Code host definitions, linked to a search host.
@@ -30,9 +30,9 @@ searchHostSettings:
           baseUrl: https://bitbucket.example.com
           # [ALLOW_SELF_SIGNED_CERT, ALLOW_ANYTHING, null]
           httpsOverride: ALLOW_ANYTHING
-          # [USERNAME_PASSWORD, TOKEN]
+          # [ACCESS_TOKEN]
           # Not all methods are applicable to all code host types
-          authMethod: USERNAME_PASSWORD
+          authMethod: ACCESS_TOKEN
           # Username or null for TOKEN auth method
           username: username
           # [LAZY_FORK, EAGER_FORK, null]

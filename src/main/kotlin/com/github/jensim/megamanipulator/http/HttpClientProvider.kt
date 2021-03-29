@@ -84,8 +84,7 @@ object HttpClientProvider {
 
     private fun getPassword(authMethod: AuthMethod, baseUrl: String, username: String) = try {
         when (authMethod) {
-            AuthMethod.TOKEN -> PasswordsOperator.getPassword("token", baseUrl)
-            AuthMethod.USERNAME_PASSWORD -> PasswordsOperator.getPassword(username, baseUrl)
+            AuthMethod.ACCESS_TOKEN -> PasswordsOperator.getPassword(username, baseUrl)
         }!!
     } catch (e: Exception) {
         NotificationsOperator.show(
@@ -104,8 +103,7 @@ object HttpClientProvider {
                 HttpsOverride.ALLOW_ANYTHING -> trustAnyClient()
             }
             when (authMethod) {
-                AuthMethod.TOKEN -> installTokenAuth(password)
-                AuthMethod.USERNAME_PASSWORD -> installBasicAuth(username!!, password)
+                AuthMethod.ACCESS_TOKEN -> installBasicAuth(username!!, password)
             }
         }
     }
@@ -116,16 +114,6 @@ object HttpClientProvider {
                 append("Content-Type", "application/json")
                 append("Accept", "application/json")
                 append("Authorization", "Basic ${Base64.encode("$username:$password".toByteArray())}")
-            }
-        }
-    }
-
-    private fun HttpClientConfig<ApacheEngineConfig>.installTokenAuth(token: String) {
-        defaultRequest {
-            headers {
-                append("Content-Type", "application/json")
-                append("Accept", "application/json")
-                append("Authorization", "token $token")
             }
         }
     }

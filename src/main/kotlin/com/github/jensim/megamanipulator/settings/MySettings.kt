@@ -10,8 +10,7 @@ enum class HttpsOverride {
 }
 
 enum class AuthMethod {
-    TOKEN,
-    USERNAME_PASSWORD,
+    ACCESS_TOKEN,
 }
 
 enum class ForkSetting {
@@ -109,13 +108,10 @@ sealed class SearchHostSettings(
     open val baseUrl: String,
     open val httpsOverride: HttpsOverride?,
     open val authMethod: AuthMethod,
-    open val username: String?
+    open val username: String,
 ) {
     fun validate() {
         validateBaseUrl(baseUrl)
-        if (authMethod == AuthMethod.USERNAME_PASSWORD) {
-            require(!username.isNullOrEmpty()) { "$baseUrl: username is required for auth method USERNAME_PASSWORD" }
-        }
     }
 }
 
@@ -123,7 +119,7 @@ data class SourceGraphSettings(
     override val baseUrl: String,
     override val httpsOverride: HttpsOverride?,
     override val authMethod: AuthMethod,
-    override val username: String?
+    override val username: String,
 ) : SearchHostSettings(
     baseUrl = baseUrl,
     httpsOverride = httpsOverride,
@@ -151,7 +147,7 @@ sealed class CodeHostSettings
 ) {
     internal fun validate() {
         validateBaseUrl(baseUrl)
-        if (authMethod == AuthMethod.USERNAME_PASSWORD) {
+        if (authMethod == AuthMethod.ACCESS_TOKEN) {
             require(!username.isNullOrEmpty()) { "$baseUrl: username is required for auth method USERNAME_PASSWORD" }
         }
         if (forkSetting != ForkSetting.PLAIN_BRANCH) {
@@ -164,7 +160,7 @@ sealed class CodeHostSettings
 data class BitBucketSettings(
     override val baseUrl: String,
     override val httpsOverride: HttpsOverride?,
-    override val authMethod: AuthMethod = AuthMethod.TOKEN,
+    override val authMethod: AuthMethod = AuthMethod.ACCESS_TOKEN,
     override val username: String?,
     override val forkSetting: ForkSetting = ForkSetting.LAZY_FORK,
     override val forkRepoPrefix: String = "mm_",
@@ -183,13 +179,13 @@ data class BitBucketSettings(
 
 data class GitHubSettings(
     override val httpsOverride: HttpsOverride? = null,
-    override val username: String? = null,
+    override val username: String,
     override val forkSetting: ForkSetting = ForkSetting.LAZY_FORK,
     override val forkRepoPrefix: String = "mm_",
 ) : CodeHostSettings(
     baseUrl = "https://api.github.com",
     httpsOverride = httpsOverride,
-    authMethod = AuthMethod.TOKEN,
+    authMethod = AuthMethod.ACCESS_TOKEN,
     username = username,
     forkSetting = forkSetting,
     forkRepoPrefix = forkRepoPrefix,
