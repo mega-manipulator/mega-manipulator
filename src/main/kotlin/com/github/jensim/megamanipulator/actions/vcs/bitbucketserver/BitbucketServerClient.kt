@@ -19,7 +19,7 @@ import io.ktor.client.request.put
 object BitbucketServerClient {
 
     private suspend fun getDefaultReviewers(client: HttpClient, settings: BitBucketSettings, pullRequest: BitBucketPullRequestWrapper): List<BitBucketUser> {
-        return client.get("${settings.baseUrl}/rest/default-reviewers/1.0/projects/${pullRequest.project()}/repos/${pullRequest.repo()}/reviewers?sourceRepoId=${pullRequest.bitbucketPR.fromRef.repository.id}&targetRepoId=${pullRequest.bitbucketPR.toRef.repository.id}&sourceRefId=${pullRequest.bitbucketPR.fromRef.id}&targetRefId=${pullRequest.bitbucketPR.toRef.id}")
+        return client.get("${settings.baseUrl}/rest/default-reviewers/1.0/projects/${pullRequest.project()}/repos/${pullRequest.baseRepo()}/reviewers?sourceRepoId=${pullRequest.bitbucketPR.fromRef.repository.id}&targetRepoId=${pullRequest.bitbucketPR.toRef.repository.id}&sourceRefId=${pullRequest.bitbucketPR.fromRef.id}&targetRefId=${pullRequest.bitbucketPR.toRef.id}")
     }
 
     suspend fun addDefaultReviewers(settings: BitBucketSettings, pullRequest: BitBucketPullRequestWrapper): PullRequestWrapper {
@@ -86,7 +86,7 @@ object BitbucketServerClient {
     }
 
     private suspend fun updatePr(client: HttpClient, settings: BitBucketSettings, pullRequest: BitBucketPullRequestWrapper): PullRequestWrapper {
-        val pr: BitBucketPullRequest = client.put("${settings.baseUrl}/rest/api/1.0/projects/${pullRequest.project()}/repos/${pullRequest.repo()}/pull-requests/${pullRequest.bitbucketPR.id}") {
+        val pr: BitBucketPullRequest = client.put("${settings.baseUrl}/rest/api/1.0/projects/${pullRequest.project()}/repos/${pullRequest.baseRepo()}/pull-requests/${pullRequest.bitbucketPR.id}") {
             body = pullRequest.bitbucketPR.copy(
                 author = null,
             )
@@ -130,7 +130,7 @@ object BitbucketServerClient {
     suspend fun closePr(dropForkOrBranch: Boolean, settings: BitBucketSettings, pullRequest: BitBucketPullRequestWrapper): PullRequestWrapper {
         val client: HttpClient = HttpClientProvider.getClient(pullRequest.searchHostName(), pullRequest.codeHostName(), settings)
         try {
-            val urlString = "${settings.baseUrl}/rest/api/1.0/projects/${pullRequest.project()}/repos/${pullRequest.repo()}/pull-requests/${pullRequest.bitbucketPR.id}/decline?version=${pullRequest.bitbucketPR.version}"
+            val urlString = "${settings.baseUrl}/rest/api/1.0/projects/${pullRequest.project()}/repos/${pullRequest.baseRepo()}/pull-requests/${pullRequest.bitbucketPR.id}/decline?version=${pullRequest.bitbucketPR.version}"
             client.post<Unit>(urlString) {
                 body = emptyMap<String, String>()
             }
@@ -159,7 +159,7 @@ object BitbucketServerClient {
 
     private suspend fun removeRemoteBranch(settings: BitBucketSettings, pullRequest: BitBucketPullRequestWrapper, client: HttpClient) {
         // https://docs.atlassian.com/bitbucket-server/rest/5.8.0/bitbucket-branch-rest.html#idm45555984542992
-        client.delete<String?>("${settings.baseUrl}/rest/branch-utils/1.0/projects/${pullRequest.project()}/repos/${pullRequest.repo()}/branches") {
+        client.delete<String?>("${settings.baseUrl}/rest/branch-utils/1.0/projects/${pullRequest.project()}/repos/${pullRequest.baseRepo()}/branches") {
             body = mapOf<String, Any>("name" to pullRequest.bitbucketPR.fromRef.id, "dryRun" to false)
         }
     }

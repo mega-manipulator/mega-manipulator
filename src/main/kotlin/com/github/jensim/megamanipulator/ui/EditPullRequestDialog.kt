@@ -13,7 +13,7 @@ class EditPullRequestDialog(pullRequests: List<PullRequestWrapper>) : CreatePull
             prTitle = select.item?.title()
             prDescription = select.item?.body()
         }
-        select.addCellRenderer { "${it.project().fixedLength(5)}/${it.repo().fixedLength(5)} ${it.title().fixedLength(12)} ${it.body().fixedLength(12)}" }
+        select.addCellRenderer { "${it.project().fixedLength(5)}/${it.baseRepo().fixedLength(5)} ${it.title().fixedLength(12)} ${it.body().fixedLength(12)}" }
     }
     override val panel: DialogPanel = panel {
         row(label = "Template from") { component(preExistingSelect) }

@@ -57,7 +57,7 @@ object PullRequestWindow : ToolWindowTab {
             override fun mouseExited(e: MouseEvent?) = Unit
         })
 
-        prList.addCellRenderer { "${it.project()}/${it.repo()} ${it.title()}" }
+        prList.addCellRenderer { "${it.project()}/${it.baseRepo()} ${it.title()}" }
         prList.addListSelectionListener {
             menuOpenButton.isEnabled = false
             prList.selectedValuesList.firstOrNull()?.let {

@@ -9,7 +9,7 @@ sealed class PullRequestWrapper {
     abstract fun codeHostName(): String
     abstract fun searchHostName(): String
     abstract fun project(): String
-    abstract fun repo(): String
+    abstract fun baseRepo(): String
     abstract fun title(): String
     abstract fun body(): String
     abstract fun fromBranch(): String
@@ -28,7 +28,7 @@ data class BitBucketPullRequestWrapper(
     override fun codeHostName(): String = codeHost
     override fun searchHostName(): String = searchHost
     override fun project(): String = bitbucketPR.toRef.repository.project!!.key
-    override fun repo(): String = bitbucketPR.toRef.repository.slug
+    override fun baseRepo(): String = bitbucketPR.toRef.repository.slug
     override fun title(): String = bitbucketPR.title
     override fun body(): String = bitbucketPR.description ?: ""
     override fun fromBranch(): String = bitbucketPR.fromRef.id.removePrefix("refs/heads/")
@@ -59,7 +59,7 @@ data class GithubComPullRequestWrapper(
     override fun codeHostName(): String = codeHost
     override fun searchHostName(): String = searchHost
     override fun project(): String = pullRequest.base?.repo?.owner?.login ?: "<?>"
-    override fun repo(): String = pullRequest.base?.repo?.name ?: "<?>"
+    override fun baseRepo(): String = pullRequest.base?.repo?.name ?: "<?>"
     override fun title(): String = pullRequest.title
     override fun body(): String = pullRequest.body
     override fun fromBranch(): String = pullRequest.head?.ref ?: "<?>"

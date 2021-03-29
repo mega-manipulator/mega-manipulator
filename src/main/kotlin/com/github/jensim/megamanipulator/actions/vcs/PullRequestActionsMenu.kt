@@ -33,7 +33,7 @@ class PullRequestActionsMenu(
                     if (!exit) {
                         prProvider().mapConcurrentWithProgress(
                             title = "Declining prs",
-                            extraText2 = { "${it.codeHostName()}/${it.project()}/${it.repo()} ${it.fromBranch()}" },
+                            extraText2 = { "${it.codeHostName()}/${it.project()}/${it.baseRepo()} ${it.fromBranch()}" },
                         ) { pullRequest: PullRequestWrapper ->
                             PrRouter.closePr(doDrop, pullRequest)
                         }
@@ -53,7 +53,7 @@ class PullRequestActionsMenu(
                         prs.mapConcurrentWithProgress(
                             title = "Reword PRs",
                             extraText1 = "Setting new title and body for Pull requests",
-                            extraText2 = { "${it.codeHostName()}/${it.project()}/${it.repo()} ${it.fromBranch()}" }
+                            extraText2 = { "${it.codeHostName()}/${it.project()}/${it.baseRepo()} ${it.fromBranch()}" }
                         ) { pr ->
                             PrRouter.updatePr(dialog.prTitle!!, dialog.prDescription!!, pr)
                         }
@@ -72,7 +72,7 @@ class PullRequestActionsMenu(
                 ) {
                     prProvider().mapConcurrentWithProgress(
                         title = "Add default reviewers",
-                        extraText2 = { "${it.codeHostName()}/${it.project()}/${it.repo()} ${it.fromBranch()}" },
+                        extraText2 = { "${it.codeHostName()}/${it.project()}/${it.baseRepo()} ${it.fromBranch()}" },
                     ) { pr ->
                         val codeHostName = codeHostName
                         val searchHostName = searchHostName

@@ -41,11 +41,11 @@ object CloneOperator {
 
     suspend fun clone(pullRequest: PullRequestWrapper) {
         val basePath = ProjectOperator.project?.basePath!!
-        val fullPath = "$basePath/clones/${pullRequest.searchHostName()}/${pullRequest.codeHostName()}/${pullRequest.project()}/${pullRequest.repo()}"
+        val fullPath = "$basePath/clones/${pullRequest.searchHostName()}/${pullRequest.codeHostName()}/${pullRequest.project()}/${pullRequest.baseRepo()}"
         val dir = File(fullPath)
         clone(dir, pullRequest.cloneUrlFrom()!!, pullRequest.fromBranch())
         if (pullRequest.isFork()) {
-            LocalRepoOperator.addForkRemote(dir, pullRequest.cloneUrlFrom()!!)
+            LocalRepoOperator.promoteOriginToForkRemote(dir,pullRequest.cloneUrlTo()!!)
         }
     }
 
@@ -58,7 +58,7 @@ object CloneOperator {
                 type = WARNING
             )
         } else {
-            val p1 = ProcessOperator.runCommandAsync(dir.parentFile, listOf("git", "clone", cloneUrl)).await()
+            val p1 = ProcessOperator.runCommandAsync(dir.parentFile, listOf("git", "clone", cloneUrl, dir.absolutePath)).await()
             if (p1.exitCode != 0) {
                 NotificationsOperator.show(
                     "Clone failed",

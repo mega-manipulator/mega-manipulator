@@ -88,6 +88,13 @@ object LocalRepoOperator {
         return ProcessOperator.runCommandAsync(repoDir, listOf("git", "remote", "add", "fork", url)).await()
     }
 
+    suspend fun promoteOriginToForkRemote(repoDir: File, originUrl: String): List<Pair<String, ApplyOutput>> {
+        return listOf(
+            "rename fork" to ProcessOperator.runCommandAsync(repoDir, listOf("git", "remote", "rename", "origin", "fork")),
+            "add origin" to ProcessOperator.runCommandAsync(repoDir, listOf("git", "remote", "add", "origin", originUrl)),
+        ).map { it.first to it.second.await() }
+    }
+
     fun getBranch(repoDir: File): String? {
         val dir = File(repoDir, ".git")
         return try {
