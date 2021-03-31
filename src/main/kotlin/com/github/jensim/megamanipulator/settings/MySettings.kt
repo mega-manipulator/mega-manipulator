@@ -11,6 +11,7 @@ enum class HttpsOverride {
 
 enum class AuthMethod {
     ACCESS_TOKEN,
+    JUST_TOKEN,
 }
 
 enum class ForkSetting {
@@ -108,18 +109,21 @@ sealed class SearchHostSettings(
     open val baseUrl: String,
     open val httpsOverride: HttpsOverride?,
     open val authMethod: AuthMethod,
-    open val username: String,
+    open val username: String?,
 ) {
     fun validate() {
         validateBaseUrl(baseUrl)
+        if (authMethod == AuthMethod.ACCESS_TOKEN) {
+            require(username != null) { "AuthMethod.ACCESS_TOKEN requires username" }
+        }
     }
 }
 
 data class SourceGraphSettings(
     override val baseUrl: String,
     override val httpsOverride: HttpsOverride?,
-    override val authMethod: AuthMethod,
-    override val username: String,
+    override val authMethod: AuthMethod = AuthMethod.JUST_TOKEN,
+    override val username: String? = null,
 ) : SearchHostSettings(
     baseUrl = baseUrl,
     httpsOverride = httpsOverride,

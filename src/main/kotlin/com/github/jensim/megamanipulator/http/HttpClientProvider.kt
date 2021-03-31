@@ -72,7 +72,7 @@ object HttpClientProvider {
 
     fun getClient(searchHostName: String, settings: SearchHostSettings): HttpClient {
         val httpsOverride: HttpsOverride? = SettingsFileOperator.readSettings()?.resolveHttpsOverride(searchHostName)
-        val password: String = getPassword(settings.authMethod, settings.baseUrl, settings.username ?: "token")
+        val password: String = getPassword(settings.authMethod, settings.baseUrl, settings.username)
         return getClient(httpsOverride, settings.authMethod, settings.username, password)
     }
 
@@ -82,9 +82,10 @@ object HttpClientProvider {
         return getClient(httpsOverride, settings.authMethod, settings.username, password)
     }
 
-    private fun getPassword(authMethod: AuthMethod, baseUrl: String, username: String) = try {
+    private fun getPassword(authMethod: AuthMethod, baseUrl: String, username: String?) = try {
         when (authMethod) {
-            AuthMethod.ACCESS_TOKEN -> PasswordsOperator.getPassword(username, baseUrl)
+            AuthMethod.ACCESS_TOKEN -> PasswordsOperator.getPassword(username!!, baseUrl)
+            AuthMethod.JUST_TOKEN -> PasswordsOperator.getPassword("token", baseUrl)
         }!!
     } catch (e: Exception) {
         NotificationsOperator.show(
@@ -104,6 +105,7 @@ object HttpClientProvider {
             }
             when (authMethod) {
                 AuthMethod.ACCESS_TOKEN -> installBasicAuth(username!!, password)
+                AuthMethod.JUST_TOKEN -> installTokenAuth(password)
             }
         }
     }
@@ -114,6 +116,16 @@ object HttpClientProvider {
                 append("Content-Type", "application/json")
                 append("Accept", "application/json")
                 append("Authorization", "Basic ${Base64.encode("$username:$password".toByteArray())}")
+            }
+        }
+    }
+
+    private fun HttpClientConfig<ApacheEngineConfig>.installTokenAuth(token: String) {
+        defaultRequest {
+            headers {
+                append("Content-Type", "application/json")
+                append("Accept", "application/json")
+                append("Authorization", "token $token")
             }
         }
     }

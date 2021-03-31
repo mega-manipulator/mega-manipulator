@@ -13,9 +13,9 @@ searchHostSettings:
       baseUrl: https://sourcegraph.example.com
       # [ALLOW_SELF_SIGNED_CERT, ALLOW_ANYTHING, null]
       httpsOverride: ALLOW_ANYTHING
-      # [ACCESS_TOKEN]
-      authMethod: ACCESS_TOKEN
-      # Username or null for TOKEN auth method
+      # [ACCESS_TOKEN, JUST_TOKEN]
+      authMethod: JUST_TOKEN
+      # Username or null for JUST_TOKEN auth method
       username: username
     # Code host definitions, linked to a search host.
     codeHostSettings:
