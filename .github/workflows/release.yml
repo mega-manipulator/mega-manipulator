@@ -51,6 +51,9 @@ jobs:
         with:
           ref: ${{ github.event.release.tag_name }}
 
+      - name: Set version
+        run: sed -i 's|^pluginVersion=.*$|pluginVersion=${{ tag_name }}|' 'gradle.properties'
+
       # Update Unreleased section with the current version
       - name: Patch Changelog
         run: ./gradlew patchChangelog --stacktrace --info
