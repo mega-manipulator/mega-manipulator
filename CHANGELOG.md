@@ -6,6 +6,7 @@
 ### Added
 
 ### Changed
+- Update the plugin description to look better in the plugin marketplace
 
 ### Deprecated
 

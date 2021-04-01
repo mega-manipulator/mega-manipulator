@@ -1,18 +1,19 @@
 # mega-manipulator
 
-# Work in progress
-
 ![Build](https://github.com/jensim/mega-manipulator/workflows/Build/badge.svg)
 [![Version](https://img.shields.io/jetbrains/plugin/v/16396.svg)](https://plugins.jetbrains.com/plugin/16396)
 [![Downloads](https://img.shields.io/jetbrains/plugin/d/16396.svg)](https://plugins.jetbrains.com/plugin/16396)
 
 <!-- Plugin description -->
 
-# Mega Manipulator
+<h1><b>Mega Manipulator</b></h1>
 
+<p>
 One stop shop for making changes, big or small, in a lot of places at once.
-See this as an alternative to sourcegraph campaigns, without the docker layer inbetween you and the changes you want to make.
+See this as an alternative to sourcegraph campaigns, without the docker layer in between you, and the changes you want to make.
+</p>
 
+<p>
 Use sourcegraph queries to find target repos.
 Then a forEach approach is provided for eache of the following actions:
 Apply changes (using scripts),
@@ -20,25 +21,26 @@ Commit,
 Push,
 Fork (lazy, eager, never),
 PR.
+</p>
 
-## Search
+<h2><b>Search</b></h2>
 
 Connect to any number of search hosts, and queury those for repository hits  
 Clone the found repos to local file system, and inspect/plan the change you want to make
 
-## Apply changes
+<h2><b>Apply changes</b></h2>
 
 Run scripted changes defined in `mega-manipulator.bash`, or apply changes from the terminal, or manually, whatever fits
 you best.
 
-## Draft PRs
+<h2><b>Draft PRs</b></h2>
 
 The file system structure of the clones link back to the config defined in `mega-manipulator.yml`, so we are able to
 draft PRs for all code hosts you have cloned from. It doesn't even have to have been discovered using the same search
 host.  
 Once you have created your PRs, you are also able to edit them, or decline, in batches.
 
-## Profit
+<h2><b>Profit</b></h2>
 
 Spend less time making small, or big, changes
 
