@@ -4,6 +4,7 @@
 
 ## [Unreleased]
 ### Added
+- Added a json schema for the mega-manipulator.yml
 
 ### Changed
 - Added default settings for connecting to sourcegraph.com and github.com

@@ -1,6 +1,10 @@
 package com.github.jensim.megamanipulator.settings
 
+import com.fasterxml.jackson.databind.JsonNode
+import com.fasterxml.jackson.databind.node.ObjectNode
 import com.fasterxml.jackson.module.kotlin.readValue
+import org.hamcrest.MatcherAssert.assertThat
+import org.hamcrest.Matchers.equalTo
 import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
@@ -66,8 +70,26 @@ class SettingsFileOperatorTest {
     }
 
     @Test
-    internal fun `test default settings`() {
+    fun `test default settings`() {
         val defaultFileContent = File("src/main/resources/base-files/mega-manipulator.yml").readText()
         SerializationHolder.yamlObjectMapper.readValue<MegaManipulatorSettings>(defaultFileContent)
+    }
+
+    @Test
+    fun `generate json schema and compare to file`() {
+        val root = SerializationHolder.jsonObjectMapper.generateJsonSchema(MegaManipulatorSettings::class.java)
+
+        val searchHost: JsonNode = SerializationHolder.jsonObjectMapper.generateJsonSchema(SearchHostSettingsWrapper::class.java).schemaNode
+        val node: JsonNode = root.schemaNode["properties"]["searchHostSettings"]
+        if (node is ObjectNode) node.put("additionalProperties", searchHost)
+
+        val codeHost: JsonNode = SerializationHolder.jsonObjectMapper.generateJsonSchema(CodeHostSettingsWrapper::class.java).schemaNode
+        val node2: JsonNode = root.schemaNode["properties"]["searchHostSettings"]["additionalProperties"]["properties"]["codeHostSettings"]
+        if (node2 is ObjectNode) node2.put("additionalProperties", codeHost)
+
+        val fileContent = File("src/main/resources/base-files/mega-manipulator-schema.json").readText().trim()
+        val generatedSchema = SerializationHolder.jsonObjectMapper.writeValueAsString(root)
+
+        assertThat(generatedSchema, equalTo(fileContent))
     }
 }
