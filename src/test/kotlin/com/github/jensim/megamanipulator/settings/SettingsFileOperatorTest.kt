@@ -19,8 +19,6 @@ class SettingsFileOperatorTest {
                     settings = SourceGraphSettings(
                         baseUrl = "https://sourcegraph.example.com",
                         httpsOverride = null,
-                        authMethod = AuthMethod.ACCESS_TOKEN,
-                        username = "null",
                     ),
                     codeHostSettings = mapOf(
                         "bb" to CodeHostSettingsWrapper(
@@ -59,8 +57,6 @@ class SettingsFileOperatorTest {
                         settings = SourceGraphSettings(
                             baseUrl = "https://sourcegraph.example.com",
                             httpsOverride = null,
-                            authMethod = AuthMethod.ACCESS_TOKEN,
-                            username = "null"
                         ),
                         codeHostSettings = mapOf()
                     ),

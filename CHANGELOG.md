@@ -6,6 +6,7 @@
 ### Added
 
 ### Changed
+- Added default settings for connecting to sourcegraph.com and github.com
 
 ### Deprecated
 

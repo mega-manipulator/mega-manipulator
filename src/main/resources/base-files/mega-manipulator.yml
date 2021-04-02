@@ -5,18 +5,23 @@ concurrency: 5
 defaultHttpsOverride: ALLOW_SELF_SIGNED_CERT
 
 searchHostSettings:
+  sourcegraph_com:
+    type: SOURCEGRAPH
+    settings:
+      baseUrl: https://sourcegraph.com
+    codeHostSettings:
+      "github.com":
+        type: GITHUB
+        settings:
+          username: jensim
   # Arbitrary naming, multiple search hosts are allowed
-  sg:
+  private_sourcegraph:
     # [SOURCEGRAPH], more to come
     type: SOURCEGRAPH
     settings:
       baseUrl: https://sourcegraph.example.com
       # [ALLOW_SELF_SIGNED_CERT, ALLOW_ANYTHING, null]
       httpsOverride: ALLOW_ANYTHING
-      # [ACCESS_TOKEN, JUST_TOKEN]
-      authMethod: JUST_TOKEN
-      # Username or null for JUST_TOKEN auth method
-      username: username
     # Code host definitions, linked to a search host.
     codeHostSettings:
       # After a search hit is found, the name will be mapped using the key here
@@ -34,7 +39,7 @@ searchHostSettings:
           # Not all methods are applicable to all code host types
           authMethod: ACCESS_TOKEN
           # Username or null for TOKEN auth method
-          username: username
+          username: jensim
           # [LAZY_FORK, EAGER_FORK, null]
           forkSetting: LAZY_FORK
           # Any prefix, to avoid naming collisions when forking your private repos or already forked repos
@@ -42,4 +47,4 @@ searchHostSettings:
       "github.com":
         type: GITHUB
         settings:
-          username: username
+          username: jensim
