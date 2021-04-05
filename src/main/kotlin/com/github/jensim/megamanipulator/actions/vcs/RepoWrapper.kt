@@ -2,7 +2,9 @@ package com.github.jensim.megamanipulator.actions.vcs
 
 import com.github.jensim.megamanipulator.actions.vcs.bitbucketserver.BitBucketRepo
 import com.github.jensim.megamanipulator.actions.vcs.githubcom.GithubComRepo
+import kotlinx.serialization.Serializable
 
+@Serializable
 sealed class RepoWrapper {
     abstract fun getSearchHost(): String
     abstract fun getCodeHost(): String
@@ -12,6 +14,7 @@ sealed class RepoWrapper {
     fun asPathString() = "${getSearchHost()}/${getCodeHost()}/${getProject()}/${getRepo()}"
 }
 
+@Serializable
 data class BitBucketRepoWrapping(
     private val searchHost: String,
     private val codeHost: String,
@@ -24,6 +27,7 @@ data class BitBucketRepoWrapping(
     override fun getCloneUrl(): String? = repo.links?.clone?.first { it.name == "ssh" }?.href
 }
 
+@Serializable
 data class GithubComRepoWrapping(
     private val searchHost: String,
     private val codeHost: String,

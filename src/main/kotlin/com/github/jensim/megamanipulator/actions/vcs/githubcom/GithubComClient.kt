@@ -5,7 +5,7 @@ import com.github.jensim.megamanipulator.actions.search.SearchResult
 import com.github.jensim.megamanipulator.actions.vcs.GithubComPullRequestWrapper
 import com.github.jensim.megamanipulator.actions.vcs.GithubComRepoWrapping
 import com.github.jensim.megamanipulator.http.HttpClientProvider
-import com.github.jensim.megamanipulator.settings.GitHubSettings
+import com.github.jensim.megamanipulator.settings.CodeHostSettings.GitHubSettings
 import io.ktor.client.HttpClient
 import io.ktor.client.request.delete
 import io.ktor.client.request.get
@@ -73,7 +73,7 @@ object GithubComClient {
         val seq: Flow<GithubComIssue> = flow {
             val page = AtomicInteger(0)
             while (true) {
-                val result: GithubComSearchResult<GithubComIssue> = client.get("${settings.baseUrl}/search/issues?page=${page.getAndIncrement()}&q=state%3Aopen+author%3A${settings.username!!}+type%3Apr")
+                val result: GithubComSearchResult<GithubComIssue> = client.get("${settings.baseUrl}/search/issues?page=${page.getAndIncrement()}&q=state%3Aopen+author%3A${settings.username}+type%3Apr")
                 result.items.forEach { emit(it) }
                 if (result.items.isEmpty()) break
             }

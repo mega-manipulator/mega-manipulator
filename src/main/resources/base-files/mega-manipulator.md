@@ -21,7 +21,7 @@ you best.
 
 #### Draft PRs
 
-The file system structure of the clones link back to the config defined in `mega-manipulator.yml`, so we are able to
+The file system structure of the clones link back to the config defined in `mega-manipulator.json`, so we are able to
 draft PRs for all code hosts you have cloned from. It doesn't even have to have been discovered using the same search
 host.  
 Once you have created your PRs, you are also able to edit them, or decline, in batches.

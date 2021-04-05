@@ -1,1 +1,211 @@
-{"type":"object","properties":{"concurrency":{"type":"integer","required":true},"defaultHttpsOverride":{"type":"string","enum":["ALLOW_SELF_SIGNED_CERT","ALLOW_ANYTHING"]},"searchHostSettings":{"type":"object","required":true,"additionalProperties":{"type":"object","properties":{"type":{"type":"string","enum":["SOURCEGRAPH"],"required":true},"settings":{"type":"object","properties":{"baseUrl":{"type":"string","required":true},"httpsOverride":{"type":"string","enum":["ALLOW_SELF_SIGNED_CERT","ALLOW_ANYTHING"]},"authMethod":{"type":"string","enum":["ACCESS_TOKEN","JUST_TOKEN"],"required":true},"username":{"type":"string"}},"required":true},"codeHostSettings":{"type":"object","required":true,"additionalProperties":{"type":"object","properties":{"type":{"type":"string","enum":["BITBUCKET_SERVER","GITHUB"],"required":true},"settings":{"type":"object","properties":{"baseUrl":{"type":"string","required":true},"httpsOverride":{"type":"string","enum":["ALLOW_SELF_SIGNED_CERT","ALLOW_ANYTHING"]},"authMethod":{"type":"string","enum":["ACCESS_TOKEN","JUST_TOKEN"],"required":true},"username":{"type":"string"},"forkSetting":{"type":"string","enum":["PLAIN_BRANCH","LAZY_FORK","EAGER_FORK"],"required":true}},"required":true}}}}}}}}}
+{
+  "$schema": "http://json-schema.org/draft-07/schema",
+  "type": "object",
+  "properties": {
+    "concurrency": {
+      "type": "number",
+      "description": "When applying changes using the scripted method,\nnumber of parallel executing changes",
+      "minimum": 1,
+      "maximum": 100
+    },
+    "defaultHttpsOverride": {
+      "if": {
+        "type": "string"
+      },
+      "else": {
+        "type": "null"
+      },
+      "enum": [
+        "ALLOW_SELF_SIGNED_CERT",
+        "ALLOW_ANYTHING"
+      ],
+      "description": "Override the default strict https validation\nMay be set less strict on searchHost or codeHost level as well"
+    },
+    "searchHostSettings": {
+      "type": "object",
+      "additionalProperties": {
+        "minProperties": 1,
+        "properties": {
+          "type": {
+            "type": "string",
+            "enum": [
+              "SOURCEGRAPH"
+            ]
+          }
+        },
+        "anyOf": [
+          {
+            "type": "object",
+            "properties": {
+              "type": {
+                "const": "SOURCEGRAPH"
+              },
+              "baseUrl": {
+                "type": "string",
+                "description": "Base url to your SourceGraph installation\nFor example https://sourcegraph.com"
+              },
+              "httpsOverride": {
+                "if": {
+                  "type": "string"
+                },
+                "else": {
+                  "type": "null"
+                },
+                "enum": [
+                  "ALLOW_SELF_SIGNED_CERT",
+                  "ALLOW_ANYTHING"
+                ],
+                "description": "Override the default strict https validation"
+              },
+              "codeHostSettings": {
+                "type": "object",
+                "additionalProperties": {
+                  "minProperties": 1,
+                  "properties": {
+                    "type": {
+                      "type": "string",
+                      "enum": [
+                        "BITBUCKET_SERVER",
+                        "GITHUB"
+                      ]
+                    }
+                  },
+                  "anyOf": [
+                    {
+                      "type": "object",
+                      "properties": {
+                        "type": {
+                          "const": "BITBUCKET_SERVER"
+                        },
+                        "baseUrl": {
+                          "type": "string",
+                          "description": "Base url, like https://bitbucket.example.com"
+                        },
+                        "httpsOverride": {
+                          "if": {
+                            "type": "string"
+                          },
+                          "else": {
+                            "type": "null"
+                          },
+                          "enum": [
+                            "ALLOW_SELF_SIGNED_CERT",
+                            "ALLOW_ANYTHING"
+                          ],
+                          "description": "Override the default, strict https validation"
+                        },
+                        "username": {
+                          "type": "string",
+                          "description": "Your username at the code host"
+                        },
+                        "forkSetting": {
+                          "type": "string",
+                          "enum": [
+                            "PLAIN_BRANCH",
+                            "LAZY_FORK",
+                            "EAGER_FORK"
+                          ],
+                          "description": "Fork settings is used to decide when to fork a repo:\nPLAIN_BRANCH: Will require write access to the repo\nLAZY_FORK: When not permitted to push into origin, attempt fork strategy\nEAGER_FORK: Fork before push, for every repo"
+                        },
+                        "forkRepoPrefix": {
+                          "type": "string",
+                          "description": "Prefix forked repos with a recognizable char sequence"
+                        },
+                        "authMethod": {
+                          "type": "string",
+                          "enum": [
+                            "ACCESS_TOKEN",
+                            "JUST_TOKEN"
+                          ]
+                        }
+                      },
+                      "required": [
+                        "baseUrl",
+                        "username"
+                      ]
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "type": {
+                          "const": "GITHUB"
+                        },
+                        "httpsOverride": {
+                          "if": {
+                            "type": "string"
+                          },
+                          "else": {
+                            "type": "null"
+                          },
+                          "enum": [
+                            "ALLOW_SELF_SIGNED_CERT",
+                            "ALLOW_ANYTHING"
+                          ],
+                          "description": "Override the default, strict https validation"
+                        },
+                        "username": {
+                          "type": "string",
+                          "description": "Your username at the code host"
+                        },
+                        "forkSetting": {
+                          "type": "string",
+                          "enum": [
+                            "PLAIN_BRANCH",
+                            "LAZY_FORK",
+                            "EAGER_FORK"
+                          ],
+                          "description": "Fork settings is used to decide when to fork a repo:\nPLAIN_BRANCH: Will require write access to the repo\nLAZY_FORK: When not permitted to push into origin, attempt fork strategy\nEAGER_FORK: Fork before push, for every repo"
+                        },
+                        "baseUrl": {
+                          "type": "string"
+                        },
+                        "authMethod": {
+                          "type": "string",
+                          "enum": [
+                            "ACCESS_TOKEN",
+                            "JUST_TOKEN"
+                          ]
+                        }
+                      },
+                      "required": [
+                        "username"
+                      ]
+                    }
+                  ],
+                  "required": [
+                    "type"
+                  ]
+                }
+              },
+              "authMethod": {
+                "type": "string",
+                "enum": [
+                  "ACCESS_TOKEN",
+                  "JUST_TOKEN"
+                ]
+              },
+              "username": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "baseUrl",
+              "codeHostSettings"
+            ]
+          }
+        ],
+        "required": [
+          "type"
+        ]
+      }
+    },
+    "$schema": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "searchHostSettings"
+  ],
+  "definitions": {
+  }
+}

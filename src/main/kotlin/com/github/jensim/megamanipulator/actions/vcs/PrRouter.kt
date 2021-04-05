@@ -3,15 +3,15 @@ package com.github.jensim.megamanipulator.actions.vcs
 import com.github.jensim.megamanipulator.actions.search.SearchResult
 import com.github.jensim.megamanipulator.actions.vcs.bitbucketserver.BitbucketServerClient
 import com.github.jensim.megamanipulator.actions.vcs.githubcom.GithubComClient
-import com.github.jensim.megamanipulator.settings.BitBucketSettings
 import com.github.jensim.megamanipulator.settings.CodeHostSettings
-import com.github.jensim.megamanipulator.settings.GitHubSettings
+import com.github.jensim.megamanipulator.settings.CodeHostSettings.BitBucketSettings
+import com.github.jensim.megamanipulator.settings.CodeHostSettings.GitHubSettings
 import com.github.jensim.megamanipulator.settings.SettingsFileOperator
 
 object PrRouter {
 
     private fun resolve(searchHost: String, codeHost: String): CodeHostSettings? = SettingsFileOperator.readSettings()
-        ?.searchHostSettings?.get(searchHost)?.codeHostSettings?.get(codeHost)?.settings
+        ?.searchHostSettings?.get(searchHost)?.codeHostSettings?.get(codeHost)
 
     suspend fun addDefaultReviewers(pullRequest: PullRequestWrapper): PullRequestWrapper {
         val settings = resolve(pullRequest.searchHostName(), pullRequest.codeHostName())
@@ -48,7 +48,7 @@ object PrRouter {
     }
 
     suspend fun getAllPrs(searchHost: String, codeHost: String): List<PullRequestWrapper>? {
-        return SettingsFileOperator.readSettings()?.searchHostSettings?.get(searchHost)?.codeHostSettings?.get(codeHost)?.settings?.let {
+        return SettingsFileOperator.readSettings()?.searchHostSettings?.get(searchHost)?.codeHostSettings?.get(codeHost)?.let {
             when (it) {
                 is BitBucketSettings -> BitbucketServerClient.getAllPrs(searchHost, codeHost, it)
                 is GitHubSettings -> GithubComClient.getAllPrs(searchHost, codeHost, it)
@@ -66,7 +66,7 @@ object PrRouter {
     }
 
     suspend fun getPrivateForkReposWithoutPRs(searchHost: String, codeHost: String): List<RepoWrapper>? {
-        return SettingsFileOperator.readSettings()?.searchHostSettings?.get(searchHost)?.codeHostSettings?.get(codeHost)?.settings?.let {
+        return SettingsFileOperator.readSettings()?.searchHostSettings?.get(searchHost)?.codeHostSettings?.get(codeHost)?.let {
             when (it) {
                 is BitBucketSettings -> BitbucketServerClient.getPrivateForkReposWithoutPRs(searchHost, codeHost, it)
                 is GitHubSettings -> GithubComClient.getPrivateForkReposWithoutPRs(searchHost, codeHost, it)
@@ -75,7 +75,7 @@ object PrRouter {
     }
 
     suspend fun deletePrivateRepo(fork: RepoWrapper) {
-        SettingsFileOperator.readSettings()?.searchHostSettings?.get(fork.getSearchHost())?.codeHostSettings?.get(fork.getCodeHost())?.settings?.let { it ->
+        SettingsFileOperator.readSettings()?.searchHostSettings?.get(fork.getSearchHost())?.codeHostSettings?.get(fork.getCodeHost())?.let { it ->
             when {
                 it is BitBucketSettings && fork is BitBucketRepoWrapping -> BitbucketServerClient.deletePrivateRepo(fork, it)
                 it is GitHubSettings && fork is GithubComRepoWrapping -> GithubComClient.deletePrivateRepo(fork, it)
@@ -85,7 +85,7 @@ object PrRouter {
     }
 
     suspend fun getRepo(searchResult: SearchResult): RepoWrapper? {
-        return SettingsFileOperator.readSettings()?.searchHostSettings?.get(searchResult.searchHostName)?.codeHostSettings?.get(searchResult.codeHostName)?.settings?.let {
+        return SettingsFileOperator.readSettings()?.searchHostSettings?.get(searchResult.searchHostName)?.codeHostSettings?.get(searchResult.codeHostName)?.let {
             when (it) {
                 is BitBucketSettings -> BitbucketServerClient.getRepo(searchResult, it)
                 is GitHubSettings -> GithubComClient.getRepo(searchResult, it)

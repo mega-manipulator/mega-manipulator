@@ -1,7 +1,7 @@
 package com.github.jensim.megamanipulator.settings
 
-import com.fasterxml.jackson.module.kotlin.readValue
 import com.github.jensim.megamanipulator.actions.NotificationsOperator
+import com.github.jensim.megamanipulator.settings.SerializationHolder.readableJson
 import com.intellij.credentialStore.CredentialAttributes
 import com.intellij.credentialStore.Credentials
 import com.intellij.ide.passwordSafe.PasswordSafe
@@ -10,6 +10,8 @@ import com.intellij.remoteServer.util.CloudConfigurationUtil.createCredentialAtt
 import com.intellij.ui.components.JBPasswordField
 import com.intellij.ui.components.JBTextField
 import com.intellij.ui.layout.panel
+import kotlinx.serialization.decodeFromString
+import kotlinx.serialization.encodeToString
 import java.util.concurrent.ConcurrentHashMap
 import javax.annotation.concurrent.NotThreadSafe
 import javax.swing.JOptionPane
@@ -104,7 +106,7 @@ object PasswordsOperator {
             null
         } else {
             PasswordSafe.instance.getPassword(credentialAttributes)?.let { passMapStr ->
-                val passMap: Map<String, String> = SerializationHolder.jsonObjectMapper.readValue(passMapStr)
+                val passMap: Map<String, String> = readableJson.decodeFromString(passMapStr)
                 passMap[usernameKey]
             }
         }
@@ -122,14 +124,14 @@ object PasswordsOperator {
             val preexisting: String? = PasswordSafe.instance.getPassword(credentialAttributes)
             if (preexisting == null) {
                 val passwordsMap = mapOf(usernameKey to password)
-                val passMapStr = SerializationHolder.jsonObjectMapper.writeValueAsString(passwordsMap)
+                val passMapStr = readableJson.encodeToString(passwordsMap)
                 val credentials = Credentials(serviceUsername, passMapStr)
                 PasswordSafe.instance.set(credentialAttributes, credentials)
             } else {
                 PasswordSafe.instance.getPassword(credentialAttributes)?.let { passMapStr: String ->
-                    val passMap: MutableMap<String, String> = SerializationHolder.jsonObjectMapper.readValue(passMapStr)
+                    val passMap: MutableMap<String, String> = readableJson.decodeFromString(passMapStr)
                     passMap[usernameKey] = password
-                    val passMapStrMod = SerializationHolder.jsonObjectMapper.writeValueAsString(passMap)
+                    val passMapStrMod = readableJson.encodeToString(passMap)
                     val credentials = Credentials(serviceUsername, passMapStrMod)
                     PasswordSafe.instance.set(credentialAttributes, credentials)
                 }

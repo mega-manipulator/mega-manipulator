@@ -7,7 +7,7 @@ import com.github.jensim.megamanipulator.actions.vcs.BitBucketPullRequestWrapper
 import com.github.jensim.megamanipulator.actions.vcs.BitBucketRepoWrapping
 import com.github.jensim.megamanipulator.actions.vcs.PullRequestWrapper
 import com.github.jensim.megamanipulator.http.HttpClientProvider
-import com.github.jensim.megamanipulator.settings.BitBucketSettings
+import com.github.jensim.megamanipulator.settings.CodeHostSettings.BitBucketSettings
 import com.intellij.notification.NotificationType
 import io.ktor.client.HttpClient
 import io.ktor.client.request.delete
@@ -55,7 +55,7 @@ object BitbucketServerClient {
         val reviewers = getDefaultReviewers(client, settings, repo, localBranch, defaultBranch)
             .map { BitBucketParticipant(BitBucketUser(name = it.name)) }
         val pr: BitBucketPullRequest = client.post("${settings.baseUrl}/rest/api/1.0/projects/${repo.project}/repos/${repo.repo}/pull-requests") {
-            body = BitBucketPullRequest(
+            body = BitBucketPullRequestRequest(
                 title = title,
                 description = description,
                 fromRef = BitBucketBranchRef(
@@ -167,12 +167,12 @@ object BitbucketServerClient {
     suspend fun createFork(settings: BitBucketSettings, repo: SearchResult): String? {
         val client: HttpClient = HttpClientProvider.getClient(repo.searchHostName, repo.codeHostName, settings)
         val bbRepo: BitBucketRepo = try {
-            if (repo.project.toLowerCase() == "~${settings.username?.toLowerCase()}") {
+            if (repo.project.toLowerCase() == "~${settings.username.toLowerCase()}") {
                 // is private repo
                 client.get("${settings.baseUrl}/rest/api/1.0/projects/${repo.project}/repos/${repo.repo}")
             } else {
                 // If repo with prefix already exists..
-                client.get("${settings.baseUrl}/rest/api/1.0/users/~${settings.username!!}/repos/${settings.forkRepoPrefix}${repo.repo}")
+                client.get("${settings.baseUrl}/rest/api/1.0/users/~${settings.username}/repos/${settings.forkRepoPrefix}${repo.repo}")
             }
         } catch (e: Exception) {
             // Repo does not exist - lets fork
@@ -194,7 +194,7 @@ object BitbucketServerClient {
         var start = 0
         val collector = HashSet<BitBucketRepo>()
         while (true) {
-            val page: BitBucketPage<BitBucketRepo> = client.get("${settings.baseUrl}/rest/api/1.0/users/~${settings.username!!}/repos?start=$start")
+            val page: BitBucketPage<BitBucketRepo> = client.get("${settings.baseUrl}/rest/api/1.0/users/~${settings.username}/repos?start=$start")
             page.values.orEmpty()
                 .filter { it.slug.startsWith(settings.forkRepoPrefix) }
                 .forEach { collector.add(it) }

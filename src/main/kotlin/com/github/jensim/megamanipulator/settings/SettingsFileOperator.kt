@@ -1,11 +1,11 @@
 package com.github.jensim.megamanipulator.settings
 
-import com.fasterxml.jackson.module.kotlin.readValue
 import com.github.jensim.megamanipulator.actions.NotificationsOperator
 import com.github.jensim.megamanipulator.settings.ProjectOperator.project
-import com.github.jensim.megamanipulator.settings.SerializationHolder.yamlObjectMapper
 import com.intellij.notification.NotificationType.WARNING
 import com.intellij.openapi.fileEditor.FileDocumentManager
+import kotlinx.serialization.decodeFromString
+import kotlinx.serialization.json.Json
 import java.io.File
 import java.util.concurrent.atomic.AtomicLong
 import java.util.concurrent.atomic.AtomicReference
@@ -13,7 +13,7 @@ import kotlin.text.Charsets.UTF_8
 
 object SettingsFileOperator {
 
-    private const val settingsFileName = "config/mega-manipulator.yml"
+    private const val settingsFileName = "config/mega-manipulator.json"
     private const val scriptFileName = "config/mega-manipulator.bash"
 
     private val lastPeek = AtomicLong(0L)
@@ -43,8 +43,8 @@ object SettingsFileOperator {
                 lastPeek.set(System.currentTimeMillis())
                 bufferedSettings.get()
             } else {
-                val yaml = String(settingsFile.readBytes(), UTF_8)
-                val readValue: MegaManipulatorSettings? = yamlObjectMapper.readValue(yaml)
+                val json = String(settingsFile.readBytes(), UTF_8)
+                val readValue: MegaManipulatorSettings? = Json.decodeFromString(json)
                 readValue?.let {
                     lastUpdated.set(settingsFile.lastModified())
                     bufferedSettings.set(it)

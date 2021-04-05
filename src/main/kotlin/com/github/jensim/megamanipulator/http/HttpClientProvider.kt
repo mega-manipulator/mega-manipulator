@@ -1,7 +1,5 @@
 package com.github.jensim.megamanipulator.http
 
-import com.fasterxml.jackson.annotation.JsonInclude
-import com.fasterxml.jackson.databind.DeserializationFeature
 import com.github.jensim.megamanipulator.actions.NotificationsOperator
 import com.github.jensim.megamanipulator.settings.AuthMethod
 import com.github.jensim.megamanipulator.settings.CodeHostSettings
@@ -17,9 +15,10 @@ import io.ktor.client.engine.apache.Apache
 import io.ktor.client.engine.apache.ApacheEngineConfig
 import io.ktor.client.features.HttpTimeout
 import io.ktor.client.features.defaultRequest
-import io.ktor.client.features.json.JacksonSerializer
 import io.ktor.client.features.json.JsonFeature
+import io.ktor.client.features.json.serializer.KotlinxSerializer
 import io.ktor.client.request.headers
+import kotlinx.serialization.json.Json
 import org.apache.http.conn.ssl.NoopHostnameVerifier
 import org.apache.http.conn.ssl.TrustSelfSignedStrategy
 import org.apache.http.conn.ssl.TrustStrategy
@@ -34,10 +33,13 @@ object HttpClientProvider {
 
     private fun bakeClient(installs: HttpClientConfig<ApacheEngineConfig>.() -> Unit): HttpClient = HttpClient(Apache) {
         install(JsonFeature) {
-            serializer = JacksonSerializer {
-                disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES)
-                setSerializationInclusion(JsonInclude.Include.NON_NULL)
-            }
+            serializer = KotlinxSerializer(
+                json = Json {
+                    ignoreUnknownKeys = true
+                    isLenient = true
+                    encodeDefaults = true
+                }
+            )
         }
         installs()
     }

@@ -4,7 +4,9 @@ package com.github.jensim.megamanipulator.actions.vcs
 
 import com.github.jensim.megamanipulator.actions.vcs.bitbucketserver.BitBucketPullRequest
 import com.github.jensim.megamanipulator.actions.vcs.githubcom.GithubComPullRequest
+import kotlinx.serialization.Serializable
 
+@Serializable
 sealed class PullRequestWrapper {
     abstract fun codeHostName(): String
     abstract fun searchHostName(): String
@@ -20,6 +22,7 @@ sealed class PullRequestWrapper {
     abstract fun cloneUrlTo(): String?
 }
 
+@Serializable
 data class BitBucketPullRequestWrapper(
     val searchHost: String,
     val codeHost: String,
@@ -51,6 +54,7 @@ data class BitBucketPullRequestWrapper(
         ?.firstOrNull { it.name == "ssh" }?.href
 }
 
+@Serializable
 data class GithubComPullRequestWrapper(
     val searchHost: String,
     val codeHost: String,

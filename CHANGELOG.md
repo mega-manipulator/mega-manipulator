@@ -8,6 +8,7 @@
 
 ### Changed
 - Added default settings for connecting to sourcegraph.com and github.com
+- Switched everything over to use kotlinx serialization from jackson
 
 ### Deprecated
 

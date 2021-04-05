@@ -1,40 +1,57 @@
 package com.github.jensim.megamanipulator.settings
 
-import com.fasterxml.jackson.annotation.JsonSubTypes
-import com.fasterxml.jackson.annotation.JsonTypeInfo
+import com.github.ricky12awesome.jss.JsonSchema
+import kotlinx.serialization.SerialName
+import kotlinx.serialization.Serializable
 import java.io.File
 
+@Serializable
 enum class HttpsOverride {
+    @JsonSchema.Description(["A self signed cert is expected to have only one level"])
     ALLOW_SELF_SIGNED_CERT,
+    @JsonSchema.Description(["Do not validate certificate at all"])
     ALLOW_ANYTHING,
 }
 
+@Serializable
 enum class AuthMethod {
+    @JsonSchema.Description(["Username and access token combination"])
     ACCESS_TOKEN,
+    @JsonSchema.Description(["Token without username"])
     JUST_TOKEN,
 }
 
+@Serializable
 enum class ForkSetting {
-    /**
-     * Will require write access to the repo
-     */
+    @JsonSchema.Description(["Will require write access to the repo"])
     PLAIN_BRANCH,
-
-    /**
-     * When not permitted to push into origin, attempt fork strategy
-     */
+    @JsonSchema.Description(["When not permitted to push into origin, attempt fork strategy"])
     LAZY_FORK,
-
-    /**
-     * Fork before push, for every repo
-     */
+    @JsonSchema.Description(["Fork before push, for every repo"])
     EAGER_FORK,
 }
 
+@Serializable
 data class MegaManipulatorSettings(
+    @JsonSchema.IntRange(1, 100)
+    @JsonSchema.Description(
+        [
+            "When applying changes using the scripted method,",
+            "number of parallel executing changes"
+        ]
+    )
     val concurrency: Int = 5,
-    val defaultHttpsOverride: HttpsOverride?,
-    val searchHostSettings: Map<String, SearchHostSettingsWrapper>,
+    @JsonSchema.Description(
+        [
+            "Override the default strict https validation",
+            "May be set less strict on searchHost or codeHost level as well"
+        ]
+    )
+    val defaultHttpsOverride: HttpsOverride? = null,
+    @JsonSchema.Description(["Search host definitions"])
+    val searchHostSettings: Map<String, SearchHostSettings>,
+    @SerialName("\$schema")
+    val schema: String = "mega-manipulator-schema.json",
 ) {
     init {
         require(searchHostSettings.isNotEmpty()) {
@@ -46,12 +63,10 @@ data class MegaManipulatorSettings(
     }
 
     fun resolveHttpsOverride(searchHostName: String): HttpsOverride? = searchHostSettings[searchHostName]
-        ?.settings?.httpsOverride ?: defaultHttpsOverride
+        ?.httpsOverride ?: defaultHttpsOverride
 
     fun resolveHttpsOverride(searchHostName: String, codeHostName: String): HttpsOverride? = searchHostSettings[searchHostName]
-        ?.codeHostSettings?.get(codeHostName)?.settings?.httpsOverride ?: defaultHttpsOverride
-
-    // fun resolveSettings(searchHostName: String): SearchHostSettings = TODO()
+        ?.codeHostSettings?.get(codeHostName)?.httpsOverride ?: defaultHttpsOverride
 
     fun resolveSettings(repoDir: File): Pair<SearchHostSettings, CodeHostSettings>? {
         val codeHostDir: String = repoDir.parentFile.parentFile.name
@@ -60,8 +75,8 @@ data class MegaManipulatorSettings(
     }
 
     fun resolveSettings(searchHostName: String, codeHostName: String): Pair<SearchHostSettings, CodeHostSettings>? {
-        return searchHostSettings[searchHostName]?.settings?.let { first ->
-            searchHostSettings[searchHostName]?.codeHostSettings?.get(codeHostName)?.settings?.let { second ->
+        return searchHostSettings[searchHostName]?.let { first ->
+            searchHostSettings[searchHostName]?.codeHostSettings?.get(codeHostName)?.let { second ->
                 Pair(first, second)
             }
         }
@@ -83,53 +98,56 @@ enum class SearchHostType {
     SOURCEGRAPH
 }
 
-data class SearchHostSettingsWrapper(
-    val type: SearchHostType,
-    @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "type", include = JsonTypeInfo.As.EXTERNAL_PROPERTY)
-    @JsonSubTypes(
-        value = [
-            JsonSubTypes.Type(value = SourceGraphSettings::class, name = "SOURCEGRAPH"),
-        ]
-    )
-    val settings: SearchHostSettings,
-    val codeHostSettings: Map<String, CodeHostSettingsWrapper>,
+@Serializable
+sealed class SearchHostSettings {
 
-) {
-    init {
-        require(codeHostSettings.isNotEmpty()) {
-            """
-            |Please add one or code host settings.
-            |Available types are ${CodeHostType.values()} 
-            |""".trimMargin()
+    abstract val authMethod: AuthMethod
+    abstract val username: String
+    abstract val baseUrl: String
+    abstract val httpsOverride: HttpsOverride?
+    abstract val codeHostSettings: Map<String, CodeHostSettings>
+
+    @Serializable
+    @SerialName("SOURCEGRAPH")
+    data class SourceGraphSettings(
+        @JsonSchema.Description(
+            [
+                "Base url to your SourceGraph installation",
+                "For example https://sourcegraph.com",
+            ]
+        )
+        override val baseUrl: String,
+        @JsonSchema.Description(["Override the default strict https validation"])
+        override val httpsOverride: HttpsOverride? = null,
+        @JsonSchema.Description(
+            [
+                "Code hosts.",
+                "The names in this map is used to connect with the naming used on the search host.",
+                "!!! IT'S THEREFORE REALLY IMPORTANT !!!"
+            ]
+        )
+        override val codeHostSettings: Map<String, CodeHostSettings>,
+    ) : SearchHostSettings() {
+
+        @JsonSchema.Description(
+            [
+                ""
+                // ALLOW_SELF_SIGNED_CERT: A self signed cert is expected to have only one level
+                // ALLOW_ANYTHING: Do not validate certificate at all
+            ]
+        )
+        override val authMethod: AuthMethod = AuthMethod.JUST_TOKEN
+        override val username: String = "token"
+
+        init {
+            require(codeHostSettings.isNotEmpty()) {
+                """
+                |Please add one or code host settings.
+                |Available types are ${CodeHostType.values()} 
+                |""".trimMargin()
+            }
+            validateBaseUrl(baseUrl)
         }
-    }
-}
-
-sealed class SearchHostSettings(
-    open val baseUrl: String,
-    open val httpsOverride: HttpsOverride?,
-    open val authMethod: AuthMethod,
-    open val username: String?,
-) {
-    fun validate() {
-        validateBaseUrl(baseUrl)
-        if (authMethod == AuthMethod.ACCESS_TOKEN) {
-            require(username != null) { "AuthMethod.ACCESS_TOKEN requires username" }
-        }
-    }
-}
-
-data class SourceGraphSettings(
-    override val baseUrl: String,
-    override val httpsOverride: HttpsOverride?,
-) : SearchHostSettings(
-    baseUrl = baseUrl,
-    httpsOverride = httpsOverride,
-    authMethod = AuthMethod.JUST_TOKEN,
-    username = null
-) {
-    init {
-        validate()
     }
 }
 
@@ -138,14 +156,15 @@ enum class CodeHostType {
     GITHUB,
 }
 
+@Serializable
 sealed class CodeHostSettings
-@SuppressWarnings("LongParameterList") constructor(
-    open val baseUrl: String,
-    open val httpsOverride: HttpsOverride?,
-    open val authMethod: AuthMethod,
-    open val username: String?,
-    open val forkSetting: ForkSetting,
-) {
+@SuppressWarnings("LongParameterList") constructor() {
+    abstract val baseUrl: String
+    abstract val httpsOverride: HttpsOverride?
+    abstract val authMethod: AuthMethod
+    abstract val username: String?
+    abstract val forkSetting: ForkSetting
+
     internal fun validate() {
         validateBaseUrl(baseUrl)
         if (authMethod == AuthMethod.ACCESS_TOKEN) {
@@ -155,55 +174,59 @@ sealed class CodeHostSettings
             require(username != null) { "username is required if forkSetting is not ${ForkSetting.PLAIN_BRANCH.name}" }
         }
     }
-}
 
-data class BitBucketSettings(
-    override val baseUrl: String,
-    override val httpsOverride: HttpsOverride?,
-    override val authMethod: AuthMethod = AuthMethod.ACCESS_TOKEN,
-    override val username: String?,
-    override val forkSetting: ForkSetting = ForkSetting.LAZY_FORK,
-    val forkRepoPrefix: String = "mm_",
-) : CodeHostSettings(
-    baseUrl = baseUrl,
-    httpsOverride = httpsOverride,
-    authMethod = authMethod,
-    username = username,
-    forkSetting = forkSetting,
-) {
-    init {
-        validate()
-        if (forkSetting != ForkSetting.PLAIN_BRANCH) {
-            require(forkRepoPrefix != null) { "forkRepoPrefix is required if forkSetting is not ${ForkSetting.PLAIN_BRANCH.name}" }
+    @Serializable
+    @SerialName("BITBUCKET_SERVER")
+    data class BitBucketSettings(
+        @JsonSchema.Description(["Base url, like https://bitbucket.example.com"])
+        override val baseUrl: String,
+        @JsonSchema.Description(["Override the default, strict https validation"])
+        override val httpsOverride: HttpsOverride? = null,
+        @JsonSchema.Description(["Your username at the code host"])
+        override val username: String,
+        @JsonSchema.Description(
+            [
+                "Fork settings is used to decide when to fork a repo:",
+                "PLAIN_BRANCH: Will require write access to the repo",
+                "LAZY_FORK: When not permitted to push into origin, attempt fork strategy",
+                "EAGER_FORK: Fork before push, for every repo",
+            ]
+        )
+        override val forkSetting: ForkSetting = ForkSetting.LAZY_FORK,
+        @JsonSchema.Description(["Prefix forked repos with a recognizable char sequence"])
+        val forkRepoPrefix: String = "mm_",
+    ) : CodeHostSettings() {
+
+        override val authMethod: AuthMethod = AuthMethod.ACCESS_TOKEN
+
+        init {
+            validate()
+        }
+    }
+
+    @Serializable
+    @SerialName("GITHUB")
+    data class GitHubSettings(
+        @JsonSchema.Description(["Override the default, strict https validation"])
+        override val httpsOverride: HttpsOverride? = null,
+        @JsonSchema.Description(["Your username at the code host"])
+        override val username: String,
+        @JsonSchema.Description(
+            [
+                "Fork settings is used to decide when to fork a repo:",
+                "PLAIN_BRANCH: Will require write access to the repo",
+                "LAZY_FORK: When not permitted to push into origin, attempt fork strategy",
+                "EAGER_FORK: Fork before push, for every repo",
+            ]
+        )
+        override val forkSetting: ForkSetting = ForkSetting.LAZY_FORK,
+    ) : CodeHostSettings() {
+
+        override val baseUrl: String = "https://api.github.com"
+        override val authMethod = AuthMethod.ACCESS_TOKEN
+
+        init {
+            validate()
         }
     }
 }
-
-data class GitHubSettings(
-    override val baseUrl: String = "https://api.github.com",
-    override val httpsOverride: HttpsOverride? = null,
-    override val username: String,
-    override val forkSetting: ForkSetting = ForkSetting.LAZY_FORK,
-) : CodeHostSettings(
-    baseUrl = baseUrl,
-    httpsOverride = httpsOverride,
-    authMethod = AuthMethod.ACCESS_TOKEN,
-    username = username,
-    forkSetting = forkSetting,
-) {
-    init {
-        validate()
-    }
-}
-
-data class CodeHostSettingsWrapper(
-    val type: CodeHostType,
-    @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "type", include = JsonTypeInfo.As.EXTERNAL_PROPERTY)
-    @JsonSubTypes(
-        value = [
-            JsonSubTypes.Type(value = BitBucketSettings::class, name = "BITBUCKET_SERVER"),
-            JsonSubTypes.Type(value = GitHubSettings::class, name = "GITHUB"),
-        ]
-    )
-    val settings: CodeHostSettings
-)

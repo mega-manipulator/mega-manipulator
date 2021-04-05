@@ -1,6 +1,6 @@
 package com.github.jensim.megamanipulator.actions.vcs
 
-import com.github.jensim.megamanipulator.settings.SerializationHolder
+import com.github.jensim.megamanipulator.settings.SerializationHolder.readableJson
 import com.github.jensim.megamanipulator.toolswindow.ToolWindowTab
 import com.github.jensim.megamanipulator.ui.CodeHostSelector
 import com.github.jensim.megamanipulator.ui.GeneralListCellRenderer.addCellRenderer
@@ -9,6 +9,7 @@ import com.intellij.ui.components.JBList
 import com.intellij.ui.components.JBScrollPane
 import com.intellij.ui.components.JBTextArea
 import com.intellij.ui.layout.panel
+import kotlinx.serialization.encodeToString
 import java.awt.event.MouseEvent
 import java.awt.event.MouseListener
 import javax.swing.JButton
@@ -61,7 +62,7 @@ object PullRequestWindow : ToolWindowTab {
         prList.addListSelectionListener {
             menuOpenButton.isEnabled = false
             prList.selectedValuesList.firstOrNull()?.let {
-                peekArea.text = SerializationHolder.yamlObjectMapper.writeValueAsString(it)
+                peekArea.text = readableJson.encodeToString(it)
                 menuOpenButton.isEnabled = true
             }
         }

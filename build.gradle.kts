@@ -11,7 +11,8 @@ plugins {
     // Java support
     id("java")
     // Kotlin support
-    id("org.jetbrains.kotlin.jvm") version "1.4.32"
+    kotlin("jvm") version "1.4.32"
+    kotlin("plugin.serialization") version "1.4.32"
     // gradle-intellij-plugin - read more: https://github.com/JetBrains/gradle-intellij-plugin
     id("org.jetbrains.intellij") version "0.7.2"
     // gradle-changelog-plugin - read more: https://github.com/JetBrains/gradle-changelog-plugin
@@ -43,32 +44,31 @@ version = pluginVersion
 // Configure project's dependencies
 repositories {
     mavenCentral()
+    maven(url = "https://jitpack.io")
     jcenter()
 }
 
 dependencies {
-    detektPlugins("io.gitlab.arturbosch.detekt:detekt-formatting:1.16.0")
-    implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8:$kotlinVersion")
-    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-jdk8:1.4.3")
-    implementation("org.jetbrains.kotlin:kotlin-reflect:$kotlinVersion")
+    detektPlugins(group = "io.gitlab.arturbosch.detekt", name = "detekt-formatting", version = "1.16.0")
+    implementation(group = "org.jetbrains.kotlin", name = "kotlin-stdlib-jdk8", version = kotlinVersion)
+    implementation(group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-jdk8", version = "1.4.3")
+    implementation(group = "org.jetbrains.kotlin", name = "kotlin-reflect", version = kotlinVersion)
     implementation(group = "org.jetbrains.kotlin", name = "kotlin-bom", version = kotlinVersion, ext = "pom")
 
-    implementation("io.ktor:ktor-client:$ktorVersion")
-    implementation("io.ktor:ktor-client-apache:$ktorVersion")
-    implementation("io.ktor:ktor-client-jackson:$ktorVersion")
+    implementation(group = "io.ktor", name = "ktor-client", version = ktorVersion)
+    implementation(group = "io.ktor", name = "ktor-client-apache", version = ktorVersion)
+    implementation(group = "io.ktor", name = "ktor-client-serialization", version = ktorVersion)
+    implementation(group = "org.jetbrains.kotlinx", name = "kotlinx-serialization-json", version = "1.0.1")
+    implementation(group = "com.github.Ricky12Awesome", name = "json-schema-serialization", version = "0.6.6")
 
-    implementation("com.fasterxml.jackson.core:jackson-databind:$jacksonVersion")
-    implementation("com.fasterxml.jackson.dataformat:jackson-dataformat-yaml:$jacksonVersion")
-    implementation("com.fasterxml.jackson.module:jackson-module-kotlin:$jacksonVersion")
-
-    implementation("org.eclipse.jgit:org.eclipse.jgit:5.11.0.202103091610-r")
-    implementation("org.apache.logging.log4j:log4j-slf4j-impl:2.14.1")
+    implementation(group = "org.eclipse.jgit", name = "org.eclipse.jgit", version = "5.11.0.202103091610-r")
+    implementation(group = "org.apache.logging.log4j", name = "log4j-slf4j-impl", version = "2.14.1")
 
     // TEST
-    testImplementation("org.hamcrest:hamcrest:2.2")
-    testImplementation("org.hamcrest:hamcrest-library:2.2")
-    testImplementation("org.junit.jupiter:junit-jupiter-api:5.7.1")
-    testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:5.7.1")
+    testImplementation(group = "org.hamcrest", name = "hamcrest", version = "2.2")
+    testImplementation(group = "org.hamcrest", name = "hamcrest-library", version = "2.2")
+    testImplementation(group = "org.junit.jupiter", name = "junit-jupiter-api", version = "5.7.1")
+    testRuntimeOnly(group = "org.junit.jupiter", name = "junit-jupiter-engine", version = "5.7.1")
 }
 
 // Configure gradle-intellij-plugin plugin.

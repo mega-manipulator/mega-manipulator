@@ -4,7 +4,7 @@ import com.github.jensim.megamanipulator.actions.NotificationsOperator
 import com.github.jensim.megamanipulator.actions.search.SearchResult
 import com.github.jensim.megamanipulator.actions.search.SearchTypes
 import com.github.jensim.megamanipulator.http.HttpClientProvider.getClient
-import com.github.jensim.megamanipulator.settings.SourceGraphSettings
+import com.github.jensim.megamanipulator.settings.SearchHostSettings.SourceGraphSettings
 import com.intellij.notification.NotificationType
 import com.jetbrains.rd.util.printlnError
 import io.ktor.client.features.timeout

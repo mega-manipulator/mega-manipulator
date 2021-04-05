@@ -87,9 +87,9 @@ object SettingsWindow : ToolWindowTab {
                     settings.searchHostSettings.map {
                         ConfigHostHolder(
                             hostType = HostType.SEARCH,
-                            authMethod = it.value.settings.authMethod,
-                            baseUri = it.value.settings.baseUrl,
-                            username = it.value.settings.username ?: "token",
+                            authMethod = it.value.authMethod,
+                            baseUri = it.value.baseUrl,
+                            username = it.value.username,
                             hostNaming = it.key
                         )
                     } + settings.searchHostSettings.values.flatMap {
@@ -97,9 +97,9 @@ object SettingsWindow : ToolWindowTab {
 
                             ConfigHostHolder(
                                 hostType = HostType.CODE,
-                                authMethod = it.value.settings.authMethod,
-                                baseUri = it.value.settings.baseUrl,
-                                username = it.value.settings.username ?: "token",
+                                authMethod = it.value.authMethod,
+                                baseUri = it.value.baseUrl,
+                                username = it.value.username ?: "token",
                                 hostNaming = it.key
                             )
                         }
