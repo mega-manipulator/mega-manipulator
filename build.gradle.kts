@@ -58,7 +58,7 @@ dependencies {
     implementation(group = "io.ktor", name = "ktor-client", version = ktorVersion)
     implementation(group = "io.ktor", name = "ktor-client-apache", version = ktorVersion)
     implementation(group = "io.ktor", name = "ktor-client-serialization", version = ktorVersion)
-    implementation(group = "org.jetbrains.kotlinx", name = "kotlinx-serialization-json", version = "1.0.1")
+    implementation(group = "org.jetbrains.kotlinx", name = "kotlinx-serialization-json", version = "1.1.0")
     implementation(group = "com.github.Ricky12Awesome", name = "json-schema-serialization", version = "0.6.6")
 
     implementation(group = "org.eclipse.jgit", name = "org.eclipse.jgit", version = "5.11.0.202103091610-r")
