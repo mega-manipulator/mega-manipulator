@@ -4,6 +4,18 @@
 
 ## [Unreleased]
 ### Added
+
+### Changed
+
+### Deprecated
+
+### Removed
+
+### Fixed
+
+### Security
+## [0.0.11]
+### Added
 - Added a json schema for the mega-manipulator.yml
 
 ### Changed
