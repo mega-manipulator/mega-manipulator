@@ -2,10 +2,12 @@ import io.gitlab.arturbosch.detekt.Detekt
 import org.jetbrains.changelog.closure
 import org.jetbrains.changelog.markdownToHTML
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
+import com.github.benmanes.gradle.versions.updates.DependencyUpdatesTask
 
-val ktorVersion: String = "1.5.2"
+val ktorVersion: String = "1.5.3"
 val jacksonVersion = "2.12.+"
 val kotlinVersion = "1.4.32"
+val jvmVersion = "11"
 
 plugins {
     // Java support
@@ -21,6 +23,7 @@ plugins {
     id("io.gitlab.arturbosch.detekt") version "1.16.0"
     // ktlint linter - read more: https://github.com/JLLeitschuh/ktlint-gradle
     id("org.jlleitschuh.gradle.ktlint") version "10.0.0"
+    id("com.github.ben-manes.versions") version "0.38.0"
 }
 
 // Import variables from gradle.properties file
@@ -58,7 +61,7 @@ dependencies {
     implementation(group = "io.ktor", name = "ktor-client", version = ktorVersion)
     implementation(group = "io.ktor", name = "ktor-client-apache", version = ktorVersion)
     implementation(group = "io.ktor", name = "ktor-client-serialization", version = ktorVersion)
-    implementation(group = "org.jetbrains.kotlinx", name = "kotlinx-serialization-json", version = "1.0.1")
+    implementation(group = "org.jetbrains.kotlinx", name = "kotlinx-serialization-json", version = "1.1.0")
     implementation(group = "com.github.Ricky12Awesome", name = "json-schema-serialization", version = "0.6.6")
 
     implementation(group = "org.eclipse.jgit", name = "org.eclipse.jgit", version = "5.11.0.202103091610-r")
@@ -103,22 +106,36 @@ detekt {
     }
 }
 
+fun isNonStable(version: String): Boolean {
+    val stableKeyword = listOf("RELEASE", "FINAL", "GA").any { version.toUpperCase().contains(it) }
+    val regex = "^[0-9,.v-]+(-r)?$".toRegex()
+    val isStable = stableKeyword || regex.matches(version)
+    return isStable.not()
+}
+
 tasks {
-    // Set the compatibility versions to 11
+    // Set the compatibility jvm versions
     withType<JavaCompile> {
-        sourceCompatibility = "11"
-        targetCompatibility = "11"
+        sourceCompatibility = jvmVersion
+        targetCompatibility = jvmVersion
     }
     withType<KotlinCompile> {
-        kotlinOptions.jvmTarget = "11"
+        kotlinOptions.jvmTarget = jvmVersion
     }
 
     withType<Detekt> {
-        jvmTarget = "11"
+        jvmTarget = jvmVersion
     }
 
     withType<Test>().configureEach {
         useJUnitPlatform()
+    }
+
+    named<DependencyUpdatesTask>("dependencyUpdates").configure {
+        gradleReleaseChannel="current"
+        rejectVersionIf {
+            isNonStable(candidate.version) && !isNonStable(currentVersion)
+        }
     }
 
     patchPluginXml {
@@ -129,7 +146,7 @@ tasks {
         // Extract the <!-- Plugin description --> section from README.md and provide for the plugin's manifest
         pluginDescription(
             closure {
-                File("./README.md").readText().lines().run {
+                File(project.projectDir, "README.md").readText().lines().run {
                     val start = "<!-- Plugin description -->"
                     val end = "<!-- Plugin description end -->"
 
