@@ -4,6 +4,7 @@
 
 ## [Unreleased]
 ### Added
+- Support IntelliJ 2021.1
 
 ### Changed
 
