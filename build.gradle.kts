@@ -1,8 +1,8 @@
+import com.github.benmanes.gradle.versions.updates.DependencyUpdatesTask
 import io.gitlab.arturbosch.detekt.Detekt
 import org.jetbrains.changelog.closure
 import org.jetbrains.changelog.markdownToHTML
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
-import com.github.benmanes.gradle.versions.updates.DependencyUpdatesTask
 
 val ktorVersion: String = "1.5.3"
 val jacksonVersion = "2.12.+"
@@ -132,7 +132,7 @@ tasks {
     }
 
     named<DependencyUpdatesTask>("dependencyUpdates").configure {
-        gradleReleaseChannel="current"
+        gradleReleaseChannel = "current"
         rejectVersionIf {
             isNonStable(candidate.version) && !isNonStable(currentVersion)
         }
