@@ -6,7 +6,7 @@
 
 <!-- Plugin description -->
 
-<h1><b>Mega Manipulator</b></h1>
+<h1><b>Mega Manipulator (m²)</b></h1>
 
 <p>
 One stop shop for making changes, big or small, in a lot of places at once.

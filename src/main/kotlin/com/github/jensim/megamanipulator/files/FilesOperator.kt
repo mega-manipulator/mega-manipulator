@@ -5,10 +5,16 @@ import com.github.jensim.megamanipulator.settings.ProjectOperator
 import com.intellij.notification.NotificationType
 import com.intellij.openapi.fileEditor.FileDocumentManager
 import com.intellij.openapi.vfs.LocalFileSystem
+import com.intellij.util.io.inputStream
+import com.intellij.util.io.isDirectory
+import java.io.BufferedInputStream
 import java.io.File
-import java.net.JarURLConnection
-import java.net.URL
-import java.util.jar.JarEntry
+import java.net.URI
+import java.nio.file.FileSystem
+import java.nio.file.FileSystems
+import java.nio.file.Files
+import java.nio.file.Path
+import java.nio.file.Paths
 
 object FilesOperator {
 
@@ -78,23 +84,26 @@ object FilesOperator {
         .plus(VirtFile(".gitignore", "clones\n.idea\n".toByteArray()))
 
     private fun findAllClasspathFiles(dir: String): List<VirtFile> {
-        val resource: URL? = FilesOperator::class.java.getResource("/$dir/")
-        return if (resource?.protocol == "jar") {
-            (resource.openConnection() as JarURLConnection).jarFile.entries().toList()
-                .filter { it.name.startsWith("$dir/") }
-                .mapNotNull { file: JarEntry ->
-                    FilesOperator::class.java.classLoader.getResourceAsStream(file.name)?.readAllBytes()?.let { content ->
-                        if (content.isNotEmpty()) {
-                            val name = file.name.removePrefix("$dir/")
-                            VirtFile("config/$name", content)
-                        } else {
-                            null
-                        }
-                    }
-                }
+        val uri: URI = FilesOperator::class.java.classLoader.getResource("/$dir")?.toURI()!!
+        return if (uri.scheme.equals("jar")) {
+            FileSystems.newFileSystem(uri, emptyMap<String, Any>()).use { fileSystem: FileSystem ->
+                fileSystem.getPath("/$dir").toVirtConfFiles()
+            }
         } else {
-            NotificationsOperator.show("Classpath read error", "Failed fetching base files from classpath", NotificationType.ERROR)
-            emptyList()
+            Paths.get(uri).toVirtConfFiles()
         }
     }
+
+    private fun Path.toVirtConfFiles(): List<VirtFile> = Files.walk(this)
+        .iterator().asSequence()
+        .filter { it.isDirectory().not() }
+        .mapNotNull {
+            val content = BufferedInputStream(it.inputStream()).use { it.readAllBytes() }
+            if (content.isNotEmpty()) {
+                VirtFile("config/${it.fileName}", content)
+            } else {
+                null
+            }
+        }
+        .toList()
 }

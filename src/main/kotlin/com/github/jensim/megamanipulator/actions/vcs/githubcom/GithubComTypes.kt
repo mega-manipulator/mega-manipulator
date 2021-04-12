@@ -25,6 +25,16 @@ data class GithubComRepo(
 )
 
 @Serializable
+data class GithubPullRequestRequest(
+    val title : String,
+    val body : String,
+    val draft : Boolean = false,
+    val maintainer_can_modify : Boolean = true,
+    val head : String, //" to "$headProject/$headRepo:$localBranch",
+    val base : String, //" to ghrepo.default_branch,
+)
+
+@Serializable
 data class GithubComUser(
     val login: String, // "octocat",
     val id: Long, // 1296269,
@@ -79,5 +89,5 @@ data class GithubComIssue(
 
 @Serializable
 data class GithubComPullRequestLinks(
-    val url: String?,
+    val url: String? = null,
 )

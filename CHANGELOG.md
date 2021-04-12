@@ -12,6 +12,9 @@
 ### Removed
 
 ### Fixed
+- Serialization of httpClient types
+- Functional default values in conf
+- Loading class path files
 
 ### Security
 ## [0.0.12]

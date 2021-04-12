@@ -11,64 +11,88 @@ object SearchTypes {
     }
 
     @Serializable
-    data class SearchVaraibles(val query: String) {
+    data class SearchVaraibles(
+        val query: String,
+    ) {
         val version = "V2"
         val patternType = "literal"
     }
 
     @Serializable
-    data class GraphQLResponse(val data: GraphQLData?, val errors: List<GraphQLError>?)
+    data class GraphQLResponse(
+        val data: GraphQLData? = null,
+        val errors: List<GraphQLError>? = null,
+    )
+
     @Serializable
-    data class GraphQLData(val search: GraphQLSearch)
+    data class GraphQLData(
+        val search: GraphQLSearch,
+    )
+
     @Serializable
-    data class GraphQLError(val message: String?, val location: GraphQLErrorLocation?)
+    data class GraphQLError(
+        val message: String? = null,
+        val location: GraphQLErrorLocation? = null,
+    )
+
     @Serializable
-    data class GraphQLErrorLocation(val line: Long?, val column: Long?)
+    data class GraphQLErrorLocation(
+        val line: Long? = null,
+        val column: Long? = null,
+    )
+
     @Serializable
     data class GraphQLSearch(val results: GraphQLSearchResults)
+
     @Serializable
     data class GraphQLSearchResults(
         val __typename: String,
         val pageInfo: PageInfo,
         val limitHit: Boolean,
-        val matchCount: Long?,
-        val approximateResultCount: String?,
-        val missing: List<Missing>?,
-        val repositoriesCount: Long?,
-        val timedout: List<Timeout>?,
-        val alert: List<Alert>?,
-        val elapsedMilliseconds: Long?,
-        val results: List<GraphQLSearchResult>?,
+        val matchCount: Long? = null,
+        val approximateResultCount: String? = null,
+        val missing: List<Missing>? = null,
+        val repositoriesCount: Long? = null,
+        val timedout: List<Timeout>? = null,
+        val alert: List<Alert>? = null,
+        val elapsedMilliseconds: Long? = null,
+        val results: List<GraphQLSearchResult>? = null,
     )
 
     @Serializable
-    data class Missing(val name: String?)
+    data class Missing(
+        val name: String? = null,
+    )
+
     @Serializable
-    data class Timeout(val name: String?)
+    data class Timeout(
+        val name: String? = null,
+    )
+
     @Serializable
     data class Alert(
-        val title: String?,
-        val description: String?,
-        val proposedQueries: List<ProposedQueries>?,
+        val title: String? = null,
+        val description: String? = null,
+        val proposedQueries: List<ProposedQueries>? = null,
     )
 
     @Serializable
     data class ProposedQueries(
-        val description: String?,
-        val query: String?,
+        val description: String? = null,
+        val query: String? = null,
     )
 
     @Serializable
     data class PageInfo(
-        val endCursor: String?,
+        val endCursor: String? = null,
         val hasNextPage: Boolean,
     )
 
     @Serializable
     data class GraphQLSearchResult(
-        val __typename: String?,
-        val file: File?,
-        val repository: Repository?,
+        val __typename: String? = null,
+        val file: File? = null,
+        val repository: Repository? = null,
     )
 
     @Serializable

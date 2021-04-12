@@ -5,7 +5,7 @@
       "type": "SOURCEGRAPH",
       "baseUrl": "https://sourcegraph.example.com",
       "codeHostSettings": {
-        "github_com": {
+        "github.com": {
           "type": "GITHUB",
           "username": "jenism"
         },
@@ -20,7 +20,7 @@
       "type": "SOURCEGRAPH",
       "baseUrl": "https://sourcegraph.com",
       "codeHostSettings": {
-        "github_com": {
+        "github.com": {
           "type": "GITHUB",
           "username": "jenism"
         }

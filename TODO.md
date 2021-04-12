@@ -1,12 +1,17 @@
 # ToDo's
 
-* [ ] Create JSON schema for config, and bind to mega-manipulator.yml
-* [ ] Clone from PRs
+* [ ] Improve testing
+* [ ] Notify on missing conf for code host or search host
+
+* [] Github fetch PullRequests, might be broken??
+  https://api.github.com/search/issues?page=0&per_page=100&q=state%3Aopen+author%3Ajenism+type%3Apr
+* [x] Create JSON schema for config, and bind to mega-manipulator.yml
+* [x] Clone from PRs
 * [ ] Drop stale forked repos
 * [ ] Drop stale - non-default branches (merged or old)
 * [ ] Validate authentication
 * [ ] Validate authorization
-* [ ]
+* [ ] 
 
 ## CodeHosts
 

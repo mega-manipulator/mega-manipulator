@@ -29,12 +29,13 @@ object GithubComClient {
         val fork: Pair<String, String>? = LocalRepoOperator.getForkProject(repo)
         val localBranch: String = LocalRepoOperator.getBranch(repo)!!
         val headProject = fork?.first ?: repo.project
-        val headRepo = fork?.second ?: repo.repo
-        val ghrepo: GithubComRepo = client.get("${settings.baseUrl}/repos/${repo.project}/${repo.repo}")
+        val ghRepo: GithubComRepo = client.get("${settings.baseUrl}/repos/${repo.project}/${repo.repo}")
         val pr: GithubComPullRequest = client.post("${settings.baseUrl}/repos/${repo.project}/${repo.repo}/pulls") {
-            body = mapOf(
-                "title" to title, body to description, "draft" to false, "maintainer_can_modify" to true,
-                "head" to "$headProject/$headRepo:$localBranch", "base" to ghrepo.default_branch
+            body = GithubPullRequestRequest(
+                title = title,
+                body = description,
+                head = "${headProject}:${localBranch}",
+                base = ghRepo.default_branch,
             )
         }
         return GithubComPullRequestWrapper(repo.searchHostName, repo.codeHostName, pr)

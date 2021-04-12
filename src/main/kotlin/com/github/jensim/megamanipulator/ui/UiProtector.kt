@@ -8,6 +8,7 @@ import com.intellij.openapi.progress.ProgressManager
 import com.intellij.openapi.progress.Task
 import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.TimeoutCancellationException
 import kotlinx.coroutines.async
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.sync.Semaphore
@@ -40,7 +41,7 @@ fun <T> uiProtectedOperation(
                         return@runBlocking withTimeout(250) {
                             deferred.await()
                         }
-                    } catch (e: Exception) {
+                    } catch (e: TimeoutCancellationException) {
                         // Just not done yet
                     }
                 }
@@ -126,7 +127,7 @@ fun <T, U> Collection<T>.mapConcurrentWithProgress(
                         return@runBlocking withTimeout(250) {
                             futures.map { it.first to it.second?.await() }
                         }
-                    } catch (e: Exception) {
+                    } catch (e: TimeoutCancellationException) {
                         // Just not done yet
                     }
                 }
