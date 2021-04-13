@@ -22,3 +22,4 @@ jobs:
           args: >
             -Dsonar.organization=jensim-github
             -Dsonar.projectKey=mega-manipulator
+            -X
