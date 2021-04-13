@@ -3,7 +3,7 @@ package com.github.jensim.megamanipulator.actions.localrepo
 import com.github.jensim.megamanipulator.actions.ProcessOperator
 import com.github.jensim.megamanipulator.actions.apply.ApplyOutput
 import com.github.jensim.megamanipulator.actions.search.SearchResult
-import com.github.jensim.megamanipulator.settings.ProjectOperator.project
+import com.github.jensim.megamanipulator.settings.ProjectOperator
 import org.eclipse.jgit.storage.file.FileRepositoryBuilder
 import java.io.File
 import java.nio.file.Files
@@ -12,12 +12,24 @@ import java.nio.file.attribute.BasicFileAttributes
 import java.util.stream.Collectors
 
 @SuppressWarnings("TooManyFunctions")
-object LocalRepoOperator {
+class LocalRepoOperator(
+    private val projectOperator: ProjectOperator,
+    private val processOperator: ProcessOperator,
+) {
 
-    private const val depth = 4
+    companion object {
+
+        private const val depth = 4
+        val instance by lazy {
+            LocalRepoOperator(
+                projectOperator = ProjectOperator.instance,
+                processOperator = ProcessOperator.instance,
+            )
+        }
+    }
 
     fun getLocalRepoFiles(): List<File> {
-        val clonesDir = File(project?.basePath!!, "clones")
+        val clonesDir = File(projectOperator.project?.basePath!!, "clones")
         if (!clonesDir.exists()) {
             return emptyList()
         }
@@ -38,16 +50,16 @@ object LocalRepoOperator {
     }
 
     fun getBranch(searchResult: SearchResult): String? {
-        val dir = File("${project?.basePath!!}/clones/${searchResult.searchHostName}/${searchResult.codeHostName}/${searchResult.project}/${searchResult.repo}")
+        val dir = File("${projectOperator.project?.basePath!!}/clones/${searchResult.searchHostName}/${searchResult.codeHostName}/${searchResult.project}/${searchResult.repo}")
         return getBranch(dir)
     }
 
     suspend fun push(repoDir: File): ApplyOutput {
         val branch = getBranch(repoDir)!!
         return if (hasFork(repoDir)) {
-            ProcessOperator.runCommandAsync(repoDir, listOf("git", "push", "--set-upstream", "fork", branch)).await()
+            processOperator.runCommandAsync(repoDir, listOf("git", "push", "--set-upstream", "fork", branch)).await()
         } else {
-            ProcessOperator.runCommandAsync(repoDir, listOf("git", "push", "--set-upstream", "origin", branch)).await()
+            processOperator.runCommandAsync(repoDir, listOf("git", "push", "--set-upstream", "origin", branch)).await()
         }
     }
 
@@ -63,9 +75,9 @@ object LocalRepoOperator {
     }
 
     private suspend fun getGitUrl(repo: SearchResult, remote: String): String? {
-        val dir = File("${project?.basePath!!}/clones/${repo.searchHostName}/${repo.codeHostName}/${repo.project}/${repo.repo}")
+        val dir = File("${projectOperator.project?.basePath!!}/clones/${repo.searchHostName}/${repo.codeHostName}/${repo.project}/${repo.repo}")
         return try {
-            ProcessOperator.runCommandAsync(dir, listOf("git", "remote", "-v")).await().std.lines()
+            processOperator.runCommandAsync(dir, listOf("git", "remote", "-v")).await().std.lines()
                 .filter { it.startsWith(remote) && it.endsWith("(push)") }
                 .map { it.split(" ", "\t").filter { it.isNotEmpty() }[1] }
                 .firstOrNull()
@@ -86,13 +98,13 @@ object LocalRepoOperator {
     }
 
     suspend fun addForkRemote(repoDir: File, url: String): ApplyOutput {
-        return ProcessOperator.runCommandAsync(repoDir, listOf("git", "remote", "add", "fork", url)).await()
+        return processOperator.runCommandAsync(repoDir, listOf("git", "remote", "add", "fork", url)).await()
     }
 
     suspend fun promoteOriginToForkRemote(repoDir: File, originUrl: String): List<Pair<String, ApplyOutput>> {
         return listOf(
-            "rename fork" to ProcessOperator.runCommandAsync(repoDir, listOf("git", "remote", "rename", "origin", "fork")),
-            "add origin" to ProcessOperator.runCommandAsync(repoDir, listOf("git", "remote", "add", "origin", originUrl)),
+            "rename fork" to processOperator.runCommandAsync(repoDir, listOf("git", "remote", "rename", "origin", "fork")),
+            "add origin" to processOperator.runCommandAsync(repoDir, listOf("git", "remote", "add", "origin", originUrl)),
         ).map { it.first to it.second.await() }
     }
 

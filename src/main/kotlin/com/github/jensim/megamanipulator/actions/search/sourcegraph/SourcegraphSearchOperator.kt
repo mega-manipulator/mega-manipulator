@@ -3,14 +3,27 @@ package com.github.jensim.megamanipulator.actions.search.sourcegraph
 import com.github.jensim.megamanipulator.actions.NotificationsOperator
 import com.github.jensim.megamanipulator.actions.search.SearchResult
 import com.github.jensim.megamanipulator.actions.search.SearchTypes
-import com.github.jensim.megamanipulator.http.HttpClientProvider.getClient
+import com.github.jensim.megamanipulator.http.HttpClientProvider
 import com.github.jensim.megamanipulator.settings.SearchHostSettings.SourceGraphSettings
 import com.intellij.notification.NotificationType
 import com.jetbrains.rd.util.printlnError
 import io.ktor.client.features.timeout
 import io.ktor.client.request.post
 
-object SourcegraphSearchOperator {
+class SourcegraphSearchOperator(
+    private val httpClientProvider: HttpClientProvider,
+    private val notificationsOperator: NotificationsOperator,
+) {
+
+    companion object {
+
+        val instance by lazy {
+            SourcegraphSearchOperator(
+                httpClientProvider = HttpClientProvider.instance,
+                notificationsOperator = NotificationsOperator.instance,
+            )
+        }
+    }
 
     suspend fun search(searchHostName: String, settings: SourceGraphSettings, search: String): Set<SearchResult> {
         try {
@@ -19,7 +32,7 @@ object SourcegraphSearchOperator {
             TODO
              * Paginate on result
              */
-            val client = getClient(searchHostName, settings)
+            val client = httpClientProvider.getClient(searchHostName, settings)
             val response: SearchTypes.GraphQLResponse = client.post("$baseUrl/.api/graphql?Search=") {
                 body = SearchTypes.GraphQlRequest(SearchTypes.SearchVaraibles(search))
                 timeout {
@@ -34,7 +47,7 @@ object SourcegraphSearchOperator {
                 internalNameToSearchResult(searchHostName, it.repository?.name)
             }.toSet()
         } catch (e: Exception) {
-            NotificationsOperator.show(
+            notificationsOperator.show(
                 title = "Search failed",
                 body = e.message ?: "Exception running search",
                 type = NotificationType.ERROR,

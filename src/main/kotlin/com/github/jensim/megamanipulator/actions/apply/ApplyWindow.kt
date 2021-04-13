@@ -1,6 +1,6 @@
 package com.github.jensim.megamanipulator.actions.apply
 
-import com.github.jensim.megamanipulator.settings.ProjectOperator.project
+import com.github.jensim.megamanipulator.settings.ProjectOperator
 import com.github.jensim.megamanipulator.toolswindow.ToolWindowTab
 import com.github.jensim.megamanipulator.ui.GeneralListCellRenderer.addCellRenderer
 import com.intellij.openapi.fileEditor.FileDocumentManager
@@ -13,7 +13,20 @@ import java.awt.Color
 import java.io.File
 import javax.swing.JButton
 
-object ApplyWindow : ToolWindowTab {
+class ApplyWindow(
+    private val applyOperator: ApplyOperator,
+    private val projectOperator: ProjectOperator,
+) : ToolWindowTab {
+
+    companion object {
+
+        val instance by lazy {
+            ApplyWindow(
+                applyOperator = ApplyOperator.instance,
+                projectOperator = ProjectOperator.instance,
+            )
+        }
+    }
 
     private val resultList = JBList<ApplyOutput>()
     private val scrollableResult = JBScrollPane(resultList)
@@ -49,7 +62,7 @@ object ApplyWindow : ToolWindowTab {
             } catch (e: Exception) {
                 e.printStackTrace().toString()
             }
-            val result = ApplyOperator.apply()
+            val result = applyOperator.apply()
             resultList.setListData(result.toTypedArray())
             button.isEnabled = true
         }
@@ -61,7 +74,7 @@ object ApplyWindow : ToolWindowTab {
     }
 
     override fun refresh() {
-        button.isEnabled = project?.basePath?.let { File(it) }?.list()?.isNotEmpty() == true
+        button.isEnabled = projectOperator.project?.basePath?.let { File(it) }?.list()?.isNotEmpty() == true
     }
 
     override val index: Int = 2

@@ -16,7 +16,20 @@ import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.Paths
 
-object FilesOperator {
+class FilesOperator(
+    private val notificationsOperator: NotificationsOperator,
+    private val projectOperator: ProjectOperator,
+) {
+
+    companion object {
+
+        val instance by lazy {
+            FilesOperator(
+                notificationsOperator = NotificationsOperator.instance,
+                projectOperator = ProjectOperator.instance,
+            )
+        }
+    }
 
     class VirtFile(
         val nameWithPath: String,
@@ -32,7 +45,7 @@ object FilesOperator {
     }
 
     private fun refresh(dir: String) {
-        val projectRoot = File(ProjectOperator.project?.basePath!!)
+        val projectRoot = File(projectOperator.project?.basePath!!)
         val root = File(projectRoot, dir)
         val tree = root.walkTopDown().onEnter { it.isDirectory }.iterator().asSequence().toList()
         LocalFileSystem.getInstance().refreshIoFiles(tree + root + projectRoot)
@@ -49,7 +62,7 @@ object FilesOperator {
                 makeUpBaseFile(baseFile)
             }
         } catch (e: Exception) {
-            NotificationsOperator.show(
+            notificationsOperator.show(
                 title = "Failed reading base files",
                 body = e.stackTrace.joinToString("<br>"),
                 type = NotificationType.WARNING
@@ -59,7 +72,7 @@ object FilesOperator {
     }
 
     private fun makeUpBaseFile(baseFile: VirtFile) {
-        val file = File(ProjectOperator.project?.basePath!!, baseFile.nameWithPath)
+        val file = File(projectOperator.project?.basePath!!, baseFile.nameWithPath)
 
         try {
             if (!file.exists()) {
@@ -71,7 +84,7 @@ object FilesOperator {
                 }
             } // else { println("file already exists ${file.path}") }
         } catch (e: Exception) {
-            NotificationsOperator.show(
+            notificationsOperator.show(
                 title = "Failed creating file",
                 body = "${file.path}\n${e.stackTrace.joinToString("<br>")}",
                 type = NotificationType.WARNING

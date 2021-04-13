@@ -20,4 +20,5 @@ class EditPullRequestDialog(pullRequests: List<PullRequestWrapper>) : CreatePull
         row(label = "PR Title") { component(titleField) }
         row(label = "PR Description") { component(descriptionScrollArea) }
     }
+    private fun String.fixedLength(len: Int) = take(len).padEnd(len, ' ')
 }

@@ -12,7 +12,24 @@ import javax.swing.JButton
 import javax.swing.JComponent
 import javax.swing.ListSelectionModel
 
-object SettingsWindow : ToolWindowTab {
+class SettingsWindow(
+    private val passwordsOperator: PasswordsOperator,
+    private val projectOperator: ProjectOperator,
+    private val filesOperator: FilesOperator,
+    private val settingsFileOperator: SettingsFileOperator,
+) : ToolWindowTab {
+
+    companion object {
+
+        val instance by lazy {
+            SettingsWindow(
+                passwordsOperator = PasswordsOperator.instance,
+                projectOperator = ProjectOperator.instance,
+                filesOperator = FilesOperator.instance,
+                settingsFileOperator = SettingsFileOperator.instance
+            )
+        }
+    }
 
     private enum class HostType {
         SEARCH,
@@ -27,9 +44,8 @@ object SettingsWindow : ToolWindowTab {
         val hostNaming: String,
 
     ) {
+
         override fun toString(): String = "$hostType: $hostNaming"
-        fun test(): Boolean = PasswordsOperator.isPasswordSet(username, baseUri)
-        fun set() = PasswordsOperator.promptForPassword(username = username, baseUrl = baseUri)
     }
 
     private val label = JBLabel()
@@ -50,8 +66,8 @@ object SettingsWindow : ToolWindowTab {
                 val b: Component = it.source as Component
                 b.isEnabled = false
                 try {
-                    ProjectOperator.toggleExcludeClones()
-                    FilesOperator.refreshClones()
+                    projectOperator.toggleExcludeClones()
+                    filesOperator.refreshClones()
                 } finally {
                     b.isEnabled = true
                 }
@@ -60,11 +76,11 @@ object SettingsWindow : ToolWindowTab {
     }
 
     init {
-        hostConfigSelect.addCellRenderer({ if (it.test()) null else Color.ORANGE }, { it.toString() })
+        hostConfigSelect.addCellRenderer({ if (testPassword(it)) null else Color.ORANGE }, { it.toString() })
         hostConfigSelect.selectionMode = ListSelectionModel.SINGLE_SELECTION
         hostConfigSelect.addListSelectionListener {
-            hostConfigSelect.selectedValue?.let { conf ->
-                conf.set()
+            hostConfigSelect.selectedValue?.let { conf: ConfigHostHolder ->
+                setPassword(conf)
                 refresh()
             }
         }
@@ -73,13 +89,16 @@ object SettingsWindow : ToolWindowTab {
         }
     }
 
+    private fun testPassword(conf: ConfigHostHolder): Boolean = passwordsOperator.isPasswordSet(conf.username, conf.baseUri)
+    private fun setPassword(conf: ConfigHostHolder) = passwordsOperator.promptForPassword(username = conf.username, baseUrl = conf.baseUri)
+
     override fun refresh() {
         configButton.isEnabled = false
-        FilesOperator.makeUpBaseFiles()
-        FilesOperator.refreshConf()
+        filesOperator.makeUpBaseFiles()
+        filesOperator.refreshConf()
         hostConfigSelect.setListData(emptyArray())
-        val settings: MegaManipulatorSettings? = SettingsFileOperator.readSettings()
-        label.text = SettingsFileOperator.validationText
+        val settings: MegaManipulatorSettings? = settingsFileOperator.readSettings()
+        label.text = settingsFileOperator.validationText
         configButton.isEnabled = true
         if (settings != null) {
             val arrayOf: Array<ConfigHostHolder> =

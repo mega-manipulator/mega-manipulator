@@ -16,14 +16,27 @@ import io.ktor.client.request.post
 import io.ktor.client.request.put
 
 @SuppressWarnings("TooManyFunctions")
-object BitbucketServerClient {
+class BitbucketServerClient(
+    private val httpClientProvider: HttpClientProvider,
+    private val localRepoOperator: LocalRepoOperator,
+    private val notificationsOperator: NotificationsOperator,
+) {
+    companion object {
+        val instance by lazy {
+            BitbucketServerClient(
+                httpClientProvider = HttpClientProvider.instance,
+                localRepoOperator = LocalRepoOperator.instance,
+                notificationsOperator = NotificationsOperator.instance,
+            )
+        }
+    }
 
     private suspend fun getDefaultReviewers(client: HttpClient, settings: BitBucketSettings, pullRequest: BitBucketPullRequestWrapper): List<BitBucketUser> {
         return client.get("${settings.baseUrl}/rest/default-reviewers/1.0/projects/${pullRequest.project()}/repos/${pullRequest.baseRepo()}/reviewers?sourceRepoId=${pullRequest.bitbucketPR.fromRef.repository.id}&targetRepoId=${pullRequest.bitbucketPR.toRef.repository.id}&sourceRefId=${pullRequest.bitbucketPR.fromRef.id}&targetRefId=${pullRequest.bitbucketPR.toRef.id}")
     }
 
     suspend fun addDefaultReviewers(settings: BitBucketSettings, pullRequest: BitBucketPullRequestWrapper): PullRequestWrapper {
-        val client: HttpClient = HttpClientProvider.getClient(pullRequest.searchHostName(), pullRequest.codeHostName(), settings)
+        val client: HttpClient = httpClientProvider.getClient(pullRequest.searchHostName(), pullRequest.codeHostName(), settings)
         val defaultReviewers = getDefaultReviewers(client, settings, pullRequest).map { BitBucketParticipant(BitBucketUser(it.name)) }
         val all = (pullRequest.bitbucketPR.reviewers + defaultReviewers).distinct()
         val bbPR2 = pullRequest.copy(bitbucketPR = pullRequest.bitbucketPR.copy(reviewers = all))
@@ -36,7 +49,7 @@ object BitbucketServerClient {
     }
 
     suspend fun getRepo(searchResult: SearchResult, settings: BitBucketSettings): BitBucketRepoWrapping {
-        val client: HttpClient = HttpClientProvider.getClient(searchResult.searchHostName, searchResult.codeHostName, settings)
+        val client: HttpClient = httpClientProvider.getClient(searchResult.searchHostName, searchResult.codeHostName, settings)
         val repo = getRepo(client, settings, searchResult)
         return BitBucketRepoWrapping(searchResult.searchHostName, searchResult.codeHostName, repo)
     }
@@ -46,10 +59,10 @@ object BitbucketServerClient {
     }
 
     suspend fun createPr(title: String, description: String, settings: BitBucketSettings, repo: SearchResult): PullRequestWrapper {
-        val client: HttpClient = HttpClientProvider.getClient(repo.searchHostName, repo.codeHostName, settings)
+        val client: HttpClient = httpClientProvider.getClient(repo.searchHostName, repo.codeHostName, settings)
         val defaultBranch = client.get<BitBucketDefaultBranch>("${settings.baseUrl}/rest/api/1.0/projects/${repo.project}/repos/${repo.repo}/default-branch").id
-        val localBranch: String = LocalRepoOperator.getBranch(repo)!!
-        val fork: Pair<String, String>? = LocalRepoOperator.getForkProject(repo)
+        val localBranch: String = localRepoOperator.getBranch(repo)!!
+        val fork: Pair<String, String>? = localRepoOperator.getForkProject(repo)
         val fromProject = fork?.first ?: repo.project
         val fromRepo = fork?.second ?: repo.repo
         val reviewers = getDefaultReviewers(client, settings, repo, localBranch, defaultBranch)
@@ -81,7 +94,7 @@ object BitbucketServerClient {
 
     suspend fun updatePr(newTitle: String, newDescription: String, settings: BitBucketSettings, pullRequest: BitBucketPullRequestWrapper): PullRequestWrapper {
         val moddedPullRequest = pullRequest.alterCopy(title = newTitle, body = newDescription)
-        val client: HttpClient = HttpClientProvider.getClient(pullRequest.searchHostName(), pullRequest.codeHostName(), settings)
+        val client: HttpClient = httpClientProvider.getClient(pullRequest.searchHostName(), pullRequest.codeHostName(), settings)
         return updatePr(client, settings, moddedPullRequest)
     }
 
@@ -100,7 +113,7 @@ object BitbucketServerClient {
 
     @Suppress("style.LoopWithTooManyJumpStatements")
     suspend fun getAllPrs(searchHostName: String, codeHostName: String, settings: BitBucketSettings): List<PullRequestWrapper> {
-        val client: HttpClient = HttpClientProvider.getClient(searchHostName, codeHostName, settings)
+        val client: HttpClient = httpClientProvider.getClient(searchHostName, codeHostName, settings)
         val collector = ArrayList<PullRequestWrapper>()
         var start = 0L
         while (true) {
@@ -128,7 +141,7 @@ object BitbucketServerClient {
     }
 
     suspend fun closePr(dropForkOrBranch: Boolean, settings: BitBucketSettings, pullRequest: BitBucketPullRequestWrapper): PullRequestWrapper {
-        val client: HttpClient = HttpClientProvider.getClient(pullRequest.searchHostName(), pullRequest.codeHostName(), settings)
+        val client: HttpClient = httpClientProvider.getClient(pullRequest.searchHostName(), pullRequest.codeHostName(), settings)
         try {
             val urlString = "${settings.baseUrl}/rest/api/1.0/projects/${pullRequest.project()}/repos/${pullRequest.baseRepo()}/pull-requests/${pullRequest.bitbucketPR.id}/decline?version=${pullRequest.bitbucketPR.version}"
             client.post<Unit>(urlString) {
@@ -148,7 +161,7 @@ object BitbucketServerClient {
             }
         } catch (e: Exception) {
             e.printStackTrace()
-            NotificationsOperator.show(
+            notificationsOperator.show(
                 title = "Failed declining PR",
                 body = "${e.message}",
                 type = NotificationType.ERROR
@@ -165,7 +178,7 @@ object BitbucketServerClient {
     }
 
     suspend fun createFork(settings: BitBucketSettings, repo: SearchResult): String? {
-        val client: HttpClient = HttpClientProvider.getClient(repo.searchHostName, repo.codeHostName, settings)
+        val client: HttpClient = httpClientProvider.getClient(repo.searchHostName, repo.codeHostName, settings)
         val bbRepo: BitBucketRepo = try {
             if (repo.project.toLowerCase() == "~${settings.username.toLowerCase()}") {
                 // is private repo
@@ -190,7 +203,7 @@ object BitbucketServerClient {
      * Get all the repos prefixed with the fork-repo-prefix, that do not have open outgoing PRs connected to them
      */
     suspend fun getPrivateForkReposWithoutPRs(searchHostName: String, codeHostName: String, settings: BitBucketSettings): List<BitBucketRepoWrapping> {
-        val client: HttpClient = HttpClientProvider.getClient(searchHostName, codeHostName, settings)
+        val client: HttpClient = httpClientProvider.getClient(searchHostName, codeHostName, settings)
         var start = 0
         val collector = HashSet<BitBucketRepo>()
         while (true) {
@@ -212,7 +225,7 @@ object BitbucketServerClient {
      * @see getPrivateForkReposWithoutPRs
      */
     suspend fun deletePrivateRepo(repo: BitBucketRepoWrapping, settings: BitBucketSettings) {
-        val client: HttpClient = HttpClientProvider.getClient(repo.getSearchHost(), repo.getCodeHost(), settings)
+        val client: HttpClient = httpClientProvider.getClient(repo.getSearchHost(), repo.getCodeHost(), settings)
         client.delete<BitBucketMessage>("${settings.baseUrl}/rest/api/1.0/users/~${settings.username}/repos/${settings.forkRepoPrefix}${repo.getRepo()}") {
             body = emptyMap<String, String>()
         }

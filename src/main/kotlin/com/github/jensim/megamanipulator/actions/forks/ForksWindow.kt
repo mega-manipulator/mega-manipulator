@@ -6,15 +6,29 @@ import com.github.jensim.megamanipulator.actions.vcs.RepoWrapper
 import com.github.jensim.megamanipulator.toolswindow.ToolWindowTab
 import com.github.jensim.megamanipulator.ui.CodeHostSelector
 import com.github.jensim.megamanipulator.ui.GeneralListCellRenderer.addCellRenderer
-import com.github.jensim.megamanipulator.ui.mapConcurrentWithProgress
-import com.github.jensim.megamanipulator.ui.uiProtectedOperation
+import com.github.jensim.megamanipulator.ui.UiProtector
 import com.intellij.notification.NotificationType
 import com.intellij.ui.components.JBList
 import com.intellij.ui.components.JBScrollPane
 import com.intellij.ui.layout.panel
 import javax.swing.JComponent
 
-object ForksWindow : ToolWindowTab {
+class ForksWindow(
+    private val prRouter: PrRouter,
+    private val notificationsOperator: NotificationsOperator,
+    private val uiProtector: UiProtector,
+) : ToolWindowTab {
+
+    companion object {
+
+        val instance by lazy {
+            ForksWindow(
+                prRouter = PrRouter.instance,
+                notificationsOperator = NotificationsOperator.instance,
+                uiProtector = UiProtector.instance,
+            )
+        }
+    }
 
     override val index: Int = 5
 
@@ -37,12 +51,12 @@ object ForksWindow : ToolWindowTab {
             button("Load forks without OPEN PRs") {
                 staleForkList.setListData(emptyArray())
                 codeHostSelect.selectedItem?.let { item ->
-                    uiProtectedOperation("Load forks without OPEN PRs") {
-                        PrRouter.getPrivateForkReposWithoutPRs(item.searchHostName, item.codeHostName)
+                    uiProtector.uiProtectedOperation("Load forks without OPEN PRs") {
+                        prRouter.getPrivateForkReposWithoutPRs(item.searchHostName, item.codeHostName)
                     }?.let { result: List<RepoWrapper> ->
                         staleForkList.setListData(result.toTypedArray())
                         if (result.isEmpty()) {
-                            NotificationsOperator.show(
+                            notificationsOperator.show(
                                 title = "No result",
                                 body = "Maybe you have zero forks without PRs?",
                                 type = NotificationType.INFORMATION
@@ -52,11 +66,12 @@ object ForksWindow : ToolWindowTab {
                 }
             }
             button("Delete remote forks") {
-                staleForkList.selectedValuesList.mapConcurrentWithProgress(
+                uiProtector.mapConcurrentWithProgress(
                     title = "Delete forks",
-                    extraText2 = { it.asPathString() }
+                    extraText2 = { it.asPathString() },
+                    data = staleForkList.selectedValuesList,
                 ) { fork ->
-                    PrRouter.deletePrivateRepo(fork)
+                    prRouter.deletePrivateRepo(fork)
                 }
             }
         }

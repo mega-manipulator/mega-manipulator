@@ -3,7 +3,7 @@ package com.github.jensim.megamanipulator.actions.search
 import com.github.jensim.megamanipulator.actions.git.clone.CloneOperator
 import com.github.jensim.megamanipulator.settings.SettingsFileOperator
 import com.github.jensim.megamanipulator.toolswindow.ToolWindowTab
-import com.github.jensim.megamanipulator.ui.uiProtectedOperation
+import com.github.jensim.megamanipulator.ui.UiProtector
 import com.intellij.openapi.ui.ComboBox
 import com.intellij.ui.components.JBList
 import com.intellij.ui.components.JBScrollPane
@@ -14,7 +14,24 @@ import java.awt.event.KeyListener
 import javax.swing.JButton
 import javax.swing.JOptionPane
 
-object SearchWindow : ToolWindowTab {
+class SearchWindow(
+    private val searchOperator: SearchOperator,
+    private val settingsFileOperator: SettingsFileOperator,
+    private val cloneOperator: CloneOperator,
+    private val uiProtector: UiProtector,
+) : ToolWindowTab {
+
+    companion object {
+
+        val instance by lazy {
+            SearchWindow(
+                searchOperator = SearchOperator.instance,
+                settingsFileOperator = SettingsFileOperator.instance,
+                cloneOperator = CloneOperator.instance,
+                uiProtector = UiProtector.instance,
+            )
+        }
+    }
 
     private val searchHostSelect = ComboBox<String>()
     private val searchButton = JButton("Search")
@@ -46,6 +63,7 @@ object SearchWindow : ToolWindowTab {
                     searchButton.doClick()
                 }
             }
+
             override fun keyPressed(e: KeyEvent?) = Unit
             override fun keyReleased(e: KeyEvent?) = Unit
         })
@@ -54,8 +72,8 @@ object SearchWindow : ToolWindowTab {
             cloneButton.isEnabled = false
             selector.setListData(emptyArray())
             val result: Array<SearchResult> = searchHostSelect.selectedItem?.let { searchHostName ->
-                uiProtectedOperation("Seraching") {
-                    SearchOperator.search(searchHostName as String, searchField.text)
+                uiProtector.uiProtectedOperation("Seraching") {
+                    searchOperator.search(searchHostName as String, searchField.text)
                 }
             }.orEmpty().toTypedArray()
             selector.setListData(result)
@@ -68,7 +86,7 @@ object SearchWindow : ToolWindowTab {
                 if (branch == null || branch.isEmpty() || branch.contains(' ')) {
                     return@addActionListener
                 }
-                CloneOperator.clone(branch, selected)
+                cloneOperator.clone(branch, selected)
                 selector.clearSelection()
             }
         }
@@ -77,7 +95,7 @@ object SearchWindow : ToolWindowTab {
     override val index: Int = 1
     override fun refresh() {
         searchHostSelect.removeAllItems()
-        SettingsFileOperator.readSettings()?.searchHostSettings?.keys?.forEach {
+        settingsFileOperator.readSettings()?.searchHostSettings?.keys?.forEach {
             searchHostSelect.addItem(it)
         }
         searchButton.isEnabled = searchHostSelect.itemCount > 0

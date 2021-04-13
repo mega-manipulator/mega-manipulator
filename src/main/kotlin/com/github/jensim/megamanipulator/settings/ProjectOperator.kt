@@ -10,7 +10,11 @@ import com.intellij.openapi.roots.ModuleRootManager
 import com.intellij.openapi.vfs.LocalFileSystem
 import java.io.File
 
-object ProjectOperator {
+class ProjectOperator {
+
+    companion object {
+        val instance by lazy { ProjectOperator() }
+    }
 
     private var projectPrivate: Project? = null
     var project: Project?

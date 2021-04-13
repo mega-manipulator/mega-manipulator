@@ -1,10 +1,10 @@
 package com.github.jensim.megamanipulator.actions.vcs
 
-import com.github.jensim.megamanipulator.settings.SerializationHolder.readableJson
+import com.github.jensim.megamanipulator.settings.SerializationHolder
 import com.github.jensim.megamanipulator.toolswindow.ToolWindowTab
 import com.github.jensim.megamanipulator.ui.CodeHostSelector
 import com.github.jensim.megamanipulator.ui.GeneralListCellRenderer.addCellRenderer
-import com.github.jensim.megamanipulator.ui.uiProtectedOperation
+import com.github.jensim.megamanipulator.ui.UiProtector
 import com.intellij.ui.components.JBList
 import com.intellij.ui.components.JBScrollPane
 import com.intellij.ui.components.JBTextArea
@@ -15,7 +15,22 @@ import java.awt.event.MouseListener
 import javax.swing.JButton
 import javax.swing.JComponent
 
-object PullRequestWindow : ToolWindowTab {
+class PullRequestWindow(
+    private val prRouter: PrRouter,
+    private val serializationHolder: SerializationHolder,
+    private val uiProtector: UiProtector,
+) : ToolWindowTab {
+
+    companion object {
+
+        val instance by lazy {
+            PullRequestWindow(
+                prRouter = PrRouter.instance,
+                serializationHolder = SerializationHolder.instance,
+                uiProtector = UiProtector.instance,
+            )
+        }
+    }
 
     override val index: Int = 4
 
@@ -24,7 +39,7 @@ object PullRequestWindow : ToolWindowTab {
     private val prScroll = JBScrollPane(prList)
     private val peekArea = JBTextArea()
     private val peekScroll = JBScrollPane(peekArea)
-    private val menu = PullRequestActionsMenu(prProvider = { prList.selectedValuesList }, postActionHook = {})
+    private val menu = PullRequestActionsMenu.instance(prProvider = { prList.selectedValuesList }, postActionHook = {})
     private val menuOpenButton = JButton("Actions")
     override val content: JComponent = panel {
         row {
@@ -62,7 +77,7 @@ object PullRequestWindow : ToolWindowTab {
         prList.addListSelectionListener {
             menuOpenButton.isEnabled = false
             prList.selectedValuesList.firstOrNull()?.let {
-                peekArea.text = readableJson.encodeToString(it)
+                peekArea.text = serializationHolder.readableJson.encodeToString(it)
                 menuOpenButton.isEnabled = true
             }
         }
@@ -77,8 +92,8 @@ object PullRequestWindow : ToolWindowTab {
     private fun fetchPRs() {
         prList.setListData(emptyArray())
         (codeHostSelect.selectedItem)?.let { selected ->
-            val prs: List<PullRequestWrapper>? = uiProtectedOperation("Fetching PRs") {
-                PrRouter.getAllPrs(selected.searchHostName, selected.codeHostName)
+            val prs: List<PullRequestWrapper>? = uiProtector.uiProtectedOperation("Fetching PRs") {
+                prRouter.getAllPrs(selected.searchHostName, selected.codeHostName)
             }
             prList.setListData(prs?.toTypedArray())
         }

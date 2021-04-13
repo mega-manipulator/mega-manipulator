@@ -25,7 +25,21 @@ import org.apache.http.conn.ssl.TrustStrategy
 import org.apache.http.ssl.SSLContextBuilder
 import java.security.cert.X509Certificate
 
-object HttpClientProvider {
+class HttpClientProvider(
+    private val settingsFileOperator: SettingsFileOperator,
+    private val passwordsOperator: PasswordsOperator,
+    private val notificationsOperator: NotificationsOperator,
+) {
+
+    companion object {
+        val instance by lazy {
+            HttpClientProvider(
+                settingsFileOperator = SettingsFileOperator.instance,
+                passwordsOperator = PasswordsOperator.instance,
+                notificationsOperator = NotificationsOperator.instance,
+            )
+        }
+    }
 
     private class TrustAnythingStrategy : TrustStrategy {
         override fun isTrusted(p0: Array<out X509Certificate>?, p1: String?): Boolean = true
@@ -73,24 +87,24 @@ object HttpClientProvider {
     }
 
     fun getClient(searchHostName: String, settings: SearchHostSettings): HttpClient {
-        val httpsOverride: HttpsOverride? = SettingsFileOperator.readSettings()?.resolveHttpsOverride(searchHostName)
+        val httpsOverride: HttpsOverride? = settingsFileOperator.readSettings()?.resolveHttpsOverride(searchHostName)
         val password: String = getPassword(settings.authMethod, settings.baseUrl, settings.username)
         return getClient(httpsOverride, settings.authMethod, settings.username, password)
     }
 
     fun getClient(searchHostName: String, codeHostName: String, settings: CodeHostSettings): HttpClient {
-        val httpsOverride: HttpsOverride? = SettingsFileOperator.readSettings()?.resolveHttpsOverride(searchHostName, codeHostName)
+        val httpsOverride: HttpsOverride? = settingsFileOperator.readSettings()?.resolveHttpsOverride(searchHostName, codeHostName)
         val password: String = getPassword(settings.authMethod, settings.baseUrl, settings.username ?: "token")
         return getClient(httpsOverride, settings.authMethod, settings.username, password)
     }
 
     private fun getPassword(authMethod: AuthMethod, baseUrl: String, username: String?) = try {
         when (authMethod) {
-            AuthMethod.ACCESS_TOKEN -> PasswordsOperator.getPassword(username!!, baseUrl)
-            AuthMethod.JUST_TOKEN -> PasswordsOperator.getPassword("token", baseUrl)
+            AuthMethod.ACCESS_TOKEN -> passwordsOperator.getPassword(username!!, baseUrl)
+            AuthMethod.JUST_TOKEN -> passwordsOperator.getPassword("token", baseUrl)
         }!!
     } catch (e: Exception) {
-        NotificationsOperator.show(
+        notificationsOperator.show(
             title = "Password not set",
             body = "Password was not set for $authMethod:$username@$baseUrl",
             type = NotificationType.WARNING

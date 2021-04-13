@@ -1,7 +1,6 @@
 package com.github.jensim.megamanipulator.settings
 
 import com.github.jensim.megamanipulator.actions.NotificationsOperator
-import com.github.jensim.megamanipulator.settings.SerializationHolder.readableJson
 import com.intellij.credentialStore.CredentialAttributes
 import com.intellij.credentialStore.Credentials
 import com.intellij.ide.passwordSafe.PasswordSafe
@@ -20,9 +19,22 @@ import javax.swing.JOptionPane.OK_OPTION
 import javax.swing.JOptionPane.QUESTION_MESSAGE
 
 @NotThreadSafe
-object PasswordsOperator {
+class PasswordsOperator(
+    private val notificationsOperator: NotificationsOperator,
+    private val serializationHolder: SerializationHolder,
+) {
 
-    private const val service = "mega-manipulator"
+    companion object {
+
+        val instance by lazy {
+            PasswordsOperator(
+                notificationsOperator = NotificationsOperator.instance,
+                serializationHolder = SerializationHolder.instance,
+            )
+        }
+        private const val service = "mega-manipulator"
+    }
+
     private val serviceUsername: String by lazy { System.getProperty("user.name") ?: service }
     private val passwordSetMap: MutableMap<String, Boolean> = ConcurrentHashMap()
 
@@ -55,14 +67,14 @@ object PasswordsOperator {
         return if (ans != OK_OPTION) {
             ""
         } else if (username == null && usernameField.text.isNullOrEmpty()) {
-            NotificationsOperator.show(
+            notificationsOperator.show(
                 title = "Username not set",
                 body = "Username was not entered",
                 type = NotificationType.WARNING
             )
             ""
         } else if (passwordField.password.concatToString().isNullOrEmpty()) {
-            NotificationsOperator.show(
+            notificationsOperator.show(
                 title = "Password not set",
                 body = "Password was not entered",
                 type = NotificationType.WARNING
@@ -85,7 +97,7 @@ object PasswordsOperator {
         val unambiguousUsername = "${serviceUsername}___${username}___$baseUrl"
         val credentialAttributes: CredentialAttributes? = createCredentialAttributes(service, unambiguousUsername)
         if (credentialAttributes == null) {
-            NotificationsOperator.show(
+            notificationsOperator.show(
                 title = "Failed deleting password",
                 body = "Could not create CredentialAttributes",
                 type = NotificationType.WARNING
@@ -102,11 +114,11 @@ object PasswordsOperator {
     private fun getPassword(usernameKey: String): String? {
         val credentialAttributes: CredentialAttributes? = createCredentialAttributes(service, serviceUsername)
         return if (credentialAttributes == null) {
-            NotificationsOperator.show("Failed setting password", "Could not create CredentialAttributes", NotificationType.WARNING)
+            notificationsOperator.show("Failed setting password", "Could not create CredentialAttributes", NotificationType.WARNING)
             null
         } else {
             PasswordSafe.instance.getPassword(credentialAttributes)?.let { passMapStr ->
-                val passMap: Map<String, String> = readableJson.decodeFromString(passMapStr)
+                val passMap: Map<String, String> = serializationHolder.readableJson.decodeFromString(passMapStr)
                 passMap[usernameKey]
             }
         }
@@ -119,19 +131,19 @@ object PasswordsOperator {
     private fun setPassword(usernameKey: String, password: String) {
         val credentialAttributes: CredentialAttributes? = createCredentialAttributes(service, serviceUsername)
         if (credentialAttributes == null) {
-            NotificationsOperator.show("Failed setting password", "Could not create CredentialAttributes", NotificationType.WARNING)
+            notificationsOperator.show("Failed setting password", "Could not create CredentialAttributes", NotificationType.WARNING)
         } else {
             val preexisting: String? = PasswordSafe.instance.getPassword(credentialAttributes)
             if (preexisting == null) {
                 val passwordsMap = mapOf(usernameKey to password)
-                val passMapStr = readableJson.encodeToString(passwordsMap)
+                val passMapStr = serializationHolder.readableJson.encodeToString(passwordsMap)
                 val credentials = Credentials(serviceUsername, passMapStr)
                 PasswordSafe.instance.set(credentialAttributes, credentials)
             } else {
                 PasswordSafe.instance.getPassword(credentialAttributes)?.let { passMapStr: String ->
-                    val passMap: MutableMap<String, String> = readableJson.decodeFromString(passMapStr)
+                    val passMap: MutableMap<String, String> = serializationHolder.readableJson.decodeFromString(passMapStr)
                     passMap[usernameKey] = password
-                    val passMapStrMod = readableJson.encodeToString(passMap)
+                    val passMapStrMod = serializationHolder.readableJson.encodeToString(passMap)
                     val credentials = Credentials(serviceUsername, passMapStrMod)
                     PasswordSafe.instance.set(credentialAttributes, credentials)
                 }

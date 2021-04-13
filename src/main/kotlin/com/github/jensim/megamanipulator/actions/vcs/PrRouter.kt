@@ -8,32 +8,47 @@ import com.github.jensim.megamanipulator.settings.CodeHostSettings.BitBucketSett
 import com.github.jensim.megamanipulator.settings.CodeHostSettings.GitHubSettings
 import com.github.jensim.megamanipulator.settings.SettingsFileOperator
 
-object PrRouter {
+class PrRouter(
+    private val settingsFileOperator: SettingsFileOperator,
+    private val bitbucketServerClient: BitbucketServerClient,
+    private val githubComClient: GithubComClient,
+) {
 
-    private fun resolve(searchHost: String, codeHost: String): CodeHostSettings? = SettingsFileOperator.readSettings()
+    companion object {
+
+        val instance by lazy {
+            PrRouter(
+                settingsFileOperator = SettingsFileOperator.instance,
+                bitbucketServerClient = BitbucketServerClient.instance,
+                githubComClient = GithubComClient.instance,
+            )
+        }
+    }
+
+    private fun resolve(searchHost: String, codeHost: String): CodeHostSettings? = settingsFileOperator.readSettings()
         ?.searchHostSettings?.get(searchHost)?.codeHostSettings?.get(codeHost)
 
     suspend fun addDefaultReviewers(pullRequest: PullRequestWrapper): PullRequestWrapper {
         val settings = resolve(pullRequest.searchHostName(), pullRequest.codeHostName())
         return when {
-            settings is BitBucketSettings && pullRequest is BitBucketPullRequestWrapper -> BitbucketServerClient.addDefaultReviewers(settings, pullRequest)
-            settings is GitHubSettings && pullRequest is GithubComPullRequestWrapper -> GithubComClient.addDefaultReviewers(settings, pullRequest)
+            settings is BitBucketSettings && pullRequest is BitBucketPullRequestWrapper -> bitbucketServerClient.addDefaultReviewers(settings, pullRequest)
+            settings is GitHubSettings && pullRequest is GithubComPullRequestWrapper -> githubComClient.addDefaultReviewers(settings, pullRequest)
             else -> throw IllegalArgumentException("Unable to match config correctly")
         }
     }
 
     suspend fun createPr(title: String, description: String, repo: SearchResult): PullRequestWrapper {
         return when (val settings = resolve(repo.searchHostName, repo.codeHostName)) {
-            is BitBucketSettings -> BitbucketServerClient.createPr(title, description, settings, repo)
-            is GitHubSettings -> GithubComClient.createPr(title, description, settings, repo)
+            is BitBucketSettings -> bitbucketServerClient.createPr(title, description, settings, repo)
+            is GitHubSettings -> githubComClient.createPr(title, description, settings, repo)
             else -> throw IllegalArgumentException("Unable to match config correctly")
         }
     }
 
     suspend fun createFork(repo: SearchResult): String? {
         return when (val settings = resolve(repo.searchHostName, repo.codeHostName)) {
-            is BitBucketSettings -> BitbucketServerClient.createFork(settings, repo)
-            is GitHubSettings -> GithubComClient.createFork(settings, repo)
+            is BitBucketSettings -> bitbucketServerClient.createFork(settings, repo)
+            is GitHubSettings -> githubComClient.createFork(settings, repo)
             null -> null
         }
     }
@@ -41,17 +56,17 @@ object PrRouter {
     suspend fun updatePr(newTitle: String, newDescription: String, pullRequest: PullRequestWrapper): PullRequestWrapper {
         val settings = resolve(pullRequest.searchHostName(), pullRequest.codeHostName())
         return when {
-            settings is BitBucketSettings && pullRequest is BitBucketPullRequestWrapper -> BitbucketServerClient.updatePr(newTitle, newDescription, settings, pullRequest)
-            settings is GitHubSettings && pullRequest is GithubComPullRequestWrapper -> GithubComClient.updatePr(newTitle, newDescription, settings, pullRequest)
+            settings is BitBucketSettings && pullRequest is BitBucketPullRequestWrapper -> bitbucketServerClient.updatePr(newTitle, newDescription, settings, pullRequest)
+            settings is GitHubSettings && pullRequest is GithubComPullRequestWrapper -> githubComClient.updatePr(newTitle, newDescription, settings, pullRequest)
             else -> throw IllegalArgumentException("Unable to match config correctly")
         }
     }
 
     suspend fun getAllPrs(searchHost: String, codeHost: String): List<PullRequestWrapper>? {
-        return SettingsFileOperator.readSettings()?.searchHostSettings?.get(searchHost)?.codeHostSettings?.get(codeHost)?.let {
+        return settingsFileOperator.readSettings()?.searchHostSettings?.get(searchHost)?.codeHostSettings?.get(codeHost)?.let {
             when (it) {
-                is BitBucketSettings -> BitbucketServerClient.getAllPrs(searchHost, codeHost, it)
-                is GitHubSettings -> GithubComClient.getAllPrs(searchHost, codeHost, it)
+                is BitBucketSettings -> bitbucketServerClient.getAllPrs(searchHost, codeHost, it)
+                is GitHubSettings -> githubComClient.getAllPrs(searchHost, codeHost, it)
             }
         }
     }
@@ -59,36 +74,36 @@ object PrRouter {
     suspend fun closePr(dropForkOrBranch: Boolean, pullRequest: PullRequestWrapper) {
         val settings = resolve(pullRequest.searchHostName(), pullRequest.codeHostName())
         when {
-            settings is BitBucketSettings && pullRequest is BitBucketPullRequestWrapper -> BitbucketServerClient.closePr(dropForkOrBranch, settings, pullRequest)
-            settings is GitHubSettings && pullRequest is GithubComPullRequestWrapper -> GithubComClient.closePr(dropForkOrBranch, settings, pullRequest)
+            settings is BitBucketSettings && pullRequest is BitBucketPullRequestWrapper -> bitbucketServerClient.closePr(dropForkOrBranch, settings, pullRequest)
+            settings is GitHubSettings && pullRequest is GithubComPullRequestWrapper -> githubComClient.closePr(dropForkOrBranch, settings, pullRequest)
             else -> throw IllegalArgumentException("Unable to match config correctly")
         }
     }
 
     suspend fun getPrivateForkReposWithoutPRs(searchHost: String, codeHost: String): List<RepoWrapper>? {
-        return SettingsFileOperator.readSettings()?.searchHostSettings?.get(searchHost)?.codeHostSettings?.get(codeHost)?.let {
+        return settingsFileOperator.readSettings()?.searchHostSettings?.get(searchHost)?.codeHostSettings?.get(codeHost)?.let {
             when (it) {
-                is BitBucketSettings -> BitbucketServerClient.getPrivateForkReposWithoutPRs(searchHost, codeHost, it)
-                is GitHubSettings -> GithubComClient.getPrivateForkReposWithoutPRs(searchHost, codeHost, it)
+                is BitBucketSettings -> bitbucketServerClient.getPrivateForkReposWithoutPRs(searchHost, codeHost, it)
+                is GitHubSettings -> githubComClient.getPrivateForkReposWithoutPRs(searchHost, codeHost, it)
             }
         }
     }
 
     suspend fun deletePrivateRepo(fork: RepoWrapper) {
-        SettingsFileOperator.readSettings()?.searchHostSettings?.get(fork.getSearchHost())?.codeHostSettings?.get(fork.getCodeHost())?.let { it ->
+        settingsFileOperator.readSettings()?.searchHostSettings?.get(fork.getSearchHost())?.codeHostSettings?.get(fork.getCodeHost())?.let { it ->
             when {
-                it is BitBucketSettings && fork is BitBucketRepoWrapping -> BitbucketServerClient.deletePrivateRepo(fork, it)
-                it is GitHubSettings && fork is GithubComRepoWrapping -> GithubComClient.deletePrivateRepo(fork, it)
+                it is BitBucketSettings && fork is BitBucketRepoWrapping -> bitbucketServerClient.deletePrivateRepo(fork, it)
+                it is GitHubSettings && fork is GithubComRepoWrapping -> githubComClient.deletePrivateRepo(fork, it)
                 else -> throw IllegalArgumentException("Unable to match config correctly")
             }
         }
     }
 
     suspend fun getRepo(searchResult: SearchResult): RepoWrapper? {
-        return SettingsFileOperator.readSettings()?.searchHostSettings?.get(searchResult.searchHostName)?.codeHostSettings?.get(searchResult.codeHostName)?.let {
+        return settingsFileOperator.readSettings()?.searchHostSettings?.get(searchResult.searchHostName)?.codeHostSettings?.get(searchResult.codeHostName)?.let {
             when (it) {
-                is BitBucketSettings -> BitbucketServerClient.getRepo(searchResult, it)
-                is GitHubSettings -> GithubComClient.getRepo(searchResult, it)
+                is BitBucketSettings -> bitbucketServerClient.getRepo(searchResult, it)
+                is GitHubSettings -> githubComClient.getRepo(searchResult, it)
             }
         }
     }

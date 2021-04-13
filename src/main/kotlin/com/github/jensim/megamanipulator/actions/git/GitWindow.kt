@@ -4,17 +4,15 @@ import com.github.jensim.megamanipulator.actions.ProcessOperator
 import com.github.jensim.megamanipulator.actions.apply.ApplyOutput
 import com.github.jensim.megamanipulator.actions.git.commit.CommitOperator
 import com.github.jensim.megamanipulator.actions.localrepo.LocalRepoOperator
-import com.github.jensim.megamanipulator.actions.localrepo.LocalRepoOperator.getLocalRepos
 import com.github.jensim.megamanipulator.actions.vcs.PrRouter
 import com.github.jensim.megamanipulator.files.FilesOperator
-import com.github.jensim.megamanipulator.settings.ProjectOperator.project
+import com.github.jensim.megamanipulator.settings.ProjectOperator
 import com.github.jensim.megamanipulator.toolswindow.ToolWindowTab
 import com.github.jensim.megamanipulator.ui.CreatePullRequestDialog
 import com.github.jensim.megamanipulator.ui.DialogGenerator
 import com.github.jensim.megamanipulator.ui.GeneralListCellRenderer.addCellRenderer
-import com.github.jensim.megamanipulator.ui.mapConcurrentWithProgress
+import com.github.jensim.megamanipulator.ui.UiProtector
 import com.github.jensim.megamanipulator.ui.trimProjectPath
-import com.github.jensim.megamanipulator.ui.uiProtectedOperation
 import com.intellij.ui.components.JBList
 import com.intellij.ui.components.JBScrollPane
 import com.intellij.ui.components.JBTextArea
@@ -28,7 +26,33 @@ import javax.swing.ListSelectionModel
 private typealias StepResult = Pair<String, ApplyOutput>
 private typealias DirResult = Pair<String, List<StepResult>>
 
-object GitWindow : ToolWindowTab {
+@SuppressWarnings("LongParameterList")
+class GitWindow(
+    private val localRepoOperator: LocalRepoOperator,
+    private val processOperator: ProcessOperator,
+    private val commitOperator: CommitOperator,
+    private val dialogGenerator: DialogGenerator,
+    private val filesOperator: FilesOperator,
+    private val projectOperator: ProjectOperator,
+    private val prRouter: PrRouter,
+    private val uiProtector: UiProtector,
+) : ToolWindowTab {
+
+    companion object {
+
+        val instance by lazy {
+            GitWindow(
+                localRepoOperator = LocalRepoOperator.instance,
+                processOperator = ProcessOperator.instance,
+                commitOperator = CommitOperator.instance,
+                dialogGenerator = DialogGenerator.instance,
+                filesOperator = FilesOperator.instance,
+                projectOperator = ProjectOperator.instance,
+                prRouter = PrRouter.instance,
+                uiProtector = UiProtector.instance,
+            )
+        }
+    }
 
     private val repoList = JBList<DirResult>()
     private val scrollLeft = JBScrollPane(repoList)
@@ -45,21 +69,22 @@ object GitWindow : ToolWindowTab {
                 }
                 button("Set branch") {
                     val branch: String? = JOptionPane.showInputDialog("This will not reset the repos to origin/default-branch first!!\nSelect branch name")
-                    uiProtectedOperation(title = "Switching branches") {
+                    uiProtector.uiProtectedOperation(title = "Switching branches") {
                         if (branch == null || branch.isEmpty() || branch.contains(' ')) {
                             throw IllegalArgumentException("Invalid branch name")
                         }
-                        LocalRepoOperator.getLocalRepoFiles().mapConcurrentWithProgress("Checkout branch $branch") { dir ->
-                            ProcessOperator.runCommandAsync(dir, listOf("git", "checkout", "-b", "$branch"))
+                        val localRepoFiles = localRepoOperator.getLocalRepoFiles()
+                        uiProtector.mapConcurrentWithProgress(title = "Checkout branch $branch", data = localRepoFiles) { dir ->
+                            processOperator.runCommandAsync(dir, listOf("git", "checkout", "-b", "$branch"))
                         }
                         refresh()
                     }
                 }
                 button("Commit and Push") {
-                    repoList.setListData(CommitOperator.commit().toList().toTypedArray())
+                    repoList.setListData(commitOperator.commit().toList().toTypedArray())
                 }
                 button("Push") {
-                    repoList.setListData(CommitOperator.push().toList().toTypedArray())
+                    repoList.setListData(commitOperator.push().toList().toTypedArray())
                 }
                 button("Create PRs") {
                     val dialog = CreatePullRequestDialog()
@@ -67,26 +92,28 @@ object GitWindow : ToolWindowTab {
                         val prTitle = dialog.prTitle
                         val prDescription = dialog.prDescription
                         if (!prTitle.isNullOrBlank() && !prDescription.isNullOrBlank()) {
-                            getLocalRepos().mapConcurrentWithProgress(
+                            val repos = localRepoOperator.getLocalRepos()
+                            uiProtector.mapConcurrentWithProgress(
                                 title = "Creating PRs",
                                 extraText1 = prTitle,
-                                extraText2 = { it.asPathString() }
+                                extraText2 = { it.asPathString() },
+                                data = repos
                             ) {
-                                PrRouter.createPr(prTitle, prDescription, it)
+                                prRouter.createPr(prTitle, prDescription, it)
                             }
                         }
                     }
                 }
             }
             button("Clean away local repos") {
-                DialogGenerator.showConfirm(title = "Are you sure?!", message = "This will remove the entire clones dir from disk, no recovery available!") {
-                    val output: ApplyOutput = project?.basePath?.let { dir ->
-                        uiProtectedOperation(title = "Remove all local clones") {
-                            ProcessOperator.runCommandAsync(File(dir), listOf("rm", "-rf", "clones")).await()
+                dialogGenerator.showConfirm(title = "Are you sure?!", message = "This will remove the entire clones dir from disk, no recovery available!") {
+                    val output: ApplyOutput = projectOperator.project?.basePath?.let { dir ->
+                        uiProtector.uiProtectedOperation(title = "Remove all local clones") {
+                            processOperator.runCommandAsync(File(dir), listOf("rm", "-rf", "clones")).await()
                         }
                     } ?: ApplyOutput(dir = ".", std = "Unable to perform clean operation", err = "Unable to perform clean operation", exitCode = 1)
                     repoList.setListData(arrayOf(Pair("Clean", listOf("rm" to output))))
-                    FilesOperator.refreshClones()
+                    filesOperator.refreshClones()
                 }
             }
         }
@@ -117,16 +144,19 @@ object GitWindow : ToolWindowTab {
     }
 
     override fun refresh() {
-        val result: List<DirResult> = LocalRepoOperator.getLocalRepoFiles().mapConcurrentWithProgress(
-            title = "Listing branches"
+        val project = projectOperator.project!!
+        val localRepoFiles = localRepoOperator.getLocalRepoFiles()
+        val result: List<DirResult> = uiProtector.mapConcurrentWithProgress(
+            title = "Listing branches",
+            data = localRepoFiles
         ) { dir ->
             listOf(
-                "log" to ProcessOperator.runCommandAsync(dir, listOf("git", "log", "--graph", "--pretty=format:'%h -%d %s (%cr) <%an>'", "--abbrev-commit", "--date=relative", "-10")),
-                "branches" to ProcessOperator.runCommandAsync(dir, listOf("git", "branch", "-v")),
-                "remotes" to ProcessOperator.runCommandAsync(dir, listOf("git", "remote", "-v")),
+                "log" to processOperator.runCommandAsync(dir, listOf("git", "log", "--graph", "--pretty=format:'%h -%d %s (%cr) <%an>'", "--abbrev-commit", "--date=relative", "-10")),
+                "branches" to processOperator.runCommandAsync(dir, listOf("git", "branch", "-v")),
+                "remotes" to processOperator.runCommandAsync(dir, listOf("git", "remote", "-v")),
             ).map { it.first to it.second.await() }
         }.map {
-            it.first.trimProjectPath() to (
+            it.first.trimProjectPath(project = project) to (
                 it.second
                     ?: listOf("Operation failed" to ApplyOutput.dummy(dir = it.first.path, err = "Failed git operation"))
                 )

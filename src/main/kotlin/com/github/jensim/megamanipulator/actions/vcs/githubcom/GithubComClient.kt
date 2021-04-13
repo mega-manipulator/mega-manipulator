@@ -18,23 +18,35 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.toList
 import java.util.concurrent.atomic.AtomicInteger
 
-object GithubComClient {
+class GithubComClient(
+    private val httpClientProvider: HttpClientProvider,
+    private val localRepoOperator: LocalRepoOperator,
+) {
+
+    companion object {
+        val instance by lazy {
+            GithubComClient(
+                httpClientProvider = HttpClientProvider.instance,
+                localRepoOperator = LocalRepoOperator.instance,
+            )
+        }
+    }
 
     fun addDefaultReviewers(settings: GitHubSettings, pullRequest: GithubComPullRequestWrapper): GithubComPullRequestWrapper {
         throw UnsupportedOperationException("Might never implement  ¯\\_(ツ)_/¯ ${settings.username}@${pullRequest.searchHost}/${pullRequest.codeHost}")
     }
 
     suspend fun createPr(title: String, description: String, settings: GitHubSettings, repo: SearchResult): GithubComPullRequestWrapper {
-        val client: HttpClient = HttpClientProvider.getClient(repo.searchHostName, repo.codeHostName, settings)
-        val fork: Pair<String, String>? = LocalRepoOperator.getForkProject(repo)
-        val localBranch: String = LocalRepoOperator.getBranch(repo)!!
+        val client: HttpClient = httpClientProvider.getClient(repo.searchHostName, repo.codeHostName, settings)
+        val fork: Pair<String, String>? = localRepoOperator.getForkProject(repo)
+        val localBranch: String = localRepoOperator.getBranch(repo)!!
         val headProject = fork?.first ?: repo.project
         val ghRepo: GithubComRepo = client.get("${settings.baseUrl}/repos/${repo.project}/${repo.repo}")
         val pr: GithubComPullRequest = client.post("${settings.baseUrl}/repos/${repo.project}/${repo.repo}/pulls") {
             body = GithubPullRequestRequest(
                 title = title,
                 body = description,
-                head = "${headProject}:${localBranch}",
+                head = "$headProject:$localBranch",
                 base = ghRepo.default_branch,
             )
         }
@@ -42,7 +54,7 @@ object GithubComClient {
     }
 
     suspend fun createFork(settings: GitHubSettings, repo: SearchResult): String {
-        val client: HttpClient = HttpClientProvider.getClient(repo.searchHostName, repo.codeHostName, settings)
+        val client: HttpClient = httpClientProvider.getClient(repo.searchHostName, repo.codeHostName, settings)
         // According to github docs, the fork process can take up to 5 minutes
         // https://docs.github.com/en/rest/reference/repos#create-a-fork
         val ghrepo: GithubComRepo? = try {
@@ -62,7 +74,7 @@ object GithubComClient {
     }
 
     suspend fun updatePr(newTitle: String, newDescription: String, settings: GitHubSettings, pullRequest: GithubComPullRequestWrapper): GithubComPullRequestWrapper {
-        val client: HttpClient = HttpClientProvider.getClient(pullRequest.searchHost, pullRequest.codeHost, settings)
+        val client: HttpClient = httpClientProvider.getClient(pullRequest.searchHost, pullRequest.codeHost, settings)
         val pr: GithubComPullRequest = client.patch(pullRequest.pullRequest.url) {
             body = mapOf("title" to newTitle, "body" to newDescription)
         }
@@ -70,7 +82,7 @@ object GithubComClient {
     }
 
     suspend fun getAllPrs(searchHost: String, codeHost: String, settings: GitHubSettings): List<GithubComPullRequestWrapper> {
-        val client: HttpClient = HttpClientProvider.getClient(searchHost, codeHost, settings)
+        val client: HttpClient = httpClientProvider.getClient(searchHost, codeHost, settings)
         val seq: Flow<GithubComIssue> = flow {
             val page = AtomicInteger(0)
             while (true) {
@@ -85,7 +97,7 @@ object GithubComClient {
     }
 
     suspend fun closePr(dropForkOrBranch: Boolean, settings: GitHubSettings, pullRequest: GithubComPullRequestWrapper) {
-        val client: HttpClient = HttpClientProvider.getClient(pullRequest.searchHost, pullRequest.codeHost, settings)
+        val client: HttpClient = httpClientProvider.getClient(pullRequest.searchHost, pullRequest.codeHost, settings)
         val updatedPr: GithubComPullRequest = client.patch(pullRequest.pullRequest.url) {
             body = mapOf<String, Any>("state" to "closed")
         }
@@ -103,7 +115,7 @@ object GithubComClient {
     }
 
     suspend fun getPrivateForkReposWithoutPRs(searchHost: String, codeHost: String, settings: GitHubSettings): List<GithubComRepoWrapping> {
-        val client: HttpClient = HttpClientProvider.getClient(searchHost, codeHost, settings)
+        val client: HttpClient = httpClientProvider.getClient(searchHost, codeHost, settings)
         val repoFlow: Flow<GithubComRepo> = flow {
             val pageCount = AtomicInteger(0)
             while (true) {
@@ -118,12 +130,12 @@ object GithubComClient {
     }
 
     suspend fun deletePrivateRepo(fork: GithubComRepoWrapping, settings: GitHubSettings) {
-        val client: HttpClient = HttpClientProvider.getClient(fork.getSearchHost(), fork.getCodeHost(), settings)
+        val client: HttpClient = httpClientProvider.getClient(fork.getSearchHost(), fork.getCodeHost(), settings)
         client.delete<String?>("${settings.baseUrl}/repos/${settings.username}/${fork.repo.name}")
     }
 
     suspend fun getRepo(searchResult: SearchResult, settings: GitHubSettings): GithubComRepoWrapping {
-        val client: HttpClient = HttpClientProvider.getClient(searchResult.searchHostName, searchResult.codeHostName, settings)
+        val client: HttpClient = httpClientProvider.getClient(searchResult.searchHostName, searchResult.codeHostName, settings)
         val repo: GithubComRepo = client.get("${settings.baseUrl}/repos/${searchResult.project}/${searchResult.repo}")
         return GithubComRepoWrapping(searchResult.searchHostName, searchResult.codeHostName, repo)
     }

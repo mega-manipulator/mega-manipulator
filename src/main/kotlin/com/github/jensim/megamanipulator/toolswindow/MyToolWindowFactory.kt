@@ -18,15 +18,23 @@ import com.intellij.ui.content.ContentFactory
 import com.intellij.ui.content.ContentManagerEvent
 import com.intellij.ui.content.ContentManagerListener
 
-object MyToolWindowFactory : ToolWindowFactory {
+class MyToolWindowFactory(
+    private val filesOperator: FilesOperator,
+    private val projectOperator: ProjectOperator,
+) : ToolWindowFactory {
+
+    constructor() : this(
+        filesOperator = FilesOperator.instance,
+        projectOperator = ProjectOperator.instance,
+    )
 
     private val tabs = listOf<Pair<String, ToolWindowTab>>(
-        "tabTitleSettings" to SettingsWindow,
-        "tabTitleSearch" to SearchWindow,
-        "tabTitleApply" to ApplyWindow,
-        "tabTitleClones" to GitWindow,
-        "tabTitlePRsManage" to PullRequestWindow,
-        "tabTitleForks" to ForksWindow,
+        "tabTitleSettings" to SettingsWindow.instance,
+        "tabTitleSearch" to SearchWindow.instance,
+        "tabTitleApply" to ApplyWindow.instance,
+        "tabTitleClones" to GitWindow.instance,
+        "tabTitlePRsManage" to PullRequestWindow.instance,
+        "tabTitleForks" to ForksWindow.instance,
     )
 
     override fun createToolWindowContent(project: Project, toolWindow: ToolWindow) {
@@ -41,14 +49,14 @@ object MyToolWindowFactory : ToolWindowFactory {
         toolWindow.addContentManagerListener(object : ContentManagerListener {
             override fun selectionChanged(event: ContentManagerEvent) {
                 super.selectionChanged(event)
-                FilesOperator.makeUpBaseFiles()
-                FilesOperator.refreshConf()
+                filesOperator.makeUpBaseFiles()
+                filesOperator.refreshConf()
                 tabs.find { it.second.index == event.index }?.second?.refresh()
-                FilesOperator.makeUpBaseFiles()
+                filesOperator.makeUpBaseFiles()
             }
         })
-        ProjectOperator.project = project
-        FilesOperator.makeUpBaseFiles()
+        projectOperator.project = project
+        filesOperator.makeUpBaseFiles()
     }
 
     override fun isApplicable(project: Project): Boolean {
@@ -64,7 +72,7 @@ object MyToolWindowFactory : ToolWindowFactory {
             it.moduleTypeName == MODULE_TYPE_ID
         } && super.isApplicable(project)
         if (applicable) {
-            ProjectOperator.project = project
+            projectOperator.project = project
         }
         return applicable
     }

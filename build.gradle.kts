@@ -68,6 +68,7 @@ dependencies {
     implementation(group = "org.apache.logging.log4j", name = "log4j-slf4j-impl", version = "2.14.1")
 
     // TEST
+    testImplementation(group = "org.mockito.kotlin", name = "mockito-kotlin", version = "3.1.0")
     testImplementation(group = "org.hamcrest", name = "hamcrest", version = "2.2")
     testImplementation(group = "org.hamcrest", name = "hamcrest-library", version = "2.2")
     testImplementation(group = "org.junit.jupiter", name = "junit-jupiter-api", version = "5.7.1")

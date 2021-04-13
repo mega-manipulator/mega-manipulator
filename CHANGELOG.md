@@ -6,6 +6,7 @@
 ### Added
 
 ### Changed
+- Re-patterned the entire source code, to enable unit testing
 
 ### Deprecated
 

@@ -7,7 +7,14 @@ import javax.swing.JOptionPane.OK_CANCEL_OPTION
 import javax.swing.JOptionPane.OK_OPTION
 import javax.swing.JOptionPane.QUESTION_MESSAGE
 
-object DialogGenerator {
+class DialogGenerator {
+
+    companion object {
+
+        val instance by lazy {
+            DialogGenerator()
+        }
+    }
 
     fun showConfirm(title: String, message: String, onCancel: () -> Unit = {}, messageType: Int = QUESTION_MESSAGE, optionType: Int = OK_CANCEL_OPTION, onOk: () -> Unit) {
         try {

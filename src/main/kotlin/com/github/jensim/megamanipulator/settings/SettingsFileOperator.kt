@@ -1,7 +1,6 @@
 package com.github.jensim.megamanipulator.settings
 
 import com.github.jensim.megamanipulator.actions.NotificationsOperator
-import com.github.jensim.megamanipulator.settings.ProjectOperator.project
 import com.intellij.notification.NotificationType.WARNING
 import com.intellij.openapi.fileEditor.FileDocumentManager
 import kotlinx.serialization.decodeFromString
@@ -11,20 +10,32 @@ import java.util.concurrent.atomic.AtomicLong
 import java.util.concurrent.atomic.AtomicReference
 import kotlin.text.Charsets.UTF_8
 
-object SettingsFileOperator {
+class SettingsFileOperator(
+    private val settingsFileName: String = "config/mega-manipulator.json",
+    private val scriptFileName: String = "config/mega-manipulator.bash",
+    private val projectOperator: ProjectOperator,
+    private val notificationsOperator: NotificationsOperator,
+) {
 
-    private const val settingsFileName = "config/mega-manipulator.json"
-    private const val scriptFileName = "config/mega-manipulator.bash"
+    companion object {
+
+        val instance by lazy {
+            SettingsFileOperator(
+                projectOperator = ProjectOperator.instance,
+                notificationsOperator = NotificationsOperator.instance
+            )
+        }
+    }
 
     private val lastPeek = AtomicLong(0L)
     private val lastUpdated: AtomicLong = AtomicLong(0L)
     private val bufferedSettings: AtomicReference<MegaManipulatorSettings?> = AtomicReference(null)
     private val settingsFile: File
-        get() = File(project?.basePath!!, settingsFileName)
+        get() = File(projectOperator.project?.basePath!!, settingsFileName)
     val scriptFile: File
-        get() = File(project?.basePath!!, scriptFileName)
+        get() = File(projectOperator.project?.basePath!!, scriptFileName)
 
-    private const val okValidationText = "Settings are valid"
+    private val okValidationText = "Settings are valid"
     private val privateValidationText = AtomicReference("Settings are not yet validated")
     val validationText: String
         get() = privateValidationText.acquire
@@ -55,7 +66,7 @@ object SettingsFileOperator {
         } catch (e: Exception) {
             e.printStackTrace()
             privateValidationText.set(e.message)
-            NotificationsOperator.show(
+            notificationsOperator.show(
                 title = "Failed settings validation",
                 body = "Failed settings validation: ${e.message}",
                 type = WARNING

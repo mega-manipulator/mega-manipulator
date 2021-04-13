@@ -13,7 +13,12 @@ import com.intellij.openapi.vfs.VirtualFile
 import java.io.File
 
 @SuppressWarnings("TooManyFunctions")
-class MegaManipulatorModuleBuilder : ModuleBuilder() {
+class MegaManipulatorModuleBuilder(
+    private val projectOperator: ProjectOperator,
+    private val filesOperator: FilesOperator,
+) : ModuleBuilder() {
+
+    constructor() : this(projectOperator = ProjectOperator.instance, filesOperator = FilesOperator.instance)
 
     companion object {
         val MODULE_TYPE: ModuleType<MegaManipulatorModuleBuilder> by lazy { MegaManipulatorModuleType() }
@@ -22,11 +27,11 @@ class MegaManipulatorModuleBuilder : ModuleBuilder() {
     override fun getModuleType(): ModuleType<MegaManipulatorModuleBuilder> = MODULE_TYPE
 
     override fun setupRootModel(modifiableRootModel: ModifiableRootModel) {
-        ProjectOperator.project = modifiableRootModel.project
+        projectOperator.project = modifiableRootModel.project
         val contentEntryFile = createAndGetContentEntry()
         val contentEntry = modifiableRootModel.addContentEntry(contentEntryFile)
 
-        FilesOperator.makeUpBaseFiles()
+        filesOperator.makeUpBaseFiles()
 
         val confDir = createDirIfNotExists(modifiableRootModel.project, "config")
         contentEntry.addSourceFolder(confDir, false)

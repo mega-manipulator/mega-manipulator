@@ -4,28 +4,49 @@ import com.github.jensim.megamanipulator.actions.ProcessOperator
 import com.github.jensim.megamanipulator.actions.localrepo.LocalRepoOperator
 import com.github.jensim.megamanipulator.files.FilesOperator
 import com.github.jensim.megamanipulator.settings.SettingsFileOperator
-import com.github.jensim.megamanipulator.ui.mapConcurrentWithProgress
+import com.github.jensim.megamanipulator.ui.UiProtector
 import java.io.File
 
-object ApplyOperator {
+class ApplyOperator(
+    private val settingsFileOperator: SettingsFileOperator,
+    private val filesOperator: FilesOperator,
+    private val processOperator: ProcessOperator,
+    private val localRepoOperator: LocalRepoOperator,
+    private val uiProtector: UiProtector,
+) {
+
+    companion object {
+
+        val instance by lazy {
+            ApplyOperator(
+                settingsFileOperator = SettingsFileOperator.instance,
+                filesOperator = FilesOperator.instance,
+                processOperator = ProcessOperator.instance,
+                localRepoOperator = LocalRepoOperator.instance,
+                uiProtector = UiProtector.instance,
+            )
+        }
+    }
+
     fun apply(): List<ApplyOutput> {
-        if (!SettingsFileOperator.scriptFile.exists()) {
+        if (!settingsFileOperator.scriptFile.exists()) {
             return emptyList()
         }
-        val gitDirs: List<File> = LocalRepoOperator.getLocalRepoFiles()
-        FilesOperator.refreshConf()
-        FilesOperator.refreshClones()
-        val scriptPath = SettingsFileOperator.scriptFile.absolutePath
-        val settings = SettingsFileOperator.readSettings()!!
-        return gitDirs.mapConcurrentWithProgress(
+        val gitDirs: List<File> = localRepoOperator.getLocalRepoFiles()
+        filesOperator.refreshConf()
+        filesOperator.refreshClones()
+        val scriptPath = settingsFileOperator.scriptFile.absolutePath
+        val settings = settingsFileOperator.readSettings()!!
+        return uiProtector.mapConcurrentWithProgress(
             title = "Applying changes from script file",
             extraText1 = "Cancelling this will not terminate running processes",
             extraText2 = { "${it.parentFile.parentFile.name}/${it.parentFile.name}/${it.name}" },
-            concurrent = settings.concurrency
+            concurrent = settings.concurrency,
+            data = gitDirs,
         ) { dir ->
-            ProcessOperator.runCommandAsync(dir, listOf("/bin/bash", scriptPath)).await()
+            processOperator.runCommandAsync(dir, listOf("/bin/bash", scriptPath)).await()
         }.map { (dir, out) -> out ?: ApplyOutput.dummy(dir.path) }.also {
-            FilesOperator.refreshClones()
+            filesOperator.refreshClones()
         }
     }
 }

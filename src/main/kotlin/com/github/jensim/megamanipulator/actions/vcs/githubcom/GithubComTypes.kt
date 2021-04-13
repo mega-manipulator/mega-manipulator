@@ -26,12 +26,12 @@ data class GithubComRepo(
 
 @Serializable
 data class GithubPullRequestRequest(
-    val title : String,
-    val body : String,
-    val draft : Boolean = false,
-    val maintainer_can_modify : Boolean = true,
-    val head : String, //" to "$headProject/$headRepo:$localBranch",
-    val base : String, //" to ghrepo.default_branch,
+    val title: String,
+    val body: String,
+    val draft: Boolean = false,
+    val maintainer_can_modify: Boolean = true,
+    val head: String, // " to "$headProject/$headRepo:$localBranch",
+    val base: String, // " to ghrepo.default_branch,
 )
 
 @Serializable

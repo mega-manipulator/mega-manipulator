@@ -3,11 +3,11 @@ package com.github.jensim.megamanipulator.settings
 import com.github.jensim.megamanipulator.settings.CodeHostSettings.BitBucketSettings
 import com.github.jensim.megamanipulator.settings.CodeHostSettings.GitHubSettings
 import com.github.jensim.megamanipulator.settings.SearchHostSettings.SourceGraphSettings
-import com.github.jensim.megamanipulator.settings.SerializationHolder.readableJson
 import com.github.ricky12awesome.jss.encodeToSchema
 import com.github.ricky12awesome.jss.globalJson
 import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.encodeToString
+import kotlinx.serialization.json.Json
 import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Disabled
@@ -16,12 +16,13 @@ import java.io.File
 
 class SettingsFileOperatorTest {
 
+    private val readableJson: Json = SerializationHolder.instance.readableJson
     private val testData = MegaManipulatorSettings(
         searchHostSettings = mapOf(
             "sourcegraph_com" to SourceGraphSettings(
                 baseUrl = "https://sourcegraph.com",
                 codeHostSettings = mapOf(
-                    "github_com" to GitHubSettings(
+                    "github.com" to GitHubSettings(
                         username = "jenism",
                     )
                 )
@@ -29,7 +30,7 @@ class SettingsFileOperatorTest {
             "private_sourcegraph" to SourceGraphSettings(
                 baseUrl = "https://sourcegraph.example.com",
                 codeHostSettings = mapOf(
-                    "github_com" to GitHubSettings(
+                    "github.com" to GitHubSettings(
                         username = "jenism",
                     ),
                     "bitbucket" to BitBucketSettings(
