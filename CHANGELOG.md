@@ -7,6 +7,7 @@
 
 ### Changed
 - Re-patterned the entire source code, to enable unit testing
+- Upgrade gradle wrapper to version 7.0
 
 ### Deprecated
 
