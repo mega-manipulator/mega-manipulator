@@ -4,6 +4,17 @@
 
 ## [Unreleased]
 ### Added
+
+### Changed
+
+### Deprecated
+
+### Removed
+
+### Fixed
+
+## [0.0.13]
+### Added
 - Sonar reports and test coverage
 
 ### Changed
