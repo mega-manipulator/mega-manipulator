@@ -20,4 +20,4 @@ jobs:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         shell: bash
-        run: ./gradlew build jacocoTestReport sonarqube -Dsonar.login=$SONAR_TOKEN -Dsonar.host.url=https://sonarcloud.io --stacktrace
+        run: ./gradlew build jacocoTestReport sonarqube -Dsonar.login=$SONAR_TOKEN -Dsonar.host.url=https://sonarcloud.io -Dsonar.organization=jensim-github -Dsonar.projectKey=mega-manipulator --stacktrace

@@ -151,13 +151,6 @@ tasks {
         }
     }
 
-    sonarqube {
-        properties {
-            property("sonar.organization", "jensim-github")
-            property("sonar.projectKey", "mega-manipulator")
-        }
-    }
-
     patchPluginXml {
         version(pluginVersion)
         sinceBuild(pluginSinceBuild)
