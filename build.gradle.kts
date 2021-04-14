@@ -4,10 +4,12 @@ import org.jetbrains.changelog.closure
 import org.jetbrains.changelog.markdownToHTML
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
+val junitVersion: String = "5.7.1"
+val kotlinxCoroutinesVersion: String = "1.4.3"
 val ktorVersion: String = "1.5.3"
-val jacksonVersion = "2.12.+"
-val kotlinVersion = "1.4.32"
-val jvmVersion = "11"
+val kotlinVersion: String = "1.4.32"
+val jvmVersion: String = "11"
+val hamcrestVersion: String = "2.2"
 
 plugins {
     // Java support
@@ -24,7 +26,7 @@ plugins {
     // ktlint linter - read more: https://github.com/JLLeitschuh/ktlint-gradle
     id("org.jlleitschuh.gradle.ktlint") version "10.0.0"
     jacoco
-    id ("org.sonarqube") version "3.1.1"
+    id("org.sonarqube") version "3.1.1"
     id("com.github.ben-manes.versions") version "0.38.0"
 }
 
@@ -56,7 +58,7 @@ repositories {
 dependencies {
     detektPlugins(group = "io.gitlab.arturbosch.detekt", name = "detekt-formatting", version = "1.16.0")
     implementation(group = "org.jetbrains.kotlin", name = "kotlin-stdlib-jdk8", version = kotlinVersion)
-    implementation(group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-jdk8", version = "1.4.3")
+    implementation(group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-jdk8", version = kotlinxCoroutinesVersion)
     implementation(group = "org.jetbrains.kotlin", name = "kotlin-reflect", version = kotlinVersion)
     implementation(group = "org.jetbrains.kotlin", name = "kotlin-bom", version = kotlinVersion, ext = "pom")
 
@@ -71,10 +73,10 @@ dependencies {
 
     // TEST
     testImplementation(group = "org.mockito.kotlin", name = "mockito-kotlin", version = "3.1.0")
-    testImplementation(group = "org.hamcrest", name = "hamcrest", version = "2.2")
-    testImplementation(group = "org.hamcrest", name = "hamcrest-library", version = "2.2")
-    testImplementation(group = "org.junit.jupiter", name = "junit-jupiter-api", version = "5.7.1")
-    testRuntimeOnly(group = "org.junit.jupiter", name = "junit-jupiter-engine", version = "5.7.1")
+    testImplementation(group = "org.hamcrest", name = "hamcrest", version = hamcrestVersion)
+    testImplementation(group = "org.hamcrest", name = "hamcrest-library", version = hamcrestVersion)
+    testImplementation(group = "org.junit.jupiter", name = "junit-jupiter-api", version = junitVersion)
+    testRuntimeOnly(group = "org.junit.jupiter", name = "junit-jupiter-engine", version = junitVersion)
 }
 
 // Configure gradle-intellij-plugin plugin.
@@ -151,8 +153,8 @@ tasks {
 
     sonarqube {
         properties {
-            property("sonar.organization","jensim-github")
-            property("sonar.projectKey","mega-manipulator")
+            property("sonar.organization", "jensim-github")
+            property("sonar.projectKey", "mega-manipulator")
         }
     }
 
@@ -197,4 +199,3 @@ tasks {
         channels(pluginVersion.split('-').getOrElse(1) { "default" }.split('.').first())
     }
 }
-

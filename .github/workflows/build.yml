@@ -17,8 +17,8 @@ name: Build
 on:
   push:
     paths-ignore:
-      - ".github/**"
-      - ".run/**"
+      - ".github/**/*"
+      - ".run/**/*"
       - "*.md"
       - "*.txt"
   pull_request:
