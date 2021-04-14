@@ -8,6 +8,7 @@
 * [ ] General tables
 * [ ] Table sorting
 * [ ] Resizable split views
+* [ ] Fuzzy find PRs
 
 ## Features
 * [ ] Github fetch PullRequests, might be broken??
