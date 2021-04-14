@@ -26,7 +26,6 @@ plugins {
     // ktlint linter - read more: https://github.com/JLLeitschuh/ktlint-gradle
     id("org.jlleitschuh.gradle.ktlint") version "10.0.0"
     jacoco
-    id("org.sonarqube") version "3.1.1"
     id("com.github.ben-manes.versions") version "0.38.0"
 }
 
