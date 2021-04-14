@@ -28,3 +28,4 @@ jobs:
             -Dsonar.organization=jensim-github
             -Dsonar.projectKey=mega-manipulator
             -Dsonar.coverage.jacoco.xmlReportPaths=${WORKDIR}/build/reports/jacoco/test/jacocoTestReport.xml
+            -Dsonar.branch.name=main
