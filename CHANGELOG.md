@@ -4,6 +4,7 @@
 
 ## [Unreleased]
 ### Added
+- Sonar reports and test coverage
 
 ### Changed
 - Re-patterned the entire source code, to enable unit testing
