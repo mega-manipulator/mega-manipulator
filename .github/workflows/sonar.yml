@@ -1,5 +1,7 @@
 on:
   push:
+    paths:
+      - .github/workflows/sonar.yml
     branches:
       - main
 
@@ -13,13 +15,8 @@ jobs:
         with:
           # Disabling shallow clone is recommended for improving relevancy of reporting
           fetch-depth: 0
-      - name: SonarCloud Scan
-        uses: sonarsource/sonarcloud-github-action@master
+      - name: SonarCloud report
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-        with:
-          args: >
-            -Dsonar.organization=jensim-github
-            -Dsonar.projectKey=mega-manipulator
-            -X
+        shell: bash
+        run: ./gradlew build jacocoTestReport sonarqube -Dsonar.login=$SONAR_TOKEN -Dsonar.host.url=https://sonarcloud.io
