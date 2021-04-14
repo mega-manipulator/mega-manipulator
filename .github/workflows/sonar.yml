@@ -15,6 +15,15 @@ jobs:
         with:
           # Disabling shallow clone is recommended for improving relevancy of reporting
           fetch-depth: 0
+      - uses: actions/cache@v2
+        with:
+          path: |
+            ${WORKDIR}/build
+            ${WORKDIR}/.gradle/caches
+            ${WORKDIR}/.gradle/wrapper
+          key: gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
+          restore-keys: |
+            gradle-
       - name: Jacoco report
         shell: bash
         run: ./gradlew build jacocoTestReport
