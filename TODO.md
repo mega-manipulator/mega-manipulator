@@ -8,9 +8,10 @@
 * [ ] General tables
 * [ ] Table sorting
 * [ ] Resizable split views
-* [ ] Fuzzy find PRs
+* [x] Fuzzy find PRs
 
 ## Features
+* [ ] Comment on PRs
 * [ ] Github fetch PullRequests, might be broken??
   https://api.github.com/search/issues?page=0&per_page=100&q=state%3Aopen+author%3Ajenism+type%3Apr
 * [x] Create JSON schema for config, and bind to mega-manipulator.yml

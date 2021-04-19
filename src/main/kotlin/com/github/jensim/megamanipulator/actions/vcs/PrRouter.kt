@@ -49,7 +49,7 @@ class PrRouter(
         return when (val settings = resolve(repo.searchHostName, repo.codeHostName)) {
             is BitBucketSettings -> bitbucketServerClient.createFork(settings, repo)
             is GitHubSettings -> githubComClient.createFork(settings, repo)
-            null -> null
+            null -> throw IllegalArgumentException("Unable to match config correctly")
         }
     }
 
@@ -62,13 +62,13 @@ class PrRouter(
         }
     }
 
-    suspend fun getAllPrs(searchHost: String, codeHost: String): List<PullRequestWrapper>? {
+    suspend fun getAllPrs(searchHost: String, codeHost: String): List<PullRequestWrapper> {
         return settingsFileOperator.readSettings()?.searchHostSettings?.get(searchHost)?.codeHostSettings?.get(codeHost)?.let {
             when (it) {
                 is BitBucketSettings -> bitbucketServerClient.getAllPrs(searchHost, codeHost, it)
                 is GitHubSettings -> githubComClient.getAllPrs(searchHost, codeHost, it)
             }
-        }
+        } ?: throw IllegalArgumentException("No config!")
     }
 
     suspend fun closePr(dropForkOrBranch: Boolean, pullRequest: PullRequestWrapper) {
@@ -80,13 +80,13 @@ class PrRouter(
         }
     }
 
-    suspend fun getPrivateForkReposWithoutPRs(searchHost: String, codeHost: String): List<RepoWrapper>? {
+    suspend fun getPrivateForkReposWithoutPRs(searchHost: String, codeHost: String): List<RepoWrapper> {
         return settingsFileOperator.readSettings()?.searchHostSettings?.get(searchHost)?.codeHostSettings?.get(codeHost)?.let {
             when (it) {
                 is BitBucketSettings -> bitbucketServerClient.getPrivateForkReposWithoutPRs(searchHost, codeHost, it)
                 is GitHubSettings -> githubComClient.getPrivateForkReposWithoutPRs(searchHost, codeHost, it)
             }
-        }
+        } ?: throw IllegalArgumentException("No config!")
     }
 
     suspend fun deletePrivateRepo(fork: RepoWrapper) {
@@ -96,15 +96,15 @@ class PrRouter(
                 it is GitHubSettings && fork is GithubComRepoWrapping -> githubComClient.deletePrivateRepo(fork, it)
                 else -> throw IllegalArgumentException("Unable to match config correctly")
             }
-        }
+        } ?: throw IllegalArgumentException("No config!")
     }
 
-    suspend fun getRepo(searchResult: SearchResult): RepoWrapper? {
+    suspend fun getRepo(searchResult: SearchResult): RepoWrapper {
         return settingsFileOperator.readSettings()?.searchHostSettings?.get(searchResult.searchHostName)?.codeHostSettings?.get(searchResult.codeHostName)?.let {
             when (it) {
                 is BitBucketSettings -> bitbucketServerClient.getRepo(searchResult, it)
                 is GitHubSettings -> githubComClient.getRepo(searchResult, it)
             }
-        }
+        } ?: throw IllegalArgumentException("No config!")
     }
 }

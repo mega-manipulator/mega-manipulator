@@ -4,6 +4,7 @@
 
 ## [Unreleased]
 ### Added
+- Fuzzy search open PRs
 
 ### Changed
 

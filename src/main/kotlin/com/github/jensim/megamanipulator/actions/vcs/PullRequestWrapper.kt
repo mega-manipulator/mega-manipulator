@@ -20,6 +20,7 @@ sealed class PullRequestWrapper {
     abstract fun isFork(): Boolean
     abstract fun cloneUrlFrom(): String?
     abstract fun cloneUrlTo(): String?
+    abstract val raw: String
 }
 
 @Serializable
@@ -27,6 +28,7 @@ data class BitBucketPullRequestWrapper(
     val searchHost: String,
     val codeHost: String,
     val bitbucketPR: BitBucketPullRequest,
+    override val raw: String
 ) : PullRequestWrapper() {
     override fun codeHostName(): String = codeHost
     override fun searchHostName(): String = searchHost
@@ -59,6 +61,7 @@ data class GithubComPullRequestWrapper(
     val searchHost: String,
     val codeHost: String,
     val pullRequest: GithubComPullRequest,
+    override val raw: String
 ) : PullRequestWrapper() {
     override fun codeHostName(): String = codeHost
     override fun searchHostName(): String = searchHost

@@ -8,12 +8,16 @@ import com.github.jensim.megamanipulator.ui.UiProtector
 import com.intellij.ui.components.JBList
 import com.intellij.ui.components.JBScrollPane
 import com.intellij.ui.components.JBTextArea
+import com.intellij.ui.components.JBTextField
 import com.intellij.ui.layout.panel
 import kotlinx.serialization.encodeToString
+import me.xdrop.fuzzywuzzy.FuzzySearch
 import java.awt.event.MouseEvent
 import java.awt.event.MouseListener
 import javax.swing.JButton
 import javax.swing.JComponent
+import javax.swing.event.DocumentEvent
+import javax.swing.event.DocumentListener
 
 class PullRequestWindow(
     private val prRouter: PrRouter,
@@ -34,6 +38,8 @@ class PullRequestWindow(
 
     override val index: Int = 4
 
+    private val search = JBTextField(50)
+    private val pullRequests: MutableList<PullRequestWrapper> = mutableListOf()
     private val codeHostSelect = CodeHostSelector()
     private val prList = JBList<PullRequestWrapper>()
     private val prScroll = JBScrollPane(prList)
@@ -47,6 +53,7 @@ class PullRequestWindow(
             button("Fetch PRs") {
                 fetchPRs()
             }
+            component(search)
             right {
                 component(menuOpenButton)
             }
@@ -73,6 +80,12 @@ class PullRequestWindow(
             override fun mouseExited(e: MouseEvent?) = Unit
         })
 
+        search.document.addDocumentListener(object : DocumentListener {
+            override fun insertUpdate(e: DocumentEvent?) = updateFilteredPrs()
+            override fun removeUpdate(e: DocumentEvent?) = updateFilteredPrs()
+            override fun changedUpdate(e: DocumentEvent?) = updateFilteredPrs()
+        })
+
         prList.addCellRenderer { "${it.project()}/${it.baseRepo()} ${it.title()}" }
         prList.addListSelectionListener {
             menuOpenButton.isEnabled = false
@@ -95,7 +108,16 @@ class PullRequestWindow(
             val prs: List<PullRequestWrapper>? = uiProtector.uiProtectedOperation("Fetching PRs") {
                 prRouter.getAllPrs(selected.searchHostName, selected.codeHostName)
             }
-            prList.setListData(prs?.toTypedArray())
+            pullRequests.clear()
+            prs?.let { pullRequests.addAll(it) }
+            updateFilteredPrs()
         }
+    }
+
+    private fun updateFilteredPrs() {
+        val filtered = pullRequests.filter {
+            search.text.isBlank() || FuzzySearch.tokenSetRatio(it.raw, search.text) == 100
+        }.sortedBy { "${it.project()}/${it.baseRepo()} ${it.title()}" }
+        prList.setListData(filtered.toTypedArray())
     }
 }

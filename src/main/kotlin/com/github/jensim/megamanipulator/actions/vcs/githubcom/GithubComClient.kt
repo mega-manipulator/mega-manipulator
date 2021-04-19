@@ -6,6 +6,7 @@ import com.github.jensim.megamanipulator.actions.vcs.GithubComPullRequestWrapper
 import com.github.jensim.megamanipulator.actions.vcs.GithubComRepoWrapping
 import com.github.jensim.megamanipulator.http.HttpClientProvider
 import com.github.jensim.megamanipulator.settings.CodeHostSettings.GitHubSettings
+import com.github.jensim.megamanipulator.settings.SerializationHolder
 import io.ktor.client.HttpClient
 import io.ktor.client.request.delete
 import io.ktor.client.request.get
@@ -16,11 +17,16 @@ import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.toList
+import kotlinx.serialization.encodeToString
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonElement
+import kotlinx.serialization.json.decodeFromJsonElement
 import java.util.concurrent.atomic.AtomicInteger
 
 class GithubComClient(
     private val httpClientProvider: HttpClientProvider,
     private val localRepoOperator: LocalRepoOperator,
+    private val json: Json,
 ) {
 
     companion object {
@@ -28,6 +34,7 @@ class GithubComClient(
             GithubComClient(
                 httpClientProvider = HttpClientProvider.instance,
                 localRepoOperator = LocalRepoOperator.instance,
+                json = SerializationHolder.instance.readableJson
             )
         }
     }
@@ -42,7 +49,7 @@ class GithubComClient(
         val localBranch: String = localRepoOperator.getBranch(repo)!!
         val headProject = fork?.first ?: repo.project
         val ghRepo: GithubComRepo = client.get("${settings.baseUrl}/repos/${repo.project}/${repo.repo}")
-        val pr: GithubComPullRequest = client.post("${settings.baseUrl}/repos/${repo.project}/${repo.repo}/pulls") {
+        val prRaw: JsonElement = client.post("${settings.baseUrl}/repos/${repo.project}/${repo.repo}/pulls") {
             body = GithubPullRequestRequest(
                 title = title,
                 body = description,
@@ -50,7 +57,14 @@ class GithubComClient(
                 base = ghRepo.default_branch,
             )
         }
-        return GithubComPullRequestWrapper(repo.searchHostName, repo.codeHostName, pr)
+        val pr: GithubComPullRequest = json.decodeFromJsonElement(prRaw)
+        val prString = json.encodeToString(prRaw)
+        return GithubComPullRequestWrapper(
+            searchHost = repo.searchHostName,
+            codeHost = repo.codeHostName,
+            pullRequest = pr,
+            raw = prString
+        )
     }
 
     suspend fun createFork(settings: GitHubSettings, repo: SearchResult): String {
@@ -75,10 +89,17 @@ class GithubComClient(
 
     suspend fun updatePr(newTitle: String, newDescription: String, settings: GitHubSettings, pullRequest: GithubComPullRequestWrapper): GithubComPullRequestWrapper {
         val client: HttpClient = httpClientProvider.getClient(pullRequest.searchHost, pullRequest.codeHost, settings)
-        val pr: GithubComPullRequest = client.patch(pullRequest.pullRequest.url) {
+        val prRaw: JsonElement = client.patch(pullRequest.pullRequest.url) {
             body = mapOf("title" to newTitle, "body" to newDescription)
         }
-        return GithubComPullRequestWrapper(pullRequest.searchHost, pullRequest.codeHost, pr)
+        val pr: GithubComPullRequest = json.decodeFromJsonElement(prRaw)
+        val prString = json.encodeToString(prRaw)
+        return GithubComPullRequestWrapper(
+            searchHost = pullRequest.searchHost,
+            codeHost = pullRequest.codeHost,
+            pullRequest = pr,
+            raw = prString,
+        )
     }
 
     suspend fun getAllPrs(searchHost: String, codeHost: String, settings: GitHubSettings): List<GithubComPullRequestWrapper> {
@@ -93,7 +114,17 @@ class GithubComClient(
         }
         return seq.toList().toList()
             .mapNotNull { it.pull_request?.url }
-            .map { GithubComPullRequestWrapper(searchHost, codeHost, client.get(it)) }
+            .map {
+                val prRaw: JsonElement = client.get(it)
+                val pr: GithubComPullRequest = json.decodeFromJsonElement(prRaw)
+                val prString = json.encodeToString(prRaw)
+                GithubComPullRequestWrapper(
+                    searchHost = searchHost,
+                    codeHost = codeHost,
+                    pullRequest = pr,
+                    raw = prString,
+                )
+            }
     }
 
     suspend fun closePr(dropForkOrBranch: Boolean, settings: GitHubSettings, pullRequest: GithubComPullRequestWrapper) {

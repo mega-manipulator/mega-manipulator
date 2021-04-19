@@ -8,18 +8,24 @@ import com.github.jensim.megamanipulator.actions.vcs.BitBucketRepoWrapping
 import com.github.jensim.megamanipulator.actions.vcs.PullRequestWrapper
 import com.github.jensim.megamanipulator.http.HttpClientProvider
 import com.github.jensim.megamanipulator.settings.CodeHostSettings.BitBucketSettings
+import com.github.jensim.megamanipulator.settings.SerializationHolder
 import com.intellij.notification.NotificationType
 import io.ktor.client.HttpClient
 import io.ktor.client.request.delete
 import io.ktor.client.request.get
 import io.ktor.client.request.post
 import io.ktor.client.request.put
+import kotlinx.serialization.encodeToString
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonElement
+import kotlinx.serialization.json.decodeFromJsonElement
 
 @SuppressWarnings("TooManyFunctions")
 class BitbucketServerClient(
     private val httpClientProvider: HttpClientProvider,
     private val localRepoOperator: LocalRepoOperator,
     private val notificationsOperator: NotificationsOperator,
+    private val json: Json,
 ) {
     companion object {
         val instance by lazy {
@@ -27,6 +33,7 @@ class BitbucketServerClient(
                 httpClientProvider = HttpClientProvider.instance,
                 localRepoOperator = LocalRepoOperator.instance,
                 notificationsOperator = NotificationsOperator.instance,
+                json = SerializationHolder.instance.readableJson,
             )
         }
     }
@@ -67,7 +74,7 @@ class BitbucketServerClient(
         val fromRepo = fork?.second ?: repo.repo
         val reviewers = getDefaultReviewers(client, settings, repo, localBranch, defaultBranch)
             .map { BitBucketParticipant(BitBucketUser(name = it.name)) }
-        val pr: BitBucketPullRequest = client.post("${settings.baseUrl}/rest/api/1.0/projects/${repo.project}/repos/${repo.repo}/pull-requests") {
+        val prRaw: JsonElement = client.post("${settings.baseUrl}/rest/api/1.0/projects/${repo.project}/repos/${repo.repo}/pull-requests") {
             body = BitBucketPullRequestRequest(
                 title = title,
                 description = description,
@@ -88,8 +95,15 @@ class BitbucketServerClient(
                 reviewers = reviewers,
             )
         }
+        val pr: BitBucketPullRequest = json.decodeFromJsonElement(prRaw)
+        val prString = json.encodeToString(prRaw)
 
-        return BitBucketPullRequestWrapper(searchHost = repo.searchHostName, codeHost = repo.codeHostName, pr)
+        return BitBucketPullRequestWrapper(
+            searchHost = repo.searchHostName,
+            codeHost = repo.codeHostName,
+            bitbucketPR = pr,
+            raw = prString,
+        )
     }
 
     suspend fun updatePr(newTitle: String, newDescription: String, settings: BitBucketSettings, pullRequest: BitBucketPullRequestWrapper): PullRequestWrapper {
@@ -99,15 +113,17 @@ class BitbucketServerClient(
     }
 
     private suspend fun updatePr(client: HttpClient, settings: BitBucketSettings, pullRequest: BitBucketPullRequestWrapper): PullRequestWrapper {
-        val pr: BitBucketPullRequest = client.put("${settings.baseUrl}/rest/api/1.0/projects/${pullRequest.project()}/repos/${pullRequest.baseRepo()}/pull-requests/${pullRequest.bitbucketPR.id}") {
-            body = pullRequest.bitbucketPR.copy(
-                author = null,
-            )
+        val prRaw: JsonElement = client.put("${settings.baseUrl}/rest/api/1.0/projects/${pullRequest.project()}/repos/${pullRequest.baseRepo()}/pull-requests/${pullRequest.bitbucketPR.id}") {
+            body = pullRequest.bitbucketPR
         }
+        val pr: BitBucketPullRequest = json.decodeFromJsonElement(prRaw)
+        val prString = json.encodeToString(prRaw)
+
         return BitBucketPullRequestWrapper(
             searchHost = pullRequest.searchHost,
             codeHost = pullRequest.codeHost,
-            bitbucketPR = pr
+            bitbucketPR = pr,
+            raw = prString,
         )
     }
 
@@ -117,7 +133,7 @@ class BitbucketServerClient(
         val collector = ArrayList<PullRequestWrapper>()
         var start = 0L
         while (true) {
-            val response: BitBucketPage<BitBucketPullRequest> = try {
+            val response: BitBucketPage = try {
                 client.get("${settings.baseUrl}/rest/api/1.0/dashboard/pull-requests?state=OPEN&role=AUTHOR&start=$start&limit=100")
             } catch (e: Exception) {
                 e.printStackTrace()
@@ -127,8 +143,15 @@ class BitbucketServerClient(
                 println("Message received $it")
             }
             collector.addAll(
-                response.values.orEmpty().map {
-                    BitBucketPullRequestWrapper(searchHostName, codeHostName, it)
+                response.values.orEmpty().map { raw ->
+                    val pr = json.decodeFromJsonElement<BitBucketPullRequest>(raw)
+                    val prString = json.encodeToString(raw)
+                    BitBucketPullRequestWrapper(
+                        searchHost = searchHostName,
+                        codeHost = codeHostName,
+                        bitbucketPR = pr,
+                        raw = prString,
+                    )
                 }
             )
             if (response.isLastPage != false) {
@@ -151,7 +174,7 @@ class BitbucketServerClient(
                 if (pullRequest.isFork()) {
                     val repository = pullRequest.bitbucketPR.fromRef.repository
                     // Get open PRs
-                    val page: BitBucketPage<BitBucketPullRequest> = client.get("${settings.baseUrl}/rest/api/1.0/projects/${repository.project?.key!!}/repos/${repository.slug}/pull-requests?direction=OUTGOING&state=OPEN")
+                    val page: BitBucketPage = client.get("${settings.baseUrl}/rest/api/1.0/projects/${repository.project?.key!!}/repos/${repository.slug}/pull-requests?direction=OUTGOING&state=OPEN")
                     if ((page.size ?: 0) == 0) {
                         deletePrivateRepo(BitBucketRepoWrapping(pullRequest.searchHost, pullRequest.codeHost, repository), settings)
                     }
@@ -207,15 +230,16 @@ class BitbucketServerClient(
         var start = 0
         val collector = HashSet<BitBucketRepo>()
         while (true) {
-            val page: BitBucketPage<BitBucketRepo> = client.get("${settings.baseUrl}/rest/api/1.0/users/~${settings.username}/repos?start=$start")
+            val page: BitBucketPage = client.get("${settings.baseUrl}/rest/api/1.0/users/~${settings.username}/repos?start=$start")
             page.values.orEmpty()
+                .map { json.decodeFromJsonElement<BitBucketRepo>(it) }
                 .filter { it.slug.startsWith(settings.forkRepoPrefix) }
                 .forEach { collector.add(it) }
             if (page.isLastPage != false) break
             start += page.size ?: 0
         }
         return collector.filter {
-            val page: BitBucketPage<BitBucketPullRequest> = client.get("${settings.baseUrl}/rest/api/1.0/projects/${it.project?.key}/repos/${it.slug}/pull-requests?direction=OUTGOING&state=OPEN")
+            val page: BitBucketPage = client.get("${settings.baseUrl}/rest/api/1.0/projects/${it.project?.key}/repos/${it.slug}/pull-requests?direction=OUTGOING&state=OPEN")
             page.size == 0
         }.map { BitBucketRepoWrapping(searchHostName, codeHostName, it) }
     }
