@@ -4,6 +4,19 @@
 
 ## [Unreleased]
 ### Added
+
+### Changed
+
+### Deprecated
+
+### Removed
+- No longer support IntelliJ 2020.2
+
+### Fixed
+- Fixed Deprecated api usage of NotificationGroup 
+
+## [0.0.14]
+### Added
 - Fuzzy search open PRs
 
 ### Changed

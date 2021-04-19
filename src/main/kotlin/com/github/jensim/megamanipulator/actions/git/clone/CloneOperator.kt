@@ -51,10 +51,11 @@ class CloneOperator(
             extraText2 = { it.asPathString() },
             data = repos,
         ) { repo ->
-            val vcsRepo = prRouter.getRepo(repo)
-            val cloneUrl = vcsRepo?.getCloneUrl()!!
-            val dir = File(basePath, "clones/${repo.asPathString()}")
-            clone(dir, cloneUrl, branch)
+            prRouter.getRepo(repo)?.let { vcsRepo ->
+                val cloneUrl = vcsRepo.getCloneUrl()!!
+                val dir = File(basePath, "clones/${repo.asPathString()}")
+                clone(dir, cloneUrl, branch)
+            }
         }
         filesOperator.refreshClones()
         if (noConf.isEmpty()) {

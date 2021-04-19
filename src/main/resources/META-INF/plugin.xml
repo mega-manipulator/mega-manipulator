@@ -13,5 +13,6 @@
         <moduleType id="mega-manipulator"
                     implementationClass="com.github.jensim.megamanipulator.project.MegaManipulatorModuleType"/>
         <moduleBuilder builderClass="com.github.jensim.megamanipulator.project.MegaManipulatorModuleBuilder"/>
+        <notificationGroup id="Mega Manipulator" displayType="BALLOON"/>
     </extensions>
 </idea-plugin>
