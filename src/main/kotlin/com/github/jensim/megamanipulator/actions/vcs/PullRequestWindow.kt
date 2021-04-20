@@ -12,6 +12,7 @@ import com.intellij.ui.components.JBTextField
 import com.intellij.ui.layout.panel
 import kotlinx.serialization.encodeToString
 import me.xdrop.fuzzywuzzy.FuzzySearch
+import java.awt.Dimension
 import java.awt.event.MouseEvent
 import java.awt.event.MouseListener
 import javax.swing.JButton
@@ -80,6 +81,7 @@ class PullRequestWindow(
             override fun mouseExited(e: MouseEvent?) = Unit
         })
 
+        search.minimumSize = Dimension(200, 30)
         search.document.addDocumentListener(object : DocumentListener {
             override fun insertUpdate(e: DocumentEvent?) = updateFilteredPrs()
             override fun removeUpdate(e: DocumentEvent?) = updateFilteredPrs()
