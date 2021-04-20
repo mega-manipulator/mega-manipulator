@@ -23,7 +23,7 @@ import org.junit.jupiter.api.Test
 import org.mockito.kotlin.doReturn
 import org.mockito.kotlin.mock
 
-internal class GithubComClientTest {
+class GithubComClientTest {
 
     private val githubSettings = GitHubSettings(
         username = System.getenv("GITHUB_USERNAME") ?: "jensim",
