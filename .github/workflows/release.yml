@@ -60,6 +60,7 @@ jobs:
         run: |
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
+          git fetch --all
           git checkout --track origin/main
           git commit -m "Update changelog" -a
 
