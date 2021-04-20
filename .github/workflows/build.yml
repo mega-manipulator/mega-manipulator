@@ -72,6 +72,8 @@ jobs:
       # Run detekt, ktlint and tests
       - name: Run Linters and Test
         run: ./gradlew check --stacktrace --info
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       # Run verifyPlugin Gradle task
       - name: Verify Plugin
