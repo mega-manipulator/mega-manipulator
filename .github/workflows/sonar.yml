@@ -23,6 +23,8 @@ jobs:
           restore-keys: |
             gradle-
       - name: Jacoco report
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         shell: bash
         run: ./gradlew build jacocoTestReport
       - name: SonarCloud Scan
