@@ -1,7 +1,5 @@
 on:
   push:
-    paths:
-      - .github/workflows/sonar.yml
     branches:
       - main
 
