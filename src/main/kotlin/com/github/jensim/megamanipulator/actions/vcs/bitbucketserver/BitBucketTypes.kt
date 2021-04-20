@@ -36,6 +36,11 @@ data class BitBucketPullRequestRequest(
 )
 
 @Serializable
+data class BitBucketComment(
+    val text: String
+)
+
+@Serializable
 data class BitBucketPullRequest(
     val id: Long? = null,
     val version: Int? = null,

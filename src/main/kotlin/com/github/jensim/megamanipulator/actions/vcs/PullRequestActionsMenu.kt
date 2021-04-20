@@ -156,6 +156,25 @@ class PullRequestActionsMenu(
             }
         }
 
+        val commentMenuItem = JMenuItem("Add comment").apply {
+            addActionListener {
+                val prs = prProvider()
+                if (prs.isNotEmpty()) {
+                    dialogGenerator.askForInput(
+                        title = "Comment selected pull requests",
+                        message = "Comment"
+                    ) { comment ->
+                        uiProtector.mapConcurrentWithProgress(
+                            title = "Add comments",
+                            data = prs
+                        ) {
+                            prRouter.commentPR(comment, it)
+                        }
+                    }
+                }
+            }
+        }
+
         add(declineMenuItem)
         add(alterMenuItem)
         add(defaultReviewersMenuItem)
@@ -163,6 +182,7 @@ class PullRequestActionsMenu(
         if (isBrowsingAllowed()) {
             add(openInBrowserMenuItem)
         }
+        add(commentMenuItem)
     }
 
     private fun isBrowsingAllowed(): Boolean = Desktop.getDesktop().isSupported(Desktop.Action.BROWSE)

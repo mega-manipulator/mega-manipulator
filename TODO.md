@@ -11,7 +11,6 @@
 * [ ] Right Click PRs
 
 ## Features
-* [ ] Comment on PRs
 * [ ] Drop stale forked repos
 * [ ] Drop stale - non-default branches (merged or old)
 * [ ] Validate authentication

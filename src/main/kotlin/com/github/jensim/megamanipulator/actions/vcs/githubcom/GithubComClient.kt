@@ -170,4 +170,13 @@ class GithubComClient(
         val repo: GithubComRepo = client.get("${settings.baseUrl}/repos/${searchResult.project}/${searchResult.repo}")
         return GithubComRepoWrapping(searchResult.searchHostName, searchResult.codeHostName, repo)
     }
+
+    suspend fun commentPR(comment: String, pullRequest: GithubComPullRequestWrapper, settings: GitHubSettings) {
+        // https://docs.github.com/en/rest/reference/pulls#comments
+        // https://docs.github.com/en/rest/reference/issues#create-an-issue-comment
+        val client: HttpClient = httpClientProvider.getClient(pullRequest.searchHost, pullRequest.codeHost, settings)
+        client.post<JsonElement>(pullRequest.pullRequest.comments_url) {
+            body = mapOf("body" to comment)
+        }
+    }
 }

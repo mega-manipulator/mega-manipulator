@@ -255,6 +255,14 @@ class BitbucketServerClient(
         }
     }
 
+    suspend fun commentPR(comment: String, pullRequest: BitBucketPullRequestWrapper, settings: BitBucketSettings) {
+        // https://docs.atlassian.com/bitbucket-server/rest/7.10.0/bitbucket-rest.html#idp323
+        val client: HttpClient = httpClientProvider.getClient(pullRequest.searchHostName(), pullRequest.codeHostName(), settings)
+        client.post<JsonElement>("${settings.baseUrl}/rest/api/1.0/projects/${pullRequest.project()}/repos/${pullRequest.baseRepo()}/pull-requests/${pullRequest.bitbucketPR.id}/comments") {
+            body = BitBucketComment(text = comment)
+        }
+    }
+
     /*
     pull requests
 

@@ -56,6 +56,7 @@ data class GithubComPullRequest(
     // https://api.github.com/repos/jensim/jensim.github.io/pulls/3
     val url: String,
     val html_url: String,
+    val comments_url: String,
     val user: GithubComUser,
     val body: String,
     val state: String,

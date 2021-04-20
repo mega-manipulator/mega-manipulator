@@ -4,6 +4,7 @@
 
 ## [Unreleased]
 ### Added
+- Comment on PRs
 
 ### Changed
 

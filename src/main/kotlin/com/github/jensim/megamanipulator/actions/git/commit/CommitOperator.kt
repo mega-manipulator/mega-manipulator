@@ -38,17 +38,14 @@ class CommitOperator(
     }
 
     fun commit(): Map<String, List<Pair<String, ApplyOutput>>> {
-        val commitMessageKey = "Commit message"
         val result = ConcurrentHashMap<String, MutableList<Pair<String, ApplyOutput>>>()
         dialogGenerator.askForInput(
-            title = "Create commits",
-            message = "Create commits for all changes in all checked out repositories",
-            values = listOf(commitMessageKey),
-            onOk = {
+            title = "Create commits for all changes in all checked out repositories",
+            message = "Commit message",
+            onOk = { commitMessage: String ->
                 val settings: MegaManipulatorSettings = settingsFileOperator.readSettings()!!
                 var push = false
-                val commitMessage = it[commitMessageKey]
-                if (commitMessage.isNullOrEmpty()) {
+                if (commitMessage.isEmpty()) {
                     return@askForInput
                 }
                 var workTitle = "Commiting"

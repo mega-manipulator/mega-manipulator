@@ -135,4 +135,14 @@ class PrRouter(
             }
         }
     }
+
+    suspend fun commentPR(comment: String, pullRequest: PullRequestWrapper) {
+        val settings = resolve(pullRequest.searchHostName(), pullRequest.codeHostName())
+        when {
+            settings is BitBucketSettings && pullRequest is BitBucketPullRequestWrapper -> bitbucketServerClient.commentPR(comment, pullRequest, settings)
+            settings is GitHubSettings && pullRequest is GithubComPullRequestWrapper -> githubComClient.commentPR(comment, pullRequest, settings)
+            settings == null -> Unit
+            else -> throw IllegalArgumentException("Unable to match config correctly")
+        }
+    }
 }
