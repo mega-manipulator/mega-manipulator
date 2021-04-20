@@ -49,7 +49,13 @@ data class BitBucketPullRequest(
     val toRef: BitBucketBranchRef,
     @Transient
     val author: BitBucketParticipant? = null,
-    val reviewers: List<BitBucketParticipant>,
+    val reviewers: List<BitBucketParticipant> = emptyList(),
+    val links: BitBucketPullRequestLinks? = null,
+)
+
+@Serializable
+data class BitBucketPullRequestLinks(
+    val self: List<BitBucketPlainLink>
 )
 
 @Serializable

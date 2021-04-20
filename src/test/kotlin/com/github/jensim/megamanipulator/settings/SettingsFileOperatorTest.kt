@@ -23,7 +23,7 @@ class SettingsFileOperatorTest {
                 baseUrl = "https://sourcegraph.com",
                 codeHostSettings = mapOf(
                     "github.com" to GitHubSettings(
-                        username = "jenism",
+                        username = "jensim",
                     )
                 )
             ),
@@ -31,7 +31,7 @@ class SettingsFileOperatorTest {
                 baseUrl = "https://sourcegraph.example.com",
                 codeHostSettings = mapOf(
                     "github.com" to GitHubSettings(
-                        username = "jenism",
+                        username = "jensim",
                     ),
                     "bitbucket" to BitBucketSettings(
                         "https://bitbucket.server.example.com",

@@ -20,6 +20,8 @@ sealed class PullRequestWrapper {
     abstract fun isFork(): Boolean
     abstract fun cloneUrlFrom(): String?
     abstract fun cloneUrlTo(): String?
+    abstract fun browseUrl():String?
+
     abstract val raw: String
 }
 
@@ -49,11 +51,9 @@ data class BitBucketPullRequestWrapper(
     )
 
     override fun isFork(): Boolean = bitbucketPR.toRef.repository.slug != bitbucketPR.fromRef.repository.slug
-    override fun cloneUrlFrom(): String? = bitbucketPR.fromRef.repository.links?.clone
-        ?.firstOrNull { it.name == "ssh" }?.href
-
-    override fun cloneUrlTo(): String? = bitbucketPR.toRef.repository.links?.clone
-        ?.firstOrNull { it.name == "ssh" }?.href
+    override fun cloneUrlFrom(): String? = bitbucketPR.fromRef.repository.links?.clone?.firstOrNull { it.name == "ssh" }?.href
+    override fun cloneUrlTo(): String? = bitbucketPR.toRef.repository.links?.clone?.firstOrNull { it.name == "ssh" }?.href
+    override fun browseUrl(): String? = bitbucketPR.links?.self?.firstOrNull()?.href
 }
 
 @Serializable
@@ -74,4 +74,5 @@ data class GithubComPullRequestWrapper(
     override fun isFork(): Boolean = pullRequest.head?.repo?.fork ?: false && (pullRequest.base?.repo?.id != pullRequest.head?.repo?.id)
     override fun cloneUrlFrom(): String = pullRequest.head?.repo?.ssh_url ?: "<?>"
     override fun cloneUrlTo(): String = pullRequest.base?.repo?.ssh_url ?: "<?>"
+    override fun browseUrl(): String = pullRequest.html_url
 }

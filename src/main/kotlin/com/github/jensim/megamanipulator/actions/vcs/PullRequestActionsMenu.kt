@@ -7,6 +7,8 @@ import com.github.jensim.megamanipulator.ui.DialogGenerator
 import com.github.jensim.megamanipulator.ui.EditPullRequestDialog
 import com.github.jensim.megamanipulator.ui.UiProtector
 import com.intellij.notification.NotificationType
+import java.awt.Desktop
+import java.net.URI
 import javax.swing.JMenuItem
 import javax.swing.JOptionPane
 import javax.swing.JOptionPane.CANCEL_OPTION
@@ -126,10 +128,42 @@ class PullRequestActionsMenu(
                 }
             }
         }
+        val openInBrowserMenuItem = JMenuItem("Open in browser").apply {
+            addActionListener {
+                val failed = mutableMapOf<PullRequestWrapper, String>()
+                val prs = prProvider()
+                prs.forEach { prWrapper ->
+                    val browseUrl = prWrapper.browseUrl()
+                    if (browseUrl == null) {
+                        failed[prWrapper] = "Missing BrowseURL"
+                    } else {
+                        try {
+                            Desktop.getDesktop().browse(URI(browseUrl))
+                        } catch (e: Exception) {
+                            failed[prWrapper] = "Exception opening link ${e.javaClass.name} ${e.message}"
+                        }
+                    }
+                }
+                if (failed.isNotEmpty()) {
+                    val failMsg = failed.map { (k, v) -> "${k.project()}/${k.baseRepo()} ${k.title().take(10)} :: $v" }
+                        .joinToString("\n")
+                    notificationsOperator.show(
+                        title = "Failed opening ${failed.size}/${prs.size} pull requests",
+                        body = failMsg,
+                        type = NotificationType.ERROR
+                    )
+                }
+            }
+        }
 
         add(declineMenuItem)
         add(alterMenuItem)
         add(defaultReviewersMenuItem)
         add(cloneMenuItem)
+        if (isBrowsingAllowed()) {
+            add(openInBrowserMenuItem)
+        }
     }
+
+    private fun isBrowsingAllowed(): Boolean = Desktop.getDesktop().isSupported(Desktop.Action.BROWSE)
 }

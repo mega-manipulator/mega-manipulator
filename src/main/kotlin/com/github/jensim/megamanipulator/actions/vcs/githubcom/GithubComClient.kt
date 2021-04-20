@@ -105,9 +105,9 @@ class GithubComClient(
     suspend fun getAllPrs(searchHost: String, codeHost: String, settings: GitHubSettings): List<GithubComPullRequestWrapper> {
         val client: HttpClient = httpClientProvider.getClient(searchHost, codeHost, settings)
         val seq: Flow<GithubComIssue> = flow {
-            val page = AtomicInteger(0)
+            val page = AtomicInteger(1)
             while (true) {
-                val result: GithubComSearchResult<GithubComIssue> = client.get("${settings.baseUrl}/search/issues?page=${page.getAndIncrement()}&q=state%3Aopen+author%3A${settings.username}+type%3Apr")
+                val result: GithubComSearchResult<GithubComIssue> = client.get("${settings.baseUrl}/search/issues?per_page=100&page=${page.getAndIncrement()}&q=state%3Aopen+author%3A${settings.username}+type%3Apr")
                 result.items.forEach { emit(it) }
                 if (result.items.isEmpty()) break
             }

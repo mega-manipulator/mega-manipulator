@@ -4,6 +4,7 @@
 
 ## [Unreleased]
 ### Added
+- Open selected PRs in browser
 
 ### Changed
 

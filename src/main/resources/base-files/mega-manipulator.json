@@ -7,7 +7,7 @@
       "codeHostSettings": {
         "github.com": {
           "type": "GITHUB",
-          "username": "jenism"
+          "username": "jensim"
         },
         "bitbucket": {
           "type": "BITBUCKET_SERVER",
@@ -22,7 +22,7 @@
       "codeHostSettings": {
         "github.com": {
           "type": "GITHUB",
-          "username": "jenism"
+          "username": "jensim"
         }
       }
     }
