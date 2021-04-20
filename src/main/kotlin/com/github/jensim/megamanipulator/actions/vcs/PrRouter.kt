@@ -11,6 +11,7 @@ import com.github.jensim.megamanipulator.settings.SettingsFileOperator
 import com.intellij.notification.NotificationType.WARNING
 import java.util.concurrent.atomic.AtomicLong
 
+@SuppressWarnings("TooManyFunctions")
 class PrRouter(
     private val settingsFileOperator: SettingsFileOperator,
     private val bitbucketServerClient: BitbucketServerClient,
