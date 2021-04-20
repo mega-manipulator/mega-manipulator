@@ -20,7 +20,7 @@ sealed class PullRequestWrapper {
     abstract fun isFork(): Boolean
     abstract fun cloneUrlFrom(): String?
     abstract fun cloneUrlTo(): String?
-    abstract fun browseUrl():String?
+    abstract fun browseUrl(): String?
 
     abstract val raw: String
 }
