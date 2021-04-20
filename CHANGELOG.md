@@ -4,6 +4,17 @@
 
 ## [Unreleased]
 ### Added
+
+### Changed
+
+### Deprecated
+
+### Removed
+
+### Fixed
+
+## [0.0.15]
+### Added
 - Open selected PRs in browser
 
 ### Changed
@@ -14,7 +25,7 @@
 - No longer support IntelliJ 2020.2
 
 ### Fixed
-- Fixed Deprecated api usage of NotificationGroup 
+- Fixed Deprecated api usage of NotificationGroup
 
 ## [0.0.14]
 ### Added
