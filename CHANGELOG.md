@@ -4,6 +4,18 @@
 
 ## [Unreleased]
 ### Added
+
+### Changed
+
+### Deprecated
+
+### Removed
+
+### Fixed
+
+### Security
+## [0.0.18]
+### Added
 - Resizable split panes for clones, PRs, & apply
 
 ### Changed
