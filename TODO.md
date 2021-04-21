@@ -1,6 +1,7 @@
 # ToDo's
 
 ## Improvements
+* [ ] Branch OPTION after clone
 * [ ] Improve testing
 * [ ] Notify on missing conf for code host or search host
 
