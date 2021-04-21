@@ -1,5 +1,9 @@
 # ToDo's
 
+## Documentation
+* [ ] Getting started video
+* [ ] IDE coach marks
+
 ## Improvements
 * [ ] Branch OPTION after clone
 * [ ] Improve testing
