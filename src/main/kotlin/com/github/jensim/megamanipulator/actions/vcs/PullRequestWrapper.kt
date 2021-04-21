@@ -23,6 +23,7 @@ sealed class PullRequestWrapper {
     abstract fun browseUrl(): String?
 
     abstract val raw: String
+    fun asPathString(): String = "${searchHostName()}/${codeHostName()}/${project()}/${baseRepo()}"
 }
 
 @Serializable

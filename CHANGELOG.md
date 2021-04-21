@@ -6,6 +6,7 @@
 ### Added
 
 ### Changed
+- Shallow clone repos, for faster speed and less disk space taken
 
 ### Deprecated
 

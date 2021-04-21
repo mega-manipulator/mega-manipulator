@@ -12,7 +12,6 @@ import com.intellij.ui.layout.panel
 import java.awt.event.KeyEvent
 import java.awt.event.KeyListener
 import javax.swing.JButton
-import javax.swing.JOptionPane
 
 class SearchWindow(
     private val searchOperator: SearchOperator,
@@ -82,11 +81,7 @@ class SearchWindow(
         cloneButton.addActionListener {
             val selected = selector.selectedValuesList.toSet()
             if (selected.isNotEmpty()) {
-                val branch: String? = JOptionPane.showInputDialog("Select branch name")
-                if (branch == null || branch.isEmpty() || branch.contains(' ')) {
-                    return@addActionListener
-                }
-                cloneOperator.clone(branch, selected)
+                cloneOperator.clone(selected)
                 selector.clearSelection()
             }
         }

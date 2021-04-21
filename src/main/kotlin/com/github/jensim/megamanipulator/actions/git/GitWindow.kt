@@ -69,15 +69,14 @@ class GitWindow(
                 }
                 button("Set branch") {
                     val branch: String? = JOptionPane.showInputDialog("This will not reset the repos to origin/default-branch first!!\nSelect branch name")
-                    uiProtector.uiProtectedOperation(title = "Switching branches") {
-                        if (branch == null || branch.isEmpty() || branch.contains(' ')) {
-                            throw IllegalArgumentException("Invalid branch name")
+                    if (branch != null && branch.isNotEmpty() || !branch!!.contains(' ')) {
+                        uiProtector.uiProtectedOperation(title = "Switching branches") {
+                            val localRepoFiles = localRepoOperator.getLocalRepoFiles()
+                            uiProtector.mapConcurrentWithProgress(title = "Checkout branch $branch", data = localRepoFiles) { dir ->
+                                processOperator.runCommandAsync(dir, listOf("git", "checkout", "-b", "$branch"))
+                            }
+                            refresh()
                         }
-                        val localRepoFiles = localRepoOperator.getLocalRepoFiles()
-                        uiProtector.mapConcurrentWithProgress(title = "Checkout branch $branch", data = localRepoFiles) { dir ->
-                            processOperator.runCommandAsync(dir, listOf("git", "checkout", "-b", "$branch"))
-                        }
-                        refresh()
                     }
                 }
                 button("Commit and Push") {

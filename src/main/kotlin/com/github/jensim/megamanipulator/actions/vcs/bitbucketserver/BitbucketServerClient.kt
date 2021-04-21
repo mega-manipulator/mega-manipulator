@@ -58,7 +58,13 @@ class BitbucketServerClient(
     suspend fun getRepo(searchResult: SearchResult, settings: BitBucketSettings): BitBucketRepoWrapping {
         val client: HttpClient = httpClientProvider.getClient(searchResult.searchHostName, searchResult.codeHostName, settings)
         val repo = getRepo(client, settings, searchResult)
-        return BitBucketRepoWrapping(searchResult.searchHostName, searchResult.codeHostName, repo)
+        val defaultBranch = client.get<BitBucketDefaultBranch>("${settings.baseUrl}/rest/api/1.0/projects/${repo.project}/repos/${repo.slug}/default-branch").displayId
+        return BitBucketRepoWrapping(
+            searchHost = searchResult.searchHostName,
+            codeHost = searchResult.codeHostName,
+            repo = repo,
+            defaultBranch = defaultBranch
+        )
     }
 
     private suspend fun getRepo(client: HttpClient, settings: BitBucketSettings, repo: SearchResult): BitBucketRepo {
@@ -176,7 +182,15 @@ class BitbucketServerClient(
                     // Get open PRs
                     val page: BitBucketPage = client.get("${settings.baseUrl}/rest/api/1.0/projects/${repository.project?.key!!}/repos/${repository.slug}/pull-requests?direction=OUTGOING&state=OPEN")
                     if ((page.size ?: 0) == 0) {
-                        deletePrivateRepo(BitBucketRepoWrapping(pullRequest.searchHost, pullRequest.codeHost, repository), settings)
+                        deletePrivateRepo(
+                            BitBucketRepoWrapping(
+                                searchHost = pullRequest.searchHost,
+                                codeHost = pullRequest.codeHost,
+                                repo = repository,
+                                defaultBranch = null,
+                            ),
+                            settings
+                        )
                     }
                 } else {
                     removeRemoteBranch(settings, pullRequest, client)
@@ -241,7 +255,14 @@ class BitbucketServerClient(
         return collector.filter {
             val page: BitBucketPage = client.get("${settings.baseUrl}/rest/api/1.0/projects/${it.project?.key}/repos/${it.slug}/pull-requests?direction=OUTGOING&state=OPEN")
             page.size == 0
-        }.map { BitBucketRepoWrapping(searchHostName, codeHostName, it) }
+        }.map {
+            BitBucketRepoWrapping(
+                searchHost = searchHostName,
+                codeHost = codeHostName,
+                repo = it,
+                defaultBranch = null,
+            )
+        }
     }
 
     /**

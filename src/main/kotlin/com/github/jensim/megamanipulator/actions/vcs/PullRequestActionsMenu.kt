@@ -118,13 +118,7 @@ class PullRequestActionsMenu(
             addActionListener {
                 val prs = prProvider()
                 dialogGenerator.showConfirm(title = "Clone...", message = "Clone ${prs.size} selected PR branches") {
-                    uiProtector.mapConcurrentWithProgress(
-                        title = "Clone PRs",
-                        data = prs,
-                    ) { pullRequest ->
-                        cloneOperator.clone(pullRequest)
-                    }
-                    filesOperator.refreshClones()
+                    cloneOperator.clone(prs)
                 }
             }
         }
