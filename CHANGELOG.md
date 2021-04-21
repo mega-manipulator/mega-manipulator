@@ -12,8 +12,11 @@
 ### Removed
 
 ### Fixed
+- Fixed pagination start index for github client, fetch forked repos without outgoing PRs.
+This will eliminate repos being listed twice
 
 ### Security
+
 ## [0.0.18]
 ### Added
 - Resizable split panes for clones, PRs, & apply
@@ -24,14 +27,6 @@
   - Apply
   - PRs
   - Clones info
-
-### Deprecated
-
-### Removed
-
-### Fixed
-
-### Security
 
 ## [0.0.17]
 ### Changed

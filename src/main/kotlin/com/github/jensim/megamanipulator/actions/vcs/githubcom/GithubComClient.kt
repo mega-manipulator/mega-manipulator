@@ -148,7 +148,7 @@ class GithubComClient(
     suspend fun getPrivateForkReposWithoutPRs(searchHost: String, codeHost: String, settings: GitHubSettings): List<GithubComRepoWrapping> {
         val client: HttpClient = httpClientProvider.getClient(searchHost, codeHost, settings)
         val repoFlow: Flow<GithubComRepo> = flow {
-            val pageCount = AtomicInteger(0)
+            val pageCount = AtomicInteger(1)
             while (true) {
                 val page: List<GithubComRepo> = client.get("${settings.baseUrl}/users/${settings.username}/repos?page=${pageCount.getAndIncrement()}")
                 page.forEach { emit(it) }
