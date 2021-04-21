@@ -13,11 +13,13 @@ import com.github.jensim.megamanipulator.ui.DialogGenerator
 import com.github.jensim.megamanipulator.ui.GeneralListCellRenderer.addCellRenderer
 import com.github.jensim.megamanipulator.ui.UiProtector
 import com.github.jensim.megamanipulator.ui.trimProjectPath
+import com.intellij.ui.JBSplitter
 import com.intellij.ui.components.JBList
 import com.intellij.ui.components.JBScrollPane
 import com.intellij.ui.components.JBTextArea
 import com.intellij.ui.layout.panel
 import java.awt.Color
+import java.awt.Dimension
 import java.io.File
 import javax.swing.JComponent
 import javax.swing.JOptionPane
@@ -54,12 +56,27 @@ class GitWindow(
         }
     }
 
-    private val repoList = JBList<DirResult>()
+    private val repoList = JBList<DirResult>().apply {
+        minimumSize = Dimension(250, 50)
+    }
     private val scrollLeft = JBScrollPane(repoList)
-    private val stepList = JBList<StepResult>()
+    private val stepList = JBList<StepResult>().apply {
+        minimumSize = Dimension(150, 50)
+    }
     private val scrollMid = JBScrollPane(stepList)
-    private val outComeInfo = JBTextArea()
+    private val outComeInfo = JBTextArea().apply {
+        minimumSize = Dimension(250, 50)
+    }
     private val scrollRight = JBScrollPane(outComeInfo)
+
+    private val splitRight = JBSplitter().apply {
+        firstComponent = scrollMid
+        secondComponent = scrollRight
+    }
+    private val splitLeft = JBSplitter().apply {
+        firstComponent = scrollLeft
+        secondComponent = splitRight
+    }
 
     override val content: JComponent = panel {
         row {
@@ -117,14 +134,12 @@ class GitWindow(
             }
         }
         row {
-            component(scrollLeft)
-            component(scrollMid)
-            component(scrollRight)
+            component(splitLeft)
         }
     }
 
     init {
-        repoList.addCellRenderer({ if (it.second.any { it.second.exitCode != 0 }) Color.ORANGE else null }) { it.first }
+        repoList.addCellRenderer({ if (it.second.last().second.exitCode != 0) Color.ORANGE else null }) { it.first }
         repoList.selectionMode = ListSelectionModel.SINGLE_SELECTION
         repoList.addListSelectionListener {
             repoList.selectedValue?.let {
@@ -161,6 +176,11 @@ class GitWindow(
                 )
         }
         repoList.setListData(result.toTypedArray())
+        if (result.isNotEmpty()) {
+            repoList.setSelectedValue(result.first(), true)
+        }
+        content.validate()
+        content.repaint()
     }
 
     override val index: Int = 3

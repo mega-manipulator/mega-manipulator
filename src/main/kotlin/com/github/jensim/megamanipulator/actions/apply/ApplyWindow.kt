@@ -5,6 +5,7 @@ import com.github.jensim.megamanipulator.toolswindow.ToolWindowTab
 import com.github.jensim.megamanipulator.ui.GeneralListCellRenderer.addCellRenderer
 import com.intellij.openapi.fileEditor.FileDocumentManager
 import com.intellij.openapi.ui.DialogPanel
+import com.intellij.ui.JBSplitter
 import com.intellij.ui.components.JBList
 import com.intellij.ui.components.JBScrollPane
 import com.intellij.ui.components.JBTextArea
@@ -33,13 +34,17 @@ class ApplyWindow(
     private val details = JBTextArea()
     private val scrollableDetails = JBScrollPane(details)
     private val button = JButton("Apply")
+    private val split = JBSplitter().apply {
+        firstComponent = scrollableResult
+        secondComponent = scrollableDetails
+    }
+
     override val content: DialogPanel = panel {
         row {
             component(button)
         }
         row {
-            component(scrollableResult)
-            component(scrollableDetails)
+            component(split)
         }
     }
 
@@ -64,11 +69,19 @@ class ApplyWindow(
             }
             val result = applyOperator.apply()
             resultList.setListData(result.toTypedArray())
+            if (result.isNotEmpty()) {
+                resultList.setSelectedValue(result.first(), true)
+            }
             button.isEnabled = true
+            content.validate()
+            content.repaint()
         }
         resultList.addListSelectionListener {
-            resultList.selectedValuesList.firstOrNull()?.let {
-                details.text = it.getFullDescription()
+            val selected = resultList.selectedValuesList
+            if (selected.isNotEmpty()) {
+                details.text = selected.first().getFullDescription()
+            } else {
+                details.text = ""
             }
         }
     }

@@ -12,7 +12,6 @@
 ## User interface
 * [ ] General tables
 * [ ] Table sorting
-* [ ] Resizable split views
 * [ ] Right Click PRs
 
 ## Features

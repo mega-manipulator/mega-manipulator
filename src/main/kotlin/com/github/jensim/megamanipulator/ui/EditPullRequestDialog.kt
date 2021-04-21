@@ -9,11 +9,14 @@ import com.intellij.ui.layout.panel
 class EditPullRequestDialog(pullRequests: List<PullRequestWrapper>) : CreatePullRequestDialog() {
     override val title: String = "Edit pull request"
     private val preExistingSelect: ComboBox<PullRequestWrapper?> = ComboBox(pullRequests.toTypedArray()).also { select ->
-        select.addActionListener { _ ->
+        select.addActionListener {
             prTitle = select.item?.title()
             prDescription = select.item?.body()
         }
         select.addCellRenderer { "${it.project().fixedLength(5)}/${it.baseRepo().fixedLength(5)} ${it.title().fixedLength(12)} ${it.body().fixedLength(12)}" }
+        if (pullRequests.isNotEmpty()) {
+            select.selectedItem = pullRequests.first()
+        }
     }
     override val panel: DialogPanel = panel {
         row(label = "Template from") { component(preExistingSelect) }

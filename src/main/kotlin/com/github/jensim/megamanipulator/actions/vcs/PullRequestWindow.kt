@@ -5,6 +5,7 @@ import com.github.jensim.megamanipulator.toolswindow.ToolWindowTab
 import com.github.jensim.megamanipulator.ui.CodeHostSelector
 import com.github.jensim.megamanipulator.ui.GeneralListCellRenderer.addCellRenderer
 import com.github.jensim.megamanipulator.ui.UiProtector
+import com.intellij.ui.JBSplitter
 import com.intellij.ui.components.JBList
 import com.intellij.ui.components.JBScrollPane
 import com.intellij.ui.components.JBTextArea
@@ -48,6 +49,11 @@ class PullRequestWindow(
     private val peekScroll = JBScrollPane(peekArea)
     private val menu = PullRequestActionsMenu.instance(prProvider = { prList.selectedValuesList }, postActionHook = {})
     private val menuOpenButton = JButton("Actions")
+    private val split = JBSplitter(false, 0.5f).apply {
+        firstComponent = prScroll
+        secondComponent = peekScroll
+        preferredSize = Dimension(4000, 1000)
+    }
     override val content: JComponent = panel {
         row {
             component(codeHostSelect)
@@ -60,8 +66,7 @@ class PullRequestWindow(
             }
         }
         row {
-            component(prScroll)
-            component(peekScroll)
+            component(split)
         }
     }
 
@@ -83,17 +88,28 @@ class PullRequestWindow(
 
         search.minimumSize = Dimension(200, 30)
         search.document.addDocumentListener(object : DocumentListener {
-            override fun insertUpdate(e: DocumentEvent?) = updateFilteredPrs()
-            override fun removeUpdate(e: DocumentEvent?) = updateFilteredPrs()
-            override fun changedUpdate(e: DocumentEvent?) = updateFilteredPrs()
+            override fun insertUpdate(e: DocumentEvent?) {
+                updateFilteredPrs()
+            }
+            override fun removeUpdate(e: DocumentEvent?) {
+                updateFilteredPrs()
+            }
+            override fun changedUpdate(e: DocumentEvent?) {
+                updateFilteredPrs()
+            }
         })
 
         prList.addCellRenderer { "${it.project()}/${it.baseRepo()} ${it.title()}" }
         prList.addListSelectionListener {
             menuOpenButton.isEnabled = false
-            prList.selectedValuesList.firstOrNull()?.let {
-                peekArea.text = serializationHolder.readableJson.encodeToString(it)
+            val selected: List<PullRequestWrapper> = prList.selectedValuesList
+            if (selected.isNotEmpty()) {
+                if (selected.size == 1) {
+                    peekArea.text = serializationHolder.readableJson.encodeToString(selected.first())
+                }
                 menuOpenButton.isEnabled = true
+            } else {
+                peekArea.text = ""
             }
         }
     }
@@ -107,19 +123,26 @@ class PullRequestWindow(
     private fun fetchPRs() {
         prList.setListData(emptyArray())
         (codeHostSelect.selectedItem)?.let { selected ->
+            search.text = ""
             val prs: List<PullRequestWrapper>? = uiProtector.uiProtectedOperation("Fetching PRs") {
                 prRouter.getAllPrs(selected.searchHostName, selected.codeHostName)
             }
             pullRequests.clear()
             prs?.let { pullRequests.addAll(it) }
-            updateFilteredPrs()
+            val filtered = updateFilteredPrs()
+            if (filtered.isNotEmpty()) {
+                prList.setSelectedValue(filtered.first(), true)
+            }
+            content.validate()
+            content.repaint()
         }
     }
 
-    private fun updateFilteredPrs() {
+    private fun updateFilteredPrs(): List<PullRequestWrapper> {
         val filtered = pullRequests.filter {
             search.text.isBlank() || FuzzySearch.tokenSetRatio(it.raw, search.text) == 100
         }.sortedBy { "${it.project()}/${it.baseRepo()} ${it.title()}" }
         prList.setListData(filtered.toTypedArray())
+        return filtered
     }
 }

@@ -38,7 +38,7 @@ class MyToolWindowFactory(
     )
 
     override fun createToolWindowContent(project: Project, toolWindow: ToolWindow) {
-        val contentFactory = ContentFactory.SERVICE.getInstance()
+        val contentFactory: ContentFactory = ContentFactory.SERVICE.getInstance()
         tabs.sortedBy { it.second.index }.forEachIndexed { index, (headerKey, tab) ->
             if (index == 0) {
                 tab.refresh()
@@ -52,7 +52,6 @@ class MyToolWindowFactory(
                 filesOperator.makeUpBaseFiles()
                 filesOperator.refreshConf()
                 tabs.find { it.second.index == event.index }?.second?.refresh()
-                filesOperator.makeUpBaseFiles()
             }
         })
         projectOperator.project = project

@@ -4,8 +4,14 @@
 
 ## [Unreleased]
 ### Added
+- Resizable split panes for clones, PRs, & apply
 
 ### Changed
+- Default select first option for
+  - Reword PRs
+  - Apply
+  - PRs
+  - Clones info
 
 ### Deprecated
 
