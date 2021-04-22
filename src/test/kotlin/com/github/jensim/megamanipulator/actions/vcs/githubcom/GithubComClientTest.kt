@@ -24,6 +24,7 @@ import org.hamcrest.Matchers.not
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
+import org.junit.jupiter.api.condition.DisabledIfEnvironmentVariable
 import org.mockito.kotlin.any
 import org.mockito.kotlin.doReturn
 import org.mockito.kotlin.mock
@@ -62,6 +63,7 @@ class GithubComClientTest {
     )
 
     @Test
+    @DisabledIfEnvironmentVariable(named = "ON_CI", matches = "true")
     fun createPr() {
         // given
         val repo = SearchResult(
@@ -82,11 +84,7 @@ class GithubComClientTest {
                     repo = repo
                 )
             }
-            if (exception.localizedMessage.contains("422 Unprocessable Entity")) {
-                assertThat(exception.localizedMessage, containsString("No commits between main and main"))
-            } else {
-                assertThat(exception.localizedMessage, containsString("Resource not accessible by integration"))
-            }
+            assertThat(exception.localizedMessage, containsString("No commits between main and main"))
         }
     }
 
