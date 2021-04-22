@@ -1,6 +1,7 @@
 package com.github.jensim.megamanipulator.actions.vcs.githubcom
 
 import com.github.jensim.megamanipulator.TestHelper
+import com.github.jensim.megamanipulator.TestHelper.Companion.MEGA_MANIPULATOR_REPO
 import com.github.jensim.megamanipulator.actions.NotificationsOperator
 import com.github.jensim.megamanipulator.actions.localrepo.LocalRepoOperator
 import com.github.jensim.megamanipulator.actions.search.SearchResult
@@ -67,7 +68,7 @@ class GithubComClientTest {
             searchHostName = settings.searchHostSettings.first().key,
             codeHostName = "github.com",
             project = githubSettings.username,
-            repo = "mega-manipulator",
+            repo = MEGA_MANIPULATOR_REPO,
         )
         whenever(localRepoMock.getBranch(any<SearchResult>())).thenReturn("main")
 
@@ -113,7 +114,7 @@ class GithubComClientTest {
             searchHostName = settings.searchHostSettings.first().key,
             codeHostName = "github.com",
             project = githubSettings.username,
-            repo = "mega-manipulator",
+            repo = MEGA_MANIPULATOR_REPO,
         )
 
         // when
@@ -122,6 +123,6 @@ class GithubComClientTest {
         }
 
         // then
-        assertThat(result.repo.name, equalTo("mega-manipulator"))
+        assertThat(result.repo.name, equalTo(MEGA_MANIPULATOR_REPO))
     }
 }

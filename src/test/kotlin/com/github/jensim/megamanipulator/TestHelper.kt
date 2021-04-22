@@ -11,6 +11,7 @@ import java.util.Properties
 class TestHelper {
 
     companion object {
+        const val MEGA_MANIPULATOR_REPO = "mega-manipulator"
         fun getGithubCredentials(): CodeHostSettings.GitHubSettings {
             val prop = Properties()
             return try {
