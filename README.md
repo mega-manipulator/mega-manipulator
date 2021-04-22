@@ -66,6 +66,12 @@ Spend less time making small, or big, changes
   Download the [latest release](https://github.com/jensim/mega-manipulator/releases/latest) and install it manually using
   <kbd>Settings/Preferences</kbd> > <kbd>Plugins</kbd> > <kbd>⚙️</kbd> > <kbd>Install plugin from disk...</kbd>
 
+## Contribution
+
+### Tests
+
+To run tests you have to set some environment variables
+**GITHUB_USERNAME** and **GITHUB_TOKEN** you can do it creating **.env** file in the project root path or setting it in the environment variable
 
 ---
 Plugin based on the [IntelliJ Platform Plugin Template][template].
