@@ -82,7 +82,11 @@ class GithubComClientTest {
                     repo = repo
                 )
             }
-            assertThat(exception.localizedMessage, containsString("No commits between main and main"))
+            if (exception.localizedMessage.contains("422 Unprocessable Entity")) {
+                assertThat(exception.localizedMessage, containsString("No commits between main and main"))
+            } else {
+                assertThat(exception.localizedMessage, containsString("Resource not accessible by integration"))
+            }
         }
     }
 
