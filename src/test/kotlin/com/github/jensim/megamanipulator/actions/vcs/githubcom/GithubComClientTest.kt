@@ -60,7 +60,6 @@ class GithubComClientTest {
         json = SerializationHolder.instance.readableJson
     )
 
-
     @Test
     fun createPr() {
         // given
