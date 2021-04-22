@@ -74,6 +74,7 @@ jobs:
         run: ./gradlew check --stacktrace --info
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_USERNAME: jensim
 
       # Run verifyPlugin Gradle task
       - name: Verify Plugin
