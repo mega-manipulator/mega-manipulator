@@ -1,7 +1,7 @@
 package com.github.jensim.megamanipulator.actions.vcs.githubcom
 
 import com.github.jensim.megamanipulator.TestHelper
-import com.github.jensim.megamanipulator.TestHelper.Companion.MEGA_MANIPULATOR_REPO
+import com.github.jensim.megamanipulator.TestHelper.MEGA_MANIPULATOR_REPO
 import com.github.jensim.megamanipulator.actions.NotificationsOperator
 import com.github.jensim.megamanipulator.actions.localrepo.LocalRepoOperator
 import com.github.jensim.megamanipulator.actions.search.SearchResult
@@ -14,26 +14,20 @@ import com.github.jensim.megamanipulator.settings.SearchHostSettings.SourceGraph
 import com.github.jensim.megamanipulator.settings.SerializationHolder
 import com.github.jensim.megamanipulator.settings.SettingsFileOperator
 import com.jetbrains.rd.util.first
-import io.ktor.client.features.ClientRequestException
 import kotlinx.coroutines.runBlocking
 import org.hamcrest.MatcherAssert.assertThat
-import org.hamcrest.Matchers.containsString
 import org.hamcrest.Matchers.empty
 import org.hamcrest.Matchers.equalTo
 import org.hamcrest.Matchers.not
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.assertThrows
-import org.junit.jupiter.api.condition.DisabledIfEnvironmentVariable
-import org.mockito.kotlin.any
 import org.mockito.kotlin.doReturn
 import org.mockito.kotlin.mock
-import org.mockito.kotlin.whenever
 
 class GithubComClientTest {
 
-    private val githubSettings = TestHelper.getGithubCredentials()
-    private val password = System.getenv(GITHUB_TOKEN) ?: System.getProperty(GITHUB_TOKEN)
+    private val githubSettings = TestHelper.githubCredentials
+    private val password = System.getProperty(GITHUB_TOKEN) ?: System.getenv(GITHUB_TOKEN)
     private val settings = MegaManipulatorSettings(
         searchHostSettings = mapOf(
             "sourcegraph.com" to SourceGraphSettings(
@@ -61,32 +55,6 @@ class GithubComClientTest {
         localRepoOperator = localRepoMock,
         json = SerializationHolder.instance.readableJson
     )
-
-    @Test
-    @DisabledIfEnvironmentVariable(named = "ON_CI", matches = "true")
-    fun createPr() {
-        // given
-        val repo = SearchResult(
-            searchHostName = settings.searchHostSettings.first().key,
-            codeHostName = "github.com",
-            project = githubSettings.username,
-            repo = MEGA_MANIPULATOR_REPO,
-        )
-        whenever(localRepoMock.getBranch(any<SearchResult>())).thenReturn("main")
-
-        // when
-        runBlocking {
-            val exception = assertThrows<ClientRequestException> {
-                client.createPr(
-                    title = "new test PR",
-                    description = "This is a test PR",
-                    settings = githubSettings,
-                    repo = repo
-                )
-            }
-            assertThat(exception.localizedMessage, containsString("No commits between main and main"))
-        }
-    }
 
     @Test
     fun getAllPrs() {
