@@ -8,6 +8,7 @@ import com.intellij.openapi.project.ProjectManager
 import com.intellij.openapi.roots.ModifiableRootModel
 import com.intellij.openapi.roots.ModuleRootManager
 import com.intellij.openapi.vfs.LocalFileSystem
+import com.intellij.ui.content.ContentFactory
 import java.io.File
 
 class ProjectOperator {
@@ -39,6 +40,9 @@ class ProjectOperator {
                 null
             }
         }
+
+    val contentFactory: ContentFactory
+    get() = ContentFactory.SERVICE.getInstance()
 
     fun toggleExcludeClones() {
         moduleRootManager?.let { manager ->

@@ -19,33 +19,28 @@ import javax.swing.JPopupMenu
 
 @SuppressWarnings("LongParameterList")
 class PullRequestActionsMenu(
-    private val prProvider: () -> List<PullRequestWrapper>,
-    private val postActionHook: () -> Unit,
     private val prRouter: PrRouter,
     private val notificationsOperator: NotificationsOperator,
     private val dialogGenerator: DialogGenerator,
     private val cloneOperator: CloneOperator,
-    private val filesOperator: FilesOperator,
     private val uiProtector: UiProtector,
 ) : JPopupMenu() {
 
     companion object {
 
-        fun instance(
-            prProvider: () -> List<PullRequestWrapper>,
-            postActionHook: () -> Unit,
-        ) = PullRequestActionsMenu(
-            prProvider = prProvider,
-            postActionHook = postActionHook,
-            prRouter = PrRouter.instance,
-            notificationsOperator = NotificationsOperator.instance,
-            dialogGenerator = DialogGenerator.instance,
-            cloneOperator = CloneOperator.instance,
-            filesOperator = FilesOperator.instance,
-            uiProtector = UiProtector.instance,
-        )
+        val instance by lazy {
+            PullRequestActionsMenu(
+                prRouter = PrRouter.instance,
+                notificationsOperator = NotificationsOperator.instance,
+                dialogGenerator = DialogGenerator.instance,
+                cloneOperator = CloneOperator.instance,
+                uiProtector = UiProtector.instance,
+            )
+        }
     }
 
+    var prProvider: () -> List<PullRequestWrapper> = { emptyList() }
+    var postActionHook: () -> Unit = {}
     var codeHostName: String? = null
     var searchHostName: String? = null
 

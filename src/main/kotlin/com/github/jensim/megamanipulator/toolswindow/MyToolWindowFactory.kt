@@ -1,6 +1,7 @@
 package com.github.jensim.megamanipulator.toolswindow
 
 import com.github.jensim.megamanipulator.MyBundle
+import com.github.jensim.megamanipulator.MyBundle.Companion
 import com.github.jensim.megamanipulator.actions.apply.ApplyWindow
 import com.github.jensim.megamanipulator.actions.forks.ForksWindow
 import com.github.jensim.megamanipulator.actions.git.GitWindow
@@ -21,29 +22,44 @@ import com.intellij.ui.content.ContentManagerListener
 class MyToolWindowFactory(
     private val filesOperator: FilesOperator,
     private val projectOperator: ProjectOperator,
+    private val tabSettings: SettingsWindow,
+    private val tabSearch: SearchWindow,
+    private val tabApply: ApplyWindow,
+    private val tabClones: GitWindow,
+    private val tabPRsManage: PullRequestWindow,
+    private val tabForks: ForksWindow,
+    private val myBundle: MyBundle,
 ) : ToolWindowFactory {
 
     constructor() : this(
         filesOperator = FilesOperator.instance,
         projectOperator = ProjectOperator.instance,
+        tabSettings = SettingsWindow.instance,
+        tabSearch = SearchWindow.instance,
+        tabApply = ApplyWindow.instance,
+        tabClones = GitWindow.instance,
+        tabPRsManage = PullRequestWindow.instance,
+        tabForks = ForksWindow.instance,
+        myBundle = MyBundle.instance,
     )
 
     private val tabs = listOf<Pair<String, ToolWindowTab>>(
-        "tabTitleSettings" to SettingsWindow.instance,
-        "tabTitleSearch" to SearchWindow.instance,
-        "tabTitleApply" to ApplyWindow.instance,
-        "tabTitleClones" to GitWindow.instance,
-        "tabTitlePRsManage" to PullRequestWindow.instance,
-        "tabTitleForks" to ForksWindow.instance,
+        "tabTitleSettings" to tabSettings,
+        "tabTitleSearch" to tabSearch,
+        "tabTitleApply" to tabApply,
+        "tabTitleClones" to tabClones,
+        "tabTitlePRsManage" to tabPRsManage,
+        "tabTitleForks" to tabForks,
     )
 
     override fun createToolWindowContent(project: Project, toolWindow: ToolWindow) {
-        val contentFactory: ContentFactory = ContentFactory.SERVICE.getInstance()
+        projectOperator.project = project
+        val contentFactory: ContentFactory = projectOperator.contentFactory
         tabs.sortedBy { it.second.index }.forEachIndexed { index, (headerKey, tab) ->
             if (index == 0) {
                 tab.refresh()
             }
-            val content1 = contentFactory.createContent(tab.content, MyBundle.message(headerKey), false)
+            val content1 = contentFactory.createContent(tab.content, myBundle.message(headerKey), false)
             toolWindow.contentManager.addContent(content1)
         }
         toolWindow.addContentManagerListener(object : ContentManagerListener {
@@ -54,7 +70,6 @@ class MyToolWindowFactory(
                 tabs.find { it.second.index == event.index }?.second?.refresh()
             }
         })
-        projectOperator.project = project
         filesOperator.makeUpBaseFiles()
     }
 

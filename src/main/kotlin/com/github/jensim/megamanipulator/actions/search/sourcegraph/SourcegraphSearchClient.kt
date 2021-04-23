@@ -10,7 +10,7 @@ import com.jetbrains.rd.util.printlnError
 import io.ktor.client.features.timeout
 import io.ktor.client.request.post
 
-class SourcegraphSearchOperator(
+class SourcegraphSearchClient(
     private val httpClientProvider: HttpClientProvider,
     private val notificationsOperator: NotificationsOperator,
 ) {
@@ -18,7 +18,7 @@ class SourcegraphSearchOperator(
     companion object {
 
         val instance by lazy {
-            SourcegraphSearchOperator(
+            SourcegraphSearchClient(
                 httpClientProvider = HttpClientProvider.instance,
                 notificationsOperator = NotificationsOperator.instance,
             )

@@ -8,7 +8,7 @@ import com.github.jensim.megamanipulator.http.HttpClientProvider
 import com.github.jensim.megamanipulator.settings.CodeHostSettings.GitHubSettings
 import com.github.jensim.megamanipulator.settings.ForkSetting.PLAIN_BRANCH
 import com.github.jensim.megamanipulator.settings.MegaManipulatorSettings
-import com.github.jensim.megamanipulator.settings.PasswordsOperator
+import com.github.jensim.megamanipulator.settings.IntelliJPasswordsOperator
 import com.github.jensim.megamanipulator.settings.SearchHostSettings.SourceGraphSettings
 import com.github.jensim.megamanipulator.settings.SerializationHolder
 import com.github.jensim.megamanipulator.settings.SettingsFileOperator
@@ -41,7 +41,7 @@ class GithubComClientTest {
     private val settingsMock: SettingsFileOperator = mock {
         on { readSettings() } doReturn settings
     }
-    private val passwordMock: PasswordsOperator = mock {
+    private val passwordMock: IntelliJPasswordsOperator = mock {
         on { getPassword(githubSettings.username, githubSettings.baseUrl) } doReturn password
         on { isPasswordSet(githubSettings.username, githubSettings.baseUrl) } doReturn true
     }
