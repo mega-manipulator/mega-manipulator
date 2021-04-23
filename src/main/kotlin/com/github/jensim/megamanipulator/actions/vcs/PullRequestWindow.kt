@@ -25,6 +25,7 @@ class PullRequestWindow(
     private val prRouter: PrRouter,
     private val serializationHolder: SerializationHolder,
     private val uiProtector: UiProtector,
+    private val pullRequestActionsMenu: PullRequestActionsMenu,
 ) : ToolWindowTab {
 
     companion object {
@@ -34,6 +35,7 @@ class PullRequestWindow(
                 prRouter = PrRouter.instance,
                 serializationHolder = SerializationHolder.instance,
                 uiProtector = UiProtector.instance,
+                pullRequestActionsMenu = PullRequestActionsMenu.instance
             )
         }
     }
@@ -47,7 +49,6 @@ class PullRequestWindow(
     private val prScroll = JBScrollPane(prList)
     private val peekArea = JBTextArea()
     private val peekScroll = JBScrollPane(peekArea)
-    private val menu = PullRequestActionsMenu.instance(prProvider = { prList.selectedValuesList }, postActionHook = {})
     private val menuOpenButton = JButton("Actions")
     private val split = JBSplitter(false, 0.5f).apply {
         firstComponent = prScroll
@@ -71,13 +72,14 @@ class PullRequestWindow(
     }
 
     init {
+        pullRequestActionsMenu.prProvider = { prList.selectedValuesList }
         menuOpenButton.isEnabled = false
         menuOpenButton.addMouseListener(object : MouseListener {
             override fun mouseClicked(e: MouseEvent) {
                 val selected = codeHostSelect.selectedItem
-                menu.codeHostName = selected?.codeHostName
-                menu.searchHostName = selected?.searchHostName
-                menu.show(menuOpenButton, e.x, e.y)
+                pullRequestActionsMenu.codeHostName = selected?.codeHostName
+                pullRequestActionsMenu.searchHostName = selected?.searchHostName
+                pullRequestActionsMenu.show(menuOpenButton, e.x, e.y)
             }
 
             override fun mousePressed(e: MouseEvent?) = Unit

@@ -23,7 +23,7 @@ class SettingsWindow(
 
         val instance by lazy {
             SettingsWindow(
-                passwordsOperator = PasswordsOperator.instance,
+                passwordsOperator = IntelliJPasswordsOperator.instance,
                 projectOperator = ProjectOperator.instance,
                 filesOperator = FilesOperator.instance,
                 settingsFileOperator = SettingsFileOperator.instance
