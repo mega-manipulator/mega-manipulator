@@ -42,7 +42,7 @@ class ProjectOperator {
         }
 
     val contentFactory: ContentFactory
-    get() = ContentFactory.SERVICE.getInstance()
+        get() = ContentFactory.SERVICE.getInstance()
 
     fun toggleExcludeClones() {
         moduleRootManager?.let { manager ->

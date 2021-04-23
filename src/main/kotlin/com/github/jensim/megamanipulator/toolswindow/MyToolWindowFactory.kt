@@ -1,7 +1,6 @@
 package com.github.jensim.megamanipulator.toolswindow
 
 import com.github.jensim.megamanipulator.MyBundle
-import com.github.jensim.megamanipulator.MyBundle.Companion
 import com.github.jensim.megamanipulator.actions.apply.ApplyWindow
 import com.github.jensim.megamanipulator.actions.forks.ForksWindow
 import com.github.jensim.megamanipulator.actions.git.GitWindow
@@ -19,6 +18,7 @@ import com.intellij.ui.content.ContentFactory
 import com.intellij.ui.content.ContentManagerEvent
 import com.intellij.ui.content.ContentManagerListener
 
+@SuppressWarnings("LongParameterList")
 class MyToolWindowFactory(
     private val filesOperator: FilesOperator,
     private val projectOperator: ProjectOperator,

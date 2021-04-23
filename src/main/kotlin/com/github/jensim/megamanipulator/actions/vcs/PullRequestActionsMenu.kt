@@ -2,7 +2,6 @@ package com.github.jensim.megamanipulator.actions.vcs
 
 import com.github.jensim.megamanipulator.actions.NotificationsOperator
 import com.github.jensim.megamanipulator.actions.git.clone.CloneOperator
-import com.github.jensim.megamanipulator.files.FilesOperator
 import com.github.jensim.megamanipulator.ui.DialogGenerator
 import com.github.jensim.megamanipulator.ui.EditPullRequestDialog
 import com.github.jensim.megamanipulator.ui.UiProtector

@@ -7,8 +7,8 @@ import com.github.jensim.megamanipulator.actions.vcs.GithubComRepoWrapping
 import com.github.jensim.megamanipulator.http.HttpClientProvider
 import com.github.jensim.megamanipulator.settings.CodeHostSettings.GitHubSettings
 import com.github.jensim.megamanipulator.settings.ForkSetting.PLAIN_BRANCH
-import com.github.jensim.megamanipulator.settings.MegaManipulatorSettings
 import com.github.jensim.megamanipulator.settings.IntelliJPasswordsOperator
+import com.github.jensim.megamanipulator.settings.MegaManipulatorSettings
 import com.github.jensim.megamanipulator.settings.SearchHostSettings.SourceGraphSettings
 import com.github.jensim.megamanipulator.settings.SerializationHolder
 import com.github.jensim.megamanipulator.settings.SettingsFileOperator
