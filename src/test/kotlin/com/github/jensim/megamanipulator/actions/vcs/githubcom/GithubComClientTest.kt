@@ -1,13 +1,13 @@
 package com.github.jensim.megamanipulator.actions.vcs.githubcom
 
 import com.github.jensim.megamanipulator.TestHelper
+import com.github.jensim.megamanipulator.TestHelper.GITHUB_TOKEN
 import com.github.jensim.megamanipulator.TestHelper.MEGA_MANIPULATOR_REPO
 import com.github.jensim.megamanipulator.actions.NotificationsOperator
 import com.github.jensim.megamanipulator.actions.localrepo.LocalRepoOperator
 import com.github.jensim.megamanipulator.actions.search.SearchResult
 import com.github.jensim.megamanipulator.actions.vcs.GithubComRepoWrapping
 import com.github.jensim.megamanipulator.http.HttpClientProvider
-import com.github.jensim.megamanipulator.settings.CodeHostSettings.GitHubSettings.Companion.GITHUB_TOKEN
 import com.github.jensim.megamanipulator.settings.MegaManipulatorSettings
 import com.github.jensim.megamanipulator.settings.PasswordsOperator
 import com.github.jensim.megamanipulator.settings.SearchHostSettings.SourceGraphSettings

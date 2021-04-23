@@ -228,10 +228,5 @@ sealed class CodeHostSettings
         init {
             validate()
         }
-
-        companion object {
-            const val GITHUB_USERNAME = "GITHUB_USERNAME"
-            const val GITHUB_TOKEN = "GITHUB_TOKEN"
-        }
     }
 }
