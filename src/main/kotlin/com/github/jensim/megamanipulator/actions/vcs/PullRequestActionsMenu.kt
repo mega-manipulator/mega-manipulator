@@ -175,7 +175,7 @@ class PullRequestActionsMenu(
 
     private fun isBrowsingAllowed(): Boolean = try {
         Desktop.getDesktop().isSupported(Desktop.Action.BROWSE)
-    } catch (e: java.awt.HeadlessException){
+    } catch (e: java.awt.HeadlessException) {
         false
     }
 }

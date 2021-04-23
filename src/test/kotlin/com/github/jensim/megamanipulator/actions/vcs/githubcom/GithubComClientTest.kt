@@ -7,11 +7,11 @@ import com.github.jensim.megamanipulator.actions.vcs.GithubComRepoWrapping
 import com.github.jensim.megamanipulator.http.HttpClientProvider
 import com.github.jensim.megamanipulator.settings.CodeHostSettings.GitHubSettings
 import com.github.jensim.megamanipulator.settings.ForkSetting.PLAIN_BRANCH
-import com.github.jensim.megamanipulator.settings.IntelliJPasswordsOperator
 import com.github.jensim.megamanipulator.settings.MegaManipulatorSettings
 import com.github.jensim.megamanipulator.settings.SearchHostSettings.SourceGraphSettings
 import com.github.jensim.megamanipulator.settings.SerializationHolder
 import com.github.jensim.megamanipulator.settings.SettingsFileOperator
+import com.github.jensim.megamanipulator.test.TestPasswordOperator
 import com.jetbrains.rd.util.first
 import kotlinx.coroutines.runBlocking
 import org.hamcrest.MatcherAssert.assertThat
@@ -41,14 +41,11 @@ class GithubComClientTest {
     private val settingsMock: SettingsFileOperator = mock {
         on { readSettings() } doReturn settings
     }
-    private val passwordMock: IntelliJPasswordsOperator = mock {
-        on { getPassword(githubSettings.username, githubSettings.baseUrl) } doReturn password
-        on { isPasswordSet(githubSettings.username, githubSettings.baseUrl) } doReturn true
-    }
+    private val passwordsOperator = TestPasswordOperator(mapOf(githubSettings.username to githubSettings.baseUrl to password))
     private val notificationsMock: NotificationsOperator = mock()
     private val clientProvider = HttpClientProvider(
         settingsFileOperator = settingsMock,
-        passwordsOperator = passwordMock,
+        passwordsOperator = passwordsOperator,
         notificationsOperator = notificationsMock
     )
     private val localRepoMock: LocalRepoOperator = mock()
