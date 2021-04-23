@@ -10,7 +10,7 @@ import com.github.jensim.megamanipulator.settings.ForkSetting
 import com.github.jensim.megamanipulator.settings.MegaManipulatorSettings
 import com.github.jensim.megamanipulator.settings.SettingsFileOperator
 import com.github.jensim.megamanipulator.ui.DialogGenerator
-import com.github.jensim.megamanipulator.ui.UiProtector
+import com.github.jensim.megamanipulator.ui.UiProtectorImpl
 import java.io.File
 import java.util.concurrent.ConcurrentHashMap
 
@@ -20,7 +20,7 @@ class CommitOperator(
     private val localRepoOperator: LocalRepoOperator,
     private val processOperator: ProcessOperator,
     private val prRouter: PrRouter,
-    private val uiProtector: UiProtector,
+    private val uiProtector: UiProtectorImpl,
 ) {
 
     companion object {
@@ -32,45 +32,42 @@ class CommitOperator(
                 localRepoOperator = LocalRepoOperator.instance,
                 processOperator = ProcessOperator.instance,
                 prRouter = PrRouter.instance,
-                uiProtector = UiProtector.instance,
+                uiProtector = UiProtectorImpl.instance,
             )
         }
     }
 
     fun commit(): Map<String, List<Pair<String, ApplyOutput>>> {
         val result = ConcurrentHashMap<String, MutableList<Pair<String, ApplyOutput>>>()
-        dialogGenerator.askForInput(
+        val commitMessage = dialogGenerator.askForInput(
             title = "Create commits for all changes in all checked out repositories",
-            message = "Commit message",
-            onOk = { commitMessage: String ->
-                val settings: MegaManipulatorSettings = settingsFileOperator.readSettings()!!
-                var push = false
-                if (commitMessage.isEmpty()) {
-                    return@askForInput
-                }
-                var workTitle = "Commiting"
-                dialogGenerator.showConfirm("Also push?", "Also push? $commitMessage") {
-                    push = true
-                    workTitle += " & pushing"
-                }
-                val dirs = localRepoOperator.getLocalRepoFiles()
-                uiProtector.mapConcurrentWithProgress(
-                    title = workTitle,
-                    data = dirs,
-                ) { dir: File ->
-                    processOperator.runCommandAsync(dir, listOf("git", "add", "--all")).await()
-                    val log = result.computeIfAbsent(dir.path) { ArrayList() }
-                    val commit = processOperator.runCommandAsync(dir, listOf("git", "commit", "-m", commitMessage)).await()
-                        .also { output -> log += "commit" to output }
-                    if (push && commit.exitCode == 0) {
-                        push(settings, dir, log)
-                    }
-                }
-            },
-            onCancel = {
-                dialogGenerator.showConfirm("Info", "No commit performed!") {}
-            }
+            message = "Commit message"
         )
+        if (commitMessage != null && commitMessage.isEmpty()) {
+            val settings: MegaManipulatorSettings = settingsFileOperator.readSettings()!!
+            var push = false
+
+            var workTitle = "Commiting"
+            if (dialogGenerator.showConfirm("Also push?", "Also push? $commitMessage")) {
+                push = true
+                workTitle += " & pushing"
+            }
+            val dirs = localRepoOperator.getLocalRepoFiles()
+            uiProtector.mapConcurrentWithProgress(
+                title = workTitle,
+                data = dirs,
+            ) { dir: File ->
+                processOperator.runCommandAsync(dir, listOf("git", "add", "--all")).await()
+                val log = result.computeIfAbsent(dir.path) { ArrayList() }
+                val commit = processOperator.runCommandAsync(dir, listOf("git", "commit", "-m", commitMessage)).await()
+                    .also { output -> log += "commit" to output }
+                if (push && commit.exitCode == 0) {
+                    push(settings, dir, log)
+                }
+            }
+        } else {
+            dialogGenerator.showConfirm("Info", "No commit performed!")
+        }
         if (result.isEmpty()) {
             result["no result"] = mutableListOf("nothing" to ApplyOutput(".", std = "", err = "", exitCode = 1))
         }
@@ -110,7 +107,7 @@ class CommitOperator(
 
     fun push(): Map<String, List<Pair<String, ApplyOutput>>> {
         val result = ConcurrentHashMap<String, MutableList<Pair<String, ApplyOutput>>>()
-        dialogGenerator.showConfirm("Push", "Push local commits to remote") {
+        if (dialogGenerator.showConfirm("Push", "Push local commits to remote")) {
             val dirs = localRepoOperator.getLocalRepoFiles()
             val settings: MegaManipulatorSettings = settingsFileOperator.readSettings()!!
             uiProtector.mapConcurrentWithProgress(

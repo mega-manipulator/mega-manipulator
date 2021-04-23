@@ -11,6 +11,7 @@ import com.github.jensim.megamanipulator.actions.git.clone.CloneOperator
 import com.github.jensim.megamanipulator.actions.git.commit.CommitOperator
 import com.github.jensim.megamanipulator.actions.localrepo.LocalRepoOperator
 import com.github.jensim.megamanipulator.actions.search.SearchOperator
+import com.github.jensim.megamanipulator.actions.search.SearchResult
 import com.github.jensim.megamanipulator.actions.search.SearchWindow
 import com.github.jensim.megamanipulator.actions.search.sourcegraph.SourcegraphSearchClient
 import com.github.jensim.megamanipulator.actions.vcs.PrRouter
@@ -20,14 +21,18 @@ import com.github.jensim.megamanipulator.actions.vcs.bitbucketserver.BitbucketSe
 import com.github.jensim.megamanipulator.actions.vcs.githubcom.GithubComClient
 import com.github.jensim.megamanipulator.files.FilesOperator
 import com.github.jensim.megamanipulator.http.HttpClientProvider
+import com.github.jensim.megamanipulator.settings.CodeHostSettings.GitHubSettings
+import com.github.jensim.megamanipulator.settings.ForkSetting.PLAIN_BRANCH
+import com.github.jensim.megamanipulator.settings.MegaManipulatorSettings
 import com.github.jensim.megamanipulator.settings.PasswordsOperator
 import com.github.jensim.megamanipulator.settings.ProjectOperator
+import com.github.jensim.megamanipulator.settings.SearchHostSettings.SourceGraphSettings
 import com.github.jensim.megamanipulator.settings.SerializationHolder
 import com.github.jensim.megamanipulator.settings.SettingsFileOperator
 import com.github.jensim.megamanipulator.settings.SettingsWindow
 import com.github.jensim.megamanipulator.toolswindow.MyToolWindowFactory
 import com.github.jensim.megamanipulator.ui.DialogGenerator
-import com.github.jensim.megamanipulator.ui.UiProtector
+import com.github.jensim.megamanipulator.ui.UiProtectorImpl
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.wm.ToolWindow
 import com.intellij.ui.content.ContentFactory
@@ -63,16 +68,47 @@ class WiringTest {
                 whenever(this.contentFactory).thenReturn(contentFactory)
             }
         }
+    private val githubUsername = "jensim"
+    private val sourcegraphToken = System.getenv("SRC_COM_ACCESS_TOKEN")
+    private val githubToken = System.getenv("GITHUB_TOKEN")
+    private val codeHostName = "github.com"
+    private val sourceGraphSettings = SourceGraphSettings(
+        baseUrl = "https://sourcegraph.com",
+        codeHostSettings = mapOf(
+            codeHostName to GitHubSettings(
+                username = githubUsername,
+                forkSetting = PLAIN_BRANCH,
+            )
+        )
+    )
+    private val searchHostName = "sourcegraph.com"
+    private val settings = MegaManipulatorSettings(
+        searchHostSettings = mapOf(
+            searchHostName to sourceGraphSettings
+        )
+    )
     private val processOperator: ProcessOperator = ProcessOperator(
         projectOperator = this.projectOperator
     )
+    private val notificationsOperator: NotificationsOperator = mock()
+    private val uiProtector: UiProtectorImpl = UiProtectorImpl(
+        projectOperator = this.projectOperator,
+        notificationsOperator = this.notificationsOperator,
+    )
     private val localRepoOperator: LocalRepoOperator = LocalRepoOperator(
         projectOperator = this.projectOperator,
-        processOperator = this.processOperator
+        processOperator = this.processOperator,
+        uiProtector = this.uiProtector,
     )
-    private val passwordsOperator: PasswordsOperator = TestPasswordOperator(emptyMap())
-    private val settingsFileOperator: SettingsFileOperator = mock()
-    private val notificationsOperator: NotificationsOperator = mock()
+    private val passwordsOperator: PasswordsOperator = TestPasswordOperator(
+        mapOf(
+            "token" to "https://sourcegraph.com" to sourcegraphToken,
+            githubUsername to codeHostName to githubToken
+        )
+    )
+    private val settingsFileOperator: SettingsFileOperator = mock {
+        on { readSettings() } doReturn settings
+    }
     private val sourcegraphSearchClient: SourcegraphSearchClient = mock()
     private val searchOperator: SearchOperator = SearchOperator(
         settingsFileOperator = this.settingsFileOperator,
@@ -102,10 +138,6 @@ class WiringTest {
         bitbucketServerClient = this.bitbucketServerClient,
         githubComClient = this.githubComClient,
         notificationsOperator = this.notificationsOperator
-    )
-    private val uiProtector: UiProtector = UiProtector(
-        projectOperator = this.projectOperator,
-        notificationsOperator = this.notificationsOperator,
     )
     private val cloneOperator: CloneOperator = CloneOperator(
         filesOperator = this.filesOperator,
@@ -196,5 +228,28 @@ class WiringTest {
         }
 
         myToolWindowFactory.createToolWindowContent(mockProject, toolWindow)
+    }
+
+    @Test
+    internal fun name() {
+        // clone
+        val result: Set<SearchResult> = setOf(SearchResult(searchHostName = searchHostName, codeHostName = codeHostName, project = githubUsername, repo = "mega-manipulator"))
+        cloneOperator.clone(result)
+
+        // branch
+        val branch = "integration_test/${UUID.randomUUID()}"
+        localRepoOperator.switchBranch(branch)
+
+        // apply
+        applyOperator.apply()
+
+        // commit
+        val commitResult = commitOperator.commit()
+
+        // push
+        // pr
+        // reword
+        // decline
+        // remove branch
     }
 }

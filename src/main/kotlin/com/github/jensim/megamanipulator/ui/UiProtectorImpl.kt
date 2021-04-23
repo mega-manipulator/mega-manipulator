@@ -16,7 +16,7 @@ import kotlinx.coroutines.sync.Semaphore
 import kotlinx.coroutines.withTimeout
 import java.util.concurrent.CancellationException
 
-class UiProtector(
+class UiProtectorImpl(
     private val projectOperator: ProjectOperator,
     private val notificationsOperator: NotificationsOperator,
 ) {
@@ -26,7 +26,7 @@ class UiProtector(
     companion object {
 
         val instance by lazy {
-            UiProtector(
+            UiProtectorImpl(
                 projectOperator = ProjectOperator.instance,
                 notificationsOperator = NotificationsOperator.instance,
             )

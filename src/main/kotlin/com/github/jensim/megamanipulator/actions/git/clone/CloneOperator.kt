@@ -9,7 +9,7 @@ import com.github.jensim.megamanipulator.actions.vcs.PrRouter
 import com.github.jensim.megamanipulator.actions.vcs.PullRequestWrapper
 import com.github.jensim.megamanipulator.files.FilesOperator
 import com.github.jensim.megamanipulator.settings.ProjectOperator
-import com.github.jensim.megamanipulator.ui.UiProtector
+import com.github.jensim.megamanipulator.ui.UiProtectorImpl
 import com.intellij.notification.NotificationType.INFORMATION
 import com.intellij.notification.NotificationType.WARNING
 import java.io.File
@@ -22,7 +22,7 @@ class CloneOperator(
     private val localRepoOperator: LocalRepoOperator,
     private val processOperator: ProcessOperator,
     private val notificationsOperator: NotificationsOperator,
-    private val uiProtector: UiProtector,
+    private val uiProtector: UiProtectorImpl,
 ) {
 
     companion object {
@@ -35,7 +35,7 @@ class CloneOperator(
                 localRepoOperator = LocalRepoOperator.instance,
                 processOperator = ProcessOperator.instance,
                 notificationsOperator = NotificationsOperator.instance,
-                uiProtector = UiProtector.instance,
+                uiProtector = UiProtectorImpl.instance,
             )
         }
     }

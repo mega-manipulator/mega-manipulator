@@ -17,19 +17,20 @@ class DialogGenerator {
         }
     }
 
-    fun showConfirm(title: String, message: String, onCancel: () -> Unit = {}, messageType: Int = QUESTION_MESSAGE, optionType: Int = OK_CANCEL_OPTION, onOk: () -> Unit) {
-        try {
+    fun showConfirm(title: String, message: String, messageType: Int = QUESTION_MESSAGE, optionType: Int = OK_CANCEL_OPTION): Boolean {
+        return try {
             when (JOptionPane.showConfirmDialog(null, message, title, optionType, messageType, null)) {
-                OK_OPTION -> onOk()
-                else -> onCancel()
+                OK_OPTION -> true
+                else -> false
             }
         } catch (e: Exception) {
             e.printStackTrace()
+            false
         }
     }
 
-    fun askForInput(title: String, message: String, onCancel: () -> Unit = {}, messageType: Int = QUESTION_MESSAGE, optionType: Int = OK_CANCEL_OPTION, onOk: (String) -> Unit) {
-        try {
+    fun askForInput(title: String, message: String, messageType: Int = QUESTION_MESSAGE, optionType: Int = OK_CANCEL_OPTION): String? {
+        return try {
             val field = JBTextArea().apply {
                 minimumSize = Dimension(500, 300)
             }
@@ -40,11 +41,12 @@ class DialogGenerator {
                 }
             }
             when (JOptionPane.showConfirmDialog(null, panel, title, optionType, messageType, null)) {
-                OK_OPTION -> onOk(field.text ?: "")
-                else -> onCancel()
+                OK_OPTION -> field.text
+                else -> null
             }
         } catch (e: Exception) {
             e.printStackTrace()
+            null
         }
     }
 }

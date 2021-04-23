@@ -4,7 +4,7 @@ import com.github.jensim.megamanipulator.settings.SerializationHolder
 import com.github.jensim.megamanipulator.toolswindow.ToolWindowTab
 import com.github.jensim.megamanipulator.ui.CodeHostSelector
 import com.github.jensim.megamanipulator.ui.GeneralListCellRenderer.addCellRenderer
-import com.github.jensim.megamanipulator.ui.UiProtector
+import com.github.jensim.megamanipulator.ui.UiProtectorImpl
 import com.intellij.ui.JBSplitter
 import com.intellij.ui.components.JBList
 import com.intellij.ui.components.JBScrollPane
@@ -24,7 +24,7 @@ import javax.swing.event.DocumentListener
 class PullRequestWindow(
     private val prRouter: PrRouter,
     private val serializationHolder: SerializationHolder,
-    private val uiProtector: UiProtector,
+    private val uiProtector: UiProtectorImpl,
     private val pullRequestActionsMenu: PullRequestActionsMenu,
 ) : ToolWindowTab {
 
@@ -34,7 +34,7 @@ class PullRequestWindow(
             PullRequestWindow(
                 prRouter = PrRouter.instance,
                 serializationHolder = SerializationHolder.instance,
-                uiProtector = UiProtector.instance,
+                uiProtector = UiProtectorImpl.instance,
                 pullRequestActionsMenu = PullRequestActionsMenu.instance
             )
         }

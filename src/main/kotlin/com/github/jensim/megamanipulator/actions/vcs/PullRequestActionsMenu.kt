@@ -4,7 +4,7 @@ import com.github.jensim.megamanipulator.actions.NotificationsOperator
 import com.github.jensim.megamanipulator.actions.git.clone.CloneOperator
 import com.github.jensim.megamanipulator.ui.DialogGenerator
 import com.github.jensim.megamanipulator.ui.EditPullRequestDialog
-import com.github.jensim.megamanipulator.ui.UiProtector
+import com.github.jensim.megamanipulator.ui.UiProtectorImpl
 import com.intellij.notification.NotificationType
 import java.awt.Desktop
 import java.net.URI
@@ -22,7 +22,7 @@ class PullRequestActionsMenu(
     private val notificationsOperator: NotificationsOperator,
     private val dialogGenerator: DialogGenerator,
     private val cloneOperator: CloneOperator,
-    private val uiProtector: UiProtector,
+    private val uiProtector: UiProtectorImpl,
 ) : JPopupMenu() {
 
     companion object {
@@ -33,7 +33,7 @@ class PullRequestActionsMenu(
                 notificationsOperator = NotificationsOperator.instance,
                 dialogGenerator = DialogGenerator.instance,
                 cloneOperator = CloneOperator.instance,
-                uiProtector = UiProtector.instance,
+                uiProtector = UiProtectorImpl.instance,
             )
         }
     }
@@ -46,7 +46,7 @@ class PullRequestActionsMenu(
     init {
         val declineMenuItem = JMenuItem("Decline PRs").apply {
             addActionListener { _ ->
-                dialogGenerator.showConfirm("Decline selected PRs", "No undo path available im afraid..\nDecline selected PRs?") {
+                if (dialogGenerator.showConfirm("Decline selected PRs", "No undo path available im afraid..\nDecline selected PRs?")) {
                     val ans = JOptionPane.showConfirmDialog(null, "Also drop source branches and forks?", "Drop source?", OK_CANCEL_OPTION, QUESTION_MESSAGE, null)
                     val doDrop = ans == OK_OPTION
                     val exit = !listOf(OK_OPTION, CANCEL_OPTION).contains(ans)
@@ -88,9 +88,10 @@ class PullRequestActionsMenu(
         }
         val defaultReviewersMenuItem = JMenuItem("Add default reviewers").apply {
             addActionListener { _ ->
-                dialogGenerator.showConfirm(
-                    title = "Add default reviewers",
-                    message = "Add default reviewers"
+                if (dialogGenerator.showConfirm(
+                        title = "Add default reviewers",
+                        message = "Add default reviewers"
+                    )
                 ) {
                     uiProtector.mapConcurrentWithProgress(
                         title = "Add default reviewers",
@@ -111,7 +112,7 @@ class PullRequestActionsMenu(
         val cloneMenuItem = JMenuItem("Clone PRs").apply {
             addActionListener {
                 val prs = prProvider()
-                dialogGenerator.showConfirm(title = "Clone...", message = "Clone ${prs.size} selected PR branches") {
+                if (dialogGenerator.showConfirm(title = "Clone...", message = "Clone ${prs.size} selected PR branches")) {
                     cloneOperator.clone(prs)
                 }
             }
@@ -148,10 +149,11 @@ class PullRequestActionsMenu(
             addActionListener {
                 val prs = prProvider()
                 if (prs.isNotEmpty()) {
-                    dialogGenerator.askForInput(
+                    val comment = dialogGenerator.askForInput(
                         title = "Comment selected pull requests",
                         message = "Comment"
-                    ) { comment ->
+                    )
+                    comment?.let { comment ->
                         uiProtector.mapConcurrentWithProgress(
                             title = "Add comments",
                             data = prs

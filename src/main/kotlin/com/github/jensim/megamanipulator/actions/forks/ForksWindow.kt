@@ -6,7 +6,7 @@ import com.github.jensim.megamanipulator.actions.vcs.RepoWrapper
 import com.github.jensim.megamanipulator.toolswindow.ToolWindowTab
 import com.github.jensim.megamanipulator.ui.CodeHostSelector
 import com.github.jensim.megamanipulator.ui.GeneralListCellRenderer.addCellRenderer
-import com.github.jensim.megamanipulator.ui.UiProtector
+import com.github.jensim.megamanipulator.ui.UiProtectorImpl
 import com.intellij.notification.NotificationType
 import com.intellij.ui.components.JBList
 import com.intellij.ui.components.JBScrollPane
@@ -16,7 +16,7 @@ import javax.swing.JComponent
 class ForksWindow(
     private val prRouter: PrRouter,
     private val notificationsOperator: NotificationsOperator,
-    private val uiProtector: UiProtector,
+    private val uiProtector: UiProtectorImpl,
 ) : ToolWindowTab {
 
     companion object {
@@ -25,7 +25,7 @@ class ForksWindow(
             ForksWindow(
                 prRouter = PrRouter.instance,
                 notificationsOperator = NotificationsOperator.instance,
-                uiProtector = UiProtector.instance,
+                uiProtector = UiProtectorImpl.instance,
             )
         }
     }

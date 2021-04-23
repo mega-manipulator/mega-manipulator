@@ -3,7 +3,7 @@ package com.github.jensim.megamanipulator.actions.search
 import com.github.jensim.megamanipulator.actions.git.clone.CloneOperator
 import com.github.jensim.megamanipulator.settings.SettingsFileOperator
 import com.github.jensim.megamanipulator.toolswindow.ToolWindowTab
-import com.github.jensim.megamanipulator.ui.UiProtector
+import com.github.jensim.megamanipulator.ui.UiProtectorImpl
 import com.intellij.openapi.ui.ComboBox
 import com.intellij.ui.components.JBList
 import com.intellij.ui.components.JBScrollPane
@@ -17,7 +17,7 @@ class SearchWindow(
     private val searchOperator: SearchOperator,
     private val settingsFileOperator: SettingsFileOperator,
     private val cloneOperator: CloneOperator,
-    private val uiProtector: UiProtector,
+    private val uiProtector: UiProtectorImpl,
 ) : ToolWindowTab {
 
     companion object {
@@ -27,7 +27,7 @@ class SearchWindow(
                 searchOperator = SearchOperator.instance,
                 settingsFileOperator = SettingsFileOperator.instance,
                 cloneOperator = CloneOperator.instance,
-                uiProtector = UiProtector.instance,
+                uiProtector = UiProtectorImpl.instance,
             )
         }
     }

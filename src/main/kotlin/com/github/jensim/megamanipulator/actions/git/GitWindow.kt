@@ -11,7 +11,7 @@ import com.github.jensim.megamanipulator.toolswindow.ToolWindowTab
 import com.github.jensim.megamanipulator.ui.CreatePullRequestDialog
 import com.github.jensim.megamanipulator.ui.DialogGenerator
 import com.github.jensim.megamanipulator.ui.GeneralListCellRenderer.addCellRenderer
-import com.github.jensim.megamanipulator.ui.UiProtector
+import com.github.jensim.megamanipulator.ui.UiProtectorImpl
 import com.github.jensim.megamanipulator.ui.trimProjectPath
 import com.intellij.ui.JBSplitter
 import com.intellij.ui.components.JBList
@@ -37,7 +37,7 @@ class GitWindow(
     private val filesOperator: FilesOperator,
     private val projectOperator: ProjectOperator,
     private val prRouter: PrRouter,
-    private val uiProtector: UiProtector,
+    private val uiProtector: UiProtectorImpl,
 ) : ToolWindowTab {
 
     companion object {
@@ -51,7 +51,7 @@ class GitWindow(
                 filesOperator = FilesOperator.instance,
                 projectOperator = ProjectOperator.instance,
                 prRouter = PrRouter.instance,
-                uiProtector = UiProtector.instance,
+                uiProtector = UiProtectorImpl.instance,
             )
         }
     }
@@ -87,13 +87,8 @@ class GitWindow(
                 button("Set branch") {
                     val branch: String? = JOptionPane.showInputDialog("This will not reset the repos to origin/default-branch first!!\nSelect branch name")
                     if (branch != null && branch.isNotEmpty() || !branch!!.contains(' ')) {
-                        uiProtector.uiProtectedOperation(title = "Switching branches") {
-                            val localRepoFiles = localRepoOperator.getLocalRepoFiles()
-                            uiProtector.mapConcurrentWithProgress(title = "Checkout branch $branch", data = localRepoFiles) { dir ->
-                                processOperator.runCommandAsync(dir, listOf("git", "checkout", "-b", "$branch"))
-                            }
-                            refresh()
-                        }
+                        localRepoOperator.switchBranch(branch)
+                        refresh()
                     }
                 }
                 button("Commit and Push") {
@@ -122,7 +117,7 @@ class GitWindow(
                 }
             }
             button("Clean away local repos") {
-                dialogGenerator.showConfirm(title = "Are you sure?!", message = "This will remove the entire clones dir from disk, no recovery available!") {
+                if (dialogGenerator.showConfirm(title = "Are you sure?!", message = "This will remove the entire clones dir from disk, no recovery available!")) {
                     val output: ApplyOutput = projectOperator.project?.basePath?.let { dir ->
                         uiProtector.uiProtectedOperation(title = "Remove all local clones") {
                             processOperator.runCommandAsync(File(dir), listOf("rm", "-rf", "clones")).await()

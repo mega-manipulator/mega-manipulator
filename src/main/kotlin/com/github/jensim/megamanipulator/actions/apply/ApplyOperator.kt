@@ -4,7 +4,7 @@ import com.github.jensim.megamanipulator.actions.ProcessOperator
 import com.github.jensim.megamanipulator.actions.localrepo.LocalRepoOperator
 import com.github.jensim.megamanipulator.files.FilesOperator
 import com.github.jensim.megamanipulator.settings.SettingsFileOperator
-import com.github.jensim.megamanipulator.ui.UiProtector
+import com.github.jensim.megamanipulator.ui.UiProtectorImpl
 import java.io.File
 
 class ApplyOperator(
@@ -12,7 +12,7 @@ class ApplyOperator(
     private val filesOperator: FilesOperator,
     private val processOperator: ProcessOperator,
     private val localRepoOperator: LocalRepoOperator,
-    private val uiProtector: UiProtector,
+    private val uiProtector: UiProtectorImpl,
 ) {
 
     companion object {
@@ -23,7 +23,7 @@ class ApplyOperator(
                 filesOperator = FilesOperator.instance,
                 processOperator = ProcessOperator.instance,
                 localRepoOperator = LocalRepoOperator.instance,
-                uiProtector = UiProtector.instance,
+                uiProtector = UiProtectorImpl.instance,
             )
         }
     }
