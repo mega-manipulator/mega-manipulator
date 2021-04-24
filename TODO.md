@@ -2,17 +2,28 @@
 
 ## Documentation
 * [ ] Getting started video
+* Doc: tokens generation
+  * [ ] GitHub
+  * [ ] Sourcegraph
+  * [ ] BitBucket Server
 * [ ] IDE coach marks
 
 ## Improvements
-* [ ] Improve testing
-* [ ] Branch OPTION after clone
-* [ ] Notify on missing conf for code host or search host
+* <strong>High prio</strong>
+  * [ ] Improve testing
+  * [ ] Notify on missing conf for code host or search host
 
 ## User interface
-* [ ] General tables
-* [ ] Table sorting
-* [ ] Right Click PRs
+* <strong>High prio</strong>
+  * [ ] Passwords coloring  
+  not readable in dark mode
+  * [ ] Forks should be listed as ${fork-parent}/${repo-name}
+  * [ ] Better interactions for the clones tab  
+Buttons clutter the UI
+* <strong>Low prio</strong>
+  * [ ] General tables
+  * [ ] Table sorting
+  * [ ] Right Click PRs
 
 ## Features
 * [ ] Drop stale forked repos
