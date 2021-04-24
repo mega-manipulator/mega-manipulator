@@ -13,6 +13,7 @@ jobs:
         with:
           # Disabling shallow clone is recommended for improving relevancy of reporting
           fetch-depth: 0
+
       - uses: actions/cache@v2
         with:
           path: |
@@ -22,12 +23,24 @@ jobs:
           key: gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
           restore-keys: |
             gradle-
+
+      - name: Install ssh keys
+        env:
+          SSH_WRITE_PRIVATE: ${{ secrets.SSH_WRITE_PRIVATE }}
+          SSH_WRITE_PUBLIC: ${{ secrets.SSH_WRITE_PUBLIC }}
+        run: |
+          mkdir -p "$HOME/.ssh"
+          echo "$SSH_WRITE_PRIVATE" > "$HOME/.ssh/id_ed25519"
+          echo "$SSH_WRITE_PUBLIC" > "$HOME/.ssh/id_ed25519.pub"
+          eval "$(ssh-agent -s)"
+
       - name: Jacoco report
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           SRC_COM_ACCESS_TOKEN: ${{ secrets.SRC_COM_ACCESS_TOKEN }}
         shell: bash
         run: ./gradlew build jacocoTestReport
+
       - name: SonarCloud Scan
         uses: sonarsource/sonarcloud-github-action@v1.6
         env:
