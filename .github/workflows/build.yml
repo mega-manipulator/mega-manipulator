@@ -15,6 +15,7 @@
 
 name: Build
 on:
+  workflow_dispatch:
   push:
     branches-ignore:
       - "integration_test/*"
