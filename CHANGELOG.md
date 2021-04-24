@@ -4,14 +4,18 @@
 
 ## [Unreleased]
 ### Added
+- .env-file support for local development
+- Integration test
 
 ### Changed
+- Application internal wiring rebuilt, to allow testing
 
 ### Deprecated
 
 ### Removed
 
 ### Fixed
+- Remove branches from GitHub
 
 ### Security
 ## [0.0.19]
@@ -24,7 +28,7 @@
 ### Removed
 
 ### Fixed
-- Fixed pagination start index for github client, fetch forked repos without outgoing PRs.
+- Fixed pagination start index for GitHub client, fetch forked repos without outgoing PRs.
 This will eliminate repos being listed twice
 
 ### Security
