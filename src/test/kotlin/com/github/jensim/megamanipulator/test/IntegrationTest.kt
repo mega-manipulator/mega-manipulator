@@ -83,7 +83,11 @@ class IntegrationTest : TestApplicationWiring() {
         assertThat(commitResults.keys, hasSize(1))
         val commitResult: List<Pair<String, ApplyOutput>> = commitResults.values.first()
         val exitCode: Int = commitResult.last().second.exitCode
-        assertThat("Last exit code was not zero for ${commitResult.last().second.getFullDescription()}", exitCode, equalTo(0))
+        assertThat(
+            "Last exit code was not zero for ${commitResult.last().first}\n${commitResult.last().second.getFullDescription()}",
+            exitCode,
+            equalTo(0)
+        )
 
         // pr
         val newPr = runBlocking { applicationWiring.prRouter.createPr(branch, "Don't mind me, im an integration test", result) }
