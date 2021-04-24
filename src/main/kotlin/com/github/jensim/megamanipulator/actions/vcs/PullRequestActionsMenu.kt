@@ -4,7 +4,7 @@ import com.github.jensim.megamanipulator.actions.NotificationsOperator
 import com.github.jensim.megamanipulator.actions.git.clone.CloneOperator
 import com.github.jensim.megamanipulator.ui.DialogGenerator
 import com.github.jensim.megamanipulator.ui.EditPullRequestDialog
-import com.github.jensim.megamanipulator.ui.UiProtectorImpl
+import com.github.jensim.megamanipulator.ui.UiProtector
 import com.intellij.notification.NotificationType
 import java.awt.Desktop
 import java.net.URI
@@ -22,21 +22,8 @@ class PullRequestActionsMenu(
     private val notificationsOperator: NotificationsOperator,
     private val dialogGenerator: DialogGenerator,
     private val cloneOperator: CloneOperator,
-    private val uiProtector: UiProtectorImpl,
+    private val uiProtector: UiProtector,
 ) : JPopupMenu() {
-
-    companion object {
-
-        val instance by lazy {
-            PullRequestActionsMenu(
-                prRouter = PrRouter.instance,
-                notificationsOperator = NotificationsOperator.instance,
-                dialogGenerator = DialogGenerator.instance,
-                cloneOperator = CloneOperator.instance,
-                uiProtector = UiProtectorImpl.instance,
-            )
-        }
-    }
 
     var prProvider: () -> List<PullRequestWrapper> = { emptyList() }
     var postActionHook: () -> Unit = {}
@@ -88,11 +75,7 @@ class PullRequestActionsMenu(
         }
         val defaultReviewersMenuItem = JMenuItem("Add default reviewers").apply {
             addActionListener { _ ->
-                if (dialogGenerator.showConfirm(
-                        title = "Add default reviewers",
-                        message = "Add default reviewers"
-                    )
-                ) {
+                if (dialogGenerator.showConfirm(title = "Add default reviewers", message = "Add default reviewers")) {
                     uiProtector.mapConcurrentWithProgress(
                         title = "Add default reviewers",
                         extraText2 = { "${it.codeHostName()}/${it.project()}/${it.baseRepo()} ${it.fromBranch()}" },

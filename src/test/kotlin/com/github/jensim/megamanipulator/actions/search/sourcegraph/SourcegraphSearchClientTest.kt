@@ -9,11 +9,11 @@ import com.github.jensim.megamanipulator.settings.MegaManipulatorSettings
 import com.github.jensim.megamanipulator.settings.SearchHostSettings.SourceGraphSettings
 import com.github.jensim.megamanipulator.settings.SettingsFileOperator
 import com.github.jensim.megamanipulator.test.TestPasswordOperator
+import io.mockk.every
+import io.mockk.mockk
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
-import org.mockito.kotlin.doReturn
-import org.mockito.kotlin.mock
 
 internal class SourcegraphSearchClientTest {
 
@@ -34,11 +34,11 @@ internal class SourcegraphSearchClientTest {
             searchHostName to sourceGraphSettings
         )
     )
-    private val settingsMock: SettingsFileOperator = mock {
-        on { readSettings() } doReturn settings
+    private val settingsMock: SettingsFileOperator = mockk {
+        every { readSettings() } returns settings
     }
     private val passwordsOperator = TestPasswordOperator(mapOf("token" to "https://sourcegraph.com" to password))
-    private val notificationsMock: NotificationsOperator = mock()
+    private val notificationsMock: NotificationsOperator = mockk()
     private val clientProvider = HttpClientProvider(
         settingsFileOperator = settingsMock,
         passwordsOperator = passwordsOperator,

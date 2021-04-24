@@ -3,10 +3,11 @@ package com.github.jensim.megamanipulator.actions.forks
 import com.github.jensim.megamanipulator.actions.NotificationsOperator
 import com.github.jensim.megamanipulator.actions.vcs.PrRouter
 import com.github.jensim.megamanipulator.actions.vcs.RepoWrapper
+import com.github.jensim.megamanipulator.settings.SettingsFileOperator
 import com.github.jensim.megamanipulator.toolswindow.ToolWindowTab
 import com.github.jensim.megamanipulator.ui.CodeHostSelector
 import com.github.jensim.megamanipulator.ui.GeneralListCellRenderer.addCellRenderer
-import com.github.jensim.megamanipulator.ui.UiProtectorImpl
+import com.github.jensim.megamanipulator.ui.UiProtector
 import com.intellij.notification.NotificationType
 import com.intellij.ui.components.JBList
 import com.intellij.ui.components.JBScrollPane
@@ -16,23 +17,13 @@ import javax.swing.JComponent
 class ForksWindow(
     private val prRouter: PrRouter,
     private val notificationsOperator: NotificationsOperator,
-    private val uiProtector: UiProtectorImpl,
+    private val uiProtector: UiProtector,
+    settingsFileOperator: SettingsFileOperator,
 ) : ToolWindowTab {
-
-    companion object {
-
-        val instance by lazy {
-            ForksWindow(
-                prRouter = PrRouter.instance,
-                notificationsOperator = NotificationsOperator.instance,
-                uiProtector = UiProtectorImpl.instance,
-            )
-        }
-    }
 
     override val index: Int = 5
 
-    private val codeHostSelect = CodeHostSelector()
+    private val codeHostSelect = CodeHostSelector(settingsFileOperator)
     private val staleForkList = JBList<RepoWrapper>()
     private val scroll = JBScrollPane(staleForkList)
 

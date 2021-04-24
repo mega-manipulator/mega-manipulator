@@ -19,16 +19,6 @@ class ApplyWindow(
     private val projectOperator: ProjectOperator,
 ) : ToolWindowTab {
 
-    companion object {
-
-        val instance by lazy {
-            ApplyWindow(
-                applyOperator = ApplyOperator.instance,
-                projectOperator = ProjectOperator.instance,
-            )
-        }
-    }
-
     private val resultList = JBList<ApplyOutput>()
     private val scrollableResult = JBScrollPane(resultList)
     private val details = JBTextArea()

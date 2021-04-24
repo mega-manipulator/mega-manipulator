@@ -9,15 +9,6 @@ class SearchOperator(
     private val sourcegraphSearchClient: SourcegraphSearchClient,
 ) {
 
-    companion object {
-        val instance by lazy {
-            SearchOperator(
-                settingsFileOperator = SettingsFileOperator.instance,
-                sourcegraphSearchClient = SourcegraphSearchClient.instance,
-            )
-        }
-    }
-
     suspend fun search(searchHostName: String, search: String): Set<SearchResult> {
         val settings: SearchHostSettings = settingsFileOperator.readSettings()?.searchHostSettings?.get(searchHostName)
             ?: throw NullPointerException("No settings for search host named $searchHostName")

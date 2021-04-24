@@ -19,21 +19,11 @@ import java.util.concurrent.CancellationException
 class UiProtectorImpl(
     private val projectOperator: ProjectOperator,
     private val notificationsOperator: NotificationsOperator,
-) {
+) : UiProtector {
 
-    private val project: Project get() = projectOperator.project!!
+    private val project: Project get() = projectOperator.project
 
-    companion object {
-
-        val instance by lazy {
-            UiProtectorImpl(
-                projectOperator = ProjectOperator.instance,
-                notificationsOperator = NotificationsOperator.instance,
-            )
-        }
-    }
-
-    fun <T> uiProtectedOperation(
+    override fun <T> uiProtectedOperation(
         title: String,
         action: suspend () -> T
     ): T? {
@@ -95,11 +85,11 @@ class UiProtectorImpl(
         }
     }
 
-    fun <T, U> mapConcurrentWithProgress(
+    override fun <T, U> mapConcurrentWithProgress(
         title: String,
-        extraText1: String? = null,
-        extraText2: (T) -> String? = { null },
-        concurrent: Int = 5,
+        extraText1: String?,
+        extraText2: (T) -> String?,
+        concurrent: Int,
         data: Collection<T>,
         mappingFunction: suspend (T) -> U
     ): List<Pair<T, U?>> {

@@ -10,7 +10,7 @@ import com.github.jensim.megamanipulator.settings.ForkSetting
 import com.github.jensim.megamanipulator.settings.MegaManipulatorSettings
 import com.github.jensim.megamanipulator.settings.SettingsFileOperator
 import com.github.jensim.megamanipulator.ui.DialogGenerator
-import com.github.jensim.megamanipulator.ui.UiProtectorImpl
+import com.github.jensim.megamanipulator.ui.UiProtector
 import java.io.File
 import java.util.concurrent.ConcurrentHashMap
 
@@ -20,30 +20,16 @@ class CommitOperator(
     private val localRepoOperator: LocalRepoOperator,
     private val processOperator: ProcessOperator,
     private val prRouter: PrRouter,
-    private val uiProtector: UiProtectorImpl,
+    private val uiProtector: UiProtector,
 ) {
-
-    companion object {
-
-        val instance by lazy {
-            CommitOperator(
-                dialogGenerator = DialogGenerator.instance,
-                settingsFileOperator = SettingsFileOperator.instance,
-                localRepoOperator = LocalRepoOperator.instance,
-                processOperator = ProcessOperator.instance,
-                prRouter = PrRouter.instance,
-                uiProtector = UiProtectorImpl.instance,
-            )
-        }
-    }
 
     fun commit(): Map<String, List<Pair<String, ApplyOutput>>> {
         val result = ConcurrentHashMap<String, MutableList<Pair<String, ApplyOutput>>>()
         val commitMessage = dialogGenerator.askForInput(
-            title = "Create commits for all changes in all checked out repositories",
-            message = "Commit message"
+            "Create commits for all changes in all checked out repositories",
+            "Commit message"
         )
-        if (commitMessage != null && commitMessage.isEmpty()) {
+        if (commitMessage != null && commitMessage.isNotEmpty()) {
             val settings: MegaManipulatorSettings = settingsFileOperator.readSettings()!!
             var push = false
 

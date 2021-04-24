@@ -13,9 +13,8 @@ class MyBundle : AbstractBundle(BUNDLE) {
         val instance by lazy { MyBundle() }
     }
 
-    @Suppress("SpreadOperator")
-    fun message(@PropertyKey(resourceBundle = BUNDLE) key: String, vararg params: Any) =
-        getMessage(key, *params)
+    fun message(@PropertyKey(resourceBundle = BUNDLE) key: String) = getMessage(key)
+    fun message(@PropertyKey(resourceBundle = BUNDLE) key: String, param: Any) = getMessage(key, param)
 
     @Suppress("SpreadOperator")
     fun messagePointer(@PropertyKey(resourceBundle = BUNDLE) key: String, vararg params: Any) =

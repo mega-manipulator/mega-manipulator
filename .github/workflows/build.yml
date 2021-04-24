@@ -16,12 +16,16 @@
 name: Build
 on:
   push:
+    branches-ignore:
+      - "integration_test/*"
     paths-ignore:
       - ".github/**/*"
       - ".run/**/*"
       - "*.md"
       - "*.txt"
   pull_request:
+    branches-ignore:
+      - "integration_test/*"
 jobs:
 
   # Run Gradle Wrapper Validation Action to verify the wrapper's checksum

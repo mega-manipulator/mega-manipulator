@@ -19,18 +19,6 @@ class PrRouter(
     private val notificationsOperator: NotificationsOperator,
 ) {
 
-    companion object {
-
-        val instance by lazy {
-            PrRouter(
-                settingsFileOperator = SettingsFileOperator.instance,
-                bitbucketServerClient = BitbucketServerClient.instance,
-                githubComClient = GithubComClient.instance,
-                notificationsOperator = NotificationsOperator.instance
-            )
-        }
-    }
-
     private val lastSettingsWarning = AtomicLong()
 
     private fun resolve(searchHost: String, codeHost: String): CodeHostSettings? {

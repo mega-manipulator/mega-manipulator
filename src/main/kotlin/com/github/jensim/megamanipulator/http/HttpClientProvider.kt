@@ -4,7 +4,6 @@ import com.github.jensim.megamanipulator.actions.NotificationsOperator
 import com.github.jensim.megamanipulator.settings.AuthMethod
 import com.github.jensim.megamanipulator.settings.CodeHostSettings
 import com.github.jensim.megamanipulator.settings.HttpsOverride
-import com.github.jensim.megamanipulator.settings.IntelliJPasswordsOperator
 import com.github.jensim.megamanipulator.settings.PasswordsOperator
 import com.github.jensim.megamanipulator.settings.SearchHostSettings
 import com.github.jensim.megamanipulator.settings.SettingsFileOperator
@@ -31,16 +30,6 @@ class HttpClientProvider(
     private val passwordsOperator: PasswordsOperator,
     private val notificationsOperator: NotificationsOperator,
 ) {
-
-    companion object {
-        val instance by lazy {
-            HttpClientProvider(
-                settingsFileOperator = SettingsFileOperator.instance,
-                passwordsOperator = IntelliJPasswordsOperator.instance,
-                notificationsOperator = NotificationsOperator.instance,
-            )
-        }
-    }
 
     private class TrustAnythingStrategy : TrustStrategy {
         override fun isTrusted(p0: Array<out X509Certificate>?, p1: String?): Boolean = true

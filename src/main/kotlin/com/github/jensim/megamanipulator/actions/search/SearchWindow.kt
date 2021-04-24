@@ -3,7 +3,7 @@ package com.github.jensim.megamanipulator.actions.search
 import com.github.jensim.megamanipulator.actions.git.clone.CloneOperator
 import com.github.jensim.megamanipulator.settings.SettingsFileOperator
 import com.github.jensim.megamanipulator.toolswindow.ToolWindowTab
-import com.github.jensim.megamanipulator.ui.UiProtectorImpl
+import com.github.jensim.megamanipulator.ui.UiProtector
 import com.intellij.openapi.ui.ComboBox
 import com.intellij.ui.components.JBList
 import com.intellij.ui.components.JBScrollPane
@@ -17,20 +17,8 @@ class SearchWindow(
     private val searchOperator: SearchOperator,
     private val settingsFileOperator: SettingsFileOperator,
     private val cloneOperator: CloneOperator,
-    private val uiProtector: UiProtectorImpl,
+    private val uiProtector: UiProtector,
 ) : ToolWindowTab {
-
-    companion object {
-
-        val instance by lazy {
-            SearchWindow(
-                searchOperator = SearchOperator.instance,
-                settingsFileOperator = SettingsFileOperator.instance,
-                cloneOperator = CloneOperator.instance,
-                uiProtector = UiProtectorImpl.instance,
-            )
-        }
-    }
 
     private val searchHostSelect = ComboBox<String>()
     private val searchButton = JButton("Search")

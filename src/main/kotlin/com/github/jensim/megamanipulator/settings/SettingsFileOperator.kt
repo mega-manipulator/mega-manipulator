@@ -17,16 +17,6 @@ class SettingsFileOperator(
     private val notificationsOperator: NotificationsOperator,
 ) {
 
-    companion object {
-
-        val instance by lazy {
-            SettingsFileOperator(
-                projectOperator = ProjectOperator.instance,
-                notificationsOperator = NotificationsOperator.instance
-            )
-        }
-    }
-
     private val lastPeek = AtomicLong(0L)
     private val lastUpdated: AtomicLong = AtomicLong(0L)
     private val bufferedSettings: AtomicReference<MegaManipulatorSettings?> = AtomicReference(null)

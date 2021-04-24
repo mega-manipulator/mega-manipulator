@@ -13,6 +13,8 @@ import com.github.jensim.megamanipulator.settings.SerializationHolder
 import com.github.jensim.megamanipulator.settings.SettingsFileOperator
 import com.github.jensim.megamanipulator.test.TestPasswordOperator
 import com.jetbrains.rd.util.first
+import io.mockk.every
+import io.mockk.mockk
 import kotlinx.coroutines.runBlocking
 import org.hamcrest.MatcherAssert.assertThat
 import org.hamcrest.Matchers.empty
@@ -20,8 +22,6 @@ import org.hamcrest.Matchers.equalTo
 import org.hamcrest.Matchers.not
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
-import org.mockito.kotlin.doReturn
-import org.mockito.kotlin.mock
 
 class GithubComClientTest {
 
@@ -38,17 +38,17 @@ class GithubComClientTest {
             )
         )
     )
-    private val settingsMock: SettingsFileOperator = mock {
-        on { readSettings() } doReturn settings
+    private val settingsMock: SettingsFileOperator = mockk {
+        every { readSettings() } returns settings
     }
     private val passwordsOperator = TestPasswordOperator(mapOf(githubSettings.username to githubSettings.baseUrl to password))
-    private val notificationsMock: NotificationsOperator = mock()
+    private val notificationsMock: NotificationsOperator = mockk()
     private val clientProvider = HttpClientProvider(
         settingsFileOperator = settingsMock,
         passwordsOperator = passwordsOperator,
         notificationsOperator = notificationsMock
     )
-    private val localRepoMock: LocalRepoOperator = mock()
+    private val localRepoMock: LocalRepoOperator = mockk()
     private val client = GithubComClient(
         httpClientProvider = clientProvider,
         localRepoOperator = localRepoMock,

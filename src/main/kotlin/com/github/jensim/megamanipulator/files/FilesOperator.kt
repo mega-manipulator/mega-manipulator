@@ -21,16 +21,6 @@ class FilesOperator(
     private val projectOperator: ProjectOperator,
 ) {
 
-    companion object {
-
-        val instance by lazy {
-            FilesOperator(
-                notificationsOperator = NotificationsOperator.instance,
-                projectOperator = ProjectOperator.instance,
-            )
-        }
-    }
-
     class VirtFile(
         val nameWithPath: String,
         val content: ByteArray,

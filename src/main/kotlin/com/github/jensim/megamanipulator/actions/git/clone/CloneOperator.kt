@@ -9,7 +9,7 @@ import com.github.jensim.megamanipulator.actions.vcs.PrRouter
 import com.github.jensim.megamanipulator.actions.vcs.PullRequestWrapper
 import com.github.jensim.megamanipulator.files.FilesOperator
 import com.github.jensim.megamanipulator.settings.ProjectOperator
-import com.github.jensim.megamanipulator.ui.UiProtectorImpl
+import com.github.jensim.megamanipulator.ui.UiProtector
 import com.intellij.notification.NotificationType.INFORMATION
 import com.intellij.notification.NotificationType.WARNING
 import java.io.File
@@ -22,26 +22,11 @@ class CloneOperator(
     private val localRepoOperator: LocalRepoOperator,
     private val processOperator: ProcessOperator,
     private val notificationsOperator: NotificationsOperator,
-    private val uiProtector: UiProtectorImpl,
+    private val uiProtector: UiProtector,
 ) {
 
-    companion object {
-
-        val instance by lazy {
-            CloneOperator(
-                filesOperator = FilesOperator.instance,
-                projectOperator = ProjectOperator.instance,
-                prRouter = PrRouter.instance,
-                localRepoOperator = LocalRepoOperator.instance,
-                processOperator = ProcessOperator.instance,
-                notificationsOperator = NotificationsOperator.instance,
-                uiProtector = UiProtectorImpl.instance,
-            )
-        }
-    }
-
     fun clone(repos: Set<SearchResult>) {
-        val basePath = projectOperator.project?.basePath!!
+        val basePath = projectOperator.project.basePath!!
 
         filesOperator.refreshConf()
         val state: List<Pair<SearchResult, List<Pair<String, ApplyOutput>>?>> = uiProtector.mapConcurrentWithProgress(

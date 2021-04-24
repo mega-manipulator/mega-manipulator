@@ -4,7 +4,7 @@ import com.github.jensim.megamanipulator.actions.ProcessOperator
 import com.github.jensim.megamanipulator.actions.localrepo.LocalRepoOperator
 import com.github.jensim.megamanipulator.files.FilesOperator
 import com.github.jensim.megamanipulator.settings.SettingsFileOperator
-import com.github.jensim.megamanipulator.ui.UiProtectorImpl
+import com.github.jensim.megamanipulator.ui.UiProtector
 import java.io.File
 
 class ApplyOperator(
@@ -12,21 +12,8 @@ class ApplyOperator(
     private val filesOperator: FilesOperator,
     private val processOperator: ProcessOperator,
     private val localRepoOperator: LocalRepoOperator,
-    private val uiProtector: UiProtectorImpl,
+    private val uiProtector: UiProtector,
 ) {
-
-    companion object {
-
-        val instance by lazy {
-            ApplyOperator(
-                settingsFileOperator = SettingsFileOperator.instance,
-                filesOperator = FilesOperator.instance,
-                processOperator = ProcessOperator.instance,
-                localRepoOperator = LocalRepoOperator.instance,
-                uiProtector = UiProtectorImpl.instance,
-            )
-        }
-    }
 
     fun apply(): List<ApplyOutput> {
         if (!settingsFileOperator.scriptFile.exists()) {

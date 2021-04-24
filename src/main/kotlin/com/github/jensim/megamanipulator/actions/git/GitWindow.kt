@@ -11,7 +11,7 @@ import com.github.jensim.megamanipulator.toolswindow.ToolWindowTab
 import com.github.jensim.megamanipulator.ui.CreatePullRequestDialog
 import com.github.jensim.megamanipulator.ui.DialogGenerator
 import com.github.jensim.megamanipulator.ui.GeneralListCellRenderer.addCellRenderer
-import com.github.jensim.megamanipulator.ui.UiProtectorImpl
+import com.github.jensim.megamanipulator.ui.UiProtector
 import com.github.jensim.megamanipulator.ui.trimProjectPath
 import com.intellij.ui.JBSplitter
 import com.intellij.ui.components.JBList
@@ -37,24 +37,8 @@ class GitWindow(
     private val filesOperator: FilesOperator,
     private val projectOperator: ProjectOperator,
     private val prRouter: PrRouter,
-    private val uiProtector: UiProtectorImpl,
+    private val uiProtector: UiProtector,
 ) : ToolWindowTab {
-
-    companion object {
-
-        val instance by lazy {
-            GitWindow(
-                localRepoOperator = LocalRepoOperator.instance,
-                processOperator = ProcessOperator.instance,
-                commitOperator = CommitOperator.instance,
-                dialogGenerator = DialogGenerator.instance,
-                filesOperator = FilesOperator.instance,
-                projectOperator = ProjectOperator.instance,
-                prRouter = PrRouter.instance,
-                uiProtector = UiProtectorImpl.instance,
-            )
-        }
-    }
 
     private val repoList = JBList<DirResult>().apply {
         minimumSize = Dimension(250, 50)

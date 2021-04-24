@@ -5,8 +5,8 @@
 * [ ] IDE coach marks
 
 ## Improvements
-* [ ] Branch OPTION after clone
 * [ ] Improve testing
+* [ ] Branch OPTION after clone
 * [ ] Notify on missing conf for code host or search host
 
 ## User interface

@@ -19,18 +19,6 @@ class SettingsWindow(
     private val settingsFileOperator: SettingsFileOperator,
 ) : ToolWindowTab {
 
-    companion object {
-
-        val instance by lazy {
-            SettingsWindow(
-                passwordsOperator = IntelliJPasswordsOperator.instance,
-                projectOperator = ProjectOperator.instance,
-                filesOperator = FilesOperator.instance,
-                settingsFileOperator = SettingsFileOperator.instance
-            )
-        }
-    }
-
     private enum class HostType {
         SEARCH,
         CODE,
