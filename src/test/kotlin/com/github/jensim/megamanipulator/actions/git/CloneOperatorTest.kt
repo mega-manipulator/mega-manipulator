@@ -55,7 +55,7 @@ class CloneOperatorTest {
 
     @InjectMockKs
     private lateinit var cloneOperator: CloneOperator
-    
+
     companion object {
         private const val CLONING_TITLE_AND_MESSAGE = "Cloning repos"
         private const val PROJECT = "mega-manipulator"
@@ -64,7 +64,7 @@ class CloneOperatorTest {
 
     @Test
     fun `clone with search requests`() = runBlocking {
-        //Given
+        // Given
         val state = listOf<Pair<String, List<String>>>()
         every {
             uiProtector.mapConcurrentWithProgress<String, List<String>>(
@@ -81,10 +81,10 @@ class CloneOperatorTest {
         every { filesOperator.refreshClones() } returns Unit
         every { notificationsOperator.show(any(), any(), any()) } returns Unit
 
-        //When
+        // When
         cloneOperator.clone(setOf())
 
-        //Then
+        // Then
         verify { filesOperator.refreshClones() }
         verify {
             notificationsOperator.show(
@@ -98,14 +98,14 @@ class CloneOperatorTest {
     @Test
     fun `clone with pull request wrapper`() = runBlocking {
 
-        //Given
+        // Given
         val state = listOf<Pair<String, List<String>>>()
         mockStates(state)
 
-        //When
+        // When
         cloneOperator.clone(listOf())
 
-        //Then
+        // Then
         verify { filesOperator.refreshClones() }
         verify {
             notificationsOperator.show(
@@ -118,14 +118,14 @@ class CloneOperatorTest {
 
     @Test
     fun `clone repos failed`() = runBlocking {
-        //Given
+        // Given
         val state = listOf("repo1" to listOf("success"), "repo2" to listOf())
         mockStates(state)
 
-        //When
+        // When
         cloneOperator.clone(listOf())
 
-        //Then
+        // Then
         verify { filesOperator.refreshClones() }
         verify {
             notificationsOperator.show(
@@ -153,7 +153,7 @@ class CloneOperatorTest {
 
     @Test
     fun `clone repos`() = runBlocking {
-        //Given
+        // Given
         val pullRequest = mockk<PullRequestWrapper>()
         val applyOutput = ApplyOutput("anydir", "anystd", "", 0)
         every { projectOperator.project.basePath } returns ".tmp/"
@@ -166,16 +166,16 @@ class CloneOperatorTest {
         every { pullRequest.isFork() } returns false
         every { processOperator.runCommandAsync(any(), any()) } returns CompletableDeferred(applyOutput)
 
-        //When
+        // When
         cloneOperator.cloneRepos(pullRequest)
 
-        //Then
+        // Then
         verify { processOperator.runCommandAsync(any(), any()) }
     }
 
     @Test
     fun `clone repos and promote origin to fork remote`() = runBlocking {
-        //Given
+        // Given
         val pullRequest = mockk<PullRequestWrapper>()
         val applyOutput = ApplyOutput("anydir", "anystd", "", 0)
         every { projectOperator.project.basePath } returns ".tmp/"
@@ -190,10 +190,10 @@ class CloneOperatorTest {
         every { processOperator.runCommandAsync(any(), any()) } returns CompletableDeferred(applyOutput)
         coEvery { localRepoOperator.promoteOriginToForkRemote(any(), any()) } returns listOf()
 
-        //When
+        // When
         cloneOperator.cloneRepos(pullRequest)
 
-        //Then
+        // Then
         verify { processOperator.runCommandAsync(any(), any()) }
         coVerify { localRepoOperator.promoteOriginToForkRemote(any(), "clone-url-to") }
         confirmVerified(localRepoOperator, processOperator)
@@ -201,7 +201,7 @@ class CloneOperatorTest {
 
     @Test
     fun `clone repos failed on both attempts`() = runBlocking {
-        //Given
+        // Given
         val pullRequest = mockk<PullRequestWrapper>()
         val applyOutput = ApplyOutput("anydir", "anystd", "", 1)
 
@@ -215,10 +215,10 @@ class CloneOperatorTest {
         every { pullRequest.isFork() } returns false
         every { processOperator.runCommandAsync(any(), any()) } returns CompletableDeferred(applyOutput)
 
-        //When
+        // When
         val states = cloneOperator.cloneRepos(pullRequest)
 
-        //Then
+        // Then
         verify(exactly = 2) { processOperator.runCommandAsync(any(), any()) }
         assertThat(states.size, equalTo(2))
         assertThat(states[0].first, equalTo("Failed shallow clone attempt"))
@@ -227,7 +227,7 @@ class CloneOperatorTest {
 
     @Test
     fun `clone repos and failed to switch branch`() = runBlocking {
-        //Given
+        // Given
         val pullRequest = mockk<PullRequestWrapper>()
         val applyOutput = ApplyOutput("anydir", "anystd", "", 1)
         val applyOutputCloneSuccess = ApplyOutput("anydir", "anystd", "", 0)
@@ -246,10 +246,10 @@ class CloneOperatorTest {
             )
         } returns CompletableDeferred(applyOutputCloneSuccess)
 
-        //When
+        // When
         val states = cloneOperator.cloneRepos(pullRequest)
 
-        //Then
+        // Then
         verify(exactly = 4) { processOperator.runCommandAsync(any(), any()) }
         assertThat(states.size, equalTo(2))
         assertThat(states[0].first, equalTo("Failed shallow clone attempt"))
@@ -258,17 +258,17 @@ class CloneOperatorTest {
 
     @Test
     fun `clone existent repository`() = runBlocking {
-        //Given
+        // Given
         val pullRequest = mockk<PullRequestWrapper>()
 
         val file = mockFile(pullRequest)
         every { file.mkdirs() } returns true
         every { file.exists() } returns true
 
-        //When
+        // When
         val states = cloneOperator.cloneRepos(pullRequest)
 
-        //Then
+        // Then
         assertThat(states.size, equalTo(1))
         assertThat(states[0].first, equalTo("Repo already cloned"))
         verify { filesOperator.getFile(path = any()) }

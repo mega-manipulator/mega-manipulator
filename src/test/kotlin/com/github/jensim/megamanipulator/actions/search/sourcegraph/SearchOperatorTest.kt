@@ -53,26 +53,25 @@ class SearchOperatorTest {
 
     @Test
     fun search() = runBlocking {
-        //Given
+        // Given
         every { settingsFileOperator.readSettings() } returns settings
         coEvery { sourcegraphSearchClient.search(any(), any(), any()) } returns emptySet()
 
-        //When
+        // When
         val sourceGraphSettings = searchOperator.search(searchHostName, "Dockerfile")
 
-        //Then
+        // Then
         assertEquals(sourceGraphSettings, emptySet())
         verify { settingsFileOperator.readSettings() }
         coVerify { sourcegraphSearchClient.search(any(), any(), any()) }
-
     }
 
     @Test
     fun searchNotFound() = runBlocking {
-        //Given
+        // Given
         every { settingsFileOperator.readSettings() } returns settings
 
-        //When
+        // When
         val nullPointerException = assertThrows<NullPointerException> {
             searchOperator.search(
                 "any-hostname",
@@ -80,7 +79,7 @@ class SearchOperatorTest {
             )
         }
 
-        //Then
+        // Then
         assertThat(nullPointerException.localizedMessage, equalTo("No settings for search host named any-hostname"))
         verify { settingsFileOperator.readSettings() }
         coVerify { sourcegraphSearchClient.search(any(), any(), any()) wasNot Called }
