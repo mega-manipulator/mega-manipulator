@@ -65,47 +65,58 @@ class CloneOperator(
     }
 
     fun clone(pullRequests: List<PullRequestWrapper>) {
-        val state: List<Pair<PullRequestWrapper, List<Pair<String, ApplyOutput>>?>> = uiProtector.mapConcurrentWithProgress(
-            title = "Cloning repos",
-            extraText1 = "Cloning repos",
-            extraText2 = { it.asPathString() },
-            data = pullRequests,
-        ) { pullRequest ->
-            val basePath = projectOperator.project?.basePath!!
-            val fullPath = "$basePath/clones/${pullRequest.searchHostName()}/${pullRequest.codeHostName()}/${pullRequest.project()}/${pullRequest.baseRepo()}"
-            val dir = File(fullPath)
-            val badState: List<Pair<String, ApplyOutput>> = clone(dir, pullRequest.cloneUrlFrom()!!, pullRequest.fromBranch())
-            if (badState.isEmpty() && pullRequest.isFork()) {
-                localRepoOperator.promoteOriginToForkRemote(dir, pullRequest.cloneUrlTo()!!)
-            }
-            badState
-        }
+        val state: List<Pair<PullRequestWrapper, List<Pair<String, ApplyOutput>>?>> =
+            uiProtector.mapConcurrentWithProgress(
+                title = "Cloning repos",
+                extraText1 = "Cloning repos",
+                extraText2 = { it.asPathString() },
+                data = pullRequests,
+            ) { cloneRepos(it) }
         filesOperator.refreshClones()
         reportState(state)
+    }
+
+    suspend fun cloneRepos(pullRequest: PullRequestWrapper): List<Pair<String, ApplyOutput>> {
+        val basePath = projectOperator.project.basePath!!
+        val fullPath =
+            "$basePath/clones/${pullRequest.searchHostName()}/${pullRequest.codeHostName()}/${pullRequest.project()}/${pullRequest.baseRepo()}"
+        val dir = filesOperator.getFile(path = fullPath)
+        val badState: List<Pair<String, ApplyOutput>> =
+            clone(dir, pullRequest.cloneUrlFrom()!!, pullRequest.fromBranch())
+        if (badState.isEmpty() && pullRequest.isFork()) {
+            localRepoOperator.promoteOriginToForkRemote(dir, pullRequest.cloneUrlTo()!!)
+        }
+        return badState
     }
 
     private suspend fun clone(dir: File, cloneUrl: String, branch: String): List<Pair<String, ApplyOutput>> {
         val badState: MutableList<Pair<String, ApplyOutput>> = mutableListOf()
         dir.mkdirs()
-        if (File(dir, ".git").exists()) {
+        if (filesOperator.getFile(dir, ".git").exists()) {
             badState.add("Repo already cloned" to ApplyOutput.dummy(dir = dir.path, std = "Repo already cloned"))
-        } else {
-            val p0 = processOperator.runCommandAsync(dir.parentFile, listOf("git", "clone", cloneUrl, "--depth", "1", "--branch", branch, dir.absolutePath)).await()
-            if (p0.exitCode != 0) {
-                badState.add("Failed shallow clone attempt" to p0)
-                val p1 = processOperator.runCommandAsync(dir.parentFile, listOf("git", "clone", cloneUrl, dir.absolutePath)).await()
-                if (p1.exitCode != 0) {
-                    badState.add("Failed fill clone attempt" to p1)
-                } else {
-                    val p2 = processOperator.runCommandAsync(dir, listOf("git", "checkout", branch)).await()
-                    if (p2.exitCode != 0) {
-                        val p3 = processOperator.runCommandAsync(dir, listOf("git", "checkout", "-b", branch)).await()
-                        if (p3.exitCode != 0) {
-                            badState.add("Branch switch failed" to p3)
-                        }
-                    }
-                }
-            }
+            return badState
+        }
+        val p0 = processOperator.runCommandAsync(
+            dir.parentFile,
+            listOf("git", "clone", cloneUrl, "--depth", "1", "--branch", branch, dir.absolutePath)
+        ).await()
+        if (p0.exitCode == 0) {
+            return badState
+        }
+        badState.add("Failed shallow clone attempt" to p0)
+        val p1 =
+            processOperator.runCommandAsync(dir.parentFile, listOf("git", "clone", cloneUrl, dir.absolutePath)).await()
+        if (p1.exitCode != 0) {
+            badState.add("Failed fill clone attempt" to p1)
+            return badState
+        }
+        val p2 = processOperator.runCommandAsync(dir, listOf("git", "checkout", branch)).await()
+        if (p2.exitCode == 0) {
+            return badState
+        }
+        val p3 = processOperator.runCommandAsync(dir, listOf("git", "checkout", "-b", branch)).await()
+        if (p3.exitCode != 0) {
+            badState.add("Branch switch failed" to p3)
         }
         return badState
     }

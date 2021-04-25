@@ -34,8 +34,12 @@ class FilesOperator(
         refresh("clones")
     }
 
+    fun getFile(dir: File? = null, path: String): File {
+        return File(dir, path)
+    }
+
     private fun refresh(dir: String) {
-        val projectRoot = File(projectOperator.project?.basePath!!)
+        val projectRoot = File(projectOperator.project.basePath!!)
         val root = File(projectRoot, dir)
         val tree = root.walkTopDown().onEnter { it.isDirectory }.iterator().asSequence().toList()
         LocalFileSystem.getInstance().refreshIoFiles(tree + root + projectRoot)
