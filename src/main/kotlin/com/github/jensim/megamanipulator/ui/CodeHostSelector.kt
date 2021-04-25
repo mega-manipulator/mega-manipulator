@@ -5,20 +5,15 @@ import com.github.jensim.megamanipulator.ui.CodeHostSelector.CodeHostSelect
 import com.intellij.openapi.ui.ComboBox
 
 class CodeHostSelector(
-    private val codeHostLoader: () -> List<CodeHostSelect> = this::defaultLoader
-
+    private val settingsFileOperator: SettingsFileOperator,
+    private val codeHostLoader: () -> List<CodeHostSelect> = {
+        settingsFileOperator.readSettings()?.searchHostSettings?.flatMap { (searchName, searchWrapper) ->
+            searchWrapper.codeHostSettings.keys.map { codeHost ->
+                CodeHostSelect(searchName, codeHost)
+            }
+        }.orEmpty()
+    },
 ) : ComboBox<CodeHostSelect>() {
-
-    companion object {
-
-        private fun defaultLoader(): List<CodeHostSelect> {
-            return SettingsFileOperator.instance.readSettings()?.searchHostSettings?.flatMap { (searchName, searchWrapper) ->
-                searchWrapper.codeHostSettings.keys.map { codeHost ->
-                    CodeHostSelect(searchName, codeHost)
-                }
-            }.orEmpty()
-        }
-    }
 
     data class CodeHostSelect(
         val searchHostName: String,

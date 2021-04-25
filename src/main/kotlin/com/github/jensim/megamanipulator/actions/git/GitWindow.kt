@@ -40,22 +40,6 @@ class GitWindow(
     private val uiProtector: UiProtector,
 ) : ToolWindowTab {
 
-    companion object {
-
-        val instance by lazy {
-            GitWindow(
-                localRepoOperator = LocalRepoOperator.instance,
-                processOperator = ProcessOperator.instance,
-                commitOperator = CommitOperator.instance,
-                dialogGenerator = DialogGenerator.instance,
-                filesOperator = FilesOperator.instance,
-                projectOperator = ProjectOperator.instance,
-                prRouter = PrRouter.instance,
-                uiProtector = UiProtector.instance,
-            )
-        }
-    }
-
     private val repoList = JBList<DirResult>().apply {
         minimumSize = Dimension(250, 50)
     }
@@ -87,13 +71,8 @@ class GitWindow(
                 button("Set branch") {
                     val branch: String? = JOptionPane.showInputDialog("This will not reset the repos to origin/default-branch first!!\nSelect branch name")
                     if (branch != null && branch.isNotEmpty() || !branch!!.contains(' ')) {
-                        uiProtector.uiProtectedOperation(title = "Switching branches") {
-                            val localRepoFiles = localRepoOperator.getLocalRepoFiles()
-                            uiProtector.mapConcurrentWithProgress(title = "Checkout branch $branch", data = localRepoFiles) { dir ->
-                                processOperator.runCommandAsync(dir, listOf("git", "checkout", "-b", "$branch"))
-                            }
-                            refresh()
-                        }
+                        localRepoOperator.switchBranch(branch)
+                        refresh()
                     }
                 }
                 button("Commit and Push") {
@@ -122,7 +101,7 @@ class GitWindow(
                 }
             }
             button("Clean away local repos") {
-                dialogGenerator.showConfirm(title = "Are you sure?!", message = "This will remove the entire clones dir from disk, no recovery available!") {
+                if (dialogGenerator.showConfirm(title = "Are you sure?!", message = "This will remove the entire clones dir from disk, no recovery available!")) {
                     val output: ApplyOutput = projectOperator.project?.basePath?.let { dir ->
                         uiProtector.uiProtectedOperation(title = "Remove all local clones") {
                             processOperator.runCommandAsync(File(dir), listOf("rm", "-rf", "clones")).await()

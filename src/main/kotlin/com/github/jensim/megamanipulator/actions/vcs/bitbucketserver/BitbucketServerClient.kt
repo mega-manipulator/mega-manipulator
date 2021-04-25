@@ -8,7 +8,6 @@ import com.github.jensim.megamanipulator.actions.vcs.BitBucketRepoWrapping
 import com.github.jensim.megamanipulator.actions.vcs.PullRequestWrapper
 import com.github.jensim.megamanipulator.http.HttpClientProvider
 import com.github.jensim.megamanipulator.settings.CodeHostSettings.BitBucketSettings
-import com.github.jensim.megamanipulator.settings.SerializationHolder
 import com.intellij.notification.NotificationType
 import io.ktor.client.HttpClient
 import io.ktor.client.request.delete
@@ -27,16 +26,6 @@ class BitbucketServerClient(
     private val notificationsOperator: NotificationsOperator,
     private val json: Json,
 ) {
-    companion object {
-        val instance by lazy {
-            BitbucketServerClient(
-                httpClientProvider = HttpClientProvider.instance,
-                localRepoOperator = LocalRepoOperator.instance,
-                notificationsOperator = NotificationsOperator.instance,
-                json = SerializationHolder.instance.readableJson,
-            )
-        }
-    }
 
     private suspend fun getDefaultReviewers(client: HttpClient, settings: BitBucketSettings, pullRequest: BitBucketPullRequestWrapper): List<BitBucketUser> {
         return client.get("${settings.baseUrl}/rest/default-reviewers/1.0/projects/${pullRequest.project()}/repos/${pullRequest.baseRepo()}/reviewers?sourceRepoId=${pullRequest.bitbucketPR.fromRef.repository.id}&targetRepoId=${pullRequest.bitbucketPR.toRef.repository.id}&sourceRefId=${pullRequest.bitbucketPR.fromRef.id}&targetRefId=${pullRequest.bitbucketPR.toRef.id}")

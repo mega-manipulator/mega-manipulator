@@ -6,7 +6,6 @@ import com.github.jensim.megamanipulator.actions.vcs.GithubComPullRequestWrapper
 import com.github.jensim.megamanipulator.actions.vcs.GithubComRepoWrapping
 import com.github.jensim.megamanipulator.http.HttpClientProvider
 import com.github.jensim.megamanipulator.settings.CodeHostSettings.GitHubSettings
-import com.github.jensim.megamanipulator.settings.SerializationHolder
 import io.ktor.client.HttpClient
 import io.ktor.client.request.delete
 import io.ktor.client.request.get
@@ -28,16 +27,6 @@ class GithubComClient(
     private val localRepoOperator: LocalRepoOperator,
     private val json: Json,
 ) {
-
-    companion object {
-        val instance by lazy {
-            GithubComClient(
-                httpClientProvider = HttpClientProvider.instance,
-                localRepoOperator = LocalRepoOperator.instance,
-                json = SerializationHolder.instance.readableJson
-            )
-        }
-    }
 
     fun addDefaultReviewers(settings: GitHubSettings, pullRequest: GithubComPullRequestWrapper): GithubComPullRequestWrapper {
         throw UnsupportedOperationException("Might never implement  ¯\\_(ツ)_/¯ ${settings.username}@${pullRequest.searchHost}/${pullRequest.codeHost}")
@@ -139,7 +128,8 @@ class GithubComClient(
                         client.delete<String?>("${settings.baseUrl}/repos/${settings.username}/${updatedPr.head.repo.name}")
                     }
                 } else {
-                    client.delete<String?>("${settings.baseUrl}/repos/${updatedPr.head.repo.owner.login}/${updatedPr.head.repo.name}/git/refs/${updatedPr.head.ref}")
+                    // https://docs.github.com/en/rest/reference/git#delete-a-reference
+                    client.delete<String?>("${settings.baseUrl}/repos/${updatedPr.head.repo.owner.login}/${updatedPr.head.repo.name}/git/refs/heads/${updatedPr.head.ref}")
                 }
             }
         }

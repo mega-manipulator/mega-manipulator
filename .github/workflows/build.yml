@@ -15,13 +15,18 @@
 
 name: Build
 on:
+  workflow_dispatch:
   push:
+    branches-ignore:
+      - "integration_test/*"
     paths-ignore:
       - ".github/**/*"
       - ".run/**/*"
       - "*.md"
       - "*.txt"
   pull_request:
+    branches-ignore:
+      - "integration_test/*"
 jobs:
 
   # Run Gradle Wrapper Validation Action to verify the wrapper's checksum
@@ -68,6 +73,21 @@ jobs:
         with:
           path: ~/.gradle/wrapper
           key: ${{ runner.os }}-gradle-wrapper-${{ hashFiles('**/gradle/wrapper/gradle-wrapper.properties') }}
+
+      - name: Install ssh keys
+        env:
+          SSH_WRITE_PRIVATE: ${{ secrets.SSH_WRITE_PRIVATE }}
+          SSH_WRITE_PUBLIC: ${{ secrets.SSH_WRITE_PUBLIC }}
+        run: |
+          mkdir -p "$HOME/.ssh"
+          echo "$SSH_WRITE_PRIVATE" > "$HOME/.ssh/id_ed25519"
+          chmod 0700 "$HOME/.ssh/id_ed25519"
+          echo "$SSH_WRITE_PUBLIC" > "$HOME/.ssh/id_ed25519.pub"
+          chmod 0700 "$HOME/.ssh/id_ed25519.pub"
+          eval "$(ssh-agent -s)"
+          ssh-add
+          git config --global user.email "jens.brimfors@gmail.com"
+          git config --global user.name "Jens Brimfors"
 
       # Run detekt, ktlint and tests
       - name: Run Linters and Test

@@ -25,13 +25,6 @@ class IntelliJPasswordsOperator(
 ) : PasswordsOperator {
 
     companion object {
-
-        val instance by lazy {
-            IntelliJPasswordsOperator(
-                notificationsOperator = NotificationsOperator.instance,
-                serializationHolder = SerializationHolder.instance,
-            )
-        }
         private const val service = "mega-manipulator"
     }
 

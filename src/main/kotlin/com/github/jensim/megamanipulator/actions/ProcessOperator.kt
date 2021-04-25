@@ -11,15 +11,6 @@ class ProcessOperator(
     private val projectOperator: ProjectOperator,
 ) {
 
-    companion object {
-
-        val instance by lazy {
-            ProcessOperator(
-                projectOperator = ProjectOperator.instance,
-            )
-        }
-    }
-
     fun runCommandAsync(workingDir: File, command: List<String>): Deferred<ApplyOutput> {
         val project = projectOperator.project!!
         val tempOutput = File.createTempFile("mega-manipulator-apply-out", "txt")

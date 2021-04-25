@@ -15,19 +15,6 @@ class ApplyOperator(
     private val uiProtector: UiProtector,
 ) {
 
-    companion object {
-
-        val instance by lazy {
-            ApplyOperator(
-                settingsFileOperator = SettingsFileOperator.instance,
-                filesOperator = FilesOperator.instance,
-                processOperator = ProcessOperator.instance,
-                localRepoOperator = LocalRepoOperator.instance,
-                uiProtector = UiProtector.instance,
-            )
-        }
-    }
-
     fun apply(): List<ApplyOutput> {
         if (!settingsFileOperator.scriptFile.exists()) {
             return emptyList()

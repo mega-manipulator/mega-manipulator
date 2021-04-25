@@ -17,19 +17,20 @@ class DialogGenerator {
         }
     }
 
-    fun showConfirm(title: String, message: String, onCancel: () -> Unit = {}, messageType: Int = QUESTION_MESSAGE, optionType: Int = OK_CANCEL_OPTION, onOk: () -> Unit) {
-        try {
-            when (JOptionPane.showConfirmDialog(null, message, title, optionType, messageType, null)) {
-                OK_OPTION -> onOk()
-                else -> onCancel()
+    fun showConfirm(title: String, message: String): Boolean {
+        return try {
+            when (JOptionPane.showConfirmDialog(null, message, title, OK_CANCEL_OPTION, QUESTION_MESSAGE, null)) {
+                OK_OPTION -> true
+                else -> false
             }
         } catch (e: Exception) {
             e.printStackTrace()
+            false
         }
     }
 
-    fun askForInput(title: String, message: String, onCancel: () -> Unit = {}, messageType: Int = QUESTION_MESSAGE, optionType: Int = OK_CANCEL_OPTION, onOk: (String) -> Unit) {
-        try {
+    fun askForInput(title: String, message: String): String? {
+        return try {
             val field = JBTextArea().apply {
                 minimumSize = Dimension(500, 300)
             }
@@ -39,12 +40,13 @@ class DialogGenerator {
                     component(field)
                 }
             }
-            when (JOptionPane.showConfirmDialog(null, panel, title, optionType, messageType, null)) {
-                OK_OPTION -> onOk(field.text ?: "")
-                else -> onCancel()
+            when (JOptionPane.showConfirmDialog(null, panel, title, OK_CANCEL_OPTION, QUESTION_MESSAGE, null)) {
+                OK_OPTION -> field.text
+                else -> null
             }
         } catch (e: Exception) {
             e.printStackTrace()
+            null
         }
     }
 }

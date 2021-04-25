@@ -25,23 +25,8 @@ class CloneOperator(
     private val uiProtector: UiProtector,
 ) {
 
-    companion object {
-
-        val instance by lazy {
-            CloneOperator(
-                filesOperator = FilesOperator.instance,
-                projectOperator = ProjectOperator.instance,
-                prRouter = PrRouter.instance,
-                localRepoOperator = LocalRepoOperator.instance,
-                processOperator = ProcessOperator.instance,
-                notificationsOperator = NotificationsOperator.instance,
-                uiProtector = UiProtector.instance,
-            )
-        }
-    }
-
     fun clone(repos: Set<SearchResult>) {
-        val basePath = projectOperator.project?.basePath!!
+        val basePath = projectOperator.project.basePath!!
 
         filesOperator.refreshConf()
         val state: List<Pair<SearchResult, List<Pair<String, ApplyOutput>>?>> = uiProtector.mapConcurrentWithProgress(

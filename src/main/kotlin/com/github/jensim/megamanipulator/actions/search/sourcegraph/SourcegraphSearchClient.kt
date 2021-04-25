@@ -15,16 +15,6 @@ class SourcegraphSearchClient(
     private val notificationsOperator: NotificationsOperator,
 ) {
 
-    companion object {
-
-        val instance by lazy {
-            SourcegraphSearchClient(
-                httpClientProvider = HttpClientProvider.instance,
-                notificationsOperator = NotificationsOperator.instance,
-            )
-        }
-    }
-
     suspend fun search(searchHostName: String, settings: SourceGraphSettings, search: String): Set<SearchResult> {
         try {
             val baseUrl = settings.baseUrl

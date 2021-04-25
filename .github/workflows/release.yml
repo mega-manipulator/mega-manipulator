@@ -4,7 +4,9 @@
 name: Release
 on:
   release:
-    types: [prereleased, released]
+    types:
+     - released
+#     - prereleased
 
 jobs:
 

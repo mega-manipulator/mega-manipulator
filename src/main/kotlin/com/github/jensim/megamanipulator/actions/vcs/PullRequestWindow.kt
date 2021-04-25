@@ -1,6 +1,7 @@
 package com.github.jensim.megamanipulator.actions.vcs
 
 import com.github.jensim.megamanipulator.settings.SerializationHolder
+import com.github.jensim.megamanipulator.settings.SettingsFileOperator
 import com.github.jensim.megamanipulator.toolswindow.ToolWindowTab
 import com.github.jensim.megamanipulator.ui.CodeHostSelector
 import com.github.jensim.megamanipulator.ui.GeneralListCellRenderer.addCellRenderer
@@ -26,25 +27,14 @@ class PullRequestWindow(
     private val serializationHolder: SerializationHolder,
     private val uiProtector: UiProtector,
     private val pullRequestActionsMenu: PullRequestActionsMenu,
+    settingsFileOperator: SettingsFileOperator,
 ) : ToolWindowTab {
-
-    companion object {
-
-        val instance by lazy {
-            PullRequestWindow(
-                prRouter = PrRouter.instance,
-                serializationHolder = SerializationHolder.instance,
-                uiProtector = UiProtector.instance,
-                pullRequestActionsMenu = PullRequestActionsMenu.instance
-            )
-        }
-    }
 
     override val index: Int = 4
 
     private val search = JBTextField(50)
     private val pullRequests: MutableList<PullRequestWrapper> = mutableListOf()
-    private val codeHostSelect = CodeHostSelector()
+    private val codeHostSelect = CodeHostSelector(settingsFileOperator)
     private val prList = JBList<PullRequestWrapper>()
     private val prScroll = JBScrollPane(prList)
     private val peekArea = JBTextArea()

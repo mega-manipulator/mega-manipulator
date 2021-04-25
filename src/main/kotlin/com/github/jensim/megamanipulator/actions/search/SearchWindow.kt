@@ -20,18 +20,6 @@ class SearchWindow(
     private val uiProtector: UiProtector,
 ) : ToolWindowTab {
 
-    companion object {
-
-        val instance by lazy {
-            SearchWindow(
-                searchOperator = SearchOperator.instance,
-                settingsFileOperator = SettingsFileOperator.instance,
-                cloneOperator = CloneOperator.instance,
-                uiProtector = UiProtector.instance,
-            )
-        }
-    }
-
     private val searchHostSelect = ComboBox<String>()
     private val searchButton = JButton("Search")
     private val cloneButton = JButton("Clone selected")
