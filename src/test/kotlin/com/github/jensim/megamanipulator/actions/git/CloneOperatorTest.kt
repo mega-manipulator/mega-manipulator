@@ -100,18 +100,7 @@ class CloneOperatorTest {
 
         //Given
         val state = listOf<Pair<String, List<String>>>()
-        every {
-            uiProtector.mapConcurrentWithProgress<String, List<String>>(
-                title = CLONING_TITLE_AND_MESSAGE,
-                extraText1 = CLONING_TITLE_AND_MESSAGE,
-                extraText2 = any(),
-                data = any(),
-                mappingFunction = any()
-            )
-        } returns state
-
-        every { filesOperator.refreshClones() } returns Unit
-        every { notificationsOperator.show(any(), any(), any()) } returns Unit
+        mockStates(state)
 
         //When
         cloneOperator.clone(listOf())
@@ -131,18 +120,7 @@ class CloneOperatorTest {
     fun `clone repos failed`() = runBlocking {
         //Given
         val state = listOf("repo1" to listOf("success"), "repo2" to listOf())
-        every {
-            uiProtector.mapConcurrentWithProgress<String, List<String>>(
-                title = CLONING_TITLE_AND_MESSAGE,
-                extraText1 = CLONING_TITLE_AND_MESSAGE,
-                extraText2 = any(),
-                data = any(),
-                mappingFunction = any()
-            )
-        } returns state
-
-        every { filesOperator.refreshClones() } returns Unit
-        every { notificationsOperator.show(any(), any(), any()) } returns Unit
+        mockStates(state)
 
         //When
         cloneOperator.clone(listOf())
@@ -156,6 +134,21 @@ class CloneOperatorTest {
                 NotificationType.WARNING
             )
         }
+    }
+
+    private fun mockStates(state: List<Pair<String, List<String>>>) {
+        every {
+            uiProtector.mapConcurrentWithProgress<String, List<String>>(
+                title = CLONING_TITLE_AND_MESSAGE,
+                extraText1 = CLONING_TITLE_AND_MESSAGE,
+                extraText2 = any(),
+                data = any(),
+                mappingFunction = any()
+            )
+        } returns state
+
+        every { filesOperator.refreshClones() } returns Unit
+        every { notificationsOperator.show(any(), any(), any()) } returns Unit
     }
 
     @Test
@@ -227,7 +220,6 @@ class CloneOperatorTest {
 
         //Then
         verify(exactly = 2) { processOperator.runCommandAsync(any(), any()) }
-        // confirmVerified(projectOperator, filesOperator, cloneOperator)
         assertThat(states.size, equalTo(2))
         assertThat(states[0].first, equalTo("Failed shallow clone attempt"))
         assertThat(states[1].first, equalTo("Failed fill clone attempt"))
@@ -240,16 +232,7 @@ class CloneOperatorTest {
         val applyOutput = ApplyOutput("anydir", "anystd", "", 1)
         val applyOutputCloneSuccess = ApplyOutput("anydir", "anystd", "", 0)
 
-        val file = mockk<File>(relaxed = true)
-        every { projectOperator.project.basePath } returns ".tmp/"
-        every { pullRequest.searchHostName() } returns "test"
-        every { pullRequest.codeHostName() } returns "codeHostName"
-        every { pullRequest.project() } returns PROJECT
-        every { pullRequest.baseRepo() } returns BASE_REPO
-        every { pullRequest.cloneUrlFrom() } returns "any-url-from"
-        every { pullRequest.fromBranch() } returns "main"
-        every { pullRequest.isFork() } returns false
-        every { filesOperator.getFile(any(), any()) } returns file
+        val file = mockFile(pullRequest)
         every { filesOperator.getFile(path = any()) } returns file
         every { file.mkdirs() } returns true
         every { file.absolutePath } returns ".tmp/mega-manipulator"
@@ -278,16 +261,7 @@ class CloneOperatorTest {
         //Given
         val pullRequest = mockk<PullRequestWrapper>()
 
-        val file = mockk<File>(relaxed = true)
-        every { projectOperator.project.basePath } returns ".tmp/"
-        every { pullRequest.searchHostName() } returns "test"
-        every { pullRequest.codeHostName() } returns "codeHostName"
-        every { pullRequest.project() } returns PROJECT
-        every { pullRequest.baseRepo() } returns BASE_REPO
-        every { pullRequest.cloneUrlFrom() } returns "any-url-from"
-        every { pullRequest.fromBranch() } returns "main"
-        every { pullRequest.isFork() } returns false
-        every { filesOperator.getFile(any(), any()) } returns file
+        val file = mockFile(pullRequest)
         every { file.mkdirs() } returns true
         every { file.exists() } returns true
 
@@ -300,5 +274,19 @@ class CloneOperatorTest {
         verify { filesOperator.getFile(path = any()) }
         verify { filesOperator.getFile(any(), ".git") }
         confirmVerified(filesOperator)
+    }
+
+    private fun mockFile(pullRequest: PullRequestWrapper): File {
+        val file = mockk<File>(relaxed = true)
+        every { projectOperator.project.basePath } returns ".tmp/"
+        every { pullRequest.searchHostName() } returns "test"
+        every { pullRequest.codeHostName() } returns "codeHostName"
+        every { pullRequest.project() } returns PROJECT
+        every { pullRequest.baseRepo() } returns BASE_REPO
+        every { pullRequest.cloneUrlFrom() } returns "any-url-from"
+        every { pullRequest.fromBranch() } returns "main"
+        every { pullRequest.isFork() } returns false
+        every { filesOperator.getFile(any(), any()) } returns file
+        return file
     }
 }
