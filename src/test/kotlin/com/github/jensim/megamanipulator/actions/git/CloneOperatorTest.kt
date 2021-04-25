@@ -55,6 +55,12 @@ class CloneOperatorTest {
 
     @InjectMockKs
     private lateinit var cloneOperator: CloneOperator
+    
+    companion object {
+        private const val CLONING_TITLE_AND_MESSAGE = "Cloning repos"
+        private const val PROJECT = "mega-manipulator"
+        private const val BASE_REPO = "base_repo"
+    }
 
     @Test
     fun `clone with search requests`() = runBlocking {
@@ -62,15 +68,15 @@ class CloneOperatorTest {
         val state = listOf<Pair<String, List<String>>>()
         every {
             uiProtector.mapConcurrentWithProgress<String, List<String>>(
-                title = "Cloning repos",
-                extraText1 = "Cloning repos",
+                title = CLONING_TITLE_AND_MESSAGE,
+                extraText1 = CLONING_TITLE_AND_MESSAGE,
                 extraText2 = any(),
                 data = any(),
                 mappingFunction = any()
             )
         } returns state
 
-        every { projectOperator.project.basePath } returns ".tmp/mega-manipulator"
+        every { projectOperator.project.basePath } returns ".tmp/mega-manipulator-path"
         every { filesOperator.refreshConf() } returns Unit
         every { filesOperator.refreshClones() } returns Unit
         every { notificationsOperator.show(any(), any(), any()) } returns Unit
@@ -96,8 +102,8 @@ class CloneOperatorTest {
         val state = listOf<Pair<String, List<String>>>()
         every {
             uiProtector.mapConcurrentWithProgress<String, List<String>>(
-                title = "Cloning repos",
-                extraText1 = "Cloning repos",
+                title = CLONING_TITLE_AND_MESSAGE,
+                extraText1 = CLONING_TITLE_AND_MESSAGE,
                 extraText2 = any(),
                 data = any(),
                 mappingFunction = any()
@@ -127,8 +133,8 @@ class CloneOperatorTest {
         val state = listOf("repo1" to listOf("success"), "repo2" to listOf())
         every {
             uiProtector.mapConcurrentWithProgress<String, List<String>>(
-                title = "Cloning repos",
-                extraText1 = "Cloning repos",
+                title = CLONING_TITLE_AND_MESSAGE,
+                extraText1 = CLONING_TITLE_AND_MESSAGE,
                 extraText2 = any(),
                 data = any(),
                 mappingFunction = any()
@@ -160,8 +166,8 @@ class CloneOperatorTest {
         every { projectOperator.project.basePath } returns ".tmp/"
         every { pullRequest.searchHostName() } returns "test"
         every { pullRequest.codeHostName() } returns "codeHostName"
-        every { pullRequest.project() } returns "mega-manipulator"
-        every { pullRequest.baseRepo() } returns "base-repo"
+        every { pullRequest.project() } returns PROJECT
+        every { pullRequest.baseRepo() } returns BASE_REPO
         every { pullRequest.cloneUrlFrom() } returns "any-url-from"
         every { pullRequest.fromBranch() } returns "main"
         every { pullRequest.isFork() } returns false
@@ -182,8 +188,8 @@ class CloneOperatorTest {
         every { projectOperator.project.basePath } returns ".tmp/"
         every { pullRequest.searchHostName() } returns "test"
         every { pullRequest.codeHostName() } returns "codeHostName"
-        every { pullRequest.project() } returns "mega-manipulator"
-        every { pullRequest.baseRepo() } returns "base-repo"
+        every { pullRequest.project() } returns PROJECT
+        every { pullRequest.baseRepo() } returns BASE_REPO
         every { pullRequest.cloneUrlFrom() } returns "any-url-from"
         every { pullRequest.fromBranch() } returns "main"
         every { pullRequest.cloneUrlTo() } returns "clone-url-to"
@@ -209,8 +215,8 @@ class CloneOperatorTest {
         every { projectOperator.project.basePath } returns ".tmp/"
         every { pullRequest.searchHostName() } returns "test"
         every { pullRequest.codeHostName() } returns "codeHostName"
-        every { pullRequest.project() } returns "mega-manipulator"
-        every { pullRequest.baseRepo() } returns "base-repo"
+        every { pullRequest.project() } returns PROJECT
+        every { pullRequest.baseRepo() } returns BASE_REPO
         every { pullRequest.cloneUrlFrom() } returns "any-url-from"
         every { pullRequest.fromBranch() } returns "main"
         every { pullRequest.isFork() } returns false
@@ -238,8 +244,8 @@ class CloneOperatorTest {
         every { projectOperator.project.basePath } returns ".tmp/"
         every { pullRequest.searchHostName() } returns "test"
         every { pullRequest.codeHostName() } returns "codeHostName"
-        every { pullRequest.project() } returns "mega-manipulator"
-        every { pullRequest.baseRepo() } returns "base-repo"
+        every { pullRequest.project() } returns PROJECT
+        every { pullRequest.baseRepo() } returns BASE_REPO
         every { pullRequest.cloneUrlFrom() } returns "any-url-from"
         every { pullRequest.fromBranch() } returns "main"
         every { pullRequest.isFork() } returns false
@@ -276,8 +282,8 @@ class CloneOperatorTest {
         every { projectOperator.project.basePath } returns ".tmp/"
         every { pullRequest.searchHostName() } returns "test"
         every { pullRequest.codeHostName() } returns "codeHostName"
-        every { pullRequest.project() } returns "mega-manipulator"
-        every { pullRequest.baseRepo() } returns "base-repo"
+        every { pullRequest.project() } returns PROJECT
+        every { pullRequest.baseRepo() } returns BASE_REPO
         every { pullRequest.cloneUrlFrom() } returns "any-url-from"
         every { pullRequest.fromBranch() } returns "main"
         every { pullRequest.isFork() } returns false
