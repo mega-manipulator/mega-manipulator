@@ -181,7 +181,7 @@ class GithubComClient(
         val scopes = scopeString.orEmpty().split(Pattern.compile(",")).map { it.trim() }
         val expected = listOf("repo", "delete_repo")
         val missing = expected - scopes
-        val missingText = if (missing.isNotEmpty()) " $missing" else ""
+        val missingText = if (missing.isNotEmpty()) ", missing scopes: $missing" else ""
         "${response.status.value}:${response.status.description}$missingText"
     } catch (e: Exception) {
         e.printStackTrace()
