@@ -57,7 +57,7 @@ class LocalRepoOperator(
     }
 
     fun getBranch(searchResult: SearchResult): String? {
-        val dir = File("${projectOperator.project?.basePath!!}/clones/${searchResult.searchHostName}/${searchResult.codeHostName}/${searchResult.project}/${searchResult.repo}")
+        val dir = File("${projectOperator.project.basePath!!}/clones/${searchResult.searchHostName}/${searchResult.codeHostName}/${searchResult.project}/${searchResult.repo}")
         return getBranch(dir)
     }
 
@@ -82,7 +82,7 @@ class LocalRepoOperator(
     }
 
     private suspend fun getGitUrl(repo: SearchResult, remote: String): String? {
-        val dir = File("${projectOperator.project?.basePath!!}/clones/${repo.searchHostName}/${repo.codeHostName}/${repo.project}/${repo.repo}")
+        val dir = File("${projectOperator.project.basePath!!}/clones/${repo.searchHostName}/${repo.codeHostName}/${repo.project}/${repo.repo}")
         return try {
             processOperator.runCommandAsync(dir, listOf("git", "remote", "-v")).await().std.lines()
                 .filter { it.startsWith(remote) && it.endsWith("(push)") }

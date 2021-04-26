@@ -14,6 +14,7 @@ import io.ktor.client.request.delete
 import io.ktor.client.request.get
 import io.ktor.client.request.post
 import io.ktor.client.request.put
+import io.ktor.client.statement.HttpResponse
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonElement
@@ -271,6 +272,15 @@ class BitbucketServerClient(
         client.post<JsonElement>("${settings.baseUrl}/rest/api/1.0/projects/${pullRequest.project()}/repos/${pullRequest.baseRepo()}/pull-requests/${pullRequest.bitbucketPR.id}/comments") {
             body = BitBucketComment(text = comment)
         }
+    }
+
+    suspend fun validateAccess(searchHost: String, codeHost: String, settings: BitBucketSettings): String = try {
+        val client: HttpClient = httpClientProvider.getClient(searchHost, codeHost, settings)
+        val response = client.get<HttpResponse>("https://api.github.com/repos/jensim/mega-manipulator")
+        "${response.status.value}:${response.status.description}"
+    } catch (e: Exception) {
+        e.printStackTrace()
+        "Client error"
     }
 
     /*

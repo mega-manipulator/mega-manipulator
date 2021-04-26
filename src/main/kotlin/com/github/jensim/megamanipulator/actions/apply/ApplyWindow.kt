@@ -77,7 +77,7 @@ class ApplyWindow(
     }
 
     override fun refresh() {
-        button.isEnabled = projectOperator.project?.basePath?.let { File(it) }?.list()?.isNotEmpty() == true
+        button.isEnabled = projectOperator.project.basePath?.let { File(it) }?.list()?.isNotEmpty() == true
     }
 
     override val index: Int = 2

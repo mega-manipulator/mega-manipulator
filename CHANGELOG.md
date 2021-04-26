@@ -14,6 +14,19 @@
 ### Fixed
 
 ### Security
+## [0.0.21]
+### Added
+- Validate access tokens
+
+### Changed
+
+### Deprecated
+
+### Removed
+
+### Fixed
+
+### Security
 ## [0.0.20]
 ### Added
 - .env-file support for local development

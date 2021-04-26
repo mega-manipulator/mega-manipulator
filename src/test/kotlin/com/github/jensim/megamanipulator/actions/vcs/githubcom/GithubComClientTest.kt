@@ -1,17 +1,19 @@
 package com.github.jensim.megamanipulator.actions.vcs.githubcom
 
-import com.github.jensim.megamanipulator.TestHelper
-import com.github.jensim.megamanipulator.TestHelper.GITHUB_TOKEN
 import com.github.jensim.megamanipulator.TestHelper.MEGA_MANIPULATOR_REPO
 import com.github.jensim.megamanipulator.actions.NotificationsOperator
 import com.github.jensim.megamanipulator.actions.localrepo.LocalRepoOperator
 import com.github.jensim.megamanipulator.actions.search.SearchResult
 import com.github.jensim.megamanipulator.actions.vcs.GithubComRepoWrapping
 import com.github.jensim.megamanipulator.http.HttpClientProvider
+import com.github.jensim.megamanipulator.settings.CodeHostSettings.GitHubSettings
+import com.github.jensim.megamanipulator.settings.ForkSetting.PLAIN_BRANCH
 import com.github.jensim.megamanipulator.settings.MegaManipulatorSettings
 import com.github.jensim.megamanipulator.settings.SearchHostSettings.SourceGraphSettings
 import com.github.jensim.megamanipulator.settings.SerializationHolder
 import com.github.jensim.megamanipulator.settings.SettingsFileOperator
+import com.github.jensim.megamanipulator.test.EnvHelper
+import com.github.jensim.megamanipulator.test.EnvHelper.EnvProperty.GITHUB_USERNAME
 import com.github.jensim.megamanipulator.test.TestPasswordOperator
 import com.jetbrains.rd.util.first
 import io.mockk.every
@@ -21,25 +23,33 @@ import org.hamcrest.MatcherAssert.assertThat
 import org.hamcrest.Matchers.empty
 import org.hamcrest.Matchers.equalTo
 import org.hamcrest.Matchers.not
+import org.hamcrest.Matchers.startsWith
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 
 class GithubComClientTest {
 
-    private val githubSettings = TestHelper.githubCredentials
-    private val password = System.getProperty(GITHUB_TOKEN) ?: System.getenv(GITHUB_TOKEN)
+    private val envHelper = EnvHelper()
+    private val githubSettings = GitHubSettings(
+        username = envHelper.resolve(GITHUB_USERNAME),
+        forkSetting = PLAIN_BRANCH,
+    )
+    private val password = envHelper.resolve(GITHUB_USERNAME)
+    private val codeHost = "github.com"
+    private val searchHost = "sourcegraph.com"
     private val settings = MegaManipulatorSettings(
         searchHostSettings = mapOf(
-            "sourcegraph.com" to SourceGraphSettings(
+            searchHost to SourceGraphSettings(
                 baseUrl = "https://sourcegraph.com",
-                codeHostSettings = mapOf("github.com" to githubSettings)
+                codeHostSettings = mapOf(codeHost to githubSettings)
             )
         )
     )
     private val settingsMock: SettingsFileOperator = mockk {
         every { readSettings() } returns settings
     }
-    private val passwordsOperator = TestPasswordOperator(mapOf(githubSettings.username to githubSettings.baseUrl to password))
+    private val passwordsOperator =
+        TestPasswordOperator(mapOf(githubSettings.username to githubSettings.baseUrl to password))
     private val notificationsMock: NotificationsOperator = mockk()
     private val clientProvider = HttpClientProvider(
         settingsFileOperator = settingsMock,
@@ -61,7 +71,7 @@ class GithubComClientTest {
         val prs = runBlocking {
             client.getAllPrs(
                 searchHost = settings.searchHostSettings.first().key,
-                codeHost = "github.com",
+                codeHost = codeHost,
                 settings = githubSettings,
             )
         }
@@ -78,8 +88,8 @@ class GithubComClientTest {
     fun getRepo() {
         // given
         val repo = SearchResult(
-            searchHostName = settings.searchHostSettings.first().key,
-            codeHostName = "github.com",
+            searchHostName = searchHost,
+            codeHostName = codeHost,
             project = githubSettings.username,
             repo = MEGA_MANIPULATOR_REPO,
         )
@@ -91,5 +101,18 @@ class GithubComClientTest {
 
         // then
         assertThat(result.repo.name, equalTo(MEGA_MANIPULATOR_REPO))
+    }
+
+    @Test
+    internal fun `validate access token`() {
+        val result: String = runBlocking {
+            client.validateAccess(
+                searchHost = searchHost,
+                codeHost = codeHost,
+                settings = githubSettings
+            )
+        }
+
+        assertThat(result, startsWith("200:OK"))
     }
 }

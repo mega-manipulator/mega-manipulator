@@ -1,22 +1,30 @@
 package com.github.jensim.megamanipulator.settings
 
+import com.github.jensim.megamanipulator.actions.search.SearchOperator
+import com.github.jensim.megamanipulator.actions.vcs.PrRouter
 import com.github.jensim.megamanipulator.files.FilesOperator
 import com.github.jensim.megamanipulator.toolswindow.ToolWindowTab
 import com.github.jensim.megamanipulator.ui.GeneralListCellRenderer.addCellRenderer
+import com.github.jensim.megamanipulator.ui.UiProtector
 import com.intellij.ui.components.JBLabel
 import com.intellij.ui.components.JBList
 import com.intellij.ui.layout.panel
+import kotlinx.coroutines.Deferred
 import java.awt.Color
 import java.awt.Component
 import javax.swing.JButton
 import javax.swing.JComponent
 import javax.swing.ListSelectionModel
 
+@SuppressWarnings("LongParameterList")
 class SettingsWindow(
     private val passwordsOperator: PasswordsOperator,
     private val projectOperator: ProjectOperator,
     private val filesOperator: FilesOperator,
     private val settingsFileOperator: SettingsFileOperator,
+    private val uiProtector: UiProtector,
+    private val prRouter: PrRouter,
+    private val searchOperator: SearchOperator,
 ) : ToolWindowTab {
 
     private enum class HostType {
@@ -36,17 +44,18 @@ class SettingsWindow(
         override fun toString(): String = "$hostType: $hostNaming"
     }
 
-    private val label = JBLabel()
+    private val settingsValidationOutputLabel = JBLabel()
+    private val tokensValidationOutputLabel = JBLabel()
     private val configButton = JButton("Validate config")
     private val hostConfigSelect = JBList<ConfigHostHolder>()
 
     override val content: JComponent = panel {
         row {
             component(configButton)
-            label("Passwords")
+            label("Tokens")
         }
         row {
-            component(label)
+            component(settingsValidationOutputLabel)
             component(hostConfigSelect)
         }
         row {
@@ -60,6 +69,18 @@ class SettingsWindow(
                     b.isEnabled = true
                 }
             }
+            button("Validate tokens") {
+                uiProtector.uiProtectedOperation("Validating tokens") {
+                    val tokens: Map<String, Deferred<String>> = searchOperator.validateTokens() + prRouter.validateAccess()
+                    tokensValidationOutputLabel.text = tokens
+                        .map { "<tr><td>${it.key}</td><td>${it.value.await()}</td></tr>" }
+                        .joinToString(separator = "\n", prefix = "<html><body><table><tr><th>Config</th><th>Status</th>", postfix = "</table></body></html>")
+                }
+            }
+        }
+        row {
+            label("") // Empty for padding
+            component(tokensValidationOutputLabel)
         }
     }
 
@@ -86,7 +107,7 @@ class SettingsWindow(
         filesOperator.refreshConf()
         hostConfigSelect.setListData(emptyArray())
         val settings: MegaManipulatorSettings? = settingsFileOperator.readSettings()
-        label.text = settingsFileOperator.validationText
+        settingsValidationOutputLabel.text = settingsFileOperator.validationText
         configButton.isEnabled = true
         if (settings != null) {
             val arrayOf: Array<ConfigHostHolder> =

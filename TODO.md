@@ -2,10 +2,6 @@
 
 ## Documentation
 * [ ] Getting started video
-* Doc: tokens generation
-  * [ ] GitHub
-  * [ ] Sourcegraph
-  * [ ] BitBucket Server
 * [ ] IDE coach marks
 
 ## Improvements

@@ -21,9 +21,9 @@ class SettingsFileOperator(
     private val lastUpdated: AtomicLong = AtomicLong(0L)
     private val bufferedSettings: AtomicReference<MegaManipulatorSettings?> = AtomicReference(null)
     private val settingsFile: File
-        get() = File(projectOperator.project?.basePath!!, settingsFileName)
+        get() = File(projectOperator.project.basePath!!, settingsFileName)
     val scriptFile: File
-        get() = File(projectOperator.project?.basePath!!, scriptFileName)
+        get() = File(projectOperator.project.basePath!!, scriptFileName)
 
     private val okValidationText = "Settings are valid"
     private val privateValidationText = AtomicReference("Settings are not yet validated")

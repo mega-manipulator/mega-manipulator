@@ -9,6 +9,9 @@ import com.github.jensim.megamanipulator.settings.CodeHostSettings.BitBucketSett
 import com.github.jensim.megamanipulator.settings.CodeHostSettings.GitHubSettings
 import com.github.jensim.megamanipulator.settings.SettingsFileOperator
 import com.intellij.notification.NotificationType.WARNING
+import kotlinx.coroutines.Deferred
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.async
 import java.util.concurrent.atomic.AtomicLong
 
 @SuppressWarnings("TooManyFunctions")
@@ -133,5 +136,18 @@ class PrRouter(
             settings == null -> Unit
             else -> throw IllegalArgumentException("Unable to match config correctly")
         }
+    }
+
+    suspend fun validateAccess(): Map<String, Deferred<String>> {
+        return settingsFileOperator.readSettings()?.searchHostSettings.orEmpty().flatMap { search ->
+            search.value.codeHostSettings.map { code ->
+                "${search.key}/${code.key}" to GlobalScope.async {
+                    when (val settings = code.value) {
+                        is BitBucketSettings -> bitbucketServerClient.validateAccess(search.key, code.key, settings)
+                        is GitHubSettings -> githubComClient.validateAccess(search.key, code.key, settings)
+                    }
+                }
+            }
+        }.toMap()
     }
 }
