@@ -80,7 +80,7 @@ class CloneOperator(
         val basePath = projectOperator.project.basePath!!
         val fullPath =
             "$basePath/clones/${pullRequest.searchHostName()}/${pullRequest.codeHostName()}/${pullRequest.project()}/${pullRequest.baseRepo()}"
-        val dir = filesOperator.getFile(path = fullPath)
+        val dir = File(fullPath)
         val badState: List<Pair<String, ApplyOutput>> =
             clone(dir, pullRequest.cloneUrlFrom()!!, pullRequest.fromBranch())
         if (badState.isEmpty() && pullRequest.isFork()) {
@@ -92,7 +92,7 @@ class CloneOperator(
     private suspend fun clone(dir: File, cloneUrl: String, branch: String): List<Pair<String, ApplyOutput>> {
         val badState: MutableList<Pair<String, ApplyOutput>> = mutableListOf()
         dir.mkdirs()
-        if (filesOperator.getFile(dir, ".git").exists()) {
+        if (File(dir, ".git").exists()) {
             badState.add("Repo already cloned" to ApplyOutput.dummy(dir = dir.path, std = "Repo already cloned"))
             return badState
         }
