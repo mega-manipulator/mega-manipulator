@@ -79,7 +79,7 @@ class CloneOperator(
     suspend fun cloneRepos(pullRequest: PullRequestWrapper): List<Pair<String, ApplyOutput>> {
         val basePath = projectOperator.project.basePath!!
         val fullPath =
-            "$basePath/clones/${pullRequest.searchHostName()}/${pullRequest.codeHostName()}/${pullRequest.project()}/${pullRequest.baseRepo()}"
+            "$basePath/clones/${pullRequest.asPathString()}"
         val dir = File(fullPath)
         val badState: List<Pair<String, ApplyOutput>> =
             clone(dir, pullRequest.cloneUrlFrom()!!, pullRequest.fromBranch())

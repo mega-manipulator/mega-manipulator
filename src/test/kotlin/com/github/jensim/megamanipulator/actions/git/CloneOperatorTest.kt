@@ -99,7 +99,6 @@ class CloneOperatorTest {
             )
         } returns state
 
-        every { projectOperator.project.basePath } returns ".tmp/mega-manipulator-path"
         every { notificationsOperator.show(any(), any(), any()) } returns Unit
 
         // When
@@ -120,18 +119,17 @@ class CloneOperatorTest {
     fun `clone with pull request wrapper`() = runBlocking {
 
         // Given
-        val state = listOf<Pair<String, List<String>>>()
-        mockStates(state)
+        mockStates(emptyList())
 
         // When
-        cloneOperator.clone(listOf())
+        cloneOperator.clone(emptyList())
 
         // Then
         verify { filesOperator.refreshClones() }
         verify {
             notificationsOperator.show(
                 "Cloning done",
-                "All ${state.size} cloned successfully",
+                "All 0 cloned successfully",
                 NotificationType.INFORMATION
             )
         }
@@ -160,15 +158,17 @@ class CloneOperatorTest {
     @Test
     fun `clone repos`() = runBlocking {
         // Given
-        val pullRequest = mockk<PullRequestWrapper>()
+        val pullRequest: PullRequestWrapper = mockk(relaxed = true) {
+            every { searchHostName() } returns "test"
+            every { codeHostName() } returns "codeHostName"
+            every { project() } returns PROJECT
+            every { baseRepo() } returns BASE_REPO
+            every { cloneUrlFrom() } returns "any-url-from"
+            every { fromBranch() } returns "main"
+            every { isFork() } returns false
+        }
         val applyOutput = ApplyOutput("anydir", "anystd", "", 0)
-        every { pullRequest.searchHostName() } returns "test"
-        every { pullRequest.codeHostName() } returns "codeHostName"
-        every { pullRequest.project() } returns PROJECT
-        every { pullRequest.baseRepo() } returns BASE_REPO
-        every { pullRequest.cloneUrlFrom() } returns "any-url-from"
-        every { pullRequest.fromBranch() } returns "main"
-        every { pullRequest.isFork() } returns false
+
         coEvery { processOperator.runCommandAsync(any(), any()) } returns CompletableDeferred(applyOutput)
 
         // When
@@ -181,17 +181,18 @@ class CloneOperatorTest {
     @Test
     fun `clone repos and promote origin to fork remote`() = runBlocking {
         // Given
-        val pullRequest = mockk<PullRequestWrapper>()
+        val pullRequest: PullRequestWrapper = mockk(relaxed = true) {
+            every { searchHostName() } returns "test"
+            every { codeHostName() } returns "codeHostName"
+            every { project() } returns PROJECT
+            every { baseRepo() } returns BASE_REPO
+            every { cloneUrlFrom() } returns "any-url-from"
+            every { fromBranch() } returns "main"
+            every { cloneUrlTo() } returns "clone-url-to"
+            every { isFork() } returns true
+        }
         val applyOutput = ApplyOutput("anydir", "anystd", "", 0)
-        every { projectOperator.project.basePath } returns ".tmp/"
-        every { pullRequest.searchHostName() } returns "test"
-        every { pullRequest.codeHostName() } returns "codeHostName"
-        every { pullRequest.project() } returns PROJECT
-        every { pullRequest.baseRepo() } returns BASE_REPO
-        every { pullRequest.cloneUrlFrom() } returns "any-url-from"
-        every { pullRequest.fromBranch() } returns "main"
-        every { pullRequest.cloneUrlTo() } returns "clone-url-to"
-        every { pullRequest.isFork() } returns true
+
         every { processOperator.runCommandAsync(any(), any()) } returns CompletableDeferred(applyOutput)
         coEvery { localRepoOperator.promoteOriginToForkRemote(any(), any()) } returns listOf()
 
@@ -207,17 +208,17 @@ class CloneOperatorTest {
     @Test
     fun `clone repos failed on both attempts`() = runBlocking {
         // Given
-        val pullRequest = mockk<PullRequestWrapper>()
+        val pullRequest: PullRequestWrapper = mockk(relaxed = true) {
+            every { searchHostName() } returns "test"
+            every { codeHostName() } returns "codeHostName"
+            every { project() } returns PROJECT
+            every { baseRepo() } returns BASE_REPO
+            every { cloneUrlFrom() } returns "any-url-from"
+            every { fromBranch() } returns "main"
+            every { isFork() } returns false
+        }
         val applyOutput = ApplyOutput("anydir", "anystd", "", 1)
 
-        every { projectOperator.project.basePath } returns ".tmp/"
-        every { pullRequest.searchHostName() } returns "test"
-        every { pullRequest.codeHostName() } returns "codeHostName"
-        every { pullRequest.project() } returns PROJECT
-        every { pullRequest.baseRepo() } returns BASE_REPO
-        every { pullRequest.cloneUrlFrom() } returns "any-url-from"
-        every { pullRequest.fromBranch() } returns "main"
-        every { pullRequest.isFork() } returns false
         every { processOperator.runCommandAsync(any(), any()) } returns CompletableDeferred(applyOutput)
 
         // When
@@ -238,8 +239,7 @@ class CloneOperatorTest {
         val applyOutput = ApplyOutput("anydir", "anystd", "", 1)
         val applyOutputCloneSuccess = ApplyOutput("anydir", "anystd", "", 0)
 
-        val fullPath =
-            "${project.basePath}/clones/${pullRequest.searchHostName()}/${pullRequest.codeHostName()}/$PROJECT/$BASE_REPO"
+        val fullPath = "${project.basePath}/clones/${pullRequest.asPathString()}"
 
         every { file.mkdirs() } returns true
         every { file.exists() } returns false
@@ -267,8 +267,7 @@ class CloneOperatorTest {
         // Given
         val pullRequest = mockk<PullRequestWrapper>()
         mockFile(pullRequest)
-        val fullPath =
-            "${project.basePath}/clones/${pullRequest.searchHostName()}/${pullRequest.codeHostName()}/$PROJECT/$BASE_REPO"
+        val fullPath = "${project.basePath}/clones/${pullRequest.asPathString()}"
         File(fullPath).mkdirs()
         File(fullPath, ".git").createNewFile()
 
@@ -290,6 +289,7 @@ class CloneOperatorTest {
         every { pullRequest.cloneUrlFrom() } returns "any-url-from"
         every { pullRequest.fromBranch() } returns "main"
         every { pullRequest.isFork() } returns false
+        every { pullRequest.asPathString() } returns "${pullRequest.searchHostName()}/${pullRequest.codeHostName()}/$PROJECT/$BASE_REPO"
         return file
     }
 
