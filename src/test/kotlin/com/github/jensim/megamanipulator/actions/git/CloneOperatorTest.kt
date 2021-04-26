@@ -34,7 +34,6 @@ import java.io.File
 import java.nio.file.Path
 import kotlin.io.path.ExperimentalPathApi
 import kotlin.io.path.createTempDirectory
-import kotlin.io.path.createTempFile
 
 @ExperimentalPathApi
 @ExtendWith(MockKExtension::class)
@@ -239,8 +238,8 @@ class CloneOperatorTest {
         val applyOutput = ApplyOutput("anydir", "anystd", "", 1)
         val applyOutputCloneSuccess = ApplyOutput("anydir", "anystd", "", 0)
 
-        val fullPath = "${project.basePath}/clones/${pullRequest.searchHostName()}/${pullRequest.codeHostName()}/$PROJECT/$BASE_REPO"
-
+        val fullPath =
+            "${project.basePath}/clones/${pullRequest.searchHostName()}/${pullRequest.codeHostName()}/$PROJECT/$BASE_REPO"
 
         every { file.mkdirs() } returns true
         every { file.exists() } returns false
@@ -268,7 +267,8 @@ class CloneOperatorTest {
         // Given
         val pullRequest = mockk<PullRequestWrapper>()
         mockFile(pullRequest)
-        val fullPath = "${project.basePath}/clones/${pullRequest.searchHostName()}/${pullRequest.codeHostName()}/$PROJECT/$BASE_REPO"
+        val fullPath =
+            "${project.basePath}/clones/${pullRequest.searchHostName()}/${pullRequest.codeHostName()}/$PROJECT/$BASE_REPO"
         File(fullPath).mkdirs()
         File(fullPath, ".git").createNewFile()
 

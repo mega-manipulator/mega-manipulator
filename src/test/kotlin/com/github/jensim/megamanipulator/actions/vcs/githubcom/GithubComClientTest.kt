@@ -1,6 +1,5 @@
 package com.github.jensim.megamanipulator.actions.vcs.githubcom
 
-import com.github.jensim.megamanipulator.TestHelper.MEGA_MANIPULATOR_REPO
 import com.github.jensim.megamanipulator.actions.NotificationsOperator
 import com.github.jensim.megamanipulator.actions.localrepo.LocalRepoOperator
 import com.github.jensim.megamanipulator.actions.search.SearchResult
@@ -62,6 +61,10 @@ class GithubComClientTest {
         localRepoOperator = localRepoMock,
         json = SerializationHolder.instance.readableJson
     )
+
+    companion object {
+        private const val MEGA_MANIPULATOR_REPO = "mega-manipulator"
+    }
 
     @Test
     fun getAllPrs() {
