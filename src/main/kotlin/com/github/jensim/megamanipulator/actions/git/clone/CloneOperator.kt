@@ -71,7 +71,7 @@ class CloneOperator(
             extraText2 = { it.asPathString() },
             data = pullRequests,
         ) { pullRequest ->
-            val basePath = projectOperator.project?.basePath!!
+            val basePath = projectOperator.project.basePath!!
             val fullPath = "$basePath/clones/${pullRequest.searchHostName()}/${pullRequest.codeHostName()}/${pullRequest.project()}/${pullRequest.baseRepo()}"
             val dir = File(fullPath)
             val badState: List<Pair<String, ApplyOutput>> = clone(dir, pullRequest.cloneUrlFrom()!!, pullRequest.fromBranch())

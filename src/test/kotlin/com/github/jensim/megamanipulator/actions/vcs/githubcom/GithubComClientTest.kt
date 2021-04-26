@@ -11,6 +11,9 @@ import com.github.jensim.megamanipulator.settings.MegaManipulatorSettings
 import com.github.jensim.megamanipulator.settings.SearchHostSettings.SourceGraphSettings
 import com.github.jensim.megamanipulator.settings.SerializationHolder
 import com.github.jensim.megamanipulator.settings.SettingsFileOperator
+import com.github.jensim.megamanipulator.test.EnvHelper
+import com.github.jensim.megamanipulator.test.EnvHelper.EnvProperty.GITHUB_TOKEN
+import com.github.jensim.megamanipulator.test.EnvHelper.EnvProperty.GITHUB_USERNAME
 import com.github.jensim.megamanipulator.test.TestPasswordOperator
 import com.jetbrains.rd.util.first
 import io.mockk.every
@@ -25,16 +28,19 @@ import org.junit.jupiter.api.Test
 
 class GithubComClientTest {
 
+    private val envHelper = EnvHelper()
     private val githubSettings = GitHubSettings(
-        username = System.getenv("GITHUB_USERNAME") ?: "jensim",
+        username = envHelper.resolve(GITHUB_USERNAME),
         forkSetting = PLAIN_BRANCH,
     )
-    private val password = System.getenv("GITHUB_TOKEN")
+    private val password = envHelper.resolve(GITHUB_TOKEN)
+    private val codeHost = "github.com"
+    private val searchHost = "sourcegraph.com"
     private val settings = MegaManipulatorSettings(
         searchHostSettings = mapOf(
-            "sourcegraph.com" to SourceGraphSettings(
+            searchHost to SourceGraphSettings(
                 baseUrl = "https://sourcegraph.com",
-                codeHostSettings = mapOf("github.com" to githubSettings)
+                codeHostSettings = mapOf(codeHost to githubSettings)
             )
         )
     )
@@ -63,7 +69,7 @@ class GithubComClientTest {
         val prs = runBlocking {
             client.getAllPrs(
                 searchHost = settings.searchHostSettings.first().key,
-                codeHost = "github.com",
+                codeHost = codeHost,
                 settings = githubSettings,
             )
         }
@@ -80,8 +86,8 @@ class GithubComClientTest {
     fun getRepo() {
         // given
         val repo = SearchResult(
-            searchHostName = settings.searchHostSettings.first().key,
-            codeHostName = "github.com",
+            searchHostName = searchHost,
+            codeHostName = codeHost,
             project = githubSettings.username,
             repo = "mega-manipulator",
         )
@@ -93,5 +99,18 @@ class GithubComClientTest {
 
         // then
         assertThat(result.repo.name, equalTo("mega-manipulator"))
+    }
+
+    @Test
+    internal fun `validate access token`() {
+        val result: String = runBlocking {
+            client.validateAccess(
+                searchHost = searchHost,
+                codeHost = codeHost,
+                settings = githubSettings
+            )
+        }
+
+        assertThat(result, equalTo("200:OK"))
     }
 }

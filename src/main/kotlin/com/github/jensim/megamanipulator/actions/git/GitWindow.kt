@@ -102,7 +102,7 @@ class GitWindow(
             }
             button("Clean away local repos") {
                 if (dialogGenerator.showConfirm(title = "Are you sure?!", message = "This will remove the entire clones dir from disk, no recovery available!")) {
-                    val output: ApplyOutput = projectOperator.project?.basePath?.let { dir ->
+                    val output: ApplyOutput = projectOperator.project.basePath?.let { dir ->
                         uiProtector.uiProtectedOperation(title = "Remove all local clones") {
                             processOperator.runCommandAsync(File(dir), listOf("rm", "-rf", "clones")).await()
                         }
@@ -137,7 +137,7 @@ class GitWindow(
     }
 
     override fun refresh() {
-        val project = projectOperator.project!!
+        val project = projectOperator.project
         val localRepoFiles = localRepoOperator.getLocalRepoFiles()
         val result: List<DirResult> = uiProtector.mapConcurrentWithProgress(
             title = "Listing branches",

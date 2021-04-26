@@ -4,6 +4,7 @@
 
 ## [Unreleased]
 ### Added
+- Validate access tokens
 
 ### Changed
 

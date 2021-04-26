@@ -35,7 +35,7 @@ class FilesOperator(
     }
 
     private fun refresh(dir: String) {
-        val projectRoot = File(projectOperator.project?.basePath!!)
+        val projectRoot = File(projectOperator.project.basePath!!)
         val root = File(projectRoot, dir)
         val tree = root.walkTopDown().onEnter { it.isDirectory }.iterator().asSequence().toList()
         LocalFileSystem.getInstance().refreshIoFiles(tree + root + projectRoot)
@@ -62,7 +62,7 @@ class FilesOperator(
     }
 
     private fun makeUpBaseFile(baseFile: VirtFile) {
-        val file = File(projectOperator.project?.basePath!!, baseFile.nameWithPath)
+        val file = File(projectOperator.project.basePath!!, baseFile.nameWithPath)
 
         try {
             if (!file.exists()) {

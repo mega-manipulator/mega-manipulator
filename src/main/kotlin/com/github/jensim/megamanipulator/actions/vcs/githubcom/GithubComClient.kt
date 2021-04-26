@@ -11,6 +11,8 @@ import io.ktor.client.request.delete
 import io.ktor.client.request.get
 import io.ktor.client.request.patch
 import io.ktor.client.request.post
+import io.ktor.client.statement.HttpResponse
+import io.ktor.client.statement.HttpStatement
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.flow
@@ -21,7 +23,9 @@ import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.decodeFromJsonElement
 import java.util.concurrent.atomic.AtomicInteger
+import java.util.regex.Pattern
 
+@SuppressWarnings("TooManyFunctions")
 class GithubComClient(
     private val httpClientProvider: HttpClientProvider,
     private val localRepoOperator: LocalRepoOperator,
@@ -168,5 +172,19 @@ class GithubComClient(
         client.post<JsonElement>(pullRequest.pullRequest.comments_url) {
             body = mapOf("body" to comment)
         }
+    }
+
+    suspend fun validateAccess(searchHost: String, codeHost: String, settings: GitHubSettings): String = try {
+        val client: HttpClient = httpClientProvider.getClient(searchHost, codeHost, settings)
+        val response: HttpResponse = client.get<HttpStatement>("https://api.github.com/repos/jensim/mega-manipulator").execute()
+        val scopeString = response.headers["X-OAuth-Scopes"]
+        val scopes = scopeString.orEmpty().split(Pattern.compile(",")).map { it.trim() }
+        val expected = listOf("repo", "delete_repo")
+        val missing = expected - scopes
+        val missingText = if (missing.isNotEmpty()) " $missing" else ""
+        "${response.status.value}:${response.status.description}$missingText"
+    } catch (e: Exception) {
+        e.printStackTrace()
+        "Client error"
     }
 }

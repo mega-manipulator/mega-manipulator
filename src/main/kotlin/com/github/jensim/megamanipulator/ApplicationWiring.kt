@@ -105,6 +105,7 @@ data class ApplicationWiring(
         sourcegraphSearchClientOverride ?: SourcegraphSearchClient(
             httpClientProvider = this.httpClientProvider,
             notificationsOperator = this.notificationsOperator,
+            json = this.json,
         )
     }
     val bitbucketServerClient: BitbucketServerClient by lazy {
@@ -205,6 +206,9 @@ data class ApplicationWiring(
             projectOperator = this.projectOperator,
             filesOperator = this.filesOperator,
             settingsFileOperator = this.settingsFileOperator,
+            uiProtector = this.uiProtector,
+            prRouter = this.prRouter,
+            searchOperator = this.searchOperator,
         )
     }
     val tabSearch: SearchWindow by lazy {
