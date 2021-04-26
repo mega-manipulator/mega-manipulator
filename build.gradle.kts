@@ -72,7 +72,7 @@ dependencies {
     implementation(group = "me.xdrop", name = "fuzzywuzzy", version = "1.3.1")
 
     // TEST
-    testImplementation(group = "io.mockk", name = "mockk", version = "1.10.6")
+    testImplementation(group = "io.mockk", name = "mockk", version = "1.11.0")
     testImplementation(group = "org.hamcrest", name = "hamcrest", version = hamcrestVersion)
     testImplementation(group = "org.hamcrest", name = "hamcrest-library", version = hamcrestVersion)
     testImplementation(group = "org.junit.jupiter", name = "junit-jupiter-api", version = junitVersion)
