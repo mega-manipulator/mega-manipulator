@@ -23,6 +23,7 @@ import org.hamcrest.MatcherAssert.assertThat
 import org.hamcrest.Matchers.empty
 import org.hamcrest.Matchers.equalTo
 import org.hamcrest.Matchers.not
+import org.hamcrest.Matchers.startsWith
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 
@@ -111,6 +112,6 @@ class GithubComClientTest {
             )
         }
 
-        assertThat(result, equalTo("200:OK"))
+        assertThat(result, startsWith("200:OK"))
     }
 }
