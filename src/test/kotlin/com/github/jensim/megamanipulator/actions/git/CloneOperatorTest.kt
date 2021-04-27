@@ -54,7 +54,7 @@ class CloneOperatorTest {
     @MockK
     private lateinit var processOperator: ProcessOperator
 
-    @MockK
+    @RelaxedMockK
     private lateinit var notificationsOperator: NotificationsOperator
 
     @MockK
@@ -88,7 +88,7 @@ class CloneOperatorTest {
     @Test
     fun `clone with search requests`() = runBlocking {
         // Given
-        val state = listOf<Pair<String, List<String>>>()
+        val state: List<Pair<String, List<String>>> = emptyList()
         every {
             uiProtector.mapConcurrentWithProgress<String, List<String>>(
                 title = CLONING_TITLE_AND_MESSAGE,
@@ -98,8 +98,6 @@ class CloneOperatorTest {
                 mappingFunction = any()
             )
         } returns state
-
-        every { notificationsOperator.show(any(), any(), any()) } returns Unit
 
         // When
         cloneOperator.clone(setOf())
@@ -138,11 +136,11 @@ class CloneOperatorTest {
     @Test
     fun `clone repos failed`() = runBlocking {
         // Given
-        val state = listOf("repo1" to listOf("success"), "repo2" to listOf())
+        val state = listOf("repo1" to listOf("success"), "repo2" to emptyList())
         mockStates(state)
 
         // When
-        cloneOperator.clone(listOf())
+        cloneOperator.clone(emptyList())
 
         // Then
         verify { filesOperator.refreshClones() }
@@ -194,7 +192,7 @@ class CloneOperatorTest {
         val applyOutput = ApplyOutput("anydir", "anystd", "", 0)
 
         every { processOperator.runCommandAsync(any(), any()) } returns CompletableDeferred(applyOutput)
-        coEvery { localRepoOperator.promoteOriginToForkRemote(any(), any()) } returns listOf()
+        coEvery { localRepoOperator.promoteOriginToForkRemote(any(), any()) } returns emptyList()
 
         // When
         cloneOperator.cloneRepos(pullRequest)
@@ -303,7 +301,5 @@ class CloneOperatorTest {
                 mappingFunction = any()
             )
         } returns state
-
-        every { notificationsOperator.show(any(), any(), any()) } returns Unit
     }
 }

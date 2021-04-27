@@ -21,7 +21,7 @@ See this as an alternative to sourcegraph campaigns, without the docker layer in
 
 <p>
 Use sourcegraph queries to find target repos.
-Then a forEach approach is provided for eache of the following actions:
+Then a forEach approach is provided for each of the following actions:
 Apply changes (using scripts),
 Commit,
 Push,
@@ -70,8 +70,9 @@ Spend less time making small, or big, changes
 
 ### Tests
 
-To run tests you have to set some environment variables
-**GITHUB_USERNAME** and **GITHUB_TOKEN** you can do it creating **.env** file in the project root path or setting it in the environment variable
+To run tests you have to set some environment variables:  
+`GITHUB_USERNAME` and `GITHUB_TOKEN` you can do it creating `.env` file in the project root path or setting it in the environment variable.  
+Take a look in `.env-example`, or copy it to `.env`.
 
 ---
 Plugin based on the [IntelliJ Platform Plugin Template][template].

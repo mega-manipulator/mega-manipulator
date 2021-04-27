@@ -14,6 +14,8 @@ import com.intellij.notification.NotificationType.INFORMATION
 import com.intellij.notification.NotificationType.WARNING
 import java.io.File
 
+private typealias Action = Pair<String, ApplyOutput>
+
 @SuppressWarnings("LongParameterList")
 class CloneOperator(
     private val filesOperator: FilesOperator,
@@ -29,7 +31,7 @@ class CloneOperator(
         val basePath = projectOperator.project.basePath!!
 
         filesOperator.refreshConf()
-        val state: List<Pair<SearchResult, List<Pair<String, ApplyOutput>>?>> = uiProtector.mapConcurrentWithProgress(
+        val state: List<Pair<SearchResult, List<Action>?>> = uiProtector.mapConcurrentWithProgress(
             title = "Cloning repos",
             extraText1 = "Cloning repos",
             extraText2 = { it.asPathString() },
@@ -46,7 +48,7 @@ class CloneOperator(
         reportState(state)
     }
 
-    private fun reportState(state: List<Pair<Any, List<Pair<String, ApplyOutput>>?>>) {
+    private fun reportState(state: List<Pair<Any, List<Action>?>>) {
         val badState = state.filter { it.second == null || it.second!!.isNotEmpty() }
         if (badState.isEmpty()) {
             notificationsOperator.show(
@@ -65,7 +67,7 @@ class CloneOperator(
     }
 
     fun clone(pullRequests: List<PullRequestWrapper>) {
-        val state: List<Pair<PullRequestWrapper, List<Pair<String, ApplyOutput>>?>> =
+        val state: List<Pair<PullRequestWrapper, List<Action>?>> =
             uiProtector.mapConcurrentWithProgress(
                 title = "Cloning repos",
                 extraText1 = "Cloning repos",
@@ -76,12 +78,12 @@ class CloneOperator(
         reportState(state)
     }
 
-    suspend fun cloneRepos(pullRequest: PullRequestWrapper): List<Pair<String, ApplyOutput>> {
+    suspend fun cloneRepos(pullRequest: PullRequestWrapper): List<Action> {
         val basePath = projectOperator.project.basePath!!
         val fullPath =
             "$basePath/clones/${pullRequest.asPathString()}"
         val dir = File(fullPath)
-        val badState: List<Pair<String, ApplyOutput>> =
+        val badState: List<Action> =
             clone(dir, pullRequest.cloneUrlFrom()!!, pullRequest.fromBranch())
         if (badState.isEmpty() && pullRequest.isFork()) {
             localRepoOperator.promoteOriginToForkRemote(dir, pullRequest.cloneUrlTo()!!)
@@ -89,8 +91,9 @@ class CloneOperator(
         return badState
     }
 
-    private suspend fun clone(dir: File, cloneUrl: String, branch: String): List<Pair<String, ApplyOutput>> {
-        val badState: MutableList<Pair<String, ApplyOutput>> = mutableListOf()
+    @SuppressWarnings("ReturnCount")
+    private suspend fun clone(dir: File, cloneUrl: String, branch: String): List<Action> {
+        val badState: MutableList<Action> = mutableListOf()
         dir.mkdirs()
         if (File(dir, ".git").exists()) {
             badState.add("Repo already cloned" to ApplyOutput.dummy(dir = dir.path, std = "Repo already cloned"))

@@ -14,7 +14,6 @@ import com.github.jensim.megamanipulator.settings.SettingsFileOperator
 import com.github.jensim.megamanipulator.test.EnvHelper
 import com.github.jensim.megamanipulator.test.EnvHelper.EnvProperty.GITHUB_USERNAME
 import com.github.jensim.megamanipulator.test.TestPasswordOperator
-import com.jetbrains.rd.util.first
 import io.mockk.every
 import io.mockk.mockk
 import kotlinx.coroutines.runBlocking
@@ -47,8 +46,7 @@ class GithubComClientTest {
     private val settingsMock: SettingsFileOperator = mockk {
         every { readSettings() } returns settings
     }
-    private val passwordsOperator =
-        TestPasswordOperator(mapOf(githubSettings.username to githubSettings.baseUrl to password))
+    private val passwordsOperator = TestPasswordOperator(mapOf(githubSettings.username to githubSettings.baseUrl to password))
     private val notificationsMock: NotificationsOperator = mockk()
     private val clientProvider = HttpClientProvider(
         settingsFileOperator = settingsMock,
@@ -73,7 +71,7 @@ class GithubComClientTest {
         // when
         val prs = runBlocking {
             client.getAllPrs(
-                searchHost = settings.searchHostSettings.first().key,
+                searchHost = settings.searchHostSettings.keys.first(),
                 codeHost = codeHost,
                 settings = githubSettings,
             )
