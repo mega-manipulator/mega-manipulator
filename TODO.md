@@ -7,7 +7,13 @@
 ## Improvements
 * <strong>High prio</strong>
   * [ ] Improve testing
+    * [ ] git over HTTP  
+      SSH does not work in forked repos running GitHub actions
   * [ ] Notify on missing conf for code host or search host
+* <strong>Low prio</strong>
+  * [ ] Generic code host  
+     Forking would be an issue
+     PRs would be difficult, maybe url pattern to open in browser?
 
 ## User interface
 * <strong>High prio</strong>
