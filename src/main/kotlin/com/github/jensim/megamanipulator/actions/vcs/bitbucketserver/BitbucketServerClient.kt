@@ -207,7 +207,7 @@ class BitbucketServerClient(
     suspend fun createFork(settings: BitBucketSettings, repo: SearchResult): String? {
         val client: HttpClient = httpClientProvider.getClient(repo.searchHostName, repo.codeHostName, settings)
         val bbRepo: BitBucketRepo = try {
-            if (repo.project.toLowerCase() == "~${settings.username.toLowerCase()}") {
+            if (repo.project.lowercase() == "~${settings.username.lowercase()}") {
                 // is private repo
                 client.get("${settings.baseUrl}/rest/api/1.0/projects/${repo.project}/repos/${repo.repo}")
             } else {

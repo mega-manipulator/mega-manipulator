@@ -7,7 +7,7 @@ import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 val junitVersion: String = "5.7.1"
 val kotlinxCoroutinesVersion: String = "1.4.3"
 val ktorVersion: String = "1.5.3"
-val kotlinVersion: String = "1.4.32"
+val kotlinVersion: String = "1.5.0"
 val jvmVersion: String = "11"
 val hamcrestVersion: String = "2.2"
 
@@ -15,10 +15,10 @@ plugins {
     // Java support
     id("java")
     // Kotlin support
-    kotlin("jvm") version "1.4.32"
-    kotlin("plugin.serialization") version "1.4.32"
+    kotlin("jvm") version "1.5.0"
+    kotlin("plugin.serialization") version "1.5.0"
     // gradle-intellij-plugin - read more: https://github.com/JetBrains/gradle-intellij-plugin
-    id("org.jetbrains.intellij") version "0.7.2"
+    id("org.jetbrains.intellij") version "0.7.3"
     // gradle-changelog-plugin - read more: https://github.com/JetBrains/gradle-changelog-plugin
     id("org.jetbrains.changelog") version "1.1.2"
     // detekt linter - read more: https://detekt.github.io/detekt/gradle.html
@@ -64,7 +64,7 @@ dependencies {
     implementation(group = "io.ktor", name = "ktor-client", version = ktorVersion)
     implementation(group = "io.ktor", name = "ktor-client-apache", version = ktorVersion)
     implementation(group = "io.ktor", name = "ktor-client-serialization", version = ktorVersion)
-    implementation(group = "org.jetbrains.kotlinx", name = "kotlinx-serialization-json", version = "1.1.0")
+    implementation(group = "org.jetbrains.kotlinx", name = "kotlinx-serialization-json", version = "1.2.0")
     implementation(group = "com.github.Ricky12Awesome", name = "json-schema-serialization", version = "0.6.6")
 
     implementation(group = "org.eclipse.jgit", name = "org.eclipse.jgit", version = "5.11.0.202103091610-r")
