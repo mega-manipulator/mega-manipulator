@@ -18,6 +18,7 @@ on:
   workflow_dispatch:
   push:
     branches:
+      - "main"
       - "!integration_test/*"
     paths-ignore:
       - ".github/**/*"
@@ -26,7 +27,7 @@ on:
       - "*.txt"
   pull_request:
     branches:
-      - '!integration_test/**'
+      - "main"
 
 jobs:
 
