@@ -1,6 +1,7 @@
 package com.github.jensim.megamanipulator.actions.search.sourcegraph
 
 import com.github.jensim.megamanipulator.actions.search.SearchOperator
+import com.github.jensim.megamanipulator.actions.search.SearchResult
 import com.github.jensim.megamanipulator.settings.CodeHostSettings
 import com.github.jensim.megamanipulator.settings.ForkSetting
 import com.github.jensim.megamanipulator.settings.MegaManipulatorSettings
@@ -17,10 +18,10 @@ import io.mockk.verify
 import kotlinx.coroutines.runBlocking
 import org.hamcrest.MatcherAssert.assertThat
 import org.hamcrest.Matchers.equalTo
+import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 import org.junit.jupiter.api.extension.ExtendWith
-import kotlin.test.assertEquals
 
 @ExtendWith(MockKExtension::class)
 class SearchOperatorTest {
@@ -61,7 +62,7 @@ class SearchOperatorTest {
         val sourceGraphSettings = searchOperator.search(searchHostName, "Dockerfile")
 
         // Then
-        assertEquals(sourceGraphSettings, emptySet())
+        assertEquals(sourceGraphSettings, emptySet<SearchResult>())
         verify { settingsFileOperator.readSettings() }
         coVerify { sourcegraphSearchClient.search(any(), any(), any()) }
     }
