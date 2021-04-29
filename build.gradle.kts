@@ -76,6 +76,7 @@ dependencies {
     testImplementation(group = "org.hamcrest", name = "hamcrest", version = hamcrestVersion)
     testImplementation(group = "org.hamcrest", name = "hamcrest-library", version = hamcrestVersion)
     testImplementation(group = "org.junit.jupiter", name = "junit-jupiter-api", version = junitVersion)
+    testImplementation(group = "org.junit.jupiter", name = "junit-jupiter-params", version = junitVersion)
     testRuntimeOnly(group = "org.junit.jupiter", name = "junit-jupiter-engine", version = junitVersion)
 }
 

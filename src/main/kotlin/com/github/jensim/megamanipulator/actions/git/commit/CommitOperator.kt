@@ -20,7 +20,7 @@ class CommitOperator(
     private val localRepoOperator: LocalRepoOperator,
     private val processOperator: ProcessOperator,
     private val prRouter: PrRouter,
-    private val uiProtector: UiProtector,
+    private val uiProtector: UiProtector
 ) {
 
     fun commit(): Map<String, List<Pair<String, ApplyOutput>>> {
@@ -42,15 +42,7 @@ class CommitOperator(
             uiProtector.mapConcurrentWithProgress(
                 title = workTitle,
                 data = dirs,
-            ) { dir: File ->
-                processOperator.runCommandAsync(dir, listOf("git", "add", "--all")).await()
-                val log = result.computeIfAbsent(dir.path) { ArrayList() }
-                val commit = processOperator.runCommandAsync(dir, listOf("git", "commit", "-m", commitMessage)).await()
-                    .also { output -> log += "commit" to output }
-                if (push && commit.exitCode == 0) {
-                    push(settings, dir, log)
-                }
-            }
+            ) { commitProcess(it, result, commitMessage, push, settings) }
         } else {
             dialogGenerator.showConfirm("Info", "No commit performed!")
         }
@@ -60,7 +52,27 @@ class CommitOperator(
         return result
     }
 
-    private suspend fun push(settings: MegaManipulatorSettings, dir: File, log: MutableList<Pair<String, ApplyOutput>>) {
+    suspend fun commitProcess(
+        it: File,
+        result: ConcurrentHashMap<String, MutableList<Pair<String, ApplyOutput>>>,
+        commitMessage: String,
+        push: Boolean,
+        settings: MegaManipulatorSettings
+    ) {
+        processOperator.runCommandAsync(it, listOf("git", "add", "--all")).await()
+        val log = result.computeIfAbsent(it.path) { ArrayList() }
+        val commit = processOperator.runCommandAsync(it, listOf("git", "commit", "-m", commitMessage)).await()
+            .also { output -> log += "commit" to output }
+        if (push && commit.exitCode == 0) {
+            push(settings, it, log)
+        }
+    }
+
+    private suspend fun push(
+        settings: MegaManipulatorSettings,
+        dir: File,
+        log: MutableList<Pair<String, ApplyOutput>>
+    ) {
         val codeHostSettings: CodeHostSettings = settings.resolveSettings(dir)!!.second
         if (localRepoOperator.hasFork(dir) || codeHostSettings.forkSetting == ForkSetting.PLAIN_BRANCH) {
             localRepoOperator.push(dir)
