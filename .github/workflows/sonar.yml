@@ -30,6 +30,11 @@ jobs:
           restore-keys: |
             gradle-
 
+      - name: Setup git user
+        run: |
+          git config --global user.email "jens.brimfors@gmail.com"
+          git config --global user.name "Jens Brimfors"
+
       - name: Jacoco report
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
