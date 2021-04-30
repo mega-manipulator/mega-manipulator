@@ -4,6 +4,7 @@ import com.github.jensim.megamanipulator.ApplicationWiring
 import com.github.jensim.megamanipulator.MyBundle
 import com.github.jensim.megamanipulator.actions.NotificationsOperator
 import com.github.jensim.megamanipulator.files.FilesOperator
+import com.github.jensim.megamanipulator.settings.CloneType.HTTPS
 import com.github.jensim.megamanipulator.settings.CodeHostSettings.GitHubSettings
 import com.github.jensim.megamanipulator.settings.ForkSetting.PLAIN_BRANCH
 import com.github.jensim.megamanipulator.settings.MegaManipulatorSettings
@@ -59,6 +60,7 @@ abstract class TestApplicationWiring {
     val gitHubSettings = GitHubSettings(
         username = githubUsername,
         forkSetting = PLAIN_BRANCH,
+        cloneType = HTTPS,
     )
     val sourceGraphSettings = SourceGraphSettings(
         baseUrl = "https://sourcegraph.com",

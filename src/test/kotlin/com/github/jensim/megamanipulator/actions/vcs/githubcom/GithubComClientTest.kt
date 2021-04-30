@@ -5,6 +5,7 @@ import com.github.jensim.megamanipulator.actions.localrepo.LocalRepoOperator
 import com.github.jensim.megamanipulator.actions.search.SearchResult
 import com.github.jensim.megamanipulator.actions.vcs.GithubComRepoWrapping
 import com.github.jensim.megamanipulator.http.HttpClientProvider
+import com.github.jensim.megamanipulator.settings.CloneType.HTTPS
 import com.github.jensim.megamanipulator.settings.CodeHostSettings.GitHubSettings
 import com.github.jensim.megamanipulator.settings.ForkSetting.PLAIN_BRANCH
 import com.github.jensim.megamanipulator.settings.MegaManipulatorSettings
@@ -31,6 +32,7 @@ class GithubComClientTest {
     private val githubSettings = GitHubSettings(
         username = envHelper.resolve(GITHUB_USERNAME),
         forkSetting = PLAIN_BRANCH,
+        cloneType = HTTPS,
     )
     private val password = envHelper.resolve(GITHUB_USERNAME)
     private val codeHost = "github.com"

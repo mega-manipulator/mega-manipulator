@@ -30,21 +30,6 @@ jobs:
           restore-keys: |
             gradle-
 
-      - name: Install ssh keys
-        env:
-          SSH_WRITE_PRIVATE: ${{ secrets.SSH_WRITE_PRIVATE }}
-          SSH_WRITE_PUBLIC: ${{ secrets.SSH_WRITE_PUBLIC }}
-        run: |
-          mkdir -p "$HOME/.ssh"
-          echo "$SSH_WRITE_PRIVATE" > "$HOME/.ssh/id_ed25519"
-          chmod 0700 "$HOME/.ssh/id_ed25519"
-          echo "$SSH_WRITE_PUBLIC" > "$HOME/.ssh/id_ed25519.pub"
-          chmod 0700 "$HOME/.ssh/id_ed25519.pub"
-          eval "$(ssh-agent -s)"
-          ssh-add
-          git config --global user.email "jens.brimfors@gmail.com"
-          git config --global user.name "Jens Brimfors"
-
       - name: Jacoco report
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

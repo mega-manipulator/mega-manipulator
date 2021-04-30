@@ -7,8 +7,14 @@ import com.github.jensim.megamanipulator.actions.localrepo.LocalRepoOperator
 import com.github.jensim.megamanipulator.actions.search.SearchResult
 import com.github.jensim.megamanipulator.actions.vcs.PrRouter
 import com.github.jensim.megamanipulator.actions.vcs.PullRequestWrapper
+import com.github.jensim.megamanipulator.actions.vcs.RepoWrapper
 import com.github.jensim.megamanipulator.files.FilesOperator
+import com.github.jensim.megamanipulator.settings.CloneType.HTTPS
+import com.github.jensim.megamanipulator.settings.CloneType.SSH
+import com.github.jensim.megamanipulator.settings.CodeHostSettings
+import com.github.jensim.megamanipulator.settings.PasswordsOperator
 import com.github.jensim.megamanipulator.settings.ProjectOperator
+import com.github.jensim.megamanipulator.settings.SettingsFileOperator
 import com.github.jensim.megamanipulator.ui.UiProtector
 import com.intellij.notification.NotificationType.INFORMATION
 import com.intellij.notification.NotificationType.WARNING
@@ -25,20 +31,23 @@ class CloneOperator(
     private val processOperator: ProcessOperator,
     private val notificationsOperator: NotificationsOperator,
     private val uiProtector: UiProtector,
+    private val settingsFileOperator: SettingsFileOperator,
+    private val passwordsOperator: PasswordsOperator,
 ) {
 
     fun clone(repos: Set<SearchResult>) {
         val basePath = projectOperator.project.basePath!!
-
         filesOperator.refreshConf()
+        val settings = settingsFileOperator.readSettings()!!
         val state: List<Pair<SearchResult, List<Action>?>> = uiProtector.mapConcurrentWithProgress(
             title = "Cloning repos",
             extraText1 = "Cloning repos",
             extraText2 = { it.asPathString() },
             data = repos,
         ) { repo ->
-            prRouter.getRepo(repo)?.let { vcsRepo ->
-                val cloneUrl = vcsRepo.getCloneUrl()!!
+            val codeSettings: CodeHostSettings = settings.resolveSettings(repo.searchHostName, repo.codeHostName)!!.second
+            prRouter.getRepo(repo)?.let { vcsRepo: RepoWrapper ->
+                val cloneUrl = buildCloneUrl(codeSettings, vcsRepo)
                 val defaultBranch = prRouter.getRepo(repo)?.getDefaultBranch()!!
                 val dir = File(basePath, "clones/${repo.asPathString()}")
                 clone(dir, cloneUrl, defaultBranch)
@@ -46,6 +55,16 @@ class CloneOperator(
         }
         filesOperator.refreshClones()
         reportState(state)
+    }
+
+    private fun buildCloneUrl(codeSettings: CodeHostSettings, vcsRepo: RepoWrapper): String {
+        val cloneUrl = vcsRepo.getCloneUrl(codeSettings.cloneType)!!
+        return when (codeSettings.cloneType) {
+            SSH -> cloneUrl
+            HTTPS -> {
+                "${cloneUrl.substringBefore("://")}://${codeSettings.username!!}:${passwordsOperator.getPassword(codeSettings.username!!,codeSettings.baseUrl)!!}@${cloneUrl.substringAfter("://")}"
+            }
+        }
     }
 
     private fun reportState(state: List<Pair<Any, List<Action>?>>) {
@@ -80,11 +99,9 @@ class CloneOperator(
 
     suspend fun cloneRepos(pullRequest: PullRequestWrapper): List<Action> {
         val basePath = projectOperator.project.basePath!!
-        val fullPath =
-            "$basePath/clones/${pullRequest.asPathString()}"
+        val fullPath = "$basePath/clones/${pullRequest.asPathString()}"
         val dir = File(fullPath)
-        val badState: List<Action> =
-            clone(dir, pullRequest.cloneUrlFrom()!!, pullRequest.fromBranch())
+        val badState: List<Action> = clone(dir, pullRequest.cloneUrlFrom()!!, pullRequest.fromBranch())
         if (badState.isEmpty() && pullRequest.isFork()) {
             localRepoOperator.promoteOriginToForkRemote(dir, pullRequest.cloneUrlTo()!!)
         }
@@ -107,10 +124,9 @@ class CloneOperator(
             return badState
         }
         badState.add("Failed shallow clone attempt" to p0)
-        val p1 =
-            processOperator.runCommandAsync(dir.parentFile, listOf("git", "clone", cloneUrl, dir.absolutePath)).await()
+        val p1 = processOperator.runCommandAsync(dir.parentFile, listOf("git", "clone", cloneUrl, dir.absolutePath)).await()
         if (p1.exitCode != 0) {
-            badState.add("Failed fill clone attempt" to p1)
+            badState.add("Failed full clone attempt" to p1)
             return badState
         }
         val p2 = processOperator.runCommandAsync(dir, listOf("git", "checkout", branch)).await()

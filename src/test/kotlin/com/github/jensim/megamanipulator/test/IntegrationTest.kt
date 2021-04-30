@@ -14,6 +14,7 @@ import org.hamcrest.Matchers.everyItem
 import org.hamcrest.Matchers.hasProperty
 import org.hamcrest.Matchers.hasSize
 import org.junit.jupiter.api.Assertions.assertNotNull
+import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 import java.io.File
 import java.util.UUID
@@ -43,6 +44,7 @@ class IntegrationTest : TestApplicationWiring() {
         )
         val results: Set<SearchResult> = setOf(result)
         applicationWiring.cloneOperator.clone(results)
+        assertTrue(File(tempDir, "clones/${result.asPathString()}/.git").exists())
 
         // branch
         val branch = "integration_test/${UUID.randomUUID()}"
