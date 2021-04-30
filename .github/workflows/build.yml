@@ -77,6 +77,11 @@ jobs:
           path: ~/.gradle/wrapper
           key: ${{ runner.os }}-gradle-wrapper-${{ hashFiles('**/gradle/wrapper/gradle-wrapper.properties') }}
 
+      - name: Setup git user
+        run: |
+          git config --global user.email "jens.brimfors@gmail.com"
+          git config --global user.name "Jens Brimfors"
+
       # Run detekt, ktlint and tests
       - name: Run Linters and Test
         run: ./gradlew check --stacktrace --info
