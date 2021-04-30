@@ -1,9 +1,19 @@
 package com.github.jensim.megamanipulator.settings
 
+import com.github.jensim.megamanipulator.settings.CloneType.SSH
 import com.github.ricky12awesome.jss.JsonSchema
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import java.io.File
+
+@Serializable
+enum class CloneType {
+
+    @JsonSchema.Description(["If you have a passphrase in your ssh key the it must be added via ssh-agent and ssh-add prior to clone/fetch/push."])
+    SSH,
+    @JsonSchema.Description(["It's not recommended to use for your daily work, as the password/token will be stored in the git settings in plain text"])
+    HTTPS,
+}
 
 @Serializable
 enum class HttpsOverride {
@@ -164,6 +174,7 @@ sealed class CodeHostSettings
     abstract val authMethod: AuthMethod
     abstract val username: String?
     abstract val forkSetting: ForkSetting
+    abstract val cloneType: CloneType
 
     internal fun validate() {
         validateBaseUrl(baseUrl)
@@ -193,6 +204,8 @@ sealed class CodeHostSettings
             ]
         )
         override val forkSetting: ForkSetting = ForkSetting.LAZY_FORK,
+        @JsonSchema.Description(["It's strongly recommended to use SSH clone type."])
+        override val cloneType: CloneType = SSH,
         @JsonSchema.Description(["Prefix forked repos with a recognizable char sequence"])
         val forkRepoPrefix: String = "mm_",
     ) : CodeHostSettings() {
@@ -220,6 +233,8 @@ sealed class CodeHostSettings
             ]
         )
         override val forkSetting: ForkSetting = ForkSetting.LAZY_FORK,
+        @JsonSchema.Description(["It's strongly recommended to use SSH clone type."])
+        override val cloneType: CloneType = SSH,
     ) : CodeHostSettings() {
 
         override val baseUrl: String = "https://api.github.com"

@@ -7,6 +7,8 @@ import com.github.jensim.megamanipulator.settings.ForkSetting
 import com.github.jensim.megamanipulator.settings.MegaManipulatorSettings
 import com.github.jensim.megamanipulator.settings.SearchHostSettings
 import com.github.jensim.megamanipulator.settings.SettingsFileOperator
+import com.github.jensim.megamanipulator.test.EnvHelper
+import com.github.jensim.megamanipulator.test.EnvHelper.EnvProperty.SRC_COM_USERNAME
 import io.mockk.Called
 import io.mockk.coEvery
 import io.mockk.coVerify
@@ -35,12 +37,14 @@ class SearchOperatorTest {
     @InjectMockKs
     private lateinit var searchOperator: SearchOperator
 
+    private val envHelper = EnvHelper()
+
     private val codeHostName = "github.com"
     private val sourceGraphSettings = SearchHostSettings.SourceGraphSettings(
         baseUrl = "https://sourcegraph.com",
         codeHostSettings = mapOf(
             codeHostName to CodeHostSettings.GitHubSettings(
-                username = "jensim",
+                username = envHelper.resolve(SRC_COM_USERNAME),
                 forkSetting = ForkSetting.PLAIN_BRANCH,
             )
         )

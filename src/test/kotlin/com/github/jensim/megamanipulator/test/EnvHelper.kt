@@ -7,12 +7,13 @@ import java.util.Properties
 class EnvHelper {
 
     enum class EnvProperty(val defaultValue: String? = null, val fallBackEnv: List<String> = emptyList()) {
-        GITHUB_USERNAME(fallBackEnv = listOf("GITHUB_ACTOR"), defaultValue = "jensim"),
+        SRC_COM_USERNAME(defaultValue = "jensim"),
         SRC_COM_ACCESS_TOKEN(fallBackEnv = listOf("SRC_ACCESS_TOKEN")),
+        GITHUB_USERNAME(fallBackEnv = listOf("GITHUB_ACTOR"), defaultValue = "jensim"),
         GITHUB_TOKEN,
         BITBUCKET_SERVER_BASEURL(fallBackEnv = listOf("BITBUCKET_BASEURL")),
         BITBUCKET_SERVER_USER(fallBackEnv = listOf("BITBUCKET_USER")),
-        BITBUCKET_SERVER_TOKEN(fallBackEnv = listOf("BITBUCKET_TOKEN"))
+        BITBUCKET_SERVER_TOKEN(fallBackEnv = listOf("BITBUCKET_TOKEN")),
     }
 
     private val dotEnvProperties: Properties by lazy {

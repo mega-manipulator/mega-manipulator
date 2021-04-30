@@ -4,6 +4,7 @@
 
 ## [Unreleased]
 ### Added
+- Added clone over https
 
 ### Changed
 
