@@ -4,7 +4,7 @@
 
 ## [Unreleased]
 ### Added
-- Added clone over https
+- Git over https
 
 ### Changed
 

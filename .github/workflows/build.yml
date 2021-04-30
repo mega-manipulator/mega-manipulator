@@ -19,7 +19,8 @@ on:
   push:
     branches:
       - "main"
-      - "!integration_test/*"
+      - "feature/*"
+      - "fix/*"
     paths-ignore:
       - ".github/**/*"
       - ".run/**/*"
