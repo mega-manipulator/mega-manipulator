@@ -14,34 +14,17 @@
 ### Fixed
 
 ### Security
+
 ## [0.0.22]
 ### Added
 - Git over https
 - Support etsy/hound search host type
 - Support sourcegraph `repo` and `commit` search types
 
-### Changed
-
-### Deprecated
-
-### Removed
-
-### Fixed
-
-### Security
 ## [0.0.21]
 ### Added
 - Validate access tokens
 
-### Changed
-
-### Deprecated
-
-### Removed
-
-### Fixed
-
-### Security
 ## [0.0.20]
 ### Added
 - .env-file support for local development
@@ -50,23 +33,11 @@
 ### Changed
 - Application internal wiring rebuilt, to allow testing
 
-### Deprecated
-
-### Removed
-
 ### Fixed
 - Remove branches from GitHub
 
 ### Security
 ## [0.0.19]
-### Added
-
-### Changed
-
-### Deprecated
-
-### Removed
-
 ### Fixed
 - Fixed pagination start index for GitHub client, fetch forked repos without outgoing PRs.
 This will eliminate repos being listed twice
