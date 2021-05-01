@@ -4,6 +4,7 @@
 
 ## [Unreleased]
 ### Added
+- Git over https
 
 ### Changed
 

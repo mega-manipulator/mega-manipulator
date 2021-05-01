@@ -4,10 +4,16 @@ import com.github.jensim.megamanipulator.actions.NotificationsOperator
 import com.github.jensim.megamanipulator.actions.ProcessOperator
 import com.github.jensim.megamanipulator.actions.apply.ApplyOutput
 import com.github.jensim.megamanipulator.actions.localrepo.LocalRepoOperator
+import com.github.jensim.megamanipulator.actions.search.SearchResult
 import com.github.jensim.megamanipulator.actions.vcs.PrRouter
 import com.github.jensim.megamanipulator.actions.vcs.PullRequestWrapper
 import com.github.jensim.megamanipulator.files.FilesOperator
+import com.github.jensim.megamanipulator.settings.CloneType.HTTPS
+import com.github.jensim.megamanipulator.settings.PasswordsOperator
 import com.github.jensim.megamanipulator.settings.ProjectOperator
+import com.github.jensim.megamanipulator.settings.SearchHostSettings
+import com.github.jensim.megamanipulator.settings.SettingsFileOperator
+import com.github.jensim.megamanipulator.ui.TestUiProtector
 import com.github.jensim.megamanipulator.ui.UiProtector
 import com.intellij.notification.NotificationType
 import com.intellij.openapi.project.Project
@@ -15,13 +21,12 @@ import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.confirmVerified
 import io.mockk.every
-import io.mockk.impl.annotations.InjectMockKs
-import io.mockk.impl.annotations.MockK
-import io.mockk.impl.annotations.RelaxedMockK
 import io.mockk.junit5.MockKExtension
 import io.mockk.mockk
 import io.mockk.verify
 import kotlinx.coroutines.CompletableDeferred
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.async
 import kotlinx.coroutines.runBlocking
 import org.hamcrest.MatcherAssert.assertThat
 import org.hamcrest.Matchers.equalTo
@@ -38,37 +43,46 @@ import kotlin.io.path.createTempDirectory
 @ExtendWith(MockKExtension::class)
 class CloneOperatorTest {
 
-    @RelaxedMockK
-    private lateinit var filesOperator: FilesOperator
+    private val filesOperator: FilesOperator = mockk(relaxed = true)
+    private val projectOperator: ProjectOperator = mockk()
+    private val prRouter: PrRouter = mockk()
+    private val localRepoOperator: LocalRepoOperator = mockk()
+    private val processOperator: ProcessOperator = mockk()
+    private val notificationsOperator: NotificationsOperator = mockk(relaxed = true)
+    private val uiProtector: UiProtector = TestUiProtector()
 
-    @MockK
-    private lateinit var projectOperator: ProjectOperator
+    private val project: Project = mockk()
+    private val settingsFileOperator: SettingsFileOperator = mockk {
+        every { readSettings() } returns mockk {
+            every { resolveSettings(any(), any()) } returns (
+                mockk<SearchHostSettings>() to mockk {
+                    every { username } returns "username"
+                    every { cloneType } returns HTTPS
+                    every { baseUrl } returns "https://example"
+                }
+                )
+        }
+    }
+    private val passwordsOperator: PasswordsOperator = mockk {
+        every { getPassword("username", "https://example") } returns "password"
+    }
+    private val cloneOperator = CloneOperator(
+        filesOperator = filesOperator,
+        projectOperator = projectOperator,
+        prRouter = prRouter,
+        localRepoOperator = localRepoOperator,
+        processOperator = processOperator,
+        notificationsOperator = notificationsOperator,
+        uiProtector = uiProtector,
+        settingsFileOperator = settingsFileOperator,
+        passwordsOperator = passwordsOperator
+    )
 
-    @MockK
-    private lateinit var prRouter: PrRouter
-
-    @MockK
-    private lateinit var localRepoOperator: LocalRepoOperator
-
-    @MockK
-    private lateinit var processOperator: ProcessOperator
-
-    @RelaxedMockK
-    private lateinit var notificationsOperator: NotificationsOperator
-
-    @MockK
-    private lateinit var uiProtector: UiProtector
-
-    @MockK
-    private lateinit var project: Project
-
-    @InjectMockKs
-    private lateinit var cloneOperator: CloneOperator
     private val tempDirPath: Path = createTempDirectory(prefix = null, attributes = emptyArray())
     private val tempDir: File = File(tempDirPath.toUri())
 
     companion object {
-        private const val CLONING_TITLE_AND_MESSAGE = "Cloning repos"
+
         private const val PROJECT = "mega-manipulator"
         private const val BASE_REPO = "base_repo"
     }
@@ -87,26 +101,22 @@ class CloneOperatorTest {
     @Test
     fun `clone with search requests`() = runBlocking {
         // Given
-        val state: List<Pair<String, List<String>>> = emptyList()
-        every {
-            uiProtector.mapConcurrentWithProgress<String, List<String>>(
-                title = CLONING_TITLE_AND_MESSAGE,
-                extraText1 = CLONING_TITLE_AND_MESSAGE,
-                extraText2 = any(),
-                data = any(),
-                mappingFunction = any()
-            )
-        } returns state
+        val input = SearchResult(searchHostName = "search", codeHostName = "code", project = "project", repo = "repo")
+        coEvery { prRouter.getRepo(input) } returns mockk {
+            every { getDefaultBranch() } returns "main"
+            every { getCloneUrl(HTTPS) } returns "https://example.com"
+        }
+        coEvery { processOperator.runCommandAsync(any(), any()) } returns GlobalScope.async { ApplyOutput.dummy(exitCode = 0) }
 
         // When
-        cloneOperator.clone(setOf())
+        cloneOperator.clone(setOf(input))
 
         // Then
         verify { filesOperator.refreshClones() }
         verify {
             notificationsOperator.show(
                 "Cloning done",
-                "All ${state.size} cloned successfully",
+                "All 1 cloned successfully",
                 NotificationType.INFORMATION
             )
         }
@@ -114,9 +124,7 @@ class CloneOperatorTest {
 
     @Test
     fun `clone with pull request wrapper`() = runBlocking {
-
         // Given
-        mockStates(emptyList())
 
         // When
         cloneOperator.clone(emptyList())
@@ -135,11 +143,21 @@ class CloneOperatorTest {
     @Test
     fun `clone repos failed`() = runBlocking {
         // Given
-        val state = listOf("repo1" to listOf("success"), "repo2" to emptyList())
-        mockStates(state)
+        val good = CompletableDeferred(ApplyOutput.dummy(exitCode = 0))
+        val bad = CompletableDeferred(ApplyOutput.dummy(exitCode = 1))
+        coEvery { processOperator.runCommandAsync(any(), any()) } returns bad andThen good
+        val pullRequest: PullRequestWrapper = mockk(relaxed = true) {
+            every { searchHostName() } returns "test"
+            every { codeHostName() } returns "codeHostName"
+            every { project() } returns PROJECT
+            every { baseRepo() } returns BASE_REPO
+            every { cloneUrlFrom() } returns "any-url-from"
+            every { fromBranch() } returns "main"
+            every { isFork() } returns false
+        }
 
         // When
-        cloneOperator.clone(emptyList())
+        cloneOperator.clone(listOf(pullRequest, pullRequest))
 
         // Then
         verify { filesOperator.refreshClones() }
@@ -225,7 +243,7 @@ class CloneOperatorTest {
         verify(exactly = 2) { processOperator.runCommandAsync(any(), any()) }
         assertThat(states.size, equalTo(2))
         assertThat(states[0].first, equalTo("Failed shallow clone attempt"))
-        assertThat(states[1].first, equalTo("Failed fill clone attempt"))
+        assertThat(states[1].first, equalTo("Failed full clone attempt"))
     }
 
     @Test
@@ -288,17 +306,5 @@ class CloneOperatorTest {
         every { pullRequest.isFork() } returns false
         every { pullRequest.asPathString() } returns "${pullRequest.searchHostName()}/${pullRequest.codeHostName()}/$PROJECT/$BASE_REPO"
         return file
-    }
-
-    private fun mockStates(state: List<Pair<String, List<String>>>) {
-        every {
-            uiProtector.mapConcurrentWithProgress<String, List<String>>(
-                title = CLONING_TITLE_AND_MESSAGE,
-                extraText1 = CLONING_TITLE_AND_MESSAGE,
-                extraText2 = any(),
-                data = any(),
-                mappingFunction = any()
-            )
-        } returns state
     }
 }

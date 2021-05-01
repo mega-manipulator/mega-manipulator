@@ -4,29 +4,8 @@ import org.jetbrains.changelog.closure
 import org.jetbrains.changelog.markdownToHTML
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
-val junitVersion: String = "5.7.1"
-val kotlinxCoroutinesVersion: String = "1.4.3"
-val ktorVersion: String = "1.5.3"
-val kotlinVersion: String = "1.4.32"
-val jvmVersion: String = "11"
-val hamcrestVersion: String = "2.2"
-
 plugins {
-    // Java support
-    id("java")
-    // Kotlin support
-    kotlin("jvm") version "1.4.32"
-    kotlin("plugin.serialization") version "1.4.32"
-    // gradle-intellij-plugin - read more: https://github.com/JetBrains/gradle-intellij-plugin
-    id("org.jetbrains.intellij") version "0.7.2"
-    // gradle-changelog-plugin - read more: https://github.com/JetBrains/gradle-changelog-plugin
-    id("org.jetbrains.changelog") version "1.1.2"
-    // detekt linter - read more: https://detekt.github.io/detekt/gradle.html
-    id("io.gitlab.arturbosch.detekt") version "1.16.0"
-    // ktlint linter - read more: https://github.com/JLLeitschuh/ktlint-gradle
-    id("org.jlleitschuh.gradle.ktlint") version "10.0.0"
-    jacoco
-    id("com.github.ben-manes.versions") version "0.38.0"
+    addPlugins()
 }
 
 // Import variables from gradle.properties file
@@ -54,35 +33,13 @@ repositories {
     jcenter()
 }
 
-dependencies {
-    detektPlugins(group = "io.gitlab.arturbosch.detekt", name = "detekt-formatting", version = "1.16.0")
-    implementation(group = "org.jetbrains.kotlin", name = "kotlin-stdlib-jdk8", version = kotlinVersion)
-    implementation(group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-jdk8", version = kotlinxCoroutinesVersion)
-    implementation(group = "org.jetbrains.kotlin", name = "kotlin-reflect", version = kotlinVersion)
-    implementation(group = "org.jetbrains.kotlin", name = "kotlin-bom", version = kotlinVersion, ext = "pom")
-
-    implementation(group = "io.ktor", name = "ktor-client", version = ktorVersion)
-    implementation(group = "io.ktor", name = "ktor-client-apache", version = ktorVersion)
-    implementation(group = "io.ktor", name = "ktor-client-serialization", version = ktorVersion)
-    implementation(group = "org.jetbrains.kotlinx", name = "kotlinx-serialization-json", version = "1.1.0")
-    implementation(group = "com.github.Ricky12Awesome", name = "json-schema-serialization", version = "0.6.6")
-
-    implementation(group = "org.eclipse.jgit", name = "org.eclipse.jgit", version = "5.11.0.202103091610-r")
-    implementation(group = "org.apache.logging.log4j", name = "log4j-slf4j-impl", version = "2.14.1")
-    implementation(group = "me.xdrop", name = "fuzzywuzzy", version = "1.3.1")
-
-    // TEST
-    testImplementation(group = "io.mockk", name = "mockk", version = "1.11.0")
-    testImplementation(group = "org.hamcrest", name = "hamcrest", version = hamcrestVersion)
-    testImplementation(group = "org.hamcrest", name = "hamcrest-library", version = hamcrestVersion)
-    testImplementation(group = "org.junit.jupiter", name = "junit-jupiter-api", version = junitVersion)
-    testImplementation(group = "org.junit.jupiter", name = "junit-jupiter-params", version = junitVersion)
-    testRuntimeOnly(group = "org.junit.jupiter", name = "junit-jupiter-engine", version = junitVersion)
+dependencies { detektPlugins("io.gitlab.arturbosch.detekt:detekt-formatting:${Versions.detekt}")
+    this.dependencies.addDependencies()
 }
 
 ktlint {
     verbose.set(true)
-    version.set("0.41.0")
+    version.set(Versions.ktlint)
 }
 
 // Configure gradle-intellij-plugin plugin.
@@ -127,15 +84,15 @@ fun isNonStable(version: String): Boolean {
 tasks {
     // Set the compatibility jvm versions
     withType<JavaCompile> {
-        sourceCompatibility = jvmVersion
-        targetCompatibility = jvmVersion
+        sourceCompatibility = Versions.jvm
+        targetCompatibility = Versions.jvm
     }
     withType<KotlinCompile> {
-        kotlinOptions.jvmTarget = jvmVersion
+        kotlinOptions.jvmTarget = Versions.jvm
     }
 
     withType<Detekt> {
-        jvmTarget = jvmVersion
+        jvmTarget = Versions.jvm
     }
 
     withType<Test>().configureEach {

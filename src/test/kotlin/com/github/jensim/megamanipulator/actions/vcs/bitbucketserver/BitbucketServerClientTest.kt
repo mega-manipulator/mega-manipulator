@@ -3,6 +3,7 @@ package com.github.jensim.megamanipulator.actions.vcs.bitbucketserver
 import com.github.jensim.megamanipulator.actions.NotificationsOperator
 import com.github.jensim.megamanipulator.actions.localrepo.LocalRepoOperator
 import com.github.jensim.megamanipulator.http.HttpClientProvider
+import com.github.jensim.megamanipulator.settings.CloneType.HTTPS
 import com.github.jensim.megamanipulator.settings.CodeHostSettings.BitBucketSettings
 import com.github.jensim.megamanipulator.settings.ForkSetting.PLAIN_BRANCH
 import com.github.jensim.megamanipulator.settings.MegaManipulatorSettings
@@ -41,7 +42,8 @@ internal class BitbucketServerClientTest {
     private val bitBucketSettings = BitBucketSettings(
         username = envHelper.resolve(BITBUCKET_SERVER_USER),
         forkSetting = PLAIN_BRANCH,
-        baseUrl = envHelper.resolve(BITBUCKET_SERVER_BASEURL)
+        baseUrl = envHelper.resolve(BITBUCKET_SERVER_BASEURL),
+        cloneType = HTTPS,
     )
     private val password = envHelper.resolve(BITBUCKET_SERVER_TOKEN)
     private val codeHost = "bitbucket_server"

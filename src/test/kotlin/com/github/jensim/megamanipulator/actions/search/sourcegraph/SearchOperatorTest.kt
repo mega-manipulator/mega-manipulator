@@ -1,11 +1,14 @@
 package com.github.jensim.megamanipulator.actions.search.sourcegraph
 
 import com.github.jensim.megamanipulator.actions.search.SearchOperator
+import com.github.jensim.megamanipulator.actions.search.SearchResult
 import com.github.jensim.megamanipulator.settings.CodeHostSettings
 import com.github.jensim.megamanipulator.settings.ForkSetting
 import com.github.jensim.megamanipulator.settings.MegaManipulatorSettings
 import com.github.jensim.megamanipulator.settings.SearchHostSettings
 import com.github.jensim.megamanipulator.settings.SettingsFileOperator
+import com.github.jensim.megamanipulator.test.EnvHelper
+import com.github.jensim.megamanipulator.test.EnvHelper.EnvProperty.SRC_COM_USERNAME
 import io.mockk.Called
 import io.mockk.coEvery
 import io.mockk.coVerify
@@ -17,10 +20,10 @@ import io.mockk.verify
 import kotlinx.coroutines.runBlocking
 import org.hamcrest.MatcherAssert.assertThat
 import org.hamcrest.Matchers.equalTo
+import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 import org.junit.jupiter.api.extension.ExtendWith
-import kotlin.test.assertEquals
 
 @ExtendWith(MockKExtension::class)
 class SearchOperatorTest {
@@ -34,12 +37,14 @@ class SearchOperatorTest {
     @InjectMockKs
     private lateinit var searchOperator: SearchOperator
 
+    private val envHelper = EnvHelper()
+
     private val codeHostName = "github.com"
     private val sourceGraphSettings = SearchHostSettings.SourceGraphSettings(
         baseUrl = "https://sourcegraph.com",
         codeHostSettings = mapOf(
             codeHostName to CodeHostSettings.GitHubSettings(
-                username = "jensim",
+                username = envHelper.resolve(SRC_COM_USERNAME),
                 forkSetting = ForkSetting.PLAIN_BRANCH,
             )
         )
@@ -61,7 +66,7 @@ class SearchOperatorTest {
         val sourceGraphSettings = searchOperator.search(searchHostName, "Dockerfile")
 
         // Then
-        assertEquals(sourceGraphSettings, emptySet())
+        assertEquals(sourceGraphSettings, emptySet<SearchResult>())
         verify { settingsFileOperator.readSettings() }
         coVerify { sourcegraphSearchClient.search(any(), any(), any()) }
     }

@@ -138,6 +138,8 @@ data class ApplicationWiring(
             processOperator = this.processOperator,
             notificationsOperator = this.notificationsOperator,
             uiProtector = this.uiProtector,
+            settingsFileOperator = this.settingsFileOperator,
+            passwordsOperator = this.passwordsOperator,
         )
     }
     val uiProtector: UiProtector by lazy {
