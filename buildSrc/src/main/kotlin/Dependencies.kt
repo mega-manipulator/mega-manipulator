@@ -1,8 +1,8 @@
-import org.gradle.kotlin.dsl.DependencyHandlerScope
-import org.gradle.kotlin.dsl.PluginDependenciesSpecScope
+import org.gradle.api.artifacts.dsl.DependencyHandler
 import org.gradle.kotlin.dsl.jacoco
 import org.gradle.kotlin.dsl.kotlin
 import org.gradle.kotlin.dsl.version
+import org.gradle.plugin.use.PluginDependenciesSpec
 
 object Versions {
 
@@ -30,7 +30,7 @@ object Versions {
 object Dependencies {
 
     val implementation = setOf(
-        "org.jetbrains.kotlin:kotlin-bom:${Versions.kotlin}:pom",
+        "org.jetbrains.kotlin:kotlin-bom:${Versions.kotlin}",//:pom",
         "org.jetbrains.kotlin:kotlin-stdlib-jdk8:${Versions.kotlin}",
         "org.jetbrains.kotlinx:kotlinx-coroutines-jdk8:${Versions.kotlinxCoroutines}",
         "org.jetbrains.kotlin:kotlin-reflect:${Versions.kotlin}",
@@ -45,20 +45,18 @@ object Dependencies {
         "org.apache.logging.log4j:log4j-slf4j-impl:${Versions.log4j}",
         "me.xdrop:fuzzywuzzy:${Versions.fuzzyWuzzy}",
     )
-
     val testImplementation = setOf(
         "io.mockk:mockk:${Versions.mockk}",
         "org.hamcrest:hamcrest:${Versions.hamcrest}",
         "org.hamcrest:hamcrest-library:${Versions.hamcrest}",
         "org.junit.jupiter:junit-jupiter-api:${Versions.junit}",
-
-        )
+    )
     val testRuntime = setOf(
         "org.junit.jupiter:junit-jupiter-engine:${Versions.junit}",
     )
 }
 
-fun PluginDependenciesSpecScope.addPlugins(){
+fun PluginDependenciesSpec.addPlugins() {
     id("java")
     // Kotlin support
     jacoco
@@ -75,9 +73,9 @@ fun PluginDependenciesSpecScope.addPlugins(){
     id("com.github.ben-manes.versions") version Versions.benManesVersions
 }
 
-fun DependencyHandlerScope.addDependencies() {
+fun DependencyHandler.addDependencies() {
     //detektPlugins("io.gitlab.arturbosch.detekt:detekt-formatting:${Versions.detekt}")
-    Dependencies.implementation.forEach { this.dependencies.add("implementation", it) }
-    Dependencies.testImplementation.forEach { this.dependencies.add("testImplementation", it) }
-    Dependencies.testRuntime.forEach { this.dependencies.add("testRuntimeOnly", it) }
+    Dependencies.implementation.forEach { this.add("implementation", it) }
+    Dependencies.testImplementation.forEach { this.add("testImplementation", it) }
+    Dependencies.testRuntime.forEach { this.add("testRuntimeOnly", it) }
 }
