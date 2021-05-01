@@ -7,8 +7,6 @@
 ## Improvements
 * <strong>High prio</strong>
   * [ ] Improve testing
-    * [ ] git over HTTP  
-      SSH does not work in forked repos running GitHub actions
   * [ ] Notify on missing conf for code host or search host
 * <strong>Low prio</strong>
   * [ ] Generic code host  
@@ -19,7 +17,7 @@
 * <strong>High prio</strong>
   * [ ] Passwords coloring  
   not readable in dark mode
-  * [ ] Forks should be listed as ${fork-parent}/${repo-name}
+  * [ ] Separate questions for dropping `branches` and `forks` when declining PRs  
   * [ ] Better interactions for the clones tab  
 Buttons clutter the UI
 * <strong>Low prio</strong>
@@ -28,7 +26,7 @@ Buttons clutter the UI
   * [ ] Right Click PRs
 
 ## Features
-* [ ] Drop stale forked repos
+* [ ] GraphQL lib use
 * [ ] Drop stale - non-default branches (merged or old)
 * [ ] Validate authentication
 * [ ] Validate authorization
@@ -43,5 +41,9 @@ Buttons clutter the UI
 ## Search hosts
 
 * [x] SourceGraph
+  * [x] File search
+  * [ ] Repo search
+  * [ ] Symbol search
+  * [ ] Commit search
 * [ ] etsy/hound
 * [ ] openGrok
