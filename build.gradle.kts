@@ -35,7 +35,7 @@ repositories {
 
 dependencies {
     detektPlugins("io.gitlab.arturbosch.detekt:detekt-formatting:${Versions.detekt}")
-    addDependencies()
+    this.dependencies.addDependencies()
 }
 
 ktlint {
