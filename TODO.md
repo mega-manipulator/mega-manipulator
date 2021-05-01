@@ -38,6 +38,7 @@ Buttons clutter the UI
 
 * [x] BitBucket Server
 * [x] GitHub.com
+* [ ] GitLab
 * [ ] ...
 
 ## Search hosts
