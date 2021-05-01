@@ -1,5 +1,6 @@
 package com.github.jensim.megamanipulator.settings
 
+import com.github.jensim.megamanipulator.settings.AuthMethod.NONE
 import com.github.jensim.megamanipulator.settings.CloneType.SSH
 import com.github.ricky12awesome.jss.JsonSchema
 import kotlinx.serialization.SerialName
@@ -27,8 +28,10 @@ enum class HttpsOverride {
 enum class AuthMethod {
     @JsonSchema.Description(["Username and access token combination"])
     ACCESS_TOKEN,
+
     @JsonSchema.Description(["Token without username"])
     JUST_TOKEN,
+    NONE,
 }
 
 @Serializable
@@ -116,6 +119,31 @@ sealed class SearchHostSettings {
     abstract val baseUrl: String
     abstract val httpsOverride: HttpsOverride?
     abstract val codeHostSettings: Map<String, CodeHostSettings>
+
+    @Serializable
+    @SerialName("HOUND")
+    data class HoundSettings(
+        @JsonSchema.Description(
+            [
+                "Base url to your SourceGraph installation",
+                "For example https://sourcegraph.com",
+            ]
+        )
+        override val baseUrl: String,
+        @JsonSchema.Description(["Override the default strict https validation"])
+        override val httpsOverride: HttpsOverride? = null,
+        @JsonSchema.Description(
+            [
+                "Code hosts.",
+                "The names in this map is used to connect with the hostname.",
+                "!!! IT'S THEREFORE REALLY IMPORTANT !!!"
+            ]
+        )
+        override val codeHostSettings: Map<String, CodeHostSettings>,
+    ) : SearchHostSettings() {
+        override val username = "none"
+        override val authMethod = NONE
+    }
 
     @Serializable
     @SerialName("SOURCEGRAPH")

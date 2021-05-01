@@ -4,4 +4,3 @@ plugins{
 repositories {
     jcenter()
 }
-

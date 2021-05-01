@@ -11,6 +11,7 @@ import com.github.jensim.megamanipulator.actions.git.commit.CommitOperator
 import com.github.jensim.megamanipulator.actions.localrepo.LocalRepoOperator
 import com.github.jensim.megamanipulator.actions.search.SearchOperator
 import com.github.jensim.megamanipulator.actions.search.SearchWindow
+import com.github.jensim.megamanipulator.actions.search.hound.HoundClient
 import com.github.jensim.megamanipulator.actions.search.sourcegraph.SourcegraphSearchClient
 import com.github.jensim.megamanipulator.actions.vcs.PrRouter
 import com.github.jensim.megamanipulator.actions.vcs.PullRequestActionsMenu
@@ -59,6 +60,7 @@ data class ApplicationWiring(
     private val serializationHolderOverride: SerializationHolder? = null,
     private val pullRequestActionsMenuOverride: PullRequestActionsMenu? = null,
     private val sourcegraphSearchClientOverride: SourcegraphSearchClient? = null,
+    private val houndClientOverride: HoundClient? = null,
     private val bitbucketServerClientOverride: BitbucketServerClient? = null,
     private val githubComClientOverride: GithubComClient? = null,
     private val httpClientProviderOverride: HttpClientProvider? = null,
@@ -108,6 +110,12 @@ data class ApplicationWiring(
             json = this.json,
         )
     }
+    val houndClient: HoundClient by lazy {
+        houndClientOverride ?: HoundClient(
+            httpClientProvider = this.httpClientProvider,
+            json = this.json,
+        )
+    }
     val bitbucketServerClient: BitbucketServerClient by lazy {
         bitbucketServerClientOverride ?: BitbucketServerClient(
             httpClientProvider = this.httpClientProvider,
@@ -127,6 +135,7 @@ data class ApplicationWiring(
         searchOperatorOverride ?: SearchOperator(
             settingsFileOperator = this.settingsFileOperator,
             sourcegraphSearchClient = this.sourcegraphSearchClient,
+            houndClient = this.houndClient,
         )
     }
     val cloneOperator: CloneOperator by lazy {

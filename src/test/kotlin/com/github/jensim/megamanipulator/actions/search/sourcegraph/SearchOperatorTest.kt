@@ -2,6 +2,7 @@ package com.github.jensim.megamanipulator.actions.search.sourcegraph
 
 import com.github.jensim.megamanipulator.actions.search.SearchOperator
 import com.github.jensim.megamanipulator.actions.search.SearchResult
+import com.github.jensim.megamanipulator.actions.search.hound.HoundClient
 import com.github.jensim.megamanipulator.settings.CodeHostSettings
 import com.github.jensim.megamanipulator.settings.ForkSetting
 import com.github.jensim.megamanipulator.settings.MegaManipulatorSettings
@@ -13,9 +14,7 @@ import io.mockk.Called
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
-import io.mockk.impl.annotations.InjectMockKs
-import io.mockk.impl.annotations.MockK
-import io.mockk.junit5.MockKExtension
+import io.mockk.mockk
 import io.mockk.verify
 import kotlinx.coroutines.runBlocking
 import org.hamcrest.MatcherAssert.assertThat
@@ -23,19 +22,17 @@ import org.hamcrest.Matchers.equalTo
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
-import org.junit.jupiter.api.extension.ExtendWith
 
-@ExtendWith(MockKExtension::class)
 class SearchOperatorTest {
 
-    @MockK
-    private lateinit var settingsFileOperator: SettingsFileOperator
-
-    @MockK
-    private lateinit var sourcegraphSearchClient: SourcegraphSearchClient
-
-    @InjectMockKs
-    private lateinit var searchOperator: SearchOperator
+    private val settingsFileOperatorMock: SettingsFileOperator = mockk()
+    private val sourcegraphSearchClientMock: SourcegraphSearchClient = mockk()
+    private val houndClientMock: HoundClient = mockk()
+    private val searchOperator = SearchOperator(
+        settingsFileOperator = settingsFileOperatorMock,
+        sourcegraphSearchClient = sourcegraphSearchClientMock,
+        houndClient = houndClientMock,
+    )
 
     private val envHelper = EnvHelper()
 
@@ -59,22 +56,22 @@ class SearchOperatorTest {
     @Test
     fun search() = runBlocking {
         // Given
-        every { settingsFileOperator.readSettings() } returns settings
-        coEvery { sourcegraphSearchClient.search(any(), any(), any()) } returns emptySet()
+        every { settingsFileOperatorMock.readSettings() } returns settings
+        coEvery { sourcegraphSearchClientMock.search(any(), any(), any()) } returns emptySet()
 
         // When
         val sourceGraphSettings = searchOperator.search(searchHostName, "Dockerfile")
 
         // Then
         assertEquals(sourceGraphSettings, emptySet<SearchResult>())
-        verify { settingsFileOperator.readSettings() }
-        coVerify { sourcegraphSearchClient.search(any(), any(), any()) }
+        verify { settingsFileOperatorMock.readSettings() }
+        coVerify { sourcegraphSearchClientMock.search(any(), any(), any()) }
     }
 
     @Test
     fun searchNotFound() = runBlocking {
         // Given
-        every { settingsFileOperator.readSettings() } returns settings
+        every { settingsFileOperatorMock.readSettings() } returns settings
 
         // When
         val nullPointerException = assertThrows<NullPointerException> {
@@ -86,7 +83,7 @@ class SearchOperatorTest {
 
         // Then
         assertThat(nullPointerException.localizedMessage, equalTo("No settings for search host named any-hostname"))
-        verify { settingsFileOperator.readSettings() }
-        coVerify { sourcegraphSearchClient.search(any(), any(), any()) wasNot Called }
+        verify { settingsFileOperatorMock.readSettings() }
+        coVerify { sourcegraphSearchClientMock.search(any(), any(), any()) wasNot Called }
     }
 }

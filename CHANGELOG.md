@@ -5,6 +5,7 @@
 ## [Unreleased]
 ### Added
 - Git over https
+- Support etsy/hound search host type
 
 ### Changed
 
