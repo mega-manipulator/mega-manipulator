@@ -9,7 +9,7 @@ object Versions {
     const val jvm = "11"
     const val junit = "5.7.1"
     const val kotlinxCoroutines = "1.4.3"
-    const val ktor = "1.5.3"
+    const val ktor = "1.5.4"
     const val kotlin = "1.4.32"
     const val hamcrest = "2.2"
     const val changelog = "1.1.2"
@@ -19,7 +19,7 @@ object Versions {
     const val ktlint = "0.41.0"
     const val benManesVersions = "0.38.0"
 
-    const val kotlinxSerialization = "1.2.0"
+    const val kotlinxSerialization = "1.1.0"
     const val jsonSchemaSerialization = "0.6.6"
     const val jGit = "5.11.0.202103091610-r"
     const val log4j = "2.14.1"
@@ -32,6 +32,7 @@ object Dependencies {
     val implementation = setOf(
         "org.jetbrains.kotlin:kotlin-bom:${Versions.kotlin}",//:pom",
         "org.jetbrains.kotlin:kotlin-stdlib-jdk8:${Versions.kotlin}",
+        "org.jetbrains.kotlinx:kotlinx-coroutines-bom:${Versions.kotlinxCoroutines}",
         "org.jetbrains.kotlinx:kotlinx-coroutines-jdk8:${Versions.kotlinxCoroutines}",
         "org.jetbrains.kotlin:kotlin-reflect:${Versions.kotlin}",
 
