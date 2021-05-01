@@ -1,9 +1,9 @@
-package com.github.jensim.megamanipulator.actions.search
+package com.github.jensim.megamanipulator.actions.search.sourcegraph
 
 import kotlinx.serialization.Serializable
 
 @SuppressWarnings("ConstructorParameterNaming")
-object SearchTypes {
+object SourcegraphTypes {
 
     @Serializable
     data class GraphQlRequest(val variables: SearchVaraibles) {
@@ -91,13 +91,16 @@ object SearchTypes {
     @Serializable
     data class GraphQLSearchResult(
         val __typename: String? = null,
-        val file: File? = null,
+        val name: String? = null,
         val repository: Repository? = null,
-    )
+        val commit: CommitSearchResult? = null,
+    ) {
+        fun getRepoName(): String? = name ?: repository?.name ?: commit?.repository?.name
+    }
 
     @Serializable
-    data class File(
-        val path: String?
+    data class CommitSearchResult(
+        val repository: Repository? = null,
     )
 
     @Serializable
@@ -147,14 +150,20 @@ object SearchTypes {
             results {
                 __typename
                 ... on FileMatch {
-                    file {
-                        path
-                    }
                     repository {
                         name
                     }
                 }
-                
+                ... on Repository {
+                    name
+                }
+                ... on CommitSearchResult {
+                    commit {
+                        repository {
+                            name
+                        }
+                    }
+                }
             }
             
         }

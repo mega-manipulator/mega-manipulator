@@ -6,6 +6,7 @@
 ### Added
 - Git over https
 - Support etsy/hound search host type
+- Support sourcegraph `repo` and `commit` search types
 
 ### Changed
 
