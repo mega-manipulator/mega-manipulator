@@ -114,6 +114,8 @@ enum class SearchHostType {
 @Serializable
 sealed class SearchHostSettings {
 
+    abstract val docLinkHref: String
+
     abstract val authMethod: AuthMethod
     abstract val username: String
     abstract val baseUrl: String
@@ -141,6 +143,8 @@ sealed class SearchHostSettings {
         )
         override val codeHostSettings: Map<String, CodeHostSettings>,
     ) : SearchHostSettings() {
+
+        override val docLinkHref: String = "https://jensim.github.io/mega-manipulator/docs/Search%20hosts/etsy_hound"
         override val username = "none"
         override val authMethod = NONE
     }
@@ -167,15 +171,9 @@ sealed class SearchHostSettings {
         override val codeHostSettings: Map<String, CodeHostSettings>,
     ) : SearchHostSettings() {
 
-        @JsonSchema.Description(
-            [
-                ""
-                // ALLOW_SELF_SIGNED_CERT: A self signed cert is expected to have only one level
-                // ALLOW_ANYTHING: Do not validate certificate at all
-            ]
-        )
         override val authMethod: AuthMethod = AuthMethod.JUST_TOKEN
         override val username: String = "token"
+        override val docLinkHref: String = "https://jensim.github.io/mega-manipulator/docs/Search%20hosts/sourcegraph"
 
         init {
             require(codeHostSettings.isNotEmpty()) {
