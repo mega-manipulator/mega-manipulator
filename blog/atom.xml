@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+    <id>https://github.com/jensim/mega-manipulator/blog</id>
+    <title>Mega Manipulator (m²) Blog</title>
+    <updated>2015-10-25T23:29:00.000Z</updated>
+    <generator>https://github.com/jpmonette/feed</generator>
+    <link rel="alternate" href="https://github.com/jensim/mega-manipulator/blog"/>
+    <subtitle>Mega Manipulator (m²) Blog</subtitle>
+    <icon>https://github.com/jensim/mega-manipulator/https://raw.githubusercontent.com/jensim/mega-manipulator/main/src/main/resources/META-INF/pluginIcon.svg</icon>
+</feed>
