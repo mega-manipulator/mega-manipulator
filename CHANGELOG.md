@@ -4,8 +4,10 @@
 
 ## [Unreleased]
 ### Added
+- Doc links
 
 ### Changed
+- Reorder search tab
 
 ### Deprecated
 

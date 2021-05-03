@@ -6,8 +6,10 @@ import com.github.jensim.megamanipulator.files.FilesOperator
 import com.github.jensim.megamanipulator.toolswindow.ToolWindowTab
 import com.github.jensim.megamanipulator.ui.GeneralListCellRenderer.addCellRenderer
 import com.github.jensim.megamanipulator.ui.UiProtector
+import com.intellij.icons.AllIcons
 import com.intellij.ui.components.JBLabel
 import com.intellij.ui.components.JBList
+import com.intellij.ui.layout.LCFlags
 import com.intellij.ui.layout.panel
 import kotlinx.coroutines.Deferred
 import java.awt.Color
@@ -44,43 +46,62 @@ class SettingsWindow(
         override fun toString(): String = "$hostType: $hostNaming"
     }
 
-    private val settingsValidationOutputLabel = JBLabel()
-    private val tokensValidationOutputLabel = JBLabel()
+    private val validationOutputLabel = JBLabel()
     private val configButton = JButton("Validate config")
     private val hostConfigSelect = JBList<ConfigHostHolder>()
 
-    override val content: JComponent = panel {
+    override val content: JComponent = panel(constraints = arrayOf(LCFlags.noGrid)) {
         row {
-            component(configButton)
-            label("Tokens")
-        }
-        row {
-            component(settingsValidationOutputLabel)
-            component(hostConfigSelect)
-        }
-        row {
-            button("Toggle clones index") {
-                val b: Component = it.source as Component
-                b.isEnabled = false
-                try {
-                    projectOperator.toggleExcludeClones()
-                    filesOperator.refreshClones()
-                } finally {
-                    b.isEnabled = true
+            component(
+                panel(title = "Config", constraints = arrayOf(LCFlags.flowY)) {
+                    row {
+                        component(configButton)
+                    }
+                    row {
+                        button("Toggle clones index") {
+                            val b: Component = it.source as Component
+                            b.isEnabled = false
+                            try {
+                                projectOperator.toggleExcludeClones()
+                                filesOperator.refreshClones()
+                            } finally {
+                                b.isEnabled = true
+                            }
+                        }
+                    }
+                    row {
+                        component(
+                            JButton("Docs", AllIcons.Toolwindows.Documentation).apply {
+                                addActionListener {
+                                    com.intellij.ide.BrowserUtil.browse("https://jensim.github.io/mega-manipulator/")
+                                }
+                            }
+                        )
+                    }
                 }
-            }
-            button("Validate tokens") {
-                uiProtector.uiProtectedOperation("Validating tokens") {
-                    val tokens: Map<String, Deferred<String>> = searchOperator.validateTokens() + prRouter.validateAccess()
-                    tokensValidationOutputLabel.text = tokens
-                        .map { "<tr><td>${it.key}</td><td>${it.value.await()}</td></tr>" }
-                        .joinToString(separator = "\n", prefix = "<html><body><table><tr><th>Config</th><th>Status</th>", postfix = "</table></body></html>")
+            )
+            component(
+                panel(title = "Tokens", constraints = arrayOf(LCFlags.flowY)) {
+                    row {
+                        button("Validate tokens") {
+                            uiProtector.uiProtectedOperation("Validating tokens") {
+                                val tokens: Map<String, Deferred<String>> = searchOperator.validateTokens() + prRouter.validateAccess()
+                                validationOutputLabel.text = tokens
+                                    .map { "<tr><td>${it.key}</td><td>${it.value.await()}</td></tr>" }
+                                    .joinToString(separator = "\n", prefix = "<html><body><table><tr><th>Config</th><th>Status</th>", postfix = "</table></body></html>")
+                            }
+                        }
+                        component(hostConfigSelect)
+                    }
                 }
-            }
-        }
-        row {
-            label("") // Empty for padding
-            component(tokensValidationOutputLabel)
+            )
+            component(
+                panel(title = "Validation output", constraints = arrayOf(LCFlags.flowY)) {
+                    row {
+                        component(validationOutputLabel)
+                    }
+                }
+            )
         }
     }
 
@@ -107,7 +128,7 @@ class SettingsWindow(
         filesOperator.refreshConf()
         hostConfigSelect.setListData(emptyArray())
         val settings: MegaManipulatorSettings? = settingsFileOperator.readSettings()
-        settingsValidationOutputLabel.text = settingsFileOperator.validationText
+        validationOutputLabel.text = settingsFileOperator.validationText
         configButton.isEnabled = true
         if (settings != null) {
             val arrayOf: Array<ConfigHostHolder> =
