@@ -1,3 +1,7 @@
+---
+sidebar_position: 5
+sidebar_label: SSH
+---
 # SSH driven git
 
 ## Generate a ssh key

@@ -1,3 +1,6 @@
+---
+sidebar_position: 2
+---
 # Setting up access
 
 This plugin does things on your behalf, if you don't allow that, then it's helpless to help you.

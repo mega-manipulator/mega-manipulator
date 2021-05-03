@@ -1,3 +1,7 @@
+---
+sidebar_position: 3
+sidebar_label: GitHub
+---
 # Setting up `GitHub` access
 
 [Add new SSH key](https://github.com/settings/keys)
@@ -6,4 +10,4 @@
 
 [Add new personal access token](https://github.com/settings/tokens/new)
 
-![Personal access token scopes](personal_access_token_scopes.png)
+![Personal access token scopes](/img/access/github/personal_access_token_scopes.png)

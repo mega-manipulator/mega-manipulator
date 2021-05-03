@@ -1,34 +1,33 @@
-# Mega Manipulator (m²)
+# Website
 
-Search and replace as if the borders of repositories, code hosts, pull requests, or access control was as inconsequential as they ought to be.
+This website is built using [Docusaurus 2](https://docusaurus.io/), a modern static website generator.
 
-![Mega manipulator flowchart](mega-manipulator-overall.svg)
+## Installation
 
-<!--
-Edit the flowchart using this link:
-https://app.diagrams.net/#Hjensim%2Fmega-manipulator%2Fdocs%2Fmega-manipulator-overall.svg
--->
+```console
+yarn install
+```
 
-# Search
-I currently support search using Sourcegraph, only OSS needed.
+## Local Development
 
-# Replace
-Many approaches possible
-* Using m²
-  Scripted changes with output and exit code capture
-* Use IntelliJ Search&Replace
-* Any way you invent yourself
-  the clones are on your filesystem
+```console
+yarn start
+```
 
-# Distribute change
-Commit, Push, Fork, Pull request using m²
+This command starts a local development server and opens up a browser window. Most changes are reflected live without having to restart the server.
 
-# Improve
-Received feedback on PRs?  
-Clone them and improve.  
-Reword titles and body.
+## Build
 
-# Getting started
+```console
+yarn build
+```
 
-* [A quick tour of the GUI](getting_started)
-* [Setting upp access](access)
+This command generates static content into the `build` directory and can be served using any static contents hosting service.
+
+## Deployment
+
+```console
+GIT_USER=<Your GitHub username> USE_SSH=true yarn deploy
+```
+
+If you are using GitHub pages for hosting, this command is a convenient way to build the website and push to the `gh-pages` branch.
