@@ -3,7 +3,7 @@ sidebar_position: 2
 sidebar_label: Sourcegraph
 ---
 
-# Setting up `Sourcegraph` access
+# Setting up Sourcegraph access
 
 ![Personal access token menu](/img/access/sourcegraph/personal_access_token_menu.png)
 

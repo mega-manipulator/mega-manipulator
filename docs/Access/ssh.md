@@ -15,8 +15,8 @@ ssh-add
 ```
 
 ## Add it to code hosts
-* [GitHub](../github)
-* [BitBucket Server](../bitbucket_server)
+* [GitHub](github)
+* [BitBucket Server](bitbucket_server)
 
 #### A word on best practices
 https://dev.to/josephmidura/how-to-manage-multiple-ssh-key-pairs-1ik

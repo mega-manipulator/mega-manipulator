@@ -35,4 +35,4 @@ Reword titles and body.
 # Getting started
 
 * [A quick tour of the GUI](getting_started)
-* [Setting upp access](access)
+* [Setting upp access](Access/set_up)
