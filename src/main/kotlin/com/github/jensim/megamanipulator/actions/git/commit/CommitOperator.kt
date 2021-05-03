@@ -20,7 +20,7 @@ class CommitOperator(
     private val localRepoOperator: LocalRepoOperator,
     private val processOperator: ProcessOperator,
     private val prRouter: PrRouter,
-    private val uiProtector: UiProtector
+    private val uiProtector: UiProtector,
 ) {
 
     fun commit(): Map<String, List<Pair<String, ApplyOutput>>> {

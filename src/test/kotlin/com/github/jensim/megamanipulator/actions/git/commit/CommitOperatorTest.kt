@@ -10,14 +10,11 @@ import com.github.jensim.megamanipulator.settings.ForkSetting
 import com.github.jensim.megamanipulator.settings.MegaManipulatorSettings
 import com.github.jensim.megamanipulator.settings.SettingsFileOperator
 import com.github.jensim.megamanipulator.ui.DialogGenerator
-import com.github.jensim.megamanipulator.ui.UiProtector
-import com.intellij.openapi.project.Project
+import com.github.jensim.megamanipulator.ui.TestUiProtector
 import io.mockk.Called
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
-import io.mockk.impl.annotations.InjectMockKs
-import io.mockk.impl.annotations.MockK
 import io.mockk.junit5.MockKExtension
 import io.mockk.mockk
 import io.mockk.slot
@@ -43,40 +40,26 @@ import kotlin.test.assertTrue
 @ExtendWith(MockKExtension::class)
 class CommitOperatorTest {
 
-    @MockK
-    private lateinit var dialogGenerator: DialogGenerator
+    private val dialogGenerator: DialogGenerator = mockk()
+    private val settingsFileOperator: SettingsFileOperator = mockk()
+    private val localRepoOperator: LocalRepoOperator = mockk()
+    private val processOperator: ProcessOperator = mockk()
+    private val prRouter: PrRouter = mockk()
+    private val uiProtector: TestUiProtector = TestUiProtector()
 
-    @MockK
-    private lateinit var settingsFileOperator: SettingsFileOperator
-
-    @MockK
-    private lateinit var localRepoOperator: LocalRepoOperator
-
-    @MockK
-    private lateinit var processOperator: ProcessOperator
-
-    @MockK
-    private lateinit var prRouter: PrRouter
-
-    @MockK(relaxed = true)
-    private lateinit var uiProtector: UiProtector
-
-    @MockK
-    private lateinit var project: Project
-
-    @InjectMockKs
-    private lateinit var commitOperator: CommitOperator
+    private val commitOperator: CommitOperator = CommitOperator(
+        dialogGenerator,
+        settingsFileOperator,
+        localRepoOperator,
+        processOperator,
+        prRouter,
+        uiProtector
+    )
     private val tempDirPath: Path = createTempDirectory(prefix = null, attributes = emptyArray())
     private val tempDir: File = File(tempDirPath.toUri())
 
     private val successOutput = ApplyOutput("any", "any", "any", 0)
     private val unsuccessfulOutput = ApplyOutput("any", "any", "any", 1)
-
-    companion object {
-        private const val CLONING_TITLE_AND_MESSAGE = "Cloning repos"
-        private const val PROJECT = "mega-manipulator"
-        private const val BASE_REPO = "base_repo"
-    }
 
     @AfterEach
     internal fun tearDown() {
@@ -104,9 +87,18 @@ class CommitOperatorTest {
     @ParameterizedTest
     @ValueSource(booleans = [true, false])
     fun commit(push: Boolean) {
-        val settings: MegaManipulatorSettings = mockk {}
+        val codeHostSettings: CodeHostSettings = mockk {
+            every { forkSetting } returns ForkSetting.LAZY_FORK
+        }
+        val settings: MegaManipulatorSettings = mockk {
+            every { resolveSettings(any())!!.second } returns codeHostSettings
+        }
         val file: File = mockk {
             every { path } returns ".tmp"
+            every { name } returns "filename"
+            every { parentFile.name } returns "parentName"
+            every { parentFile.parentFile.name } returns "parentParentName"
+            every { parentFile.parentFile.parentFile.name } returns "searchHostName"
         }
         val commitMessage = "This is my first commit"
         every { dialogGenerator.askForInput(any(), any()) } returns commitMessage
@@ -114,6 +106,15 @@ class CommitOperatorTest {
         every { dialogGenerator.showConfirm(any(), any()) } returns push
         every { localRepoOperator.getLocalRepoFiles() } returns listOf(file)
         every { processOperator.runCommandAsync(file, any()) } returns CompletableDeferred(successOutput)
+
+        val searchResultSlot = slot<SearchResult>()
+        every { settingsFileOperator.readSettings() } returns settings
+        every { localRepoOperator.getLocalRepoFiles() } returns listOf(file)
+        every { processOperator.runCommandAsync(file, any()) } returns CompletableDeferred(successOutput)
+        every { localRepoOperator.hasFork(file) } returns false
+        coEvery { localRepoOperator.push(file) } returns unsuccessfulOutput
+        coEvery { prRouter.createFork(capture(searchResultSlot)) } returns "clonedUrl"
+        coEvery { localRepoOperator.addForkRemote(file, "clonedUrl") } returns successOutput
 
         commitOperator.commit()
 
@@ -255,11 +256,29 @@ class CommitOperatorTest {
 
     @Test
     fun push() {
-        every { dialogGenerator.showConfirm(any(), any()) } returns true
-        val settings: MegaManipulatorSettings = mockk {}
+        val codeHostSettings: CodeHostSettings = mockk {
+            every { forkSetting } returns ForkSetting.EAGER_FORK
+        }
+        val settings: MegaManipulatorSettings = mockk {
+            every { resolveSettings(any())!!.second } returns codeHostSettings
+        }
         val file: File = mockk {
             every { path } returns ".tmp"
+            every { name } returns "filename"
+            every { parentFile.name } returns "parentName"
+            every { parentFile.parentFile.name } returns "parentParentName"
+            every { parentFile.parentFile.parentFile.name } returns "searchHostName"
         }
+        val searchResultSlot = slot<SearchResult>()
+
+        every { settingsFileOperator.readSettings() } returns settings
+        every { localRepoOperator.getLocalRepoFiles() } returns listOf(file)
+        every { processOperator.runCommandAsync(file, any()) } returns CompletableDeferred(successOutput)
+        every { localRepoOperator.hasFork(file) } returns false
+        coEvery { localRepoOperator.push(file) } returns successOutput
+        coEvery { prRouter.createFork(capture(searchResultSlot)) } returns "clonedUrl"
+        coEvery { localRepoOperator.addForkRemote(file, "clonedUrl") } returns successOutput
+        every { dialogGenerator.showConfirm(any(), any()) } returns true
         every { settingsFileOperator.readSettings() } returns settings
         every { localRepoOperator.getLocalRepoFiles() } returns listOf(file)
         every { processOperator.runCommandAsync(file, any()) } returns CompletableDeferred(successOutput)

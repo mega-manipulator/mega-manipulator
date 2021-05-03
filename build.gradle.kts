@@ -33,7 +33,8 @@ repositories {
     jcenter()
 }
 
-dependencies { detektPlugins("io.gitlab.arturbosch.detekt:detekt-formatting:${Versions.detekt}")
+dependencies {
+    detektPlugins("io.gitlab.arturbosch.detekt:detekt-formatting:${Versions.detekt}")
     this.dependencies.addDependencies()
 }
 
