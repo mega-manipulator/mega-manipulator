@@ -24,6 +24,7 @@ import kotlinx.coroutines.runBlocking
 import org.hamcrest.MatcherAssert.assertThat
 import org.hamcrest.Matchers.equalTo
 import org.junit.jupiter.api.AfterEach
+import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
 import org.junit.jupiter.params.ParameterizedTest
@@ -34,7 +35,6 @@ import java.nio.file.Path
 import java.util.concurrent.ConcurrentHashMap
 import kotlin.io.path.ExperimentalPathApi
 import kotlin.io.path.createTempDirectory
-import kotlin.test.assertTrue
 
 @ExperimentalPathApi
 @ExtendWith(MockKExtension::class)
@@ -250,7 +250,7 @@ class CommitOperatorTest {
     fun pushWithoutConfirmation() {
         every { dialogGenerator.showConfirm(any(), any()) } returns false
         val result = commitOperator.push()
-        assertTrue { result.containsKey("no result") }
+        assertTrue(result.containsKey("no result"))
         verify { dialogGenerator.showConfirm("Push", "Push local commits to remote") }
     }
 
