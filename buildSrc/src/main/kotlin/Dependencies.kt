@@ -50,6 +50,7 @@ object Dependencies {
         "io.mockk:mockk:${Versions.mockk}",
         "org.hamcrest:hamcrest:${Versions.hamcrest}",
         "org.hamcrest:hamcrest-library:${Versions.hamcrest}",
+        "org.jetbrains.kotlin:kotlin-test:${Versions.kotlin}",
         "org.junit.jupiter:junit-jupiter-api:${Versions.junit}",
         "org.junit.jupiter:junit-jupiter-params:${Versions.junit}",
     )
