@@ -13,6 +13,9 @@
      Forking would be an issue
      PRs would be difficult, maybe url pattern to open in browser?
 
+## DevEx
+* [ ] GitHub workflow to notice new intellij versions 
+
 ## User interface
 * <strong>High prio</strong>
   * [ ] Passwords coloring  
@@ -26,7 +29,6 @@ Buttons clutter the UI
   * [ ] Right Click PRs
 
 ## Features
-* [ ] GraphQL lib use
 * [ ] Drop stale - non-default branches (merged or old)
 * [ ] Validate authentication
 * [ ] Validate authorization
@@ -36,14 +38,11 @@ Buttons clutter the UI
 
 * [x] BitBucket Server
 * [x] GitHub.com
+* [ ] GitLab
 * [ ] ...
 
 ## Search hosts
 
 * [x] SourceGraph
-  * [x] File search
-  * [ ] Repo search
-  * [ ] Symbol search
-  * [ ] Commit search
-* [ ] etsy/hound
+* [x] etsy/hound
 * [ ] openGrok

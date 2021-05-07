@@ -2,6 +2,9 @@ package com.github.jensim.megamanipulator.http
 
 import com.github.jensim.megamanipulator.actions.NotificationsOperator
 import com.github.jensim.megamanipulator.settings.AuthMethod
+import com.github.jensim.megamanipulator.settings.AuthMethod.ACCESS_TOKEN
+import com.github.jensim.megamanipulator.settings.AuthMethod.JUST_TOKEN
+import com.github.jensim.megamanipulator.settings.AuthMethod.NONE
 import com.github.jensim.megamanipulator.settings.CodeHostSettings
 import com.github.jensim.megamanipulator.settings.HttpsOverride
 import com.github.jensim.megamanipulator.settings.PasswordsOperator
@@ -92,6 +95,7 @@ class HttpClientProvider(
         when (authMethod) {
             AuthMethod.ACCESS_TOKEN -> passwordsOperator.getPassword(username!!, baseUrl)
             AuthMethod.JUST_TOKEN -> passwordsOperator.getPassword("token", baseUrl)
+            AuthMethod.NONE -> ""
         }!!
     } catch (e: Exception) {
         notificationsOperator.show(
@@ -110,8 +114,9 @@ class HttpClientProvider(
                 HttpsOverride.ALLOW_ANYTHING -> trustAnyClient()
             }
             when (authMethod) {
-                AuthMethod.ACCESS_TOKEN -> installBasicAuth(username!!, password)
-                AuthMethod.JUST_TOKEN -> installTokenAuth(password)
+                ACCESS_TOKEN -> installBasicAuth(username!!, password)
+                JUST_TOKEN -> installTokenAuth(password)
+                NONE -> {}
             }
         }
     }

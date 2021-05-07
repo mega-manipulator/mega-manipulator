@@ -7,7 +7,6 @@ import com.github.jensim.megamanipulator.ui.EditPullRequestDialog
 import com.github.jensim.megamanipulator.ui.UiProtector
 import com.intellij.notification.NotificationType
 import java.awt.Desktop
-import java.net.URI
 import javax.swing.JMenuItem
 import javax.swing.JOptionPane
 import javax.swing.JOptionPane.CANCEL_OPTION
@@ -110,7 +109,7 @@ class PullRequestActionsMenu(
                         failed[prWrapper] = "Missing BrowseURL"
                     } else {
                         try {
-                            Desktop.getDesktop().browse(URI(browseUrl))
+                            com.intellij.ide.BrowserUtil.browse(browseUrl)
                         } catch (e: Exception) {
                             failed[prWrapper] = "Exception opening link ${e.javaClass.name} ${e.message}"
                         }

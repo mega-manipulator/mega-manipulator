@@ -1,0 +1,8 @@
+version: '3.3'
+services:
+  hound:
+    image: 'etsy/hound:latest'
+    ports:
+      - 6080:6080
+    volumes:
+      - ./data:/data

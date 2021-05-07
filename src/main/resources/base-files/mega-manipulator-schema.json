@@ -29,11 +29,190 @@
           "type": {
             "type": "string",
             "enum": [
+              "HOUND",
               "SOURCEGRAPH"
             ]
           }
         },
         "anyOf": [
+          {
+            "type": "object",
+            "properties": {
+              "type": {
+                "const": "HOUND"
+              },
+              "baseUrl": {
+                "type": "string",
+                "description": "Base url to your SourceGraph installation\nFor example https://sourcegraph.com"
+              },
+              "httpsOverride": {
+                "if": {
+                  "type": "string"
+                },
+                "else": {
+                  "type": "null"
+                },
+                "enum": [
+                  "ALLOW_SELF_SIGNED_CERT",
+                  "ALLOW_ANYTHING"
+                ],
+                "description": "Override the default strict https validation"
+              },
+              "codeHostSettings": {
+                "type": "object",
+                "additionalProperties": {
+                  "minProperties": 1,
+                  "properties": {
+                    "type": {
+                      "type": "string",
+                      "enum": [
+                        "BITBUCKET_SERVER",
+                        "GITHUB"
+                      ]
+                    }
+                  },
+                  "anyOf": [
+                    {
+                      "type": "object",
+                      "properties": {
+                        "type": {
+                          "const": "BITBUCKET_SERVER"
+                        },
+                        "baseUrl": {
+                          "type": "string",
+                          "description": "Base url, like https://bitbucket.example.com"
+                        },
+                        "httpsOverride": {
+                          "if": {
+                            "type": "string"
+                          },
+                          "else": {
+                            "type": "null"
+                          },
+                          "enum": [
+                            "ALLOW_SELF_SIGNED_CERT",
+                            "ALLOW_ANYTHING"
+                          ],
+                          "description": "Override the default, strict https validation"
+                        },
+                        "username": {
+                          "type": "string",
+                          "description": "Your username at the code host"
+                        },
+                        "forkSetting": {
+                          "type": "string",
+                          "enum": [
+                            "PLAIN_BRANCH",
+                            "LAZY_FORK",
+                            "EAGER_FORK"
+                          ],
+                          "description": "Fork settings is used to decide when to fork a repo:\nPLAIN_BRANCH: Will require write access to the repo\nLAZY_FORK: When not permitted to push into origin, attempt fork strategy\nEAGER_FORK: Fork before push, for every repo"
+                        },
+                        "cloneType": {
+                          "type": "string",
+                          "enum": [
+                            "SSH",
+                            "HTTPS"
+                          ],
+                          "description": "It's strongly recommended to use SSH clone type."
+                        },
+                        "forkRepoPrefix": {
+                          "type": "string",
+                          "description": "Prefix forked repos with a recognizable char sequence"
+                        },
+                        "authMethod": {
+                          "type": "string",
+                          "enum": [
+                            "ACCESS_TOKEN",
+                            "JUST_TOKEN",
+                            "NONE"
+                          ]
+                        }
+                      },
+                      "required": [
+                        "baseUrl",
+                        "username"
+                      ]
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "type": {
+                          "const": "GITHUB"
+                        },
+                        "httpsOverride": {
+                          "if": {
+                            "type": "string"
+                          },
+                          "else": {
+                            "type": "null"
+                          },
+                          "enum": [
+                            "ALLOW_SELF_SIGNED_CERT",
+                            "ALLOW_ANYTHING"
+                          ],
+                          "description": "Override the default, strict https validation"
+                        },
+                        "username": {
+                          "type": "string",
+                          "description": "Your username at the code host"
+                        },
+                        "forkSetting": {
+                          "type": "string",
+                          "enum": [
+                            "PLAIN_BRANCH",
+                            "LAZY_FORK",
+                            "EAGER_FORK"
+                          ],
+                          "description": "Fork settings is used to decide when to fork a repo:\nPLAIN_BRANCH: Will require write access to the repo\nLAZY_FORK: When not permitted to push into origin, attempt fork strategy\nEAGER_FORK: Fork before push, for every repo"
+                        },
+                        "cloneType": {
+                          "type": "string",
+                          "enum": [
+                            "SSH",
+                            "HTTPS"
+                          ],
+                          "description": "It's strongly recommended to use SSH clone type."
+                        },
+                        "baseUrl": {
+                          "type": "string"
+                        },
+                        "authMethod": {
+                          "type": "string",
+                          "enum": [
+                            "ACCESS_TOKEN",
+                            "JUST_TOKEN",
+                            "NONE"
+                          ]
+                        }
+                      },
+                      "required": [
+                        "username"
+                      ]
+                    }
+                  ],
+                  "required": [
+                    "type"
+                  ]
+                }
+              },
+              "username": {
+                "type": "string"
+              },
+              "authMethod": {
+                "type": "string",
+                "enum": [
+                  "ACCESS_TOKEN",
+                  "JUST_TOKEN",
+                  "NONE"
+                ]
+              }
+            },
+            "required": [
+              "baseUrl",
+              "codeHostSettings"
+            ]
+          },
           {
             "type": "object",
             "properties": {
@@ -107,6 +286,14 @@
                           ],
                           "description": "Fork settings is used to decide when to fork a repo:\nPLAIN_BRANCH: Will require write access to the repo\nLAZY_FORK: When not permitted to push into origin, attempt fork strategy\nEAGER_FORK: Fork before push, for every repo"
                         },
+                        "cloneType": {
+                          "type": "string",
+                          "enum": [
+                            "SSH",
+                            "HTTPS"
+                          ],
+                          "description": "It's strongly recommended to use SSH clone type."
+                        },
                         "forkRepoPrefix": {
                           "type": "string",
                           "description": "Prefix forked repos with a recognizable char sequence"
@@ -115,7 +302,8 @@
                           "type": "string",
                           "enum": [
                             "ACCESS_TOKEN",
-                            "JUST_TOKEN"
+                            "JUST_TOKEN",
+                            "NONE"
                           ]
                         }
                       },
@@ -156,6 +344,14 @@
                           ],
                           "description": "Fork settings is used to decide when to fork a repo:\nPLAIN_BRANCH: Will require write access to the repo\nLAZY_FORK: When not permitted to push into origin, attempt fork strategy\nEAGER_FORK: Fork before push, for every repo"
                         },
+                        "cloneType": {
+                          "type": "string",
+                          "enum": [
+                            "SSH",
+                            "HTTPS"
+                          ],
+                          "description": "It's strongly recommended to use SSH clone type."
+                        },
                         "baseUrl": {
                           "type": "string"
                         },
@@ -163,7 +359,8 @@
                           "type": "string",
                           "enum": [
                             "ACCESS_TOKEN",
-                            "JUST_TOKEN"
+                            "JUST_TOKEN",
+                            "NONE"
                           ]
                         }
                       },
@@ -181,7 +378,8 @@
                 "type": "string",
                 "enum": [
                   "ACCESS_TOKEN",
-                  "JUST_TOKEN"
+                  "JUST_TOKEN",
+                  "NONE"
                 ]
               },
               "username": {
