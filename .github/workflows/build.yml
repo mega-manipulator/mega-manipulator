@@ -17,8 +17,6 @@ name: Build
 on:
   workflow_dispatch:
   push:
-    branches-ignore:
-      - "integration_test/**"
     paths-ignore:
       - ".github/**/*"
       - ".run/**/*"
@@ -34,6 +32,7 @@ jobs:
   gradleValidation:
     name: Gradle Wrapper
     runs-on: ubuntu-latest
+    if: ${{ ! startsWith(github.ref, 'integration_test/') }}
     steps:
 
       # Check out current repository
