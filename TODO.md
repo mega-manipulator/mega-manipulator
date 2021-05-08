@@ -20,6 +20,8 @@
 * <strong>High prio</strong>
   * [ ] Passwords coloring  
   not readable in dark mode
+  * [ ] Git view  
+  See changed files tree
   * [ ] Separate questions for dropping `branches` and `forks` when declining PRs  
   * [ ] Better interactions for the clones tab  
 Buttons clutter the UI
@@ -30,7 +32,6 @@ Buttons clutter the UI
 
 ## Features
 * [ ] Drop stale - non-default branches (merged or old)
-* [ ] Validate authentication
 * [ ] Validate authorization
 * [ ] 
 
