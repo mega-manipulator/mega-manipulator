@@ -22,9 +22,6 @@ on:
       - ".run/**/*"
       - "*.md"
       - "*.txt"
-  pull_request:
-    branches:
-      - "main"
 
 jobs:
 
@@ -32,7 +29,6 @@ jobs:
   gradleValidation:
     name: Gradle Wrapper
     runs-on: ubuntu-latest
-    if: ${{ ! startsWith(github.ref, 'refs/heads/integration_test/') }}
     steps:
 
       # Check out current repository
