@@ -51,6 +51,7 @@ object Dependencies {
         "org.hamcrest:hamcrest:${Versions.hamcrest}",
         "org.hamcrest:hamcrest-library:${Versions.hamcrest}",
         "org.junit.jupiter:junit-jupiter-api:${Versions.junit}",
+        "org.junit.jupiter:junit-jupiter-params:${Versions.junit}",
     )
     val testRuntime = setOf(
         "org.junit.jupiter:junit-jupiter-engine:${Versions.junit}",
