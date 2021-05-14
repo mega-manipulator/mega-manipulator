@@ -4,9 +4,11 @@ import com.github.jensim.megamanipulator.actions.NotificationsOperator
 import com.github.jensim.megamanipulator.actions.search.SearchResult
 import com.github.jensim.megamanipulator.actions.vcs.bitbucketserver.BitbucketServerClient
 import com.github.jensim.megamanipulator.actions.vcs.githubcom.GithubComClient
+import com.github.jensim.megamanipulator.actions.vcs.gitlab.GitLabClient
 import com.github.jensim.megamanipulator.settings.CodeHostSettings
 import com.github.jensim.megamanipulator.settings.CodeHostSettings.BitBucketSettings
 import com.github.jensim.megamanipulator.settings.CodeHostSettings.GitHubSettings
+import com.github.jensim.megamanipulator.settings.CodeHostSettings.GitLabSettings
 import com.github.jensim.megamanipulator.settings.SettingsFileOperator
 import com.intellij.notification.NotificationType.WARNING
 import kotlinx.coroutines.Deferred
@@ -19,6 +21,7 @@ class PrRouter(
     private val settingsFileOperator: SettingsFileOperator,
     private val bitbucketServerClient: BitbucketServerClient,
     private val githubComClient: GithubComClient,
+    private val gitLabClient: GitLabClient,
     private val notificationsOperator: NotificationsOperator,
 ) {
 
@@ -47,6 +50,7 @@ class PrRouter(
         return when {
             settings is BitBucketSettings && pullRequest is BitBucketPullRequestWrapper -> bitbucketServerClient.addDefaultReviewers(settings, pullRequest)
             settings is GitHubSettings && pullRequest is GithubComPullRequestWrapper -> githubComClient.addDefaultReviewers(settings, pullRequest)
+            settings is GitLabSettings && pullRequest is GitLabPullRequestWrapper -> gitLabClient.addDefaultReviewers(settings, pullRequest)
             settings == null -> null
             else -> throw IllegalArgumentException("Unable to match config correctly")
         }
@@ -56,6 +60,7 @@ class PrRouter(
         return when (val settings = resolve(repo.searchHostName, repo.codeHostName)) {
             is BitBucketSettings -> bitbucketServerClient.createPr(title, description, settings, repo)
             is GitHubSettings -> githubComClient.createPr(title, description, settings, repo)
+            is GitLabSettings -> gitLabClient.createPr(title, description, settings, repo)
             null -> null
             else -> throw IllegalArgumentException("Unable to match config correctly")
         }
@@ -65,6 +70,7 @@ class PrRouter(
         return when (val settings = resolve(repo.searchHostName, repo.codeHostName)) {
             is BitBucketSettings -> bitbucketServerClient.createFork(settings, repo)
             is GitHubSettings -> githubComClient.createFork(settings, repo)
+            is GitLabSettings -> gitLabClient.createFork(settings, repo)
             null -> null
             else -> throw IllegalArgumentException("Unable to match config correctly")
         }
@@ -75,6 +81,7 @@ class PrRouter(
         return when {
             settings is BitBucketSettings && pullRequest is BitBucketPullRequestWrapper -> bitbucketServerClient.updatePr(newTitle, newDescription, settings, pullRequest)
             settings is GitHubSettings && pullRequest is GithubComPullRequestWrapper -> githubComClient.updatePr(newTitle, newDescription, settings, pullRequest)
+            settings is GitLabSettings && pullRequest is GitLabPullRequestWrapper -> gitLabClient.updatePr(newTitle, newDescription, settings, pullRequest)
             settings == null -> null
             else -> throw IllegalArgumentException("Unable to match config correctly")
         }
@@ -85,6 +92,7 @@ class PrRouter(
             when (it) {
                 is BitBucketSettings -> bitbucketServerClient.getAllPrs(searchHost, codeHost, it)
                 is GitHubSettings -> githubComClient.getAllPrs(searchHost, codeHost, it)
+                is GitLabSettings -> gitLabClient.getAllPrs(searchHost, codeHost, it)
             }
         }
     }
@@ -94,6 +102,7 @@ class PrRouter(
         when {
             settings is BitBucketSettings && pullRequest is BitBucketPullRequestWrapper -> bitbucketServerClient.closePr(dropForkOrBranch, settings, pullRequest)
             settings is GitHubSettings && pullRequest is GithubComPullRequestWrapper -> githubComClient.closePr(dropForkOrBranch, settings, pullRequest)
+            settings is GitLabSettings && pullRequest is GitLabPullRequestWrapper -> gitLabClient.closePr(dropForkOrBranch, settings, pullRequest)
             settings == null -> Unit
             else -> throw IllegalArgumentException("Unable to match config correctly")
         }
@@ -104,6 +113,7 @@ class PrRouter(
             when (it) {
                 is BitBucketSettings -> bitbucketServerClient.getPrivateForkReposWithoutPRs(searchHost, codeHost, it)
                 is GitHubSettings -> githubComClient.getPrivateForkReposWithoutPRs(searchHost, codeHost, it)
+                is GitLabSettings -> gitLabClient.getPrivateForkReposWithoutPRs(searchHost, codeHost, it)
             }
         }
     }
@@ -113,6 +123,7 @@ class PrRouter(
             when {
                 settings is BitBucketSettings && fork is BitBucketRepoWrapping -> bitbucketServerClient.deletePrivateRepo(fork, settings)
                 settings is GitHubSettings && fork is GithubComRepoWrapping -> githubComClient.deletePrivateRepo(fork, settings)
+                settings is GitLabSettings && fork is GitLabRepoWrapping -> gitLabClient.deletePrivateRepo(fork, settings)
                 else -> throw IllegalArgumentException("Unable to match config correctly")
             }
         }
@@ -124,6 +135,7 @@ class PrRouter(
             when (it) {
                 is BitBucketSettings -> bitbucketServerClient.getRepo(searchResult, it)
                 is GitHubSettings -> githubComClient.getRepo(searchResult, it)
+                is GitLabSettings -> gitLabClient.getRepo(searchResult, it)
             }
         }
     }
@@ -133,6 +145,7 @@ class PrRouter(
         when {
             settings is BitBucketSettings && pullRequest is BitBucketPullRequestWrapper -> bitbucketServerClient.commentPR(comment, pullRequest, settings)
             settings is GitHubSettings && pullRequest is GithubComPullRequestWrapper -> githubComClient.commentPR(comment, pullRequest, settings)
+            settings is GitLabSettings && pullRequest is GitLabPullRequestWrapper -> gitLabClient.commentPR(comment, pullRequest, settings)
             settings == null -> Unit
             else -> throw IllegalArgumentException("Unable to match config correctly")
         }
@@ -145,6 +158,7 @@ class PrRouter(
                     when (val settings = code.value) {
                         is BitBucketSettings -> bitbucketServerClient.validateAccess(search.key, code.key, settings)
                         is GitHubSettings -> githubComClient.validateAccess(search.key, code.key, settings)
+                        is GitLabSettings -> gitLabClient.validateAccess(search.key, code.key, settings)
                     }
                 }
             }

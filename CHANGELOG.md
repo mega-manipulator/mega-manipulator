@@ -4,6 +4,7 @@
 
 ## [Unreleased]
 ### Added
+- GitLab code host
 
 ### Changed
 

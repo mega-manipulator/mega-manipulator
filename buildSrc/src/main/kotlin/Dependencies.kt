@@ -25,6 +25,7 @@ object Versions {
     const val log4j = "2.14.1"
     const val fuzzyWuzzy = "1.3.1"
     const val mockk = "1.11.0"
+    const val graphql = "4.1.1"
 }
 
 object Dependencies {
@@ -45,6 +46,7 @@ object Dependencies {
         "org.eclipse.jgit:org.eclipse.jgit:${Versions.jGit}",
         "org.apache.logging.log4j:log4j-slf4j-impl:${Versions.log4j}",
         "me.xdrop:fuzzywuzzy:${Versions.fuzzyWuzzy}",
+        "com.expediagroup:graphql-kotlin-ktor-client:${Versions.graphql}"
     )
     val testImplementation = setOf(
         "io.mockk:mockk:${Versions.mockk}",
@@ -73,6 +75,7 @@ fun PluginDependenciesSpec.addPlugins() {
     // ktlint linter - read more: https://github.com/JLLeitschuh/ktlint-gradle
     id("org.jlleitschuh.gradle.ktlint") version Versions.ktlintPlugin
     id("com.github.ben-manes.versions") version Versions.benManesVersions
+    id("com.expediagroup.graphql") version Versions.graphql
 }
 
 fun DependencyHandler.addDependencies() {

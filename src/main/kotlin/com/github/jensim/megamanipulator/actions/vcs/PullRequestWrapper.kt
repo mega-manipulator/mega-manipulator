@@ -77,3 +77,23 @@ data class GithubComPullRequestWrapper(
     override fun cloneUrlTo(): String = pullRequest.base?.repo?.ssh_url ?: "<?>"
     override fun browseUrl(): String = pullRequest.html_url
 }
+
+data class GitLabPullRequestWrapper(
+    val searchHost: String,
+    val codeHost: String,
+    override val raw: String,
+) : PullRequestWrapper() {
+
+    override fun codeHostName(): String = TODO("not implemented")
+    override fun searchHostName(): String = TODO("not implemented")
+    override fun project(): String = TODO("not implemented")
+    override fun baseRepo(): String = TODO("not implemented")
+    override fun title(): String = TODO("not implemented")
+    override fun body(): String = TODO("not implemented")
+    override fun fromBranch(): String = TODO("not implemented")
+    override fun toBranch(): String = TODO("not implemented")
+    override fun isFork(): Boolean = TODO("not implemented")
+    override fun cloneUrlFrom(): String? = TODO("not implemented")
+    override fun cloneUrlTo(): String? = TODO("not implemented")
+    override fun browseUrl(): String? = TODO("not implemented")
+}

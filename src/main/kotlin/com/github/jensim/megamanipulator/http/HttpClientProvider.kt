@@ -93,9 +93,9 @@ class HttpClientProvider(
 
     private fun getPassword(authMethod: AuthMethod, baseUrl: String, username: String?) = try {
         when (authMethod) {
-            AuthMethod.ACCESS_TOKEN -> passwordsOperator.getPassword(username!!, baseUrl)
-            AuthMethod.JUST_TOKEN -> passwordsOperator.getPassword("token", baseUrl)
-            AuthMethod.NONE -> ""
+            ACCESS_TOKEN -> passwordsOperator.getPassword(username!!, baseUrl)
+            JUST_TOKEN -> passwordsOperator.getPassword("token", baseUrl)
+            NONE -> ""
         }!!
     } catch (e: Exception) {
         notificationsOperator.show(
@@ -108,7 +108,11 @@ class HttpClientProvider(
 
     fun getClient(httpsOverride: HttpsOverride?, authMethod: AuthMethod, username: String? = null, password: String): HttpClient {
         return bakeClient {
-            install(HttpTimeout)
+            install(HttpTimeout) {
+                connectTimeoutMillis = 1_000
+                requestTimeoutMillis = 60_000
+                socketTimeoutMillis = 60_000
+            }
             when (httpsOverride) {
                 HttpsOverride.ALLOW_SELF_SIGNED_CERT -> trustSelfSignedClient()
                 HttpsOverride.ALLOW_ANYTHING -> trustAnyClient()
@@ -116,7 +120,8 @@ class HttpClientProvider(
             when (authMethod) {
                 ACCESS_TOKEN -> installBasicAuth(username!!, password)
                 JUST_TOKEN -> installTokenAuth(password)
-                NONE -> {}
+                NONE -> {
+                }
             }
         }
     }

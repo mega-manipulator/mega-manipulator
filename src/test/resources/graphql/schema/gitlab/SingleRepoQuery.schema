@@ -1,0 +1,18 @@
+query(
+  $repoPath : ID!
+){
+  project(fullPath: $repoPath){
+    webUrl
+    sshUrlToRepo
+    httpUrlToRepo
+    path
+    repository{
+      rootRef
+      empty
+    }
+    fullPath
+    namespace {
+      fullName
+    }
+  }
+}

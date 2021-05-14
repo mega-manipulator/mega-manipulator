@@ -270,4 +270,26 @@ sealed class CodeHostSettings
             validate()
         }
     }
+
+    @Serializable
+    @SerialName("GITLAB")
+    data class GitLabSettings(
+        @JsonSchema.Description(["Override the default, strict https validation"])
+        override val httpsOverride: HttpsOverride? = null,
+        @JsonSchema.Description(["Your username at the code host"])
+        override val username: String,
+        @JsonSchema.Description(
+            [
+                "Fork settings is used to decide when to fork a repo:",
+                "PLAIN_BRANCH: Will require write access to the repo",
+                "LAZY_FORK: When not permitted to push into origin, attempt fork strategy",
+                "EAGER_FORK: Fork before push, for every repo",
+            ]
+        )
+        override val forkSetting: ForkSetting = ForkSetting.LAZY_FORK,
+        @JsonSchema.Description(["It's strongly recommended to use SSH clone type."])
+        override val cloneType: CloneType = SSH,
+        override val baseUrl: String = "https://api.github.com",
+        override val authMethod: AuthMethod = AuthMethod.ACCESS_TOKEN,
+    ) : CodeHostSettings()
 }

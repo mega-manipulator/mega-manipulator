@@ -18,6 +18,7 @@ import com.github.jensim.megamanipulator.actions.vcs.PullRequestActionsMenu
 import com.github.jensim.megamanipulator.actions.vcs.PullRequestWindow
 import com.github.jensim.megamanipulator.actions.vcs.bitbucketserver.BitbucketServerClient
 import com.github.jensim.megamanipulator.actions.vcs.githubcom.GithubComClient
+import com.github.jensim.megamanipulator.actions.vcs.gitlab.GitLabClient
 import com.github.jensim.megamanipulator.files.FilesOperator
 import com.github.jensim.megamanipulator.http.HttpClientProvider
 import com.github.jensim.megamanipulator.settings.IntelliJPasswordsOperator
@@ -63,6 +64,7 @@ data class ApplicationWiring(
     private val houndClientOverride: HoundClient? = null,
     private val bitbucketServerClientOverride: BitbucketServerClient? = null,
     private val githubComClientOverride: GithubComClient? = null,
+    private val gitLabClientOverride: GitLabClient? = null,
     private val httpClientProviderOverride: HttpClientProvider? = null,
     private val jsonOverride: Json? = null,
 ) {
@@ -131,6 +133,11 @@ data class ApplicationWiring(
             json = this.json,
         )
     }
+    val gitLabClient: GitLabClient by lazy {
+        gitLabClientOverride ?: GitLabClient(
+            httpClientProvider = this.httpClientProvider,
+        )
+    }
     val searchOperator: SearchOperator by lazy {
         searchOperatorOverride ?: SearchOperator(
             settingsFileOperator = this.settingsFileOperator,
@@ -196,6 +203,7 @@ data class ApplicationWiring(
             settingsFileOperator = this.settingsFileOperator,
             bitbucketServerClient = this.bitbucketServerClient,
             githubComClient = this.githubComClient,
+            gitLabClient = this.gitLabClient,
             notificationsOperator = this.notificationsOperator,
         )
     }

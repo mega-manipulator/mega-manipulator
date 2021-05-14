@@ -3,6 +3,7 @@ import io.gitlab.arturbosch.detekt.Detekt
 import org.jetbrains.changelog.closure
 import org.jetbrains.changelog.markdownToHTML
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
+import com.expediagroup.graphql.plugin.gradle.config.GraphQLSerializer
 
 plugins {
     addPlugins()
@@ -41,6 +42,22 @@ dependencies {
 ktlint {
     verbose.set(true)
     version.set(Versions.ktlint)
+    filter {
+        exclude("**/generated/**")
+    }
+}
+graphql {
+    client {
+        packageName = "com.github.jensim.megamanipulator.graphql.generated.gitlab"
+        // you can also use direct sdlEndpoint instead
+        //queryFileDirectory = "${project.projectDir.absolutePath}/src/test/resources/graphql/schema/gitlab"
+        queryFiles = listOf(file("src/test/resources/graphql/schema/gitlab/SingleRepoQuery.schema"))
+        endpoint = "https://gitlab.com/api/graphql"
+
+        // optional
+        //allowDeprecatedFields = true
+        serializer = GraphQLSerializer.KOTLINX
+    }
 }
 
 // Configure gradle-intellij-plugin plugin.
