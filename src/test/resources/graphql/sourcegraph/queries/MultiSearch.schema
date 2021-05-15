@@ -1,0 +1,50 @@
+query Search($query: String!) {
+  search(query: $query, version: V2, patternType: literal) {
+    results {
+      __typename
+      ... on SearchResults {
+        pageInfo {
+          endCursor
+          hasNextPage
+        }
+      }
+      limitHit
+      matchCount
+      approximateResultCount
+      missing {
+        name
+      }
+      repositoriesCount
+      timedout {
+        name
+      }
+      alert {
+        title
+        description
+        proposedQueries {
+          description
+          query
+        }
+      }
+      elapsedMilliseconds
+      results {
+        __typename
+        ... on FileMatch {
+          repository {
+            name
+          }
+        }
+        ... on Repository {
+          name
+        }
+        ... on CommitSearchResult {
+          commit {
+            repository {
+              name
+            }
+          }
+        }
+      }
+    }
+  }
+}

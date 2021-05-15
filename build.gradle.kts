@@ -4,6 +4,7 @@ import org.jetbrains.changelog.closure
 import org.jetbrains.changelog.markdownToHTML
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 import com.expediagroup.graphql.plugin.gradle.config.GraphQLSerializer
+import com.expediagroup.graphql.plugin.gradle.tasks.GraphQLGenerateClientTask
 
 plugins {
     addPlugins()
@@ -43,20 +44,7 @@ ktlint {
     verbose.set(true)
     version.set(Versions.ktlint)
     filter {
-        exclude("**/generated/**")
-    }
-}
-graphql {
-    client {
-        packageName = "com.github.jensim.megamanipulator.graphql.generated.gitlab"
-        // you can also use direct sdlEndpoint instead
-        //queryFileDirectory = "${project.projectDir.absolutePath}/src/test/resources/graphql/schema/gitlab"
-        queryFiles = listOf(file("src/test/resources/graphql/schema/gitlab/SingleRepoQuery.schema"))
-        endpoint = "https://gitlab.com/api/graphql"
-
-        // optional
-        //allowDeprecatedFields = true
-        serializer = GraphQLSerializer.KOTLINX
+        exclude("**/graphql/generated/**")
     }
 }
 
@@ -100,12 +88,31 @@ fun isNonStable(version: String): Boolean {
 }
 
 tasks {
+    val graphqlGenerateClient by getting(GraphQLGenerateClientTask::class) {
+        packageName.set("com.github.jensim.megamanipulator.graphql.generated.gitlab")
+        queryFiles.from(
+            "${project.projectDir.absolutePath}/src/test/resources/graphql/gitlab/queries/SingleRepoQuery.schema"
+        )
+        schemaFileName.set(file("${project.projectDir.absolutePath}/src/test/resources/graphql/gitlab/gitlab.graphql.schema").absolutePath)
+        serializer.set(GraphQLSerializer.KOTLINX)
+    }
+    val graphqlGenerateSourcegraphClient by register("graphqlGenerateSourcegraphClient", GraphQLGenerateClientTask::class) {
+        packageName.set("com.github.jensim.megamanipulator.graphql.generated.sourcegraph")
+        queryFiles.from(
+            "${project.projectDir.absolutePath}/src/test/resources/graphql/sourcegraph/queries/MultiSearch.schema"
+        )
+        schemaFileName.set(file("${project.projectDir.absolutePath}/src/test/resources/graphql/sourcegraph/sourcegraph.graphql.schema").absolutePath)
+        serializer.set(GraphQLSerializer.KOTLINX)
+    }
+
     // Set the compatibility jvm versions
     withType<JavaCompile> {
         sourceCompatibility = Versions.jvm
         targetCompatibility = Versions.jvm
     }
     withType<KotlinCompile> {
+        dependsOn(graphqlGenerateSourcegraphClient)
+        dependsOn(graphqlGenerateClient)
         kotlinOptions.jvmTarget = Versions.jvm
     }
 
