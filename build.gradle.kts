@@ -104,6 +104,14 @@ tasks {
         schemaFileName.set(file("${project.projectDir.absolutePath}/src/test/resources/graphql/sourcegraph/sourcegraph.graphql.schema").absolutePath)
         serializer.set(GraphQLSerializer.KOTLINX)
     }
+    val graphqlGenerateGithubClient by register("graphqlGenerateGithubClient", GraphQLGenerateClientTask::class) {
+        packageName.set("com.github.jensim.megamanipulator.graphql.generated.github")
+        queryFiles.from(
+            "${project.projectDir.absolutePath}/src/test/resources/graphql/github/queries/SingleRepoQuery.schema"
+        )
+        schemaFileName.set(file("${project.projectDir.absolutePath}/src/test/resources/graphql/github/github.graphql.schema").absolutePath)
+        serializer.set(GraphQLSerializer.KOTLINX)
+    }
 
     // Set the compatibility jvm versions
     withType<JavaCompile> {
@@ -111,6 +119,7 @@ tasks {
         targetCompatibility = Versions.jvm
     }
     withType<KotlinCompile> {
+        dependsOn(graphqlGenerateGithubClient)
         dependsOn(graphqlGenerateSourcegraphClient)
         dependsOn(graphqlGenerateClient)
         kotlinOptions.jvmTarget = Versions.jvm

@@ -109,7 +109,6 @@ data class ApplicationWiring(
         sourcegraphSearchClientOverride ?: SourcegraphSearchClient(
             httpClientProvider = this.httpClientProvider,
             notificationsOperator = this.notificationsOperator,
-            json = this.json,
         )
     }
     val houndClient: HoundClient by lazy {

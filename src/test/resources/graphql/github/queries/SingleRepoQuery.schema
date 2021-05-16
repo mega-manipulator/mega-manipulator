@@ -1,0 +1,9 @@
+query ($repo: String!, $owner:String!) {
+  repository(name: $repo, owner: $owner){
+    sshUrl
+    url
+    defaultBranchRef {
+      name
+    }
+  }
+}

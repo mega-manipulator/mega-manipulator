@@ -5,8 +5,10 @@
 ## [Unreleased]
 ### Added
 - GitLab code host
+- HttpClient logging
 
 ### Changed
+- Use GraphQL lib
 
 ### Deprecated
 

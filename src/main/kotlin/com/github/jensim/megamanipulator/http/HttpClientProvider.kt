@@ -20,6 +20,10 @@ import io.ktor.client.features.HttpTimeout
 import io.ktor.client.features.defaultRequest
 import io.ktor.client.features.json.JsonFeature
 import io.ktor.client.features.json.serializer.KotlinxSerializer
+import io.ktor.client.features.logging.DEFAULT
+import io.ktor.client.features.logging.LogLevel
+import io.ktor.client.features.logging.Logger
+import io.ktor.client.features.logging.Logging
 import io.ktor.client.request.headers
 import kotlinx.serialization.json.Json
 import org.apache.http.conn.ssl.NoopHostnameVerifier
@@ -47,6 +51,10 @@ class HttpClientProvider(
                     encodeDefaults = true
                 }
             )
+        }
+        install(Logging) {
+            logger = Logger.DEFAULT
+            level = LogLevel.HEADERS
         }
         installs()
     }
@@ -129,8 +137,6 @@ class HttpClientProvider(
     private fun HttpClientConfig<ApacheEngineConfig>.installBasicAuth(username: String, password: String) {
         defaultRequest {
             headers {
-                append("Content-Type", "application/json")
-                append("Accept", "application/json")
                 append("Authorization", "Basic ${Base64.encode("$username:$password".toByteArray())}")
             }
         }
@@ -139,8 +145,6 @@ class HttpClientProvider(
     private fun HttpClientConfig<ApacheEngineConfig>.installTokenAuth(token: String) {
         defaultRequest {
             headers {
-                append("Content-Type", "application/json")
-                append("Accept", "application/json")
                 append("Authorization", "token $token")
             }
         }

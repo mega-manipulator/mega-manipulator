@@ -7,7 +7,6 @@ import com.github.jensim.megamanipulator.settings.CodeHostSettings.GitHubSetting
 import com.github.jensim.megamanipulator.settings.ForkSetting.PLAIN_BRANCH
 import com.github.jensim.megamanipulator.settings.MegaManipulatorSettings
 import com.github.jensim.megamanipulator.settings.SearchHostSettings.SourceGraphSettings
-import com.github.jensim.megamanipulator.settings.SerializationHolder
 import com.github.jensim.megamanipulator.settings.SettingsFileOperator
 import com.github.jensim.megamanipulator.test.EnvHelper
 import com.github.jensim.megamanipulator.test.EnvHelper.EnvProperty.GITHUB_USERNAME
@@ -51,11 +50,9 @@ internal class SourcegraphSearchClientTest {
         passwordsOperator = passwordsOperator,
         notificationsOperator = notificationsMock
     )
-    private val json = SerializationHolder().readableJson
     private val sourcegraphSearchClient = SourcegraphSearchClient(
         httpClientProvider = clientProvider,
         notificationsOperator = notificationsMock,
-        json = this.json,
     )
 
     @Test
@@ -85,6 +82,6 @@ internal class SourcegraphSearchClientTest {
             sourcegraphSearchClient.validateToken(searchHostName, sourceGraphSettings)
         }
 
-        assertThat(result, equalTo("200:OK"))
+        assertThat(result, equalTo("OK"))
     }
 }

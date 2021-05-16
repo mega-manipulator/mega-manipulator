@@ -40,13 +40,14 @@ object Dependencies {
         "io.ktor:ktor-client:${Versions.ktor}",
         "io.ktor:ktor-client-apache:${Versions.ktor}",
         "io.ktor:ktor-client-serialization:${Versions.ktor}",
+        "io.ktor:ktor-client-logging:${Versions.ktor}",
         "org.jetbrains.kotlinx:kotlinx-serialization-json:${Versions.kotlinxSerialization}",
         "com.github.Ricky12Awesome:json-schema-serialization:${Versions.jsonSchemaSerialization}",
 
         "org.eclipse.jgit:org.eclipse.jgit:${Versions.jGit}",
         "org.apache.logging.log4j:log4j-slf4j-impl:${Versions.log4j}",
         "me.xdrop:fuzzywuzzy:${Versions.fuzzyWuzzy}",
-        "com.expediagroup:graphql-kotlin-ktor-client:${Versions.graphql}"
+        "com.expediagroup:graphql-kotlin-ktor-client:${Versions.graphql}",
     )
     val testImplementation = setOf(
         "io.mockk:mockk:${Versions.mockk}",
