@@ -6,6 +6,7 @@ import com.github.jensim.megamanipulator.actions.search.hound.HoundTypes.HoundSe
 import com.github.jensim.megamanipulator.http.HttpClientProvider
 import com.github.jensim.megamanipulator.settings.SearchHostSettings.HoundSettings
 import io.ktor.client.request.get
+import io.ktor.client.request.header
 import io.ktor.client.request.parameter
 import io.ktor.client.statement.HttpResponse
 import io.ktor.client.statement.readText
@@ -27,6 +28,7 @@ class HoundClient(
             parameter("rng", ":1000")
             parameter("files", "")
             parameter("i", "fosho")
+            header("Accept", "application/json")
         }
         val body = rawResp.readText()
         val searchResp: HoundSearchResults = json.decodeFromString(body)
@@ -35,7 +37,9 @@ class HoundClient(
 
     suspend fun validate(searchHostName: String, settings: HoundSettings): String = try {
         val client = httpClientProvider.getClient(searchHostName, settings)
-        val response = client.get<HttpResponse>("${settings.baseUrl}/api/v1/repos")
+        val response = client.get<HttpResponse>("${settings.baseUrl}/api/v1/repos"){
+            header("Accept", "application/json")
+        }
         "${response.status.value}:${response.status.description}"
     } catch (e: Exception) {
         e.printStackTrace()
