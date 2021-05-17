@@ -100,7 +100,6 @@ internal class GitLabClientTest {
     }
 
     @Test
-    @Disabled("Temporary until fixed")
     fun getAllPrs() {
         // given
 

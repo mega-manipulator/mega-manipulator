@@ -125,11 +125,11 @@ class GitLabClient(
             val vars = GetAuthoredPullRequests.Variables(cursor = lastCursor)
             val resp: GraphQLClientResponse<Result> = client.execute(GetAuthoredPullRequests(vars))
             when {
-                resp.errors?.isNullOrEmpty() != true -> {
+                !resp.errors.isNullOrEmpty() -> {
                     log.warn("Error received from gitlab {}", resp.errors)
                     break
                 }
-                resp.data?.currentUser?.authoredMergeRequests?.nodes?.isNullOrEmpty() != true ->
+                !resp.data?.currentUser?.authoredMergeRequests?.nodes.isNullOrEmpty() ->
                     resp.data?.currentUser?.authoredMergeRequests?.nodes?.mapNotNull {
                         it?.let {
                             val raw = json.encodeToString(it)
