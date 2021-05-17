@@ -1,8 +1,8 @@
 package com.github.jensim.megamanipulator.settings
 
-import com.github.jensim.megamanipulator.settings.CodeHostSettings.BitBucketSettings
-import com.github.jensim.megamanipulator.settings.CodeHostSettings.GitHubSettings
-import com.github.jensim.megamanipulator.settings.SearchHostSettings.SourceGraphSettings
+import com.github.jensim.megamanipulator.settings.types.CodeHostSettings
+import com.github.jensim.megamanipulator.settings.types.MegaManipulatorSettings
+import com.github.jensim.megamanipulator.settings.types.SearchHostSettings
 import com.github.ricky12awesome.jss.encodeToSchema
 import com.github.ricky12awesome.jss.globalJson
 import kotlinx.serialization.decodeFromString
@@ -19,25 +19,25 @@ class SettingsFileOperatorTest {
     private val readableJson: Json = SerializationHolder.instance.readableJson
     private val testData = MegaManipulatorSettings(
         searchHostSettings = mapOf(
-            "sourcegraph_com" to SourceGraphSettings(
-                baseUrl = "https://sourcegraph.com",
-                codeHostSettings = mapOf(
-                    "github.com" to GitHubSettings(
-                        username = "jensim",
+            "sourcegraph_com" to SearchHostSettings.SourceGraphSettings(
+                    baseUrl = "https://sourcegraph.com",
+                    codeHostSettings = mapOf(
+                            "github.com" to CodeHostSettings.GitHubSettings(
+                                    username = "jensim",
+                            )
                     )
-                )
             ),
-            "private_sourcegraph" to SourceGraphSettings(
-                baseUrl = "https://sourcegraph.example.com",
-                codeHostSettings = mapOf(
-                    "github.com" to GitHubSettings(
-                        username = "jensim",
-                    ),
-                    "bitbucket" to BitBucketSettings(
-                        "https://bitbucket.server.example.com",
-                        username = "jensim",
+            "private_sourcegraph" to SearchHostSettings.SourceGraphSettings(
+                    baseUrl = "https://sourcegraph.example.com",
+                    codeHostSettings = mapOf(
+                            "github.com" to CodeHostSettings.GitHubSettings(
+                                    username = "jensim",
+                            ),
+                            "bitbucket" to CodeHostSettings.BitBucketSettings(
+                                    "https://bitbucket.server.example.com",
+                                    username = "jensim",
+                            )
                     )
-                )
             )
         ),
     )
@@ -61,10 +61,10 @@ class SettingsFileOperatorTest {
             MegaManipulatorSettings(
                 defaultHttpsOverride = null,
                 searchHostSettings = mapOf(
-                    "sg" to SourceGraphSettings(
-                        baseUrl = "https://sourcegraph.example.com",
-                        httpsOverride = null,
-                        codeHostSettings = mapOf()
+                    "sg" to SearchHostSettings.SourceGraphSettings(
+                            baseUrl = "https://sourcegraph.example.com",
+                            httpsOverride = null,
+                            codeHostSettings = mapOf()
                     )
                 )
             )
