@@ -185,6 +185,9 @@
                         },
                         "baseUrl": {
                           "type": "string"
+                        },
+                        "graphQLUrl": {
+                          "type": "string"
                         }
                       },
                       "required": [
@@ -422,6 +425,9 @@
                           ]
                         },
                         "baseUrl": {
+                          "type": "string"
+                        },
+                        "graphQLUrl": {
                           "type": "string"
                         }
                       },

@@ -5,11 +5,11 @@ import com.github.jensim.megamanipulator.actions.search.SearchResult
 import com.github.jensim.megamanipulator.actions.vcs.bitbucketserver.BitbucketServerClient
 import com.github.jensim.megamanipulator.actions.vcs.githubcom.GithubComClient
 import com.github.jensim.megamanipulator.actions.vcs.gitlab.GitLabClient
+import com.github.jensim.megamanipulator.settings.SettingsFileOperator
 import com.github.jensim.megamanipulator.settings.types.CodeHostSettings
 import com.github.jensim.megamanipulator.settings.types.CodeHostSettings.BitBucketSettings
 import com.github.jensim.megamanipulator.settings.types.CodeHostSettings.GitHubSettings
 import com.github.jensim.megamanipulator.settings.types.CodeHostSettings.GitLabSettings
-import com.github.jensim.megamanipulator.settings.SettingsFileOperator
 import com.intellij.notification.NotificationType.WARNING
 import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.GlobalScope

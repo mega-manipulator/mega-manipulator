@@ -14,9 +14,9 @@ import java.util.stream.Collectors
 
 @SuppressWarnings("TooManyFunctions")
 class LocalRepoOperator(
-        private val projectOperator: ProjectOperator,
-        private val processOperator: ProcessOperator,
-        private val uiProtector: UiProtector,
+    private val projectOperator: ProjectOperator,
+    private val processOperator: ProcessOperator,
+    private val uiProtector: UiProtector,
 ) {
 
     companion object {

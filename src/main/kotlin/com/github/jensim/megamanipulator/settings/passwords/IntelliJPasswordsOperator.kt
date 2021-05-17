@@ -21,8 +21,8 @@ import javax.swing.JOptionPane.QUESTION_MESSAGE
 
 @NotThreadSafe
 class IntelliJPasswordsOperator(
-        private val notificationsOperator: NotificationsOperator,
-        private val serializationHolder: SerializationHolder,
+    private val notificationsOperator: NotificationsOperator,
+    private val serializationHolder: SerializationHolder,
 ) : PasswordsOperator {
 
     companion object {

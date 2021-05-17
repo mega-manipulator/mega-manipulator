@@ -7,12 +7,15 @@ import com.github.jensim.megamanipulator.actions.vcs.GithubComRepoWrapping
 import com.github.jensim.megamanipulator.http.HttpClientProvider
 import com.github.jensim.megamanipulator.settings.types.CodeHostSettings.GitHubSettings
 import io.ktor.client.HttpClient
+import io.ktor.client.request.accept
 import io.ktor.client.request.delete
 import io.ktor.client.request.get
 import io.ktor.client.request.patch
 import io.ktor.client.request.post
 import io.ktor.client.statement.HttpResponse
 import io.ktor.client.statement.HttpStatement
+import io.ktor.http.ContentType
+import io.ktor.http.contentType
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.flow
@@ -43,6 +46,8 @@ class GithubComClient(
         val headProject = fork?.first ?: repo.project
         val ghRepo: GithubComRepo = client.get("${settings.baseUrl}/repos/${repo.project}/${repo.repo}")
         val prRaw: JsonElement = client.post("${settings.baseUrl}/repos/${repo.project}/${repo.repo}/pulls") {
+            contentType(ContentType.Application.Json)
+            accept(ContentType.Application.Json)
             body = GithubPullRequestRequest(
                 title = title,
                 body = description,
@@ -83,6 +88,7 @@ class GithubComClient(
     suspend fun updatePr(newTitle: String, newDescription: String, settings: GitHubSettings, pullRequest: GithubComPullRequestWrapper): GithubComPullRequestWrapper {
         val client: HttpClient = httpClientProvider.getClient(pullRequest.searchHost, pullRequest.codeHost, settings)
         val prRaw: JsonElement = client.patch(pullRequest.pullRequest.url) {
+            contentType(ContentType.Application.Json)
             body = mapOf("title" to newTitle, "body" to newDescription)
         }
         val pr: GithubComPullRequest = json.decodeFromJsonElement(prRaw)
@@ -123,6 +129,7 @@ class GithubComClient(
     suspend fun closePr(dropFork: Boolean, dropBranch: Boolean, settings: GitHubSettings, pullRequest: GithubComPullRequestWrapper) {
         val client: HttpClient = httpClientProvider.getClient(pullRequest.searchHost, pullRequest.codeHost, settings)
         val updatedPr: GithubComPullRequest = client.patch(pullRequest.pullRequest.url) {
+            contentType(ContentType.Application.Json)
             body = mapOf<String, Any>("state" to "closed")
         }
 
@@ -169,6 +176,7 @@ class GithubComClient(
         // https://docs.github.com/en/rest/reference/issues#create-an-issue-comment
         val client: HttpClient = httpClientProvider.getClient(pullRequest.searchHost, pullRequest.codeHost, settings)
         client.post<JsonElement>(pullRequest.pullRequest.comments_url) {
+            contentType(ContentType.Application.Json)
             body = mapOf("body" to comment)
         }
     }

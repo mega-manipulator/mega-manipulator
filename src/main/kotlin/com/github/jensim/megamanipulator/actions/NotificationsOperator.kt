@@ -5,8 +5,8 @@ import com.intellij.notification.NotificationGroup
 import com.intellij.notification.NotificationType
 
 class NotificationsOperator(
-        private val projectOperator: ProjectOperator,
-        private val notificationGroup: NotificationGroup,
+    private val projectOperator: ProjectOperator,
+    private val notificationGroup: NotificationGroup,
 ) {
 
     fun show(title: String, body: String, type: NotificationType = NotificationType.INFORMATION) {

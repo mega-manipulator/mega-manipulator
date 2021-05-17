@@ -4,14 +4,14 @@ import com.github.jensim.megamanipulator.ApplicationWiring
 import com.github.jensim.megamanipulator.MyBundle
 import com.github.jensim.megamanipulator.actions.NotificationsOperator
 import com.github.jensim.megamanipulator.files.FilesOperator
+import com.github.jensim.megamanipulator.settings.SettingsFileOperator
+import com.github.jensim.megamanipulator.settings.passwords.PasswordsOperator
+import com.github.jensim.megamanipulator.settings.passwords.ProjectOperator
 import com.github.jensim.megamanipulator.settings.types.CloneType.HTTPS
 import com.github.jensim.megamanipulator.settings.types.CodeHostSettings.GitHubSettings
 import com.github.jensim.megamanipulator.settings.types.ForkSetting.PLAIN_BRANCH
 import com.github.jensim.megamanipulator.settings.types.MegaManipulatorSettings
-import com.github.jensim.megamanipulator.settings.passwords.PasswordsOperator
-import com.github.jensim.megamanipulator.settings.passwords.ProjectOperator
 import com.github.jensim.megamanipulator.settings.types.SearchHostSettings.SourceGraphSettings
-import com.github.jensim.megamanipulator.settings.SettingsFileOperator
 import com.github.jensim.megamanipulator.test.EnvHelper.EnvProperty.GITHUB_TOKEN
 import com.github.jensim.megamanipulator.test.EnvHelper.EnvProperty.GITHUB_USERNAME
 import com.github.jensim.megamanipulator.test.EnvHelper.EnvProperty.SRC_COM_ACCESS_TOKEN
@@ -31,7 +31,7 @@ import kotlin.io.path.ExperimentalPathApi
 import kotlin.io.path.createTempDirectory
 
 @ExperimentalPathApi
-abstract class TestApplicationWiring {
+open class TestApplicationWiring {
 
     @AfterEach
     internal fun tearDown() {
@@ -78,11 +78,11 @@ abstract class TestApplicationWiring {
     open val uiProtector: UiProtector get() = TestUiProtector()
     open val passwordsOperator: PasswordsOperator
         get() = TestPasswordOperator(
-        mapOf(
-            "token" to sourceGraphSettings.baseUrl to sourcegraphToken,
-            githubUsername to gitHubSettings.baseUrl to githubToken
+            mapOf(
+                "token" to sourceGraphSettings.baseUrl to sourcegraphToken,
+                githubUsername to gitHubSettings.baseUrl to githubToken
+            )
         )
-    )
     open val settingsFileOperator: SettingsFileOperator = mockk {
         every { readSettings() } returns settings
         every { validationText } returns "Looks good..?"

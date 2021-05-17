@@ -27,7 +27,7 @@ import kotlinx.serialization.json.Json
 import org.slf4j.LoggerFactory
 import java.net.URL
 
-@SuppressWarnings(value = ["UnusedPrivateMember", "TooManyFunctions"])
+@Suppress("debtUnusedPrivateMember", "TooManyFunctions", "LoopWithTooManyJumpStatements", "UnusedPrivateMember")
 class GitLabClient(
     private val httpClientProvider: HttpClientProvider,
     private val json: Json,

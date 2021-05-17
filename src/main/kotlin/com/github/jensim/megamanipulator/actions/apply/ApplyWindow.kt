@@ -15,8 +15,8 @@ import java.io.File
 import javax.swing.JButton
 
 class ApplyWindow(
-        private val applyOperator: ApplyOperator,
-        private val projectOperator: ProjectOperator,
+    private val applyOperator: ApplyOperator,
+    private val projectOperator: ProjectOperator,
 ) : ToolWindowTab {
 
     private val resultList = JBList<ApplyOutput>()

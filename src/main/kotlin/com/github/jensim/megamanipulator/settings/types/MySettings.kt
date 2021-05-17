@@ -1,10 +1,10 @@
 package com.github.jensim.megamanipulator.settings.types
 
 import com.github.ricky12awesome.jss.JsonSchema
-import java.io.File
-import java.util.Base64
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
+import java.io.File
+import java.util.Base64
 
 private val base64encoder = Base64.getEncoder()
 
@@ -228,9 +228,9 @@ sealed class CodeHostSettings
         override val forkSetting: ForkSetting = ForkSetting.LAZY_FORK,
         @JsonSchema.Description(["It's strongly recommended to use SSH clone type."])
         override val cloneType: CloneType = CloneType.SSH,
-        override val authMethod: AuthMethod = AuthMethod.JUST_TOKEN,
     ) : CodeHostSettings() {
 
+        override val authMethod: AuthMethod = AuthMethod.USERNAME_TOKEN
         override val baseUrl: String = "https://api.github.com"
         val graphQLUrl: String = "https://graphql.github.com/graphql/proxy"
 
@@ -240,7 +240,6 @@ sealed class CodeHostSettings
 
         override fun getAuthHeaderValue(password: String?): String? = when {
             // https://docs.github.com/en/rest/guides/getting-started-with-the-rest-api#authentication
-            password != null && authMethod == AuthMethod.JUST_TOKEN -> "token $password"
             password != null && authMethod == AuthMethod.USERNAME_TOKEN -> "Basic ${base64encoder.encodeToString("$username:$password".toByteArray())}"
             else -> null
         }

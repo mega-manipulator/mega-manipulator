@@ -20,24 +20,24 @@ class SettingsFileOperatorTest {
     private val testData = MegaManipulatorSettings(
         searchHostSettings = mapOf(
             "sourcegraph_com" to SearchHostSettings.SourceGraphSettings(
-                    baseUrl = "https://sourcegraph.com",
-                    codeHostSettings = mapOf(
-                            "github.com" to CodeHostSettings.GitHubSettings(
-                                    username = "jensim",
-                            )
+                baseUrl = "https://sourcegraph.com",
+                codeHostSettings = mapOf(
+                    "github.com" to CodeHostSettings.GitHubSettings(
+                        username = "jensim",
                     )
+                )
             ),
             "private_sourcegraph" to SearchHostSettings.SourceGraphSettings(
-                    baseUrl = "https://sourcegraph.example.com",
-                    codeHostSettings = mapOf(
-                            "github.com" to CodeHostSettings.GitHubSettings(
-                                    username = "jensim",
-                            ),
-                            "bitbucket" to CodeHostSettings.BitBucketSettings(
-                                    "https://bitbucket.server.example.com",
-                                    username = "jensim",
-                            )
+                baseUrl = "https://sourcegraph.example.com",
+                codeHostSettings = mapOf(
+                    "github.com" to CodeHostSettings.GitHubSettings(
+                        username = "jensim",
+                    ),
+                    "bitbucket" to CodeHostSettings.BitBucketSettings(
+                        "https://bitbucket.server.example.com",
+                        username = "jensim",
                     )
+                )
             )
         ),
     )
@@ -62,9 +62,9 @@ class SettingsFileOperatorTest {
                 defaultHttpsOverride = null,
                 searchHostSettings = mapOf(
                     "sg" to SearchHostSettings.SourceGraphSettings(
-                            baseUrl = "https://sourcegraph.example.com",
-                            httpsOverride = null,
-                            codeHostSettings = mapOf()
+                        baseUrl = "https://sourcegraph.example.com",
+                        httpsOverride = null,
+                        codeHostSettings = mapOf()
                     )
                 )
             )

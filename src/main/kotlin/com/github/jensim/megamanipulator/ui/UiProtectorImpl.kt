@@ -17,8 +17,8 @@ import kotlinx.coroutines.withTimeout
 import java.util.concurrent.CancellationException
 
 class UiProtectorImpl(
-        private val projectOperator: ProjectOperator,
-        private val notificationsOperator: NotificationsOperator,
+    private val projectOperator: ProjectOperator,
+    private val notificationsOperator: NotificationsOperator,
 ) : UiProtector {
 
     private val project: Project get() = projectOperator.project

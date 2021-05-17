@@ -33,6 +33,7 @@ class IntegrationTest : TestApplicationWiring() {
         myToolWindowFactory.createToolWindowContent(mockProject, toolWindowMock)
     }
 
+    @SuppressWarnings("LongMethod")
     @Test
     internal fun `run naive scenario`() {
         // clone

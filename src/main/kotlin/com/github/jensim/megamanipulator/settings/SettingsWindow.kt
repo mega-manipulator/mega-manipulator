@@ -24,13 +24,13 @@ import javax.swing.ListSelectionModel
 
 @SuppressWarnings("LongParameterList")
 class SettingsWindow(
-        private val passwordsOperator: PasswordsOperator,
-        private val projectOperator: ProjectOperator,
-        private val filesOperator: FilesOperator,
-        private val settingsFileOperator: SettingsFileOperator,
-        private val uiProtector: UiProtector,
-        private val prRouter: PrRouter,
-        private val searchOperator: SearchOperator,
+    private val passwordsOperator: PasswordsOperator,
+    private val projectOperator: ProjectOperator,
+    private val filesOperator: FilesOperator,
+    private val settingsFileOperator: SettingsFileOperator,
+    private val uiProtector: UiProtector,
+    private val prRouter: PrRouter,
+    private val searchOperator: SearchOperator,
 ) : ToolWindowTab {
 
     private enum class HostType {
@@ -39,13 +39,13 @@ class SettingsWindow(
     }
 
     private data class ConfigHostHolder(
-            val hostType: HostType,
-            val authMethod: AuthMethod,
-            val baseUri: String,
-            val username: String,
-            val hostNaming: String,
+        val hostType: HostType,
+        val authMethod: AuthMethod,
+        val baseUri: String,
+        val username: String,
+        val hostNaming: String,
 
-            ) {
+    ) {
 
         override fun toString(): String = "$hostType: $hostNaming"
     }

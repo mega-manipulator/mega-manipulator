@@ -7,7 +7,7 @@ import org.gradle.plugin.use.PluginDependenciesSpec
 object Versions {
 
     const val jvm = "11"
-    const val junit = "5.7.1"
+    const val junit = "5.7.2"
     const val kotlinxCoroutines = "1.4.3"
     const val ktor = "1.5.4"
     const val kotlin = "1.4.32"
@@ -21,7 +21,7 @@ object Versions {
 
     const val kotlinxSerialization = "1.1.0"
     const val jsonSchemaSerialization = "0.6.6"
-    const val jGit = "5.11.0.202103091610-r"
+    const val jGit = "5.11.1.202105131744-r"
     const val log4j = "2.14.1"
     const val fuzzyWuzzy = "1.3.1"
     const val mockk = "1.11.0"

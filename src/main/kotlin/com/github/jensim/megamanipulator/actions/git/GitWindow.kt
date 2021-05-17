@@ -30,14 +30,14 @@ private typealias DirResult = Pair<String, List<StepResult>>
 
 @SuppressWarnings("LongParameterList")
 class GitWindow(
-        private val localRepoOperator: LocalRepoOperator,
-        private val processOperator: ProcessOperator,
-        private val commitOperator: CommitOperator,
-        private val dialogGenerator: DialogGenerator,
-        private val filesOperator: FilesOperator,
-        private val projectOperator: ProjectOperator,
-        private val prRouter: PrRouter,
-        private val uiProtector: UiProtector,
+    private val localRepoOperator: LocalRepoOperator,
+    private val processOperator: ProcessOperator,
+    private val commitOperator: CommitOperator,
+    private val dialogGenerator: DialogGenerator,
+    private val filesOperator: FilesOperator,
+    private val projectOperator: ProjectOperator,
+    private val prRouter: PrRouter,
+    private val uiProtector: UiProtector,
 ) : ToolWindowTab {
 
     private val repoList = JBList<DirResult>().apply {

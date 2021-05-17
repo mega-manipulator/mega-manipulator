@@ -8,7 +8,7 @@ import kotlinx.coroutines.future.asDeferred
 import java.io.File
 
 class ProcessOperator(
-        private val projectOperator: ProjectOperator,
+    private val projectOperator: ProjectOperator,
 ) {
 
     fun runCommandAsync(workingDir: File, command: List<String>): Deferred<ApplyOutput> {

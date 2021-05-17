@@ -17,8 +17,8 @@ import java.nio.file.Path
 import java.nio.file.Paths
 
 class FilesOperator(
-        private val notificationsOperator: NotificationsOperator,
-        private val projectOperator: ProjectOperator,
+    private val notificationsOperator: NotificationsOperator,
+    private val projectOperator: ProjectOperator,
 ) {
 
     class VirtFile(
