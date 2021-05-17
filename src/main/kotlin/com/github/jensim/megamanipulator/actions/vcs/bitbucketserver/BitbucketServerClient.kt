@@ -159,32 +159,30 @@ class BitbucketServerClient(
         return collector
     }
 
-    suspend fun closePr(dropForkOrBranch: Boolean, settings: BitBucketSettings, pullRequest: BitBucketPullRequestWrapper): PullRequestWrapper {
+    suspend fun closePr(dropFork: Boolean, dropBranch: Boolean, settings: BitBucketSettings, pullRequest: BitBucketPullRequestWrapper): PullRequestWrapper {
         val client: HttpClient = httpClientProvider.getClient(pullRequest.searchHostName(), pullRequest.codeHostName(), settings)
         try {
             val urlString = "${settings.baseUrl}/rest/api/1.0/projects/${pullRequest.project()}/repos/${pullRequest.baseRepo()}/pull-requests/${pullRequest.bitbucketPR.id}/decline?version=${pullRequest.bitbucketPR.version}"
             client.post<Unit>(urlString) {
                 body = emptyMap<String, String>()
             }
-            if (dropForkOrBranch) {
-                if (pullRequest.isFork()) {
-                    val repository = pullRequest.bitbucketPR.fromRef.repository
-                    // Get open PRs
-                    val page: BitBucketPage = client.get("${settings.baseUrl}/rest/api/1.0/projects/${repository.project?.key!!}/repos/${repository.slug}/pull-requests?direction=OUTGOING&state=OPEN")
-                    if ((page.size ?: 0) == 0) {
-                        deletePrivateRepo(
-                            BitBucketRepoWrapping(
-                                searchHost = pullRequest.searchHost,
-                                codeHost = pullRequest.codeHost,
-                                repo = repository,
-                                defaultBranch = null,
-                            ),
-                            settings
-                        )
-                    }
-                } else {
-                    removeRemoteBranch(settings, pullRequest, client)
+            if (dropFork && pullRequest.isFork()) {
+                val repository = pullRequest.bitbucketPR.fromRef.repository
+                // Get open PRs
+                val page: BitBucketPage = client.get("${settings.baseUrl}/rest/api/1.0/projects/${repository.project?.key!!}/repos/${repository.slug}/pull-requests?direction=OUTGOING&state=OPEN")
+                if ((page.size ?: 0) == 0) {
+                    deletePrivateRepo(
+                        BitBucketRepoWrapping(
+                            searchHost = pullRequest.searchHost,
+                            codeHost = pullRequest.codeHost,
+                            repo = repository,
+                            defaultBranch = null,
+                        ),
+                        settings
+                    )
                 }
+            } else if (dropBranch && !pullRequest.isFork() && pullRequest.bitbucketPR.fromRef.repository == pullRequest.bitbucketPR.toRef.repository) {
+                removeRemoteBranch(settings, pullRequest, client)
             }
         } catch (e: Exception) {
             e.printStackTrace()

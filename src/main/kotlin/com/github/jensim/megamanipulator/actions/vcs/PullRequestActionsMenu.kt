@@ -33,17 +33,16 @@ class PullRequestActionsMenu(
         val declineMenuItem = JMenuItem("Decline PRs").apply {
             addActionListener { _ ->
                 if (dialogGenerator.showConfirm("Decline selected PRs", "No undo path available im afraid..\nDecline selected PRs?")) {
-                    val ans = JOptionPane.showConfirmDialog(null, "Also drop source branches and forks?", "Drop source?", OK_CANCEL_OPTION, QUESTION_MESSAGE, null)
-                    val doDrop = ans == OK_OPTION
-                    val exit = !listOf(OK_OPTION, CANCEL_OPTION).contains(ans)
-                    if (!exit) {
-                        uiProtector.mapConcurrentWithProgress(
-                            title = "Declining prs",
-                            extraText2 = { "${it.codeHostName()}/${it.project()}/${it.baseRepo()} ${it.fromBranch()}" },
-                            data = prProvider(),
-                        ) { pullRequest: PullRequestWrapper ->
-                            prRouter.closePr(doDrop, pullRequest)
-                        }
+                    val dropBranchesAns = JOptionPane.showConfirmDialog(null, "Drop source branches?", "Drop branches?", OK_CANCEL_OPTION, QUESTION_MESSAGE, null)
+                    if (!listOf(OK_OPTION, CANCEL_OPTION).contains(dropBranchesAns)) return@addActionListener
+                    val dropForksAns = JOptionPane.showConfirmDialog(null, "Also drop source forks?", "Drop forks?", OK_CANCEL_OPTION, QUESTION_MESSAGE, null)
+                    if (!listOf(OK_OPTION, CANCEL_OPTION).contains(dropForksAns)) return@addActionListener
+                    uiProtector.mapConcurrentWithProgress(
+                        title = "Declining prs",
+                        extraText2 = { "${it.codeHostName()}/${it.project()}/${it.baseRepo()} ${it.fromBranch()}" },
+                        data = prProvider(),
+                    ) { pullRequest: PullRequestWrapper ->
+                        prRouter.closePr(dropFork = dropForksAns == OK_OPTION, dropBranch = dropBranchesAns == OK_OPTION, pullRequest)
                     }
                     postActionHook()
                 }

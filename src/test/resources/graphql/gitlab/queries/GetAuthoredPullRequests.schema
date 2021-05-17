@@ -1,0 +1,43 @@
+query ($cursor: String) {
+  currentUser {
+    authoredMergeRequests(after: $cursor) {
+      count
+      pageInfo {
+        hasNextPage
+        startCursor
+        endCursor
+      }
+      nodes {
+        id
+        iid
+        webUrl
+        title
+        description
+        sourceBranch
+        targetBranch
+        sourceProject {
+          id
+          path
+          fullPath
+          group {
+            path
+          }
+          sshUrlToRepo
+          httpUrlToRepo
+          webUrl
+        }
+        targetProject {
+          id
+          path
+          fullPath
+          group {
+            path
+          }
+          sshUrlToRepo
+          httpUrlToRepo
+          webUrl
+        }
+      }
+    }
+  }
+}

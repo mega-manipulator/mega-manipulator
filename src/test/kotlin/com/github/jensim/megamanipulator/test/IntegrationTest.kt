@@ -106,7 +106,7 @@ class IntegrationTest : TestApplicationWiring() {
 
         // decline
         runBlocking {
-            applicationWiring.prRouter.closePr(true, updatedPR!!)
+            applicationWiring.prRouter.closePr(dropFork = true, dropBranch = true, pullRequest = updatedPR!!)
         }
     }
 }

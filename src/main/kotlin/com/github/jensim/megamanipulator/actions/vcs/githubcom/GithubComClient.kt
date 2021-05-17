@@ -120,21 +120,20 @@ class GithubComClient(
             }
     }
 
-    suspend fun closePr(dropForkOrBranch: Boolean, settings: GitHubSettings, pullRequest: GithubComPullRequestWrapper) {
+    suspend fun closePr(dropFork: Boolean, dropBranch: Boolean, settings: GitHubSettings, pullRequest: GithubComPullRequestWrapper) {
         val client: HttpClient = httpClientProvider.getClient(pullRequest.searchHost, pullRequest.codeHost, settings)
         val updatedPr: GithubComPullRequest = client.patch(pullRequest.pullRequest.url) {
             body = mapOf<String, Any>("state" to "closed")
         }
-        if (dropForkOrBranch) {
-            if (updatedPr.head?.repo != null) {
-                if (updatedPr.head.repo.fork && updatedPr.head.repo.id != updatedPr.base?.repo?.id) {
-                    if (updatedPr.head.repo.open_issues_count == 0L && updatedPr.head.repo.owner.login == settings.username) {
-                        client.delete<String?>("${settings.baseUrl}/repos/${settings.username}/${updatedPr.head.repo.name}")
-                    }
-                } else {
-                    // https://docs.github.com/en/rest/reference/git#delete-a-reference
-                    client.delete<String?>("${settings.baseUrl}/repos/${updatedPr.head.repo.owner.login}/${updatedPr.head.repo.name}/git/refs/heads/${updatedPr.head.ref}")
+
+        if (updatedPr.head?.repo != null) {
+            if (dropFork && updatedPr.head.repo.fork && updatedPr.head.repo.id != updatedPr.base?.repo?.id) {
+                if (updatedPr.head.repo.open_issues_count == 0L && updatedPr.head.repo.owner.login == settings.username) {
+                    client.delete<String?>("${settings.baseUrl}/repos/${settings.username}/${updatedPr.head.repo.name}")
                 }
+            } else if (dropBranch && updatedPr.head.repo.id == updatedPr.base?.repo?.id) {
+                // https://docs.github.com/en/rest/reference/git#delete-a-reference
+                client.delete<String?>("${settings.baseUrl}/repos/${updatedPr.head.repo.owner.login}/${updatedPr.head.repo.name}/git/refs/heads/${updatedPr.head.ref}")
             }
         }
     }

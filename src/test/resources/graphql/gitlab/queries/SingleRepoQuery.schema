@@ -1,12 +1,11 @@
-query(
-  $repoPath : ID!
-){
-  project(fullPath: $repoPath){
+query ($repoPath: ID!) {
+  project(fullPath: $repoPath) {
+    id
     webUrl
     sshUrlToRepo
     httpUrlToRepo
     path
-    repository{
+    repository {
       rootRef
       empty
     }

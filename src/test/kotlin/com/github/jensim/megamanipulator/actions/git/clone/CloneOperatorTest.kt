@@ -9,6 +9,7 @@ import com.github.jensim.megamanipulator.actions.vcs.PrRouter
 import com.github.jensim.megamanipulator.actions.vcs.PullRequestWrapper
 import com.github.jensim.megamanipulator.files.FilesOperator
 import com.github.jensim.megamanipulator.settings.CloneType.HTTPS
+import com.github.jensim.megamanipulator.settings.MegaManipulatorSettings
 import com.github.jensim.megamanipulator.settings.PasswordsOperator
 import com.github.jensim.megamanipulator.settings.ProjectOperator
 import com.github.jensim.megamanipulator.settings.SearchHostSettings
@@ -52,16 +53,17 @@ class CloneOperatorTest {
     private val uiProtector: UiProtector = TestUiProtector()
 
     private val project: Project = mockk()
+    private val settings = mockk<MegaManipulatorSettings> {
+        every { resolveSettings(any(), any()) } returns (
+            mockk<SearchHostSettings>() to mockk {
+                every { username } returns "username"
+                every { cloneType } returns HTTPS
+                every { baseUrl } returns "https://example"
+            }
+            )
+    }
     private val settingsFileOperator: SettingsFileOperator = mockk {
-        every { readSettings() } returns mockk {
-            every { resolveSettings(any(), any()) } returns (
-                mockk<SearchHostSettings>() to mockk {
-                    every { username } returns "username"
-                    every { cloneType } returns HTTPS
-                    every { baseUrl } returns "https://example"
-                }
-                )
-        }
+        every { readSettings() } returns settings
     }
     private val passwordsOperator: PasswordsOperator = mockk {
         every { getPassword("username", "https://example") } returns "password"
@@ -151,7 +153,7 @@ class CloneOperatorTest {
             every { codeHostName() } returns "codeHostName"
             every { project() } returns PROJECT
             every { baseRepo() } returns BASE_REPO
-            every { cloneUrlFrom() } returns "any-url-from"
+            every { cloneUrlFrom(HTTPS) } returns "any-url-from"
             every { fromBranch() } returns "main"
             every { isFork() } returns false
         }
@@ -178,7 +180,7 @@ class CloneOperatorTest {
             every { codeHostName() } returns "codeHostName"
             every { project() } returns PROJECT
             every { baseRepo() } returns BASE_REPO
-            every { cloneUrlFrom() } returns "any-url-from"
+            every { cloneUrlFrom(HTTPS) } returns "any-url-from"
             every { fromBranch() } returns "main"
             every { isFork() } returns false
         }
@@ -187,7 +189,7 @@ class CloneOperatorTest {
         coEvery { processOperator.runCommandAsync(any(), any()) } returns CompletableDeferred(applyOutput)
 
         // When
-        cloneOperator.cloneRepos(pullRequest)
+        cloneOperator.cloneRepos(pullRequest, settings)
 
         // Then
         verify { processOperator.runCommandAsync(any(), any()) }
@@ -201,9 +203,9 @@ class CloneOperatorTest {
             every { codeHostName() } returns "codeHostName"
             every { project() } returns PROJECT
             every { baseRepo() } returns BASE_REPO
-            every { cloneUrlFrom() } returns "any-url-from"
+            every { cloneUrlFrom(HTTPS) } returns "any-url-from"
             every { fromBranch() } returns "main"
-            every { cloneUrlTo() } returns "clone-url-to"
+            every { cloneUrlTo(HTTPS) } returns "clone-url-to"
             every { isFork() } returns true
         }
         val applyOutput = ApplyOutput("anydir", "anystd", "", 0)
@@ -212,7 +214,7 @@ class CloneOperatorTest {
         coEvery { localRepoOperator.promoteOriginToForkRemote(any(), any()) } returns emptyList()
 
         // When
-        cloneOperator.cloneRepos(pullRequest)
+        cloneOperator.cloneRepos(pullRequest, settings)
 
         // Then
         verify { processOperator.runCommandAsync(any(), any()) }
@@ -228,7 +230,7 @@ class CloneOperatorTest {
             every { codeHostName() } returns "codeHostName"
             every { project() } returns PROJECT
             every { baseRepo() } returns BASE_REPO
-            every { cloneUrlFrom() } returns "any-url-from"
+            every { cloneUrlFrom(HTTPS) } returns "any-url-from"
             every { fromBranch() } returns "main"
             every { isFork() } returns false
         }
@@ -237,7 +239,7 @@ class CloneOperatorTest {
         every { processOperator.runCommandAsync(any(), any()) } returns CompletableDeferred(applyOutput)
 
         // When
-        val states = cloneOperator.cloneRepos(pullRequest)
+        val states = cloneOperator.cloneRepos(pullRequest, settings)
 
         // Then
         verify(exactly = 2) { processOperator.runCommandAsync(any(), any()) }
@@ -268,7 +270,7 @@ class CloneOperatorTest {
         } returns CompletableDeferred(applyOutputCloneSuccess)
 
         // When
-        val states = cloneOperator.cloneRepos(pullRequest)
+        val states = cloneOperator.cloneRepos(pullRequest, settings)
 
         // Then
         verify(exactly = 4) { processOperator.runCommandAsync(any(), any()) }
@@ -287,7 +289,7 @@ class CloneOperatorTest {
         File(fullPath, ".git").createNewFile()
 
         // When
-        val states = cloneOperator.cloneRepos(pullRequest)
+        val states = cloneOperator.cloneRepos(pullRequest, settings)
 
         // Then
         assertThat(states.size, equalTo(1))
@@ -301,7 +303,7 @@ class CloneOperatorTest {
         every { pullRequest.codeHostName() } returns "codeHostName"
         every { pullRequest.project() } returns PROJECT
         every { pullRequest.baseRepo() } returns BASE_REPO
-        every { pullRequest.cloneUrlFrom() } returns "any-url-from"
+        every { pullRequest.cloneUrlFrom(HTTPS) } returns "any-url-from"
         every { pullRequest.fromBranch() } returns "main"
         every { pullRequest.isFork() } returns false
         every { pullRequest.asPathString() } returns "${pullRequest.searchHostName()}/${pullRequest.codeHostName()}/$PROJECT/$BASE_REPO"

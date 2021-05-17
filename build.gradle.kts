@@ -1,10 +1,10 @@
+import com.expediagroup.graphql.plugin.gradle.config.GraphQLSerializer
+import com.expediagroup.graphql.plugin.gradle.tasks.GraphQLGenerateClientTask
 import com.github.benmanes.gradle.versions.updates.DependencyUpdatesTask
 import io.gitlab.arturbosch.detekt.Detekt
 import org.jetbrains.changelog.closure
 import org.jetbrains.changelog.markdownToHTML
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
-import com.expediagroup.graphql.plugin.gradle.config.GraphQLSerializer
-import com.expediagroup.graphql.plugin.gradle.tasks.GraphQLGenerateClientTask
 
 plugins {
     addPlugins()
@@ -88,10 +88,11 @@ fun isNonStable(version: String): Boolean {
 }
 
 tasks {
+    findByName("graphqlGenerateTestClient")?.enabled = false
     val graphqlGenerateClient by getting(GraphQLGenerateClientTask::class) {
         packageName.set("com.github.jensim.megamanipulator.graphql.generated.gitlab")
         queryFiles.from(
-            "${project.projectDir.absolutePath}/src/test/resources/graphql/gitlab/queries/SingleRepoQuery.schema"
+            *fileTree("${project.projectDir.absolutePath}/src/test/resources/graphql/gitlab/queries").files.toTypedArray()
         )
         schemaFileName.set(file("${project.projectDir.absolutePath}/src/test/resources/graphql/gitlab/gitlab.graphql.schema").absolutePath)
         serializer.set(GraphQLSerializer.KOTLINX)
@@ -99,7 +100,7 @@ tasks {
     val graphqlGenerateSourcegraphClient by register("graphqlGenerateSourcegraphClient", GraphQLGenerateClientTask::class) {
         packageName.set("com.github.jensim.megamanipulator.graphql.generated.sourcegraph")
         queryFiles.from(
-            "${project.projectDir.absolutePath}/src/test/resources/graphql/sourcegraph/queries/MultiSearch.schema"
+            *fileTree("${project.projectDir.absolutePath}/src/test/resources/graphql/sourcegraph/queries").files.toTypedArray()
         )
         schemaFileName.set(file("${project.projectDir.absolutePath}/src/test/resources/graphql/sourcegraph/sourcegraph.graphql.schema").absolutePath)
         serializer.set(GraphQLSerializer.KOTLINX)
@@ -107,7 +108,7 @@ tasks {
     val graphqlGenerateGithubClient by register("graphqlGenerateGithubClient", GraphQLGenerateClientTask::class) {
         packageName.set("com.github.jensim.megamanipulator.graphql.generated.github")
         queryFiles.from(
-            "${project.projectDir.absolutePath}/src/test/resources/graphql/github/queries/SingleRepoQuery.schema"
+            *fileTree("${project.projectDir.absolutePath}/src/test/resources/graphql/github/queries").files.toTypedArray()
         )
         schemaFileName.set(file("${project.projectDir.absolutePath}/src/test/resources/graphql/github/github.graphql.schema").absolutePath)
         serializer.set(GraphQLSerializer.KOTLINX)

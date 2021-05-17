@@ -2,16 +2,16 @@ package com.github.jensim.megamanipulator.http
 
 import com.github.jensim.megamanipulator.actions.NotificationsOperator
 import com.github.jensim.megamanipulator.settings.AuthMethod
-import com.github.jensim.megamanipulator.settings.AuthMethod.ACCESS_TOKEN
 import com.github.jensim.megamanipulator.settings.AuthMethod.JUST_TOKEN
 import com.github.jensim.megamanipulator.settings.AuthMethod.NONE
+import com.github.jensim.megamanipulator.settings.AuthMethod.USERNAME_TOKEN
 import com.github.jensim.megamanipulator.settings.CodeHostSettings
+import com.github.jensim.megamanipulator.settings.HostWithAuth
 import com.github.jensim.megamanipulator.settings.HttpsOverride
 import com.github.jensim.megamanipulator.settings.PasswordsOperator
 import com.github.jensim.megamanipulator.settings.SearchHostSettings
 import com.github.jensim.megamanipulator.settings.SettingsFileOperator
 import com.intellij.notification.NotificationType
-import com.intellij.util.Base64
 import io.ktor.client.HttpClient
 import io.ktor.client.HttpClientConfig
 import io.ktor.client.engine.apache.Apache
@@ -90,18 +90,18 @@ class HttpClientProvider(
     fun getClient(searchHostName: String, settings: SearchHostSettings): HttpClient {
         val httpsOverride: HttpsOverride? = settingsFileOperator.readSettings()?.resolveHttpsOverride(searchHostName)
         val password: String = getPassword(settings.authMethod, settings.baseUrl, settings.username)
-        return getClient(httpsOverride, settings.authMethod, settings.username, password)
+        return getClient(httpsOverride, settings, password)
     }
 
     fun getClient(searchHostName: String, codeHostName: String, settings: CodeHostSettings): HttpClient {
         val httpsOverride: HttpsOverride? = settingsFileOperator.readSettings()?.resolveHttpsOverride(searchHostName, codeHostName)
         val password: String = getPassword(settings.authMethod, settings.baseUrl, settings.username ?: "token")
-        return getClient(httpsOverride, settings.authMethod, settings.username, password)
+        return getClient(httpsOverride, settings, password)
     }
 
     private fun getPassword(authMethod: AuthMethod, baseUrl: String, username: String?) = try {
         when (authMethod) {
-            ACCESS_TOKEN -> passwordsOperator.getPassword(username!!, baseUrl)
+            USERNAME_TOKEN -> passwordsOperator.getPassword(username!!, baseUrl)
             JUST_TOKEN -> passwordsOperator.getPassword("token", baseUrl)
             NONE -> ""
         }!!
@@ -114,7 +114,7 @@ class HttpClientProvider(
         throw e
     }
 
-    fun getClient(httpsOverride: HttpsOverride?, authMethod: AuthMethod, username: String? = null, password: String): HttpClient {
+    fun getClient(httpsOverride: HttpsOverride?, auth: HostWithAuth, password: String): HttpClient {
         return bakeClient {
             install(HttpTimeout) {
                 connectTimeoutMillis = 1_000
@@ -125,27 +125,16 @@ class HttpClientProvider(
                 HttpsOverride.ALLOW_SELF_SIGNED_CERT -> trustSelfSignedClient()
                 HttpsOverride.ALLOW_ANYTHING -> trustAnyClient()
             }
-            when (authMethod) {
-                ACCESS_TOKEN -> installBasicAuth(username!!, password)
-                JUST_TOKEN -> installTokenAuth(password)
-                NONE -> {
-                }
+            auth.getAuthHeaderValue(password)?.let {
+                installBasicAuth(password)
             }
         }
     }
 
-    private fun HttpClientConfig<ApacheEngineConfig>.installBasicAuth(username: String, password: String) {
+    private fun HttpClientConfig<ApacheEngineConfig>.installBasicAuth(headerValue: String) {
         defaultRequest {
             headers {
-                append("Authorization", "Basic ${Base64.encode("$username:$password".toByteArray())}")
-            }
-        }
-    }
-
-    private fun HttpClientConfig<ApacheEngineConfig>.installTokenAuth(token: String) {
-        defaultRequest {
-            headers {
-                append("Authorization", "token $token")
+                append("Authorization", headerValue)
             }
         }
     }

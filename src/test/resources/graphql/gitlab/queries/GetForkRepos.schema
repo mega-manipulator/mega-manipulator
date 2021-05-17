@@ -1,0 +1,25 @@
+query ($cursor: String) {
+  currentUser {
+    username
+    projectMemberships(after: $cursor) {
+      pageInfo {
+        hasNextPage
+        endCursor
+      }
+      nodes {
+        user {
+          id
+          username
+        }
+        project {
+          id
+          path
+          fullPath
+          group {
+            path
+          }
+        }
+      }
+    }
+  }
+}

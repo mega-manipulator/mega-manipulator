@@ -4,6 +4,7 @@ package com.github.jensim.megamanipulator.actions.vcs
 
 import com.github.jensim.megamanipulator.actions.vcs.bitbucketserver.BitBucketPullRequest
 import com.github.jensim.megamanipulator.actions.vcs.githubcom.GithubComPullRequest
+import com.github.jensim.megamanipulator.settings.CloneType
 import kotlinx.serialization.Serializable
 
 @Serializable
@@ -18,8 +19,8 @@ sealed class PullRequestWrapper {
     abstract fun toBranch(): String
 
     abstract fun isFork(): Boolean
-    abstract fun cloneUrlFrom(): String?
-    abstract fun cloneUrlTo(): String?
+    abstract fun cloneUrlFrom(cloneType: CloneType): String?
+    abstract fun cloneUrlTo(cloneType: CloneType): String?
     abstract fun browseUrl(): String?
 
     abstract val raw: String
@@ -51,9 +52,17 @@ data class BitBucketPullRequestWrapper(
         ),
     )
 
-    override fun isFork(): Boolean = bitbucketPR.toRef.repository.slug != bitbucketPR.fromRef.repository.slug
-    override fun cloneUrlFrom(): String? = bitbucketPR.fromRef.repository.links?.clone?.firstOrNull { it.name == "ssh" }?.href
-    override fun cloneUrlTo(): String? = bitbucketPR.toRef.repository.links?.clone?.firstOrNull { it.name == "ssh" }?.href
+    override fun isFork(): Boolean = bitbucketPR.toRef.repository.let { "${it.project?.key}/${it.slug}" } != bitbucketPR.fromRef.repository.let { "${it.project?.key}/${it.slug}" }
+    override fun cloneUrlFrom(cloneType: CloneType): String? = when (cloneType) {
+        CloneType.SSH -> bitbucketPR.fromRef.repository.links?.clone?.firstOrNull { it.name == "ssh" }?.href
+        CloneType.HTTPS -> bitbucketPR.fromRef.repository.links?.clone?.firstOrNull { it.name == "http" }?.href
+    }
+
+    override fun cloneUrlTo(cloneType: CloneType): String? = when (cloneType) {
+        CloneType.SSH -> bitbucketPR.toRef.repository.links?.clone?.firstOrNull { it.name == "ssh" }?.href
+        CloneType.HTTPS -> bitbucketPR.toRef.repository.links?.clone?.firstOrNull { it.name == "http" }?.href
+    }
+
     override fun browseUrl(): String? = bitbucketPR.links?.self?.firstOrNull()?.href
 }
 
@@ -73,27 +82,44 @@ data class GithubComPullRequestWrapper(
     override fun fromBranch(): String = pullRequest.head?.ref ?: "<?>"
     override fun toBranch(): String = pullRequest.base?.ref ?: "<?>"
     override fun isFork(): Boolean = pullRequest.head?.repo?.fork ?: false && (pullRequest.base?.repo?.id != pullRequest.head?.repo?.id)
-    override fun cloneUrlFrom(): String = pullRequest.head?.repo?.ssh_url ?: "<?>"
-    override fun cloneUrlTo(): String = pullRequest.base?.repo?.ssh_url ?: "<?>"
+    override fun cloneUrlFrom(cloneType: CloneType): String = when (cloneType) {
+        CloneType.SSH -> pullRequest.head?.repo?.ssh_url ?: "<?>"
+        CloneType.HTTPS -> pullRequest.head?.repo?.clone_url ?: "<?>"
+    }
+
+    override fun cloneUrlTo(cloneType: CloneType): String = when (cloneType) {
+        CloneType.SSH -> pullRequest.base?.repo?.ssh_url ?: "<?>"
+        CloneType.HTTPS -> pullRequest.base?.repo?.clone_url ?: "<?>"
+    }
+
     override fun browseUrl(): String = pullRequest.html_url
 }
 
 data class GitLabPullRequestWrapper(
     val searchHost: String,
     val codeHost: String,
+    val mergeRequest: com.github.jensim.megamanipulator.graphql.generated.gitlab.getauthoredpullrequests.MergeRequest,
     override val raw: String,
 ) : PullRequestWrapper() {
 
-    override fun codeHostName(): String = TODO("not implemented")
-    override fun searchHostName(): String = TODO("not implemented")
-    override fun project(): String = TODO("not implemented")
-    override fun baseRepo(): String = TODO("not implemented")
-    override fun title(): String = TODO("not implemented")
-    override fun body(): String = TODO("not implemented")
-    override fun fromBranch(): String = TODO("not implemented")
-    override fun toBranch(): String = TODO("not implemented")
-    override fun isFork(): Boolean = TODO("not implemented")
-    override fun cloneUrlFrom(): String? = TODO("not implemented")
-    override fun cloneUrlTo(): String? = TODO("not implemented")
-    override fun browseUrl(): String? = TODO("not implemented")
+    override fun codeHostName(): String = codeHost
+    override fun searchHostName(): String = searchHost
+    override fun project(): String = mergeRequest.targetProject.path
+    override fun baseRepo(): String = mergeRequest.targetProject.group?.path ?: "<?>"
+    override fun title(): String = mergeRequest.title
+    override fun body(): String = mergeRequest.description ?: ""
+    override fun fromBranch(): String = mergeRequest.sourceBranch
+    override fun toBranch(): String = mergeRequest.targetBranch
+    override fun isFork(): Boolean = mergeRequest.sourceProject?.path != mergeRequest.targetProject.path
+    override fun cloneUrlFrom(cloneType: CloneType): String? = when (cloneType) {
+        CloneType.SSH -> mergeRequest.sourceProject?.sshUrlToRepo
+        CloneType.HTTPS -> mergeRequest.sourceProject?.httpUrlToRepo
+    }
+
+    override fun cloneUrlTo(cloneType: CloneType): String? = when (cloneType) {
+        CloneType.SSH -> mergeRequest.targetProject.sshUrlToRepo
+        CloneType.HTTPS -> mergeRequest.targetProject.httpUrlToRepo
+    }
+
+    override fun browseUrl(): String? = mergeRequest.webUrl
 }

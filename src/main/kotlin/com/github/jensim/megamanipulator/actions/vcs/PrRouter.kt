@@ -97,12 +97,12 @@ class PrRouter(
         }
     }
 
-    suspend fun closePr(dropForkOrBranch: Boolean, pullRequest: PullRequestWrapper) {
+    suspend fun closePr(dropFork: Boolean, dropBranch: Boolean, pullRequest: PullRequestWrapper) {
         val settings = resolve(pullRequest.searchHostName(), pullRequest.codeHostName())
         when {
-            settings is BitBucketSettings && pullRequest is BitBucketPullRequestWrapper -> bitbucketServerClient.closePr(dropForkOrBranch, settings, pullRequest)
-            settings is GitHubSettings && pullRequest is GithubComPullRequestWrapper -> githubComClient.closePr(dropForkOrBranch, settings, pullRequest)
-            settings is GitLabSettings && pullRequest is GitLabPullRequestWrapper -> gitLabClient.closePr(dropForkOrBranch, settings, pullRequest)
+            settings is BitBucketSettings && pullRequest is BitBucketPullRequestWrapper -> bitbucketServerClient.closePr(dropFork, dropBranch, settings, pullRequest)
+            settings is GitHubSettings && pullRequest is GithubComPullRequestWrapper -> githubComClient.closePr(dropFork, dropBranch, settings, pullRequest)
+            settings is GitLabSettings && pullRequest is GitLabPullRequestWrapper -> gitLabClient.closePr(dropFork, dropBranch, settings, pullRequest)
             settings == null -> Unit
             else -> throw IllegalArgumentException("Unable to match config correctly")
         }

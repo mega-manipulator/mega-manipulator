@@ -1,0 +1,6 @@
+mutation ($projectPath: ID!, $iid: String!) {
+  mergeRequestUpdate(input: {projectPath: $projectPath, iid: $iid, state: CLOSED}) {
+    clientMutationId
+    errors
+  }
+}

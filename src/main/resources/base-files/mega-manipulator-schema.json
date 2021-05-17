@@ -67,7 +67,8 @@
                       "type": "string",
                       "enum": [
                         "BITBUCKET_SERVER",
-                        "GITHUB"
+                        "GITHUB",
+                        "GITLAB"
                       ]
                     }
                   },
@@ -123,7 +124,7 @@
                         "authMethod": {
                           "type": "string",
                           "enum": [
-                            "ACCESS_TOKEN",
+                            "USERNAME_TOKEN",
                             "JUST_TOKEN",
                             "NONE"
                           ]
@@ -174,13 +175,69 @@
                           ],
                           "description": "It's strongly recommended to use SSH clone type."
                         },
+                        "authMethod": {
+                          "type": "string",
+                          "enum": [
+                            "USERNAME_TOKEN",
+                            "JUST_TOKEN",
+                            "NONE"
+                          ]
+                        },
+                        "baseUrl": {
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "username"
+                      ]
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "type": {
+                          "const": "GITLAB"
+                        },
+                        "httpsOverride": {
+                          "if": {
+                            "type": "string"
+                          },
+                          "else": {
+                            "type": "null"
+                          },
+                          "enum": [
+                            "ALLOW_SELF_SIGNED_CERT",
+                            "ALLOW_ANYTHING"
+                          ],
+                          "description": "Override the default, strict https validation"
+                        },
+                        "username": {
+                          "type": "string",
+                          "description": "Your username at the code host"
+                        },
+                        "forkSetting": {
+                          "type": "string",
+                          "enum": [
+                            "PLAIN_BRANCH",
+                            "LAZY_FORK",
+                            "EAGER_FORK"
+                          ],
+                          "description": "Fork settings is used to decide when to fork a repo:\nPLAIN_BRANCH: Will require write access to the repo\nLAZY_FORK: When not permitted to push into origin, attempt fork strategy\nEAGER_FORK: Fork before push, for every repo"
+                        },
+                        "cloneType": {
+                          "type": "string",
+                          "enum": [
+                            "SSH",
+                            "HTTPS"
+                          ],
+                          "description": "It's strongly recommended to use SSH clone type."
+                        },
                         "baseUrl": {
                           "type": "string"
                         },
                         "authMethod": {
                           "type": "string",
                           "enum": [
-                            "ACCESS_TOKEN",
+                            "USERNAME_TOKEN",
                             "JUST_TOKEN",
                             "NONE"
                           ]
@@ -196,13 +253,16 @@
                   ]
                 }
               },
+              "docLinkHref": {
+                "type": "string"
+              },
               "username": {
                 "type": "string"
               },
               "authMethod": {
                 "type": "string",
                 "enum": [
-                  "ACCESS_TOKEN",
+                  "USERNAME_TOKEN",
                   "JUST_TOKEN",
                   "NONE"
                 ]
@@ -245,7 +305,8 @@
                       "type": "string",
                       "enum": [
                         "BITBUCKET_SERVER",
-                        "GITHUB"
+                        "GITHUB",
+                        "GITLAB"
                       ]
                     }
                   },
@@ -301,7 +362,7 @@
                         "authMethod": {
                           "type": "string",
                           "enum": [
-                            "ACCESS_TOKEN",
+                            "USERNAME_TOKEN",
                             "JUST_TOKEN",
                             "NONE"
                           ]
@@ -352,13 +413,69 @@
                           ],
                           "description": "It's strongly recommended to use SSH clone type."
                         },
+                        "authMethod": {
+                          "type": "string",
+                          "enum": [
+                            "USERNAME_TOKEN",
+                            "JUST_TOKEN",
+                            "NONE"
+                          ]
+                        },
+                        "baseUrl": {
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "username"
+                      ]
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "type": {
+                          "const": "GITLAB"
+                        },
+                        "httpsOverride": {
+                          "if": {
+                            "type": "string"
+                          },
+                          "else": {
+                            "type": "null"
+                          },
+                          "enum": [
+                            "ALLOW_SELF_SIGNED_CERT",
+                            "ALLOW_ANYTHING"
+                          ],
+                          "description": "Override the default, strict https validation"
+                        },
+                        "username": {
+                          "type": "string",
+                          "description": "Your username at the code host"
+                        },
+                        "forkSetting": {
+                          "type": "string",
+                          "enum": [
+                            "PLAIN_BRANCH",
+                            "LAZY_FORK",
+                            "EAGER_FORK"
+                          ],
+                          "description": "Fork settings is used to decide when to fork a repo:\nPLAIN_BRANCH: Will require write access to the repo\nLAZY_FORK: When not permitted to push into origin, attempt fork strategy\nEAGER_FORK: Fork before push, for every repo"
+                        },
+                        "cloneType": {
+                          "type": "string",
+                          "enum": [
+                            "SSH",
+                            "HTTPS"
+                          ],
+                          "description": "It's strongly recommended to use SSH clone type."
+                        },
                         "baseUrl": {
                           "type": "string"
                         },
                         "authMethod": {
                           "type": "string",
                           "enum": [
-                            "ACCESS_TOKEN",
+                            "USERNAME_TOKEN",
                             "JUST_TOKEN",
                             "NONE"
                           ]
@@ -377,12 +494,15 @@
               "authMethod": {
                 "type": "string",
                 "enum": [
-                  "ACCESS_TOKEN",
+                  "USERNAME_TOKEN",
                   "JUST_TOKEN",
                   "NONE"
                 ]
               },
               "username": {
+                "type": "string"
+              },
+              "docLinkHref": {
                 "type": "string"
               }
             },

@@ -1,8 +1,6 @@
 package com.github.jensim.megamanipulator.actions.search.sourcegraph
 
 import com.expediagroup.graphql.client.ktor.GraphQLKtorClient
-import com.expediagroup.graphql.client.serializer.GraphQLClientSerializer
-import com.expediagroup.graphql.client.types.GraphQLClientRequest
 import com.expediagroup.graphql.client.types.GraphQLClientResponse
 import com.github.jensim.megamanipulator.actions.NotificationsOperator
 import com.github.jensim.megamanipulator.actions.search.SearchResult
@@ -16,10 +14,8 @@ import com.github.jensim.megamanipulator.settings.SearchHostSettings.SourceGraph
 import com.intellij.notification.NotificationType.ERROR
 import com.intellij.notification.NotificationType.WARNING
 import com.jetbrains.rd.util.printlnError
-import kotlinx.serialization.json.Json
 import org.slf4j.LoggerFactory
 import java.net.URL
-import kotlin.reflect.KClass
 
 class SourcegraphSearchClient(
     private val httpClientProvider: HttpClientProvider,

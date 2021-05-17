@@ -6,6 +6,7 @@
 
 ## Improvements
 * <strong>High prio</strong>
+  * [ ] Retry mechanics
   * [ ] Improve testing
   * [ ] Notify on missing conf for code host or search host
 * <strong>Low prio</strong>

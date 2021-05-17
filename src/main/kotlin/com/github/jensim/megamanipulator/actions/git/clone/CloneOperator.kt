@@ -12,6 +12,7 @@ import com.github.jensim.megamanipulator.files.FilesOperator
 import com.github.jensim.megamanipulator.settings.CloneType.HTTPS
 import com.github.jensim.megamanipulator.settings.CloneType.SSH
 import com.github.jensim.megamanipulator.settings.CodeHostSettings
+import com.github.jensim.megamanipulator.settings.MegaManipulatorSettings
 import com.github.jensim.megamanipulator.settings.PasswordsOperator
 import com.github.jensim.megamanipulator.settings.ProjectOperator
 import com.github.jensim.megamanipulator.settings.SettingsFileOperator
@@ -86,24 +87,31 @@ class CloneOperator(
     }
 
     fun clone(pullRequests: List<PullRequestWrapper>) {
-        val state: List<Pair<PullRequestWrapper, List<Action>?>> =
-            uiProtector.mapConcurrentWithProgress(
-                title = "Cloning repos",
-                extraText1 = "Cloning repos",
-                extraText2 = { it.asPathString() },
-                data = pullRequests,
-            ) { cloneRepos(it) }
-        filesOperator.refreshClones()
-        reportState(state)
+        val settings = uiProtector.uiProtectedOperation("Load settings") { settingsFileOperator.readSettings() }
+        if (settings == null) {
+            reportState(listOf("Settings" to listOf("Load Settings" to ApplyOutput.dummy(err = "No settings found for project."))))
+        } else {
+            val state: List<Pair<PullRequestWrapper, List<Action>?>> =
+                uiProtector.mapConcurrentWithProgress(
+                    title = "Cloning repos",
+                    extraText1 = "Cloning repos",
+                    extraText2 = { it.asPathString() },
+                    data = pullRequests,
+                ) { cloneRepos(it, settings) }
+            filesOperator.refreshClones()
+            reportState(state)
+        }
     }
 
-    suspend fun cloneRepos(pullRequest: PullRequestWrapper): List<Action> {
+    suspend fun cloneRepos(pullRequest: PullRequestWrapper, settings: MegaManipulatorSettings): List<Action> {
         val basePath = projectOperator.project.basePath!!
         val fullPath = "$basePath/clones/${pullRequest.asPathString()}"
         val dir = File(fullPath)
-        val badState: List<Action> = clone(dir, pullRequest.cloneUrlFrom()!!, pullRequest.fromBranch())
+        val prSettings: CodeHostSettings = settings.resolveSettings(pullRequest.searchHostName(), pullRequest.codeHostName())?.second
+            ?: return listOf("Settings" to ApplyOutput.dummy(dir = pullRequest.asPathString(), err = "No settings found for ${pullRequest.searchHostName()}/${pullRequest.codeHostName()}"))
+        val badState: List<Action> = clone(dir, pullRequest.cloneUrlFrom(prSettings.cloneType)!!, pullRequest.fromBranch())
         if (badState.isEmpty() && pullRequest.isFork()) {
-            localRepoOperator.promoteOriginToForkRemote(dir, pullRequest.cloneUrlTo()!!)
+            localRepoOperator.promoteOriginToForkRemote(dir, pullRequest.cloneUrlTo(prSettings.cloneType)!!)
         }
         return badState
     }

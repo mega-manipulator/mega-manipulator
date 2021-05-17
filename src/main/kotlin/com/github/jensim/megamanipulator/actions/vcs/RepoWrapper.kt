@@ -66,7 +66,7 @@ data class GitLabRepoWrapping(
     override fun getCodeHost(): String = codeHost
     override fun getProject(): String = repo.namespace?.fullName!!
     override fun getRepo(): String = repo.path
-    override fun getCloneUrl(cloneType: CloneType): String? = when (cloneType){
+    override fun getCloneUrl(cloneType: CloneType): String? = when (cloneType) {
         SSH -> repo.sshUrlToRepo
         HTTPS -> repo.httpUrlToRepo
     }

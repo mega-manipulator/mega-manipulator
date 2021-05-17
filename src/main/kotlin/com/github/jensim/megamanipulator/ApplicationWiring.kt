@@ -135,6 +135,7 @@ data class ApplicationWiring(
     val gitLabClient: GitLabClient by lazy {
         gitLabClientOverride ?: GitLabClient(
             httpClientProvider = this.httpClientProvider,
+            json = this.json,
         )
     }
     val searchOperator: SearchOperator by lazy {

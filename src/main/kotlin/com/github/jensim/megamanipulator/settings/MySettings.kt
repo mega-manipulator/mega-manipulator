@@ -1,17 +1,19 @@
 package com.github.jensim.megamanipulator.settings
 
-import com.github.jensim.megamanipulator.settings.AuthMethod.NONE
-import com.github.jensim.megamanipulator.settings.CloneType.SSH
 import com.github.ricky12awesome.jss.JsonSchema
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import java.io.File
+import java.util.Base64
+
+private val base64encoder = Base64.getEncoder()
 
 @Serializable
 enum class CloneType {
 
     @JsonSchema.Description(["If you have a passphrase in your ssh key the it must be added via ssh-agent and ssh-add prior to clone/fetch/push."])
     SSH,
+
     @JsonSchema.Description(["It's not recommended to use for your daily work, as the password/token will be stored in the git settings in plain text"])
     HTTPS,
 }
@@ -20,6 +22,7 @@ enum class CloneType {
 enum class HttpsOverride {
     @JsonSchema.Description(["A self signed cert is expected to have only one level"])
     ALLOW_SELF_SIGNED_CERT,
+
     @JsonSchema.Description(["Do not validate certificate at all"])
     ALLOW_ANYTHING,
 }
@@ -27,7 +30,7 @@ enum class HttpsOverride {
 @Serializable
 enum class AuthMethod {
     @JsonSchema.Description(["Username and access token combination"])
-    ACCESS_TOKEN,
+    USERNAME_TOKEN,
 
     @JsonSchema.Description(["Token without username"])
     JUST_TOKEN,
@@ -38,8 +41,10 @@ enum class AuthMethod {
 enum class ForkSetting {
     @JsonSchema.Description(["Will require write access to the repo"])
     PLAIN_BRANCH,
+
     @JsonSchema.Description(["When not permitted to push into origin, attempt fork strategy"])
     LAZY_FORK,
+
     @JsonSchema.Description(["Fork before push, for every repo"])
     EAGER_FORK,
 }
@@ -111,8 +116,12 @@ enum class SearchHostType {
     SOURCEGRAPH
 }
 
+interface HostWithAuth {
+    fun getAuthHeaderValue(password: String?): String?
+}
+
 @Serializable
-sealed class SearchHostSettings {
+sealed class SearchHostSettings : HostWithAuth {
 
     abstract val docLinkHref: String
 
@@ -146,7 +155,8 @@ sealed class SearchHostSettings {
 
         override val docLinkHref: String = "https://jensim.github.io/mega-manipulator/docs/Search%20hosts/etsy_hound"
         override val username = "none"
-        override val authMethod = NONE
+        override val authMethod = AuthMethod.NONE
+        override fun getAuthHeaderValue(password: String?): String? = null
     }
 
     @Serializable
@@ -169,9 +179,9 @@ sealed class SearchHostSettings {
             ]
         )
         override val codeHostSettings: Map<String, CodeHostSettings>,
+        override val authMethod: AuthMethod = AuthMethod.JUST_TOKEN,
     ) : SearchHostSettings() {
 
-        override val authMethod: AuthMethod = AuthMethod.JUST_TOKEN
         override val username: String = "token"
         override val docLinkHref: String = "https://jensim.github.io/mega-manipulator/docs/Search%20hosts/sourcegraph"
 
@@ -184,6 +194,13 @@ sealed class SearchHostSettings {
             }
             validateBaseUrl(baseUrl)
         }
+
+        override fun getAuthHeaderValue(password: String?): String? = when {
+            // https://docs.sourcegraph.com/api/graphql
+            password != null && authMethod == AuthMethod.JUST_TOKEN -> "token $password"
+            password != null && authMethod == AuthMethod.USERNAME_TOKEN -> "Basic ${base64encoder.encode("$username:$password".toByteArray())}"
+            else -> null
+        }
     }
 }
 
@@ -194,7 +211,7 @@ enum class CodeHostType {
 
 @Serializable
 sealed class CodeHostSettings
-@SuppressWarnings("LongParameterList") constructor() {
+@SuppressWarnings("LongParameterList") constructor() : HostWithAuth {
     abstract val baseUrl: String
     abstract val httpsOverride: HttpsOverride?
     abstract val authMethod: AuthMethod
@@ -204,7 +221,7 @@ sealed class CodeHostSettings
 
     internal fun validate() {
         validateBaseUrl(baseUrl)
-        if (authMethod == AuthMethod.ACCESS_TOKEN) {
+        if (authMethod == AuthMethod.USERNAME_TOKEN) {
             require(!username.isNullOrEmpty()) { "$baseUrl: username is required for auth method USERNAME_PASSWORD" }
         }
         if (forkSetting != ForkSetting.PLAIN_BRANCH) {
@@ -231,15 +248,22 @@ sealed class CodeHostSettings
         )
         override val forkSetting: ForkSetting = ForkSetting.LAZY_FORK,
         @JsonSchema.Description(["It's strongly recommended to use SSH clone type."])
-        override val cloneType: CloneType = SSH,
+        override val cloneType: CloneType = CloneType.SSH,
         @JsonSchema.Description(["Prefix forked repos with a recognizable char sequence"])
         val forkRepoPrefix: String = "mm_",
     ) : CodeHostSettings() {
 
-        override val authMethod: AuthMethod = AuthMethod.ACCESS_TOKEN
+        override val authMethod: AuthMethod = AuthMethod.USERNAME_TOKEN
 
         init {
             validate()
+        }
+
+        override fun getAuthHeaderValue(password: String?): String? = when {
+            // https://developer.atlassian.com/server/bitbucket/how-tos/example-basic-authentication/
+            password != null && authMethod == AuthMethod.USERNAME_TOKEN ->
+                "Basic ${base64encoder.encode("$username:$password".toByteArray())}"
+            else -> null
         }
     }
 
@@ -260,14 +284,21 @@ sealed class CodeHostSettings
         )
         override val forkSetting: ForkSetting = ForkSetting.LAZY_FORK,
         @JsonSchema.Description(["It's strongly recommended to use SSH clone type."])
-        override val cloneType: CloneType = SSH,
+        override val cloneType: CloneType = CloneType.SSH,
+        override val authMethod: AuthMethod = AuthMethod.JUST_TOKEN,
     ) : CodeHostSettings() {
 
         override val baseUrl: String = "https://api.github.com"
-        override val authMethod = AuthMethod.ACCESS_TOKEN
 
         init {
             validate()
+        }
+
+        override fun getAuthHeaderValue(password: String?): String? = when {
+            // https://docs.github.com/en/rest/guides/getting-started-with-the-rest-api#authentication
+            password != null && authMethod == AuthMethod.JUST_TOKEN -> "token $password"
+            password != null && authMethod == AuthMethod.USERNAME_TOKEN -> "Basic ${base64encoder.encode("$username:$password".toByteArray())}"
+            else -> null
         }
     }
 
@@ -288,8 +319,16 @@ sealed class CodeHostSettings
         )
         override val forkSetting: ForkSetting = ForkSetting.LAZY_FORK,
         @JsonSchema.Description(["It's strongly recommended to use SSH clone type."])
-        override val cloneType: CloneType = SSH,
+        override val cloneType: CloneType = CloneType.SSH,
         override val baseUrl: String = "https://api.github.com",
-        override val authMethod: AuthMethod = AuthMethod.ACCESS_TOKEN,
-    ) : CodeHostSettings()
+    ) : CodeHostSettings() {
+        override val authMethod: AuthMethod = AuthMethod.JUST_TOKEN
+
+        override fun getAuthHeaderValue(password: String?): String? = when {
+            // https://docs.gitlab.com/ee/api/README.html#personalproject-access-tokens
+            password != null && authMethod == AuthMethod.JUST_TOKEN -> "Bearer $password"
+            password != null && authMethod == AuthMethod.USERNAME_TOKEN -> "Basic ${base64encoder.encode("$username:$password".toByteArray())}"
+            else -> null
+        }
+    }
 }

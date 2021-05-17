@@ -37,7 +37,7 @@ class HoundClient(
 
     suspend fun validate(searchHostName: String, settings: HoundSettings): String = try {
         val client = httpClientProvider.getClient(searchHostName, settings)
-        val response = client.get<HttpResponse>("${settings.baseUrl}/api/v1/repos"){
+        val response = client.get<HttpResponse>("${settings.baseUrl}/api/v1/repos") {
             header("Accept", "application/json")
         }
         "${response.status.value}:${response.status.description}"
