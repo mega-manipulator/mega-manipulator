@@ -1,5 +1,6 @@
 package com.github.jensim.megamanipulator.actions.search.sourcegraph
 
+import com.expediagroup.graphql.client.serialization.GraphQLClientKotlinxSerializer
 import com.github.jensim.megamanipulator.actions.NotificationsOperator
 import com.github.jensim.megamanipulator.actions.search.SearchResult
 import com.github.jensim.megamanipulator.http.HttpClientProvider
@@ -50,9 +51,11 @@ internal class SourcegraphSearchClientTest {
         passwordsOperator = passwordsOperator,
         notificationsOperator = notificationsMock
     )
+    private val graphQLClientKotlinxSerializer = GraphQLClientKotlinxSerializer()
     private val sourcegraphSearchClient = SourcegraphSearchClient(
         httpClientProvider = clientProvider,
         notificationsOperator = notificationsMock,
+        graphQLClientKotlinxSerializer = graphQLClientKotlinxSerializer
     )
 
     @Test

@@ -289,6 +289,7 @@ sealed class CodeHostSettings
     ) : CodeHostSettings() {
 
         override val baseUrl: String = "https://api.github.com"
+        val graphQLUrl: String = "https://graphql.github.com/graphql/proxy"
 
         init {
             validate()
@@ -320,7 +321,7 @@ sealed class CodeHostSettings
         override val forkSetting: ForkSetting = ForkSetting.LAZY_FORK,
         @JsonSchema.Description(["It's strongly recommended to use SSH clone type."])
         override val cloneType: CloneType = CloneType.SSH,
-        override val baseUrl: String = "https://api.github.com",
+        override val baseUrl: String = "https://gitlab.com",
     ) : CodeHostSettings() {
         override val authMethod: AuthMethod = AuthMethod.JUST_TOKEN
 

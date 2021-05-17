@@ -1,6 +1,7 @@
 package com.github.jensim.megamanipulator.actions.vcs.gitlab
 
 import com.expediagroup.graphql.client.ktor.GraphQLKtorClient
+import com.expediagroup.graphql.client.serialization.GraphQLClientKotlinxSerializer
 import com.expediagroup.graphql.client.types.GraphQLClientResponse
 import com.github.jensim.megamanipulator.actions.search.SearchResult
 import com.github.jensim.megamanipulator.actions.vcs.GitLabPullRequestWrapper
@@ -30,6 +31,7 @@ import java.net.URL
 class GitLabClient(
     private val httpClientProvider: HttpClientProvider,
     private val json: Json,
+    private val graphQLClientKotlinxSerializer: GraphQLClientKotlinxSerializer,
 ) {
 
     private val log = LoggerFactory.getLogger(this.javaClass)
@@ -39,7 +41,8 @@ class GitLabClient(
 
     private fun getClient(searchHost: String, codeHost: String, settings: GitLabSettings) = GraphQLKtorClient(
         url = URL("${settings.baseUrl}/api/graphql"),
-        httpClient = httpClientProvider.getClient(searchHost, codeHost, settings)
+        httpClient = httpClientProvider.getClient(searchHost, codeHost, settings),
+        serializer = graphQLClientKotlinxSerializer,
     )
 
     suspend fun getRepo(searchResult: SearchResult, settings: GitLabSettings): RepoWrapper {
@@ -62,7 +65,7 @@ class GitLabClient(
         val client: HttpClient = httpClientProvider.getClient(searchHostName = pullRequest.searchHost, codeHostName = pullRequest.codeHost, settings = settings)
         val project: String = pullRequest.mergeRequest.targetProject.fullPath.encodeURLPath()
         val iid: String = pullRequest.mergeRequest.iid
-        client.post<HttpResponse>("${settings.baseUrl}/projects/$project/merge_requests/$iid/notes") {
+        client.post<HttpResponse>("${settings.baseUrl}/api/v4/projects/$project/merge_requests/$iid/notes") {
             body = mapOf("body" to comment)
             contentType(ContentType.Application.Json)
         }

@@ -14,6 +14,10 @@ class EnvHelper {
         BITBUCKET_SERVER_BASEURL(fallBackEnv = listOf("BITBUCKET_BASEURL")),
         BITBUCKET_SERVER_USER(fallBackEnv = listOf("BITBUCKET_USER")),
         BITBUCKET_SERVER_TOKEN(fallBackEnv = listOf("BITBUCKET_TOKEN")),
+        GITLAB_USERNAME,
+        GITLAB_TOKEN,
+        GITLAB_GROUP(defaultValue = "mega-manipulator-ci"),
+        GITLAB_PROJECT(defaultValue = "dump")
     }
 
     private val dotEnvProperties: Properties by lazy {

@@ -1,6 +1,7 @@
 package com.github.jensim.megamanipulator.actions.search.sourcegraph
 
 import com.expediagroup.graphql.client.ktor.GraphQLKtorClient
+import com.expediagroup.graphql.client.serialization.GraphQLClientKotlinxSerializer
 import com.expediagroup.graphql.client.types.GraphQLClientResponse
 import com.github.jensim.megamanipulator.actions.NotificationsOperator
 import com.github.jensim.megamanipulator.actions.search.SearchResult
@@ -20,6 +21,7 @@ import java.net.URL
 class SourcegraphSearchClient(
     private val httpClientProvider: HttpClientProvider,
     private val notificationsOperator: NotificationsOperator,
+    private val graphQLClientKotlinxSerializer: GraphQLClientKotlinxSerializer,
 ) {
 
     private val log = LoggerFactory.getLogger(this.javaClass)
@@ -63,7 +65,7 @@ class SourcegraphSearchClient(
     private fun getClient(searchHost: String, settings: SourceGraphSettings) = GraphQLKtorClient(
         url = URL("${settings.baseUrl}/.api/graphql"),
         httpClient = httpClientProvider.getClient(searchHost, settings),
-
+        serializer = graphQLClientKotlinxSerializer,
     )
 
     private fun internalNameToSearchResult(searchHostName: String, name: String?): SearchResult? {

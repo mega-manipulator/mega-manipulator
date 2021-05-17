@@ -102,7 +102,7 @@ class HttpClientProvider(
     private fun getPassword(authMethod: AuthMethod, baseUrl: String, username: String?) = try {
         when (authMethod) {
             USERNAME_TOKEN -> passwordsOperator.getPassword(username!!, baseUrl)
-            JUST_TOKEN -> passwordsOperator.getPassword("token", baseUrl)
+            JUST_TOKEN -> passwordsOperator.getPassword(username ?: "token", baseUrl)
             NONE -> ""
         }!!
     } catch (e: Exception) {
@@ -126,7 +126,7 @@ class HttpClientProvider(
                 HttpsOverride.ALLOW_ANYTHING -> trustAnyClient()
             }
             auth.getAuthHeaderValue(password)?.let {
-                installBasicAuth(password)
+                installBasicAuth(it)
             }
         }
     }

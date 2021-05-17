@@ -1,5 +1,6 @@
 package com.github.jensim.megamanipulator
 
+import com.expediagroup.graphql.client.serialization.GraphQLClientKotlinxSerializer
 import com.github.jensim.megamanipulator.actions.NotificationsOperator
 import com.github.jensim.megamanipulator.actions.ProcessOperator
 import com.github.jensim.megamanipulator.actions.apply.ApplyOperator
@@ -61,6 +62,7 @@ data class ApplicationWiring(
     private val serializationHolderOverride: SerializationHolder? = null,
     private val pullRequestActionsMenuOverride: PullRequestActionsMenu? = null,
     private val sourcegraphSearchClientOverride: SourcegraphSearchClient? = null,
+    private val graphQLClientKotlinxSerializerOverride: GraphQLClientKotlinxSerializer? = null,
     private val houndClientOverride: HoundClient? = null,
     private val bitbucketServerClientOverride: BitbucketServerClient? = null,
     private val githubComClientOverride: GithubComClient? = null,
@@ -105,10 +107,14 @@ data class ApplicationWiring(
     val json: Json by lazy {
         jsonOverride ?: serializationHolder.readableJson
     }
+    val graphQLClientKotlinxSerializer: GraphQLClientKotlinxSerializer by lazy {
+        graphQLClientKotlinxSerializerOverride ?: GraphQLClientKotlinxSerializer()
+    }
     val sourcegraphSearchClient: SourcegraphSearchClient by lazy {
         sourcegraphSearchClientOverride ?: SourcegraphSearchClient(
             httpClientProvider = this.httpClientProvider,
             notificationsOperator = this.notificationsOperator,
+            graphQLClientKotlinxSerializer = this.graphQLClientKotlinxSerializer,
         )
     }
     val houndClient: HoundClient by lazy {
@@ -136,6 +142,7 @@ data class ApplicationWiring(
         gitLabClientOverride ?: GitLabClient(
             httpClientProvider = this.httpClientProvider,
             json = this.json,
+            graphQLClientKotlinxSerializer = this.graphQLClientKotlinxSerializer,
         )
     }
     val searchOperator: SearchOperator by lazy {

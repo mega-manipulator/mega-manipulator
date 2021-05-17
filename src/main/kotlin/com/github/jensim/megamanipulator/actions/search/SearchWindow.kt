@@ -12,6 +12,7 @@ import com.intellij.ui.components.JBList
 import com.intellij.ui.components.JBScrollPane
 import com.intellij.ui.components.JBTextField
 import com.intellij.ui.layout.panel
+import com.intellij.util.castSafelyTo
 import java.awt.Dimension
 import java.awt.event.KeyEvent
 import java.awt.event.KeyListener
@@ -75,9 +76,11 @@ class SearchWindow(
             searchButton.isEnabled = false
             cloneButton.isEnabled = false
             selector.setListData(emptyArray())
-            val result: Array<SearchResult> = searchHostSelect.selectedItem?.let { searchHostName ->
-                uiProtector.uiProtectedOperation("Seraching") {
-                    searchOperator.search(searchHostName as String, searchField.text)
+            val result: Array<SearchResult> = searchHostSelect.selectedItem?.let { searchHost: Any ->
+                searchHost.castSafelyTo<Pair<String, SearchHostSettings>>()?.first?.let { searchHostName ->
+                    uiProtector.uiProtectedOperation("Seraching") {
+                        searchOperator.search(searchHostName, searchField.text)
+                    }
                 }
             }.orEmpty().toTypedArray()
             selector.setListData(result)

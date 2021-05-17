@@ -44,54 +44,53 @@ abstract class TestApplicationWiring {
         every { projectOperator.project } returns mockProject
     }
 
-    val envHelper = EnvHelper()
-    val mockProject: Project = mockk(relaxed = true)
-    val projectOperator: ProjectOperator = mockk(relaxed = true)
-    val notificationsOperator: NotificationsOperator = mockk(relaxed = true)
-    val dialogGenerator: DialogGenerator = mockk(relaxed = true)
-    val filesOperator: FilesOperator = mockk(relaxed = true)
+    open val envHelper = EnvHelper()
+    open val mockProject: Project = mockk(relaxed = true)
+    open val projectOperator: ProjectOperator = mockk(relaxed = true)
+    open val notificationsOperator: NotificationsOperator = mockk(relaxed = true)
+    open val dialogGenerator: DialogGenerator = mockk(relaxed = true)
+    open val filesOperator: FilesOperator = mockk(relaxed = true)
 
     val tempDirPath: Path = createTempDirectory(prefix = null, attributes = emptyArray())
     val tempDir: File = File(tempDirPath.toUri())
-    val githubUsername = envHelper.resolve(GITHUB_USERNAME)
-    val sourcegraphToken = envHelper.resolve(SRC_COM_ACCESS_TOKEN)
-    val githubToken = envHelper.resolve(GITHUB_TOKEN)
-    val codeHostName = "github.com"
-    val gitHubSettings = GitHubSettings(
+    open val githubUsername get() = envHelper.resolve(GITHUB_USERNAME)
+    open val sourcegraphToken get() = envHelper.resolve(SRC_COM_ACCESS_TOKEN)
+    open val githubToken get() = envHelper.resolve(GITHUB_TOKEN)
+    open val codeHostName get() = "github.com"
+    open val gitHubSettings get() = GitHubSettings(
         username = githubUsername,
         forkSetting = PLAIN_BRANCH,
         cloneType = HTTPS,
     )
-    val sourceGraphSettings = SourceGraphSettings(
+    open val sourceGraphSettings get() = SourceGraphSettings(
         baseUrl = "https://sourcegraph.com",
         codeHostSettings = mapOf(
             codeHostName to gitHubSettings
         )
     )
-    val searchHostName = "sourcegraph.com"
-    val settings = MegaManipulatorSettings(
+    open val searchHostName = "sourcegraph.com"
+    open val settings get() = MegaManipulatorSettings(
         searchHostSettings = mapOf(
             searchHostName to sourceGraphSettings
         )
     )
 
-    val uiProtector: UiProtector = TestUiProtector()
-    val passwordsOperator: PasswordsOperator = TestPasswordOperator(
+    open val uiProtector: UiProtector get() = TestUiProtector()
+    open val passwordsOperator: PasswordsOperator get() = TestPasswordOperator(
         mapOf(
             "token" to sourceGraphSettings.baseUrl to sourcegraphToken,
             githubUsername to gitHubSettings.baseUrl to githubToken
         )
     )
-    val settingsFileOperator: SettingsFileOperator = mockk {
+    open val settingsFileOperator: SettingsFileOperator = mockk {
         every { readSettings() } returns settings
         every { validationText } returns "Looks good..?"
     }
-
-    val myBundle: MyBundle = mockk {
+    open val myBundle: MyBundle = mockk {
         every { message(any()) } returns UUID.randomUUID().toString()
     }
 
-    val applicationWiring by lazy {
+    open val applicationWiring by lazy {
         ApplicationWiring(
             projectOperator = this.projectOperator,
             myBundleOverride = myBundle,
