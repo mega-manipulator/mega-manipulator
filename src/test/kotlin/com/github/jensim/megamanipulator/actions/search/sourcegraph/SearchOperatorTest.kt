@@ -3,10 +3,10 @@ package com.github.jensim.megamanipulator.actions.search.sourcegraph
 import com.github.jensim.megamanipulator.actions.search.SearchOperator
 import com.github.jensim.megamanipulator.actions.search.SearchResult
 import com.github.jensim.megamanipulator.actions.search.hound.HoundClient
-import com.github.jensim.megamanipulator.settings.CodeHostSettings
-import com.github.jensim.megamanipulator.settings.ForkSetting
-import com.github.jensim.megamanipulator.settings.MegaManipulatorSettings
-import com.github.jensim.megamanipulator.settings.SearchHostSettings
+import com.github.jensim.megamanipulator.settings.types.CodeHostSettings
+import com.github.jensim.megamanipulator.settings.types.ForkSetting
+import com.github.jensim.megamanipulator.settings.types.MegaManipulatorSettings
+import com.github.jensim.megamanipulator.settings.types.SearchHostSettings
 import com.github.jensim.megamanipulator.settings.SettingsFileOperator
 import com.github.jensim.megamanipulator.test.EnvHelper
 import com.github.jensim.megamanipulator.test.EnvHelper.EnvProperty.SRC_COM_USERNAME

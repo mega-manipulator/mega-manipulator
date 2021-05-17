@@ -1,53 +1,12 @@
 package com.github.jensim.megamanipulator.settings.types
 
 import com.github.ricky12awesome.jss.JsonSchema
-import kotlinx.serialization.SerialName
-import kotlinx.serialization.Serializable
 import java.io.File
 import java.util.Base64
+import kotlinx.serialization.SerialName
+import kotlinx.serialization.Serializable
 
 private val base64encoder = Base64.getEncoder()
-
-@Serializable
-enum class CloneType {
-
-    @JsonSchema.Description(["If you have a passphrase in your ssh key the it must be added via ssh-agent and ssh-add prior to clone/fetch/push."])
-    SSH,
-
-    @JsonSchema.Description(["It's not recommended to use for your daily work, as the password/token will be stored in the git settings in plain text"])
-    HTTPS,
-}
-
-@Serializable
-enum class HttpsOverride {
-    @JsonSchema.Description(["A self signed cert is expected to have only one level"])
-    ALLOW_SELF_SIGNED_CERT,
-
-    @JsonSchema.Description(["Do not validate certificate at all"])
-    ALLOW_ANYTHING,
-}
-
-@Serializable
-enum class AuthMethod {
-    @JsonSchema.Description(["Username and access token combination"])
-    USERNAME_TOKEN,
-
-    @JsonSchema.Description(["Token without username"])
-    JUST_TOKEN,
-    NONE,
-}
-
-@Serializable
-enum class ForkSetting {
-    @JsonSchema.Description(["Will require write access to the repo"])
-    PLAIN_BRANCH,
-
-    @JsonSchema.Description(["When not permitted to push into origin, attempt fork strategy"])
-    LAZY_FORK,
-
-    @JsonSchema.Description(["Fork before push, for every repo"])
-    EAGER_FORK,
-}
 
 @Serializable
 data class MegaManipulatorSettings(
@@ -75,7 +34,7 @@ data class MegaManipulatorSettings(
         require(searchHostSettings.isNotEmpty()) {
             """
             |Please add one or search host settings.
-            |Available types are ${SearchHostType.values()} 
+            |Available types are [HOUND, SOURCEGRAPH] 
             |""".trimMargin()
         }
     }
@@ -110,14 +69,6 @@ private fun validateBaseUrl(baseUrl: String) {
             "baseUrl must not end in '$it'"
         }
     }
-}
-
-enum class SearchHostType {
-    SOURCEGRAPH
-}
-
-interface HostWithAuth {
-    fun getAuthHeaderValue(password: String?): String?
 }
 
 @Serializable
@@ -187,10 +138,7 @@ sealed class SearchHostSettings : HostWithAuth {
 
         init {
             require(codeHostSettings.isNotEmpty()) {
-                """
-                |Please add one or code host settings.
-                |Available types are ${CodeHostType.values()} 
-                |""".trimMargin()
+                "Please add one or code host settings."
             }
             validateBaseUrl(baseUrl)
         }
@@ -198,15 +146,10 @@ sealed class SearchHostSettings : HostWithAuth {
         override fun getAuthHeaderValue(password: String?): String? = when {
             // https://docs.sourcegraph.com/api/graphql
             password != null && authMethod == AuthMethod.JUST_TOKEN -> "token $password"
-            password != null && authMethod == AuthMethod.USERNAME_TOKEN -> "Basic ${base64encoder.encode("$username:$password".toByteArray())}"
+            password != null && authMethod == AuthMethod.USERNAME_TOKEN -> "Basic ${base64encoder.encodeToString("$username:$password".toByteArray())}"
             else -> null
         }
     }
-}
-
-enum class CodeHostType {
-    BITBUCKET_SERVER,
-    GITHUB,
 }
 
 @Serializable
@@ -262,7 +205,7 @@ sealed class CodeHostSettings
         override fun getAuthHeaderValue(password: String?): String? = when {
             // https://developer.atlassian.com/server/bitbucket/how-tos/example-basic-authentication/
             password != null && authMethod == AuthMethod.USERNAME_TOKEN ->
-                "Basic ${base64encoder.encode("$username:$password".toByteArray())}"
+                "Basic ${base64encoder.encodeToString("$username:$password".toByteArray())}"
             else -> null
         }
     }
@@ -298,7 +241,7 @@ sealed class CodeHostSettings
         override fun getAuthHeaderValue(password: String?): String? = when {
             // https://docs.github.com/en/rest/guides/getting-started-with-the-rest-api#authentication
             password != null && authMethod == AuthMethod.JUST_TOKEN -> "token $password"
-            password != null && authMethod == AuthMethod.USERNAME_TOKEN -> "Basic ${base64encoder.encode("$username:$password".toByteArray())}"
+            password != null && authMethod == AuthMethod.USERNAME_TOKEN -> "Basic ${base64encoder.encodeToString("$username:$password".toByteArray())}"
             else -> null
         }
     }
@@ -328,7 +271,7 @@ sealed class CodeHostSettings
         override fun getAuthHeaderValue(password: String?): String? = when {
             // https://docs.gitlab.com/ee/api/README.html#personalproject-access-tokens
             password != null && authMethod == AuthMethod.JUST_TOKEN -> "Bearer $password"
-            password != null && authMethod == AuthMethod.USERNAME_TOKEN -> "Basic ${base64encoder.encode("$username:$password".toByteArray())}"
+            password != null && authMethod == AuthMethod.USERNAME_TOKEN -> "Basic ${base64encoder.encodeToString("$username:$password".toByteArray())}"
             else -> null
         }
     }

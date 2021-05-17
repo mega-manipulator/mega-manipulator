@@ -5,9 +5,9 @@ import com.github.jensim.megamanipulator.actions.apply.ApplyOutput
 import com.github.jensim.megamanipulator.actions.localrepo.LocalRepoOperator
 import com.github.jensim.megamanipulator.actions.search.SearchResult
 import com.github.jensim.megamanipulator.actions.vcs.PrRouter
-import com.github.jensim.megamanipulator.settings.CodeHostSettings
-import com.github.jensim.megamanipulator.settings.ForkSetting
-import com.github.jensim.megamanipulator.settings.MegaManipulatorSettings
+import com.github.jensim.megamanipulator.settings.types.CodeHostSettings
+import com.github.jensim.megamanipulator.settings.types.ForkSetting
+import com.github.jensim.megamanipulator.settings.types.MegaManipulatorSettings
 import com.github.jensim.megamanipulator.settings.SettingsFileOperator
 import com.github.jensim.megamanipulator.ui.DialogGenerator
 import com.github.jensim.megamanipulator.ui.TestUiProtector

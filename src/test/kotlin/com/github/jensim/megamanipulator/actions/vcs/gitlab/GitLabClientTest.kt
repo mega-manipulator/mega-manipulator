@@ -4,10 +4,10 @@ import com.github.jensim.megamanipulator.actions.search.SearchResult
 import com.github.jensim.megamanipulator.actions.vcs.GitLabRepoWrapping
 import com.github.jensim.megamanipulator.actions.vcs.PullRequestWrapper
 import com.github.jensim.megamanipulator.actions.vcs.RepoWrapper
-import com.github.jensim.megamanipulator.settings.CloneType
-import com.github.jensim.megamanipulator.settings.CodeHostSettings
+import com.github.jensim.megamanipulator.settings.types.CloneType
+import com.github.jensim.megamanipulator.settings.types.CodeHostSettings
 import com.github.jensim.megamanipulator.settings.passwords.PasswordsOperator
-import com.github.jensim.megamanipulator.settings.SearchHostSettings
+import com.github.jensim.megamanipulator.settings.types.SearchHostSettings
 import com.github.jensim.megamanipulator.test.EnvHelper
 import com.github.jensim.megamanipulator.test.EnvHelper.EnvProperty.GITLAB_GROUP
 import com.github.jensim.megamanipulator.test.EnvHelper.EnvProperty.GITLAB_PROJECT

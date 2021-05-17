@@ -3,11 +3,11 @@ package com.github.jensim.megamanipulator.actions.vcs.bitbucketserver
 import com.github.jensim.megamanipulator.actions.NotificationsOperator
 import com.github.jensim.megamanipulator.actions.localrepo.LocalRepoOperator
 import com.github.jensim.megamanipulator.http.HttpClientProvider
-import com.github.jensim.megamanipulator.settings.CloneType.HTTPS
-import com.github.jensim.megamanipulator.settings.CodeHostSettings.BitBucketSettings
-import com.github.jensim.megamanipulator.settings.ForkSetting.PLAIN_BRANCH
-import com.github.jensim.megamanipulator.settings.MegaManipulatorSettings
-import com.github.jensim.megamanipulator.settings.SearchHostSettings.SourceGraphSettings
+import com.github.jensim.megamanipulator.settings.types.CloneType.HTTPS
+import com.github.jensim.megamanipulator.settings.types.CodeHostSettings.BitBucketSettings
+import com.github.jensim.megamanipulator.settings.types.ForkSetting.PLAIN_BRANCH
+import com.github.jensim.megamanipulator.settings.types.MegaManipulatorSettings
+import com.github.jensim.megamanipulator.settings.types.SearchHostSettings.SourceGraphSettings
 import com.github.jensim.megamanipulator.settings.SerializationHolder
 import com.github.jensim.megamanipulator.settings.SettingsFileOperator
 import com.github.jensim.megamanipulator.test.EnvHelper
