@@ -17,6 +17,7 @@ import io.ktor.client.request.post
 import io.ktor.client.request.put
 import io.ktor.client.statement.HttpResponse
 import io.ktor.http.ContentType
+import io.ktor.http.contentType
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonElement
@@ -44,13 +45,17 @@ class BitbucketServerClient(
 
     private suspend fun getDefaultReviewers(client: HttpClient, settings: BitBucketSettings, repo: SearchResult, fromBranchRef: String, toBranchRef: String): List<BitBucketUser> {
         val bitBucketRepo: BitBucketRepo = getRepo(client, settings, repo)
-        return client.get("${settings.baseUrl}/rest/default-reviewers/1.0/projects/${repo.project}/repos/${repo.repo}/reviewers?sourceRepoId=${bitBucketRepo.id}&targetRepoId=${bitBucketRepo.id}&sourceRefId=$fromBranchRef&targetRefId=$toBranchRef")
+        return client.get("${settings.baseUrl}/rest/default-reviewers/1.0/projects/${repo.project}/repos/${repo.repo}/reviewers?sourceRepoId=${bitBucketRepo.id}&targetRepoId=${bitBucketRepo.id}&sourceRefId=$fromBranchRef&targetRefId=$toBranchRef"){
+            accept(ContentType.Application.Json)
+        }
     }
 
     suspend fun getRepo(searchResult: SearchResult, settings: BitBucketSettings): BitBucketRepoWrapping {
         val client: HttpClient = httpClientProvider.getClient(searchResult.searchHostName, searchResult.codeHostName, settings)
         val repo = getRepo(client, settings, searchResult)
-        val defaultBranch = client.get<BitBucketDefaultBranch>("${settings.baseUrl}/rest/api/1.0/projects/${repo.project}/repos/${repo.slug}/default-branch").displayId
+        val defaultBranch = client.get<BitBucketDefaultBranch>("${settings.baseUrl}/rest/api/1.0/projects/${repo.project}/repos/${repo.slug}/default-branch"){
+            accept(ContentType.Application.Json)
+        }.displayId
         return BitBucketRepoWrapping(
             searchHost = searchResult.searchHostName,
             codeHost = searchResult.codeHostName,
@@ -60,7 +65,9 @@ class BitbucketServerClient(
     }
 
     private suspend fun getRepo(client: HttpClient, settings: BitBucketSettings, repo: SearchResult): BitBucketRepo {
-        return client.get("${settings.baseUrl}/rest/api/1.0/projects/${repo.project}/repos/${repo.repo}")
+        return client.get("${settings.baseUrl}/rest/api/1.0/projects/${repo.project}/repos/${repo.repo}"){
+            accept(ContentType.Application.Json)
+        }
     }
 
     suspend fun createPr(title: String, description: String, settings: BitBucketSettings, repo: SearchResult): PullRequestWrapper {
@@ -73,6 +80,8 @@ class BitbucketServerClient(
         val reviewers = getDefaultReviewers(client, settings, repo, localBranch, defaultBranch)
             .map { BitBucketParticipant(BitBucketUser(name = it.name)) }
         val prRaw: JsonElement = client.post("${settings.baseUrl}/rest/api/1.0/projects/${repo.project}/repos/${repo.repo}/pull-requests") {
+            contentType(ContentType.Application.Json)
+            accept(ContentType.Application.Json)
             body = BitBucketPullRequestRequest(
                 title = title,
                 description = description,
@@ -112,6 +121,8 @@ class BitbucketServerClient(
 
     private suspend fun updatePr(client: HttpClient, settings: BitBucketSettings, pullRequest: BitBucketPullRequestWrapper): PullRequestWrapper {
         val prRaw: JsonElement = client.put("${settings.baseUrl}/rest/api/1.0/projects/${pullRequest.project()}/repos/${pullRequest.baseRepo()}/pull-requests/${pullRequest.bitbucketPR.id}") {
+            contentType(ContentType.Application.Json)
+            accept(ContentType.Application.Json)
             body = pullRequest.bitbucketPR
         }
         val pr: BitBucketPullRequest = json.decodeFromJsonElement(prRaw)
@@ -132,7 +143,9 @@ class BitbucketServerClient(
         var start = 0L
         while (true) {
             val response: BitBucketPage = try {
-                client.get("${settings.baseUrl}/rest/api/1.0/dashboard/pull-requests?state=OPEN&role=AUTHOR&start=$start&limit=100")
+                client.get("${settings.baseUrl}/rest/api/1.0/dashboard/pull-requests?state=OPEN&role=AUTHOR&start=$start&limit=100"){
+                    accept(ContentType.Application.Json)
+                }
             } catch (e: Exception) {
                 e.printStackTrace()
                 break
@@ -166,12 +179,15 @@ class BitbucketServerClient(
         try {
             val urlString = "${settings.baseUrl}/rest/api/1.0/projects/${pullRequest.project()}/repos/${pullRequest.baseRepo()}/pull-requests/${pullRequest.bitbucketPR.id}/decline?version=${pullRequest.bitbucketPR.version}"
             client.post<Unit>(urlString) {
+                contentType(ContentType.Application.Json)
                 body = emptyMap<String, String>()
             }
             if (dropFork && pullRequest.isFork()) {
                 val repository = pullRequest.bitbucketPR.fromRef.repository
                 // Get open PRs
-                val page: BitBucketPage = client.get("${settings.baseUrl}/rest/api/1.0/projects/${repository.project?.key!!}/repos/${repository.slug}/pull-requests?direction=OUTGOING&state=OPEN")
+                val page: BitBucketPage = client.get("${settings.baseUrl}/rest/api/1.0/projects/${repository.project?.key!!}/repos/${repository.slug}/pull-requests?direction=OUTGOING&state=OPEN"){
+                    accept(ContentType.Application.Json)
+                }
                 if ((page.size ?: 0) == 0) {
                     deletePrivateRepo(
                         BitBucketRepoWrapping(
@@ -200,6 +216,7 @@ class BitbucketServerClient(
     private suspend fun removeRemoteBranch(settings: BitBucketSettings, pullRequest: BitBucketPullRequestWrapper, client: HttpClient) {
         // https://docs.atlassian.com/bitbucket-server/rest/5.8.0/bitbucket-branch-rest.html#idm45555984542992
         client.delete<String?>("${settings.baseUrl}/rest/branch-utils/1.0/projects/${pullRequest.project()}/repos/${pullRequest.baseRepo()}/branches") {
+            contentType(ContentType.Application.Json)
             body = mapOf<String, Any>("name" to pullRequest.bitbucketPR.fromRef.id, "dryRun" to false)
         }
     }
@@ -209,15 +226,21 @@ class BitbucketServerClient(
         val bbRepo: BitBucketRepo = try {
             if (repo.project.toLowerCase() == "~${settings.username.toLowerCase()}") {
                 // is private repo
-                client.get("${settings.baseUrl}/rest/api/1.0/projects/${repo.project}/repos/${repo.repo}")
+                client.get("${settings.baseUrl}/rest/api/1.0/projects/${repo.project}/repos/${repo.repo}"){
+                    accept(ContentType.Application.Json)
+                }
             } else {
                 // If repo with prefix already exists..
-                client.get("${settings.baseUrl}/rest/api/1.0/users/~${settings.username}/repos/${settings.forkRepoPrefix}${repo.repo}")
+                client.get("${settings.baseUrl}/rest/api/1.0/users/~${settings.username}/repos/${settings.forkRepoPrefix}${repo.repo}"){
+                    accept(ContentType.Application.Json)
+                }
             }
         } catch (e: Exception) {
             // Repo does not exist - lets fork
             null
         } ?: client.post("${settings.baseUrl}/rest/api/1.0/projects/${repo.project}/repos/${repo.repo}") {
+            contentType(ContentType.Application.Json)
+            accept(ContentType.Application.Json)
             body = BitBucketForkRequest(
                 slug = "${settings.forkRepoPrefix}${repo.repo}",
                 project = BitBucketProjectRequest(key = "~${settings.username}")
@@ -234,7 +257,9 @@ class BitbucketServerClient(
         var start = 0
         val collector = HashSet<BitBucketRepo>()
         while (true) {
-            val page: BitBucketPage = client.get("${settings.baseUrl}/rest/api/1.0/users/~${settings.username}/repos?start=$start")
+            val page: BitBucketPage = client.get("${settings.baseUrl}/rest/api/1.0/users/~${settings.username}/repos?start=$start"){
+                accept(ContentType.Application.Json)
+            }
             page.values.orEmpty()
                 .map { json.decodeFromJsonElement<BitBucketRepo>(it) }
                 .filter { it.slug.startsWith(settings.forkRepoPrefix) }
@@ -243,7 +268,9 @@ class BitbucketServerClient(
             start += page.size ?: 0
         }
         return collector.filter {
-            val page: BitBucketPage = client.get("${settings.baseUrl}/rest/api/1.0/projects/${it.project?.key}/repos/${it.slug}/pull-requests?direction=OUTGOING&state=OPEN")
+            val page: BitBucketPage = client.get("${settings.baseUrl}/rest/api/1.0/projects/${it.project?.key}/repos/${it.slug}/pull-requests?direction=OUTGOING&state=OPEN"){
+                accept(ContentType.Application.Json)
+            }
             page.size == 0
         }.map {
             BitBucketRepoWrapping(
@@ -262,6 +289,8 @@ class BitbucketServerClient(
     suspend fun deletePrivateRepo(repo: BitBucketRepoWrapping, settings: BitBucketSettings) {
         val client: HttpClient = httpClientProvider.getClient(repo.getSearchHost(), repo.getCodeHost(), settings)
         client.delete<BitBucketMessage>("${settings.baseUrl}/rest/api/1.0/users/~${settings.username}/repos/${settings.forkRepoPrefix}${repo.getRepo()}") {
+            contentType(ContentType.Application.Json)
+            accept(ContentType.Application.Json)
             body = emptyMap<String, String>()
         }
     }
@@ -270,6 +299,8 @@ class BitbucketServerClient(
         // https://docs.atlassian.com/bitbucket-server/rest/7.10.0/bitbucket-rest.html#idp323
         val client: HttpClient = httpClientProvider.getClient(pullRequest.searchHostName(), pullRequest.codeHostName(), settings)
         client.post<JsonElement>("${settings.baseUrl}/rest/api/1.0/projects/${pullRequest.project()}/repos/${pullRequest.baseRepo()}/pull-requests/${pullRequest.bitbucketPR.id}/comments") {
+            contentType(ContentType.Application.Json)
+            accept(ContentType.Application.Json)
             body = BitBucketComment(text = comment)
         }
     }
