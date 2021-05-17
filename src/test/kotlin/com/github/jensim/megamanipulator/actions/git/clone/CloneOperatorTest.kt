@@ -10,8 +10,8 @@ import com.github.jensim.megamanipulator.actions.vcs.PullRequestWrapper
 import com.github.jensim.megamanipulator.files.FilesOperator
 import com.github.jensim.megamanipulator.settings.CloneType.HTTPS
 import com.github.jensim.megamanipulator.settings.MegaManipulatorSettings
-import com.github.jensim.megamanipulator.settings.PasswordsOperator
-import com.github.jensim.megamanipulator.settings.ProjectOperator
+import com.github.jensim.megamanipulator.settings.passwords.PasswordsOperator
+import com.github.jensim.megamanipulator.settings.passwords.ProjectOperator
 import com.github.jensim.megamanipulator.settings.SearchHostSettings
 import com.github.jensim.megamanipulator.settings.SettingsFileOperator
 import com.github.jensim.megamanipulator.ui.TestUiProtector

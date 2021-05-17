@@ -4,7 +4,7 @@ package com.github.jensim.megamanipulator.actions.vcs
 
 import com.github.jensim.megamanipulator.actions.vcs.bitbucketserver.BitBucketPullRequest
 import com.github.jensim.megamanipulator.actions.vcs.githubcom.GithubComPullRequest
-import com.github.jensim.megamanipulator.settings.CloneType
+import com.github.jensim.megamanipulator.settings.types.CloneType
 import kotlinx.serialization.Serializable
 
 @Serializable

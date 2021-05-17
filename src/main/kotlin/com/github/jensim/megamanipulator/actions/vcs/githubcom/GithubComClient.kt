@@ -5,7 +5,7 @@ import com.github.jensim.megamanipulator.actions.search.SearchResult
 import com.github.jensim.megamanipulator.actions.vcs.GithubComPullRequestWrapper
 import com.github.jensim.megamanipulator.actions.vcs.GithubComRepoWrapping
 import com.github.jensim.megamanipulator.http.HttpClientProvider
-import com.github.jensim.megamanipulator.settings.CodeHostSettings.GitHubSettings
+import com.github.jensim.megamanipulator.settings.types.CodeHostSettings.GitHubSettings
 import io.ktor.client.HttpClient
 import io.ktor.client.request.delete
 import io.ktor.client.request.get

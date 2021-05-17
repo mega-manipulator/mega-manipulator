@@ -2,9 +2,9 @@ package com.github.jensim.megamanipulator.actions.search
 
 import com.github.jensim.megamanipulator.actions.search.hound.HoundClient
 import com.github.jensim.megamanipulator.actions.search.sourcegraph.SourcegraphSearchClient
-import com.github.jensim.megamanipulator.settings.SearchHostSettings
-import com.github.jensim.megamanipulator.settings.SearchHostSettings.HoundSettings
-import com.github.jensim.megamanipulator.settings.SearchHostSettings.SourceGraphSettings
+import com.github.jensim.megamanipulator.settings.types.SearchHostSettings
+import com.github.jensim.megamanipulator.settings.types.SearchHostSettings.HoundSettings
+import com.github.jensim.megamanipulator.settings.types.SearchHostSettings.SourceGraphSettings
 import com.github.jensim.megamanipulator.settings.SettingsFileOperator
 import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.GlobalScope

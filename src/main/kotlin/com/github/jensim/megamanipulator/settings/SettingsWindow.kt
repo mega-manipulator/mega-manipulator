@@ -3,6 +3,10 @@ package com.github.jensim.megamanipulator.settings
 import com.github.jensim.megamanipulator.actions.search.SearchOperator
 import com.github.jensim.megamanipulator.actions.vcs.PrRouter
 import com.github.jensim.megamanipulator.files.FilesOperator
+import com.github.jensim.megamanipulator.settings.passwords.PasswordsOperator
+import com.github.jensim.megamanipulator.settings.passwords.ProjectOperator
+import com.github.jensim.megamanipulator.settings.types.AuthMethod
+import com.github.jensim.megamanipulator.settings.types.MegaManipulatorSettings
 import com.github.jensim.megamanipulator.toolswindow.ToolWindowTab
 import com.github.jensim.megamanipulator.ui.GeneralListCellRenderer.addCellRenderer
 import com.github.jensim.megamanipulator.ui.UiProtector
@@ -20,13 +24,13 @@ import javax.swing.ListSelectionModel
 
 @SuppressWarnings("LongParameterList")
 class SettingsWindow(
-    private val passwordsOperator: PasswordsOperator,
-    private val projectOperator: ProjectOperator,
-    private val filesOperator: FilesOperator,
-    private val settingsFileOperator: SettingsFileOperator,
-    private val uiProtector: UiProtector,
-    private val prRouter: PrRouter,
-    private val searchOperator: SearchOperator,
+        private val passwordsOperator: PasswordsOperator,
+        private val projectOperator: ProjectOperator,
+        private val filesOperator: FilesOperator,
+        private val settingsFileOperator: SettingsFileOperator,
+        private val uiProtector: UiProtector,
+        private val prRouter: PrRouter,
+        private val searchOperator: SearchOperator,
 ) : ToolWindowTab {
 
     private enum class HostType {
@@ -35,13 +39,13 @@ class SettingsWindow(
     }
 
     private data class ConfigHostHolder(
-        val hostType: HostType,
-        val authMethod: AuthMethod,
-        val baseUri: String,
-        val username: String,
-        val hostNaming: String,
+            val hostType: HostType,
+            val authMethod: AuthMethod,
+            val baseUri: String,
+            val username: String,
+            val hostNaming: String,
 
-    ) {
+            ) {
 
         override fun toString(): String = "$hostType: $hostNaming"
     }

@@ -3,7 +3,7 @@ package com.github.jensim.megamanipulator.actions.localrepo
 import com.github.jensim.megamanipulator.actions.ProcessOperator
 import com.github.jensim.megamanipulator.actions.apply.ApplyOutput
 import com.github.jensim.megamanipulator.actions.search.SearchResult
-import com.github.jensim.megamanipulator.settings.ProjectOperator
+import com.github.jensim.megamanipulator.settings.passwords.ProjectOperator
 import com.github.jensim.megamanipulator.ui.UiProtector
 import org.eclipse.jgit.storage.file.FileRepositoryBuilder
 import java.io.File
@@ -14,9 +14,9 @@ import java.util.stream.Collectors
 
 @SuppressWarnings("TooManyFunctions")
 class LocalRepoOperator(
-    private val projectOperator: ProjectOperator,
-    private val processOperator: ProcessOperator,
-    private val uiProtector: UiProtector,
+        private val projectOperator: ProjectOperator,
+        private val processOperator: ProcessOperator,
+        private val uiProtector: UiProtector,
 ) {
 
     companion object {

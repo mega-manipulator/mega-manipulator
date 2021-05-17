@@ -22,9 +22,9 @@ import com.github.jensim.megamanipulator.actions.vcs.githubcom.GithubComClient
 import com.github.jensim.megamanipulator.actions.vcs.gitlab.GitLabClient
 import com.github.jensim.megamanipulator.files.FilesOperator
 import com.github.jensim.megamanipulator.http.HttpClientProvider
-import com.github.jensim.megamanipulator.settings.IntelliJPasswordsOperator
-import com.github.jensim.megamanipulator.settings.PasswordsOperator
-import com.github.jensim.megamanipulator.settings.ProjectOperator
+import com.github.jensim.megamanipulator.settings.passwords.IntelliJPasswordsOperator
+import com.github.jensim.megamanipulator.settings.passwords.PasswordsOperator
+import com.github.jensim.megamanipulator.settings.passwords.ProjectOperator
 import com.github.jensim.megamanipulator.settings.SerializationHolder
 import com.github.jensim.megamanipulator.settings.SettingsFileOperator
 import com.github.jensim.megamanipulator.settings.SettingsWindow
@@ -36,39 +36,39 @@ import com.intellij.openapi.project.Project
 import kotlinx.serialization.json.Json
 
 data class ApplicationWiring(
-    val projectOperator: ProjectOperator,
-    private val filesOperatorOverride: FilesOperator? = null,
-    private val tabSettingsOverride: SettingsWindow? = null,
-    private val tabSearchOverride: SearchWindow? = null,
-    private val tabApplyOverride: ApplyWindow? = null,
-    private val tabClonesOverride: GitWindow? = null,
-    private val tabPRsManageOverride: PullRequestWindow? = null,
-    private val tabForksOverride: ForksWindow? = null,
-    private val myBundleOverride: MyBundle? = null,
-    private val notificationGroupManagerOverride: NotificationGroupManager? = null,
-    private val notificationsOperatorOverride: NotificationsOperator? = null,
+        val projectOperator: ProjectOperator,
+        private val filesOperatorOverride: FilesOperator? = null,
+        private val tabSettingsOverride: SettingsWindow? = null,
+        private val tabSearchOverride: SearchWindow? = null,
+        private val tabApplyOverride: ApplyWindow? = null,
+        private val tabClonesOverride: GitWindow? = null,
+        private val tabPRsManageOverride: PullRequestWindow? = null,
+        private val tabForksOverride: ForksWindow? = null,
+        private val myBundleOverride: MyBundle? = null,
+        private val notificationGroupManagerOverride: NotificationGroupManager? = null,
+        private val notificationsOperatorOverride: NotificationsOperator? = null,
 
-    private val passwordsOperatorOverride: PasswordsOperator? = null,
-    private val settingsFileOperatorOverride: SettingsFileOperator? = null,
-    private val searchOperatorOverride: SearchOperator? = null,
-    private val cloneOperatorOverride: CloneOperator? = null,
-    private val uiProtectorOverride: UiProtector? = null,
-    private val applyOperatorOverride: ApplyOperator? = null,
-    private val localRepoOperatorOverride: LocalRepoOperator? = null,
-    private val processOperatorOverride: ProcessOperator? = null,
-    private val commitOperatorOverride: CommitOperator? = null,
-    private val dialogGeneratorOverride: DialogGenerator? = null,
-    private val prRouterOverride: PrRouter? = null,
-    private val serializationHolderOverride: SerializationHolder? = null,
-    private val pullRequestActionsMenuOverride: PullRequestActionsMenu? = null,
-    private val sourcegraphSearchClientOverride: SourcegraphSearchClient? = null,
-    private val graphQLClientKotlinxSerializerOverride: GraphQLClientKotlinxSerializer? = null,
-    private val houndClientOverride: HoundClient? = null,
-    private val bitbucketServerClientOverride: BitbucketServerClient? = null,
-    private val githubComClientOverride: GithubComClient? = null,
-    private val gitLabClientOverride: GitLabClient? = null,
-    private val httpClientProviderOverride: HttpClientProvider? = null,
-    private val jsonOverride: Json? = null,
+        private val passwordsOperatorOverride: PasswordsOperator? = null,
+        private val settingsFileOperatorOverride: SettingsFileOperator? = null,
+        private val searchOperatorOverride: SearchOperator? = null,
+        private val cloneOperatorOverride: CloneOperator? = null,
+        private val uiProtectorOverride: UiProtector? = null,
+        private val applyOperatorOverride: ApplyOperator? = null,
+        private val localRepoOperatorOverride: LocalRepoOperator? = null,
+        private val processOperatorOverride: ProcessOperator? = null,
+        private val commitOperatorOverride: CommitOperator? = null,
+        private val dialogGeneratorOverride: DialogGenerator? = null,
+        private val prRouterOverride: PrRouter? = null,
+        private val serializationHolderOverride: SerializationHolder? = null,
+        private val pullRequestActionsMenuOverride: PullRequestActionsMenu? = null,
+        private val sourcegraphSearchClientOverride: SourcegraphSearchClient? = null,
+        private val graphQLClientKotlinxSerializerOverride: GraphQLClientKotlinxSerializer? = null,
+        private val houndClientOverride: HoundClient? = null,
+        private val bitbucketServerClientOverride: BitbucketServerClient? = null,
+        private val githubComClientOverride: GithubComClient? = null,
+        private val gitLabClientOverride: GitLabClient? = null,
+        private val httpClientProviderOverride: HttpClientProvider? = null,
+        private val jsonOverride: Json? = null,
 ) {
 
     constructor(project: Project) : this(projectOperator = ProjectOperator(project))

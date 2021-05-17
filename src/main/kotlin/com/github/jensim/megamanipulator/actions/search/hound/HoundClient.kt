@@ -4,7 +4,7 @@ import com.github.jensim.megamanipulator.actions.search.SearchResult
 import com.github.jensim.megamanipulator.actions.search.hound.HoundTypes.HoundRepo
 import com.github.jensim.megamanipulator.actions.search.hound.HoundTypes.HoundSearchResults
 import com.github.jensim.megamanipulator.http.HttpClientProvider
-import com.github.jensim.megamanipulator.settings.SearchHostSettings.HoundSettings
+import com.github.jensim.megamanipulator.settings.types.SearchHostSettings.HoundSettings
 import io.ktor.client.request.get
 import io.ktor.client.request.header
 import io.ktor.client.request.parameter

@@ -9,12 +9,12 @@ import com.github.jensim.megamanipulator.actions.vcs.PrRouter
 import com.github.jensim.megamanipulator.actions.vcs.PullRequestWrapper
 import com.github.jensim.megamanipulator.actions.vcs.RepoWrapper
 import com.github.jensim.megamanipulator.files.FilesOperator
-import com.github.jensim.megamanipulator.settings.CloneType.HTTPS
-import com.github.jensim.megamanipulator.settings.CloneType.SSH
-import com.github.jensim.megamanipulator.settings.CodeHostSettings
-import com.github.jensim.megamanipulator.settings.MegaManipulatorSettings
-import com.github.jensim.megamanipulator.settings.PasswordsOperator
-import com.github.jensim.megamanipulator.settings.ProjectOperator
+import com.github.jensim.megamanipulator.settings.types.CloneType.HTTPS
+import com.github.jensim.megamanipulator.settings.types.CloneType.SSH
+import com.github.jensim.megamanipulator.settings.types.CodeHostSettings
+import com.github.jensim.megamanipulator.settings.types.MegaManipulatorSettings
+import com.github.jensim.megamanipulator.settings.passwords.PasswordsOperator
+import com.github.jensim.megamanipulator.settings.passwords.ProjectOperator
 import com.github.jensim.megamanipulator.settings.SettingsFileOperator
 import com.github.jensim.megamanipulator.ui.UiProtector
 import com.intellij.notification.NotificationType.INFORMATION
@@ -25,15 +25,15 @@ private typealias Action = Pair<String, ApplyOutput>
 
 @SuppressWarnings("LongParameterList")
 class CloneOperator(
-    private val filesOperator: FilesOperator,
-    private val projectOperator: ProjectOperator,
-    private val prRouter: PrRouter,
-    private val localRepoOperator: LocalRepoOperator,
-    private val processOperator: ProcessOperator,
-    private val notificationsOperator: NotificationsOperator,
-    private val uiProtector: UiProtector,
-    private val settingsFileOperator: SettingsFileOperator,
-    private val passwordsOperator: PasswordsOperator,
+        private val filesOperator: FilesOperator,
+        private val projectOperator: ProjectOperator,
+        private val prRouter: PrRouter,
+        private val localRepoOperator: LocalRepoOperator,
+        private val processOperator: ProcessOperator,
+        private val notificationsOperator: NotificationsOperator,
+        private val uiProtector: UiProtector,
+        private val settingsFileOperator: SettingsFileOperator,
+        private val passwordsOperator: PasswordsOperator,
 ) {
 
     fun clone(repos: Set<SearchResult>) {

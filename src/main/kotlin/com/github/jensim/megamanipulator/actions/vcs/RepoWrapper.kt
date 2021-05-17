@@ -3,9 +3,9 @@ package com.github.jensim.megamanipulator.actions.vcs
 import com.github.jensim.megamanipulator.actions.vcs.bitbucketserver.BitBucketRepo
 import com.github.jensim.megamanipulator.actions.vcs.githubcom.GithubComRepo
 import com.github.jensim.megamanipulator.graphql.generated.gitlab.singlerepoquery.Project
-import com.github.jensim.megamanipulator.settings.CloneType
-import com.github.jensim.megamanipulator.settings.CloneType.HTTPS
-import com.github.jensim.megamanipulator.settings.CloneType.SSH
+import com.github.jensim.megamanipulator.settings.types.CloneType
+import com.github.jensim.megamanipulator.settings.types.CloneType.HTTPS
+import com.github.jensim.megamanipulator.settings.types.CloneType.SSH
 import kotlinx.serialization.Serializable
 
 @Serializable

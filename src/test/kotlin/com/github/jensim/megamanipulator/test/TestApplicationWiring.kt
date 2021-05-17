@@ -8,8 +8,8 @@ import com.github.jensim.megamanipulator.settings.CloneType.HTTPS
 import com.github.jensim.megamanipulator.settings.CodeHostSettings.GitHubSettings
 import com.github.jensim.megamanipulator.settings.ForkSetting.PLAIN_BRANCH
 import com.github.jensim.megamanipulator.settings.MegaManipulatorSettings
-import com.github.jensim.megamanipulator.settings.PasswordsOperator
-import com.github.jensim.megamanipulator.settings.ProjectOperator
+import com.github.jensim.megamanipulator.settings.passwords.PasswordsOperator
+import com.github.jensim.megamanipulator.settings.passwords.ProjectOperator
 import com.github.jensim.megamanipulator.settings.SearchHostSettings.SourceGraphSettings
 import com.github.jensim.megamanipulator.settings.SettingsFileOperator
 import com.github.jensim.megamanipulator.test.EnvHelper.EnvProperty.GITHUB_TOKEN
@@ -76,7 +76,8 @@ abstract class TestApplicationWiring {
     )
 
     open val uiProtector: UiProtector get() = TestUiProtector()
-    open val passwordsOperator: PasswordsOperator get() = TestPasswordOperator(
+    open val passwordsOperator: PasswordsOperator
+        get() = TestPasswordOperator(
         mapOf(
             "token" to sourceGraphSettings.baseUrl to sourcegraphToken,
             githubUsername to gitHubSettings.baseUrl to githubToken

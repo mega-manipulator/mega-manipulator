@@ -1,6 +1,6 @@
 package com.github.jensim.megamanipulator.test
 
-import com.github.jensim.megamanipulator.settings.PasswordsOperator
+import com.github.jensim.megamanipulator.settings.passwords.PasswordsOperator
 
 typealias Password = String
 typealias Username = String

@@ -1,4 +1,4 @@
-package com.github.jensim.megamanipulator.settings
+package com.github.jensim.megamanipulator.settings.passwords
 
 interface PasswordsOperator {
 

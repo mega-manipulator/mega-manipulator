@@ -1,7 +1,7 @@
 package com.github.jensim.megamanipulator.ui
 
 import com.github.jensim.megamanipulator.actions.NotificationsOperator
-import com.github.jensim.megamanipulator.settings.ProjectOperator
+import com.github.jensim.megamanipulator.settings.passwords.ProjectOperator
 import com.intellij.notification.NotificationType
 import com.intellij.openapi.progress.ProgressIndicator
 import com.intellij.openapi.progress.ProgressManager
@@ -17,8 +17,8 @@ import kotlinx.coroutines.withTimeout
 import java.util.concurrent.CancellationException
 
 class UiProtectorImpl(
-    private val projectOperator: ProjectOperator,
-    private val notificationsOperator: NotificationsOperator,
+        private val projectOperator: ProjectOperator,
+        private val notificationsOperator: NotificationsOperator,
 ) : UiProtector {
 
     private val project: Project get() = projectOperator.project

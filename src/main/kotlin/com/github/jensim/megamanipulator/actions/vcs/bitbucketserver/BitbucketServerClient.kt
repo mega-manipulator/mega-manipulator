@@ -7,14 +7,17 @@ import com.github.jensim.megamanipulator.actions.vcs.BitBucketPullRequestWrapper
 import com.github.jensim.megamanipulator.actions.vcs.BitBucketRepoWrapping
 import com.github.jensim.megamanipulator.actions.vcs.PullRequestWrapper
 import com.github.jensim.megamanipulator.http.HttpClientProvider
-import com.github.jensim.megamanipulator.settings.CodeHostSettings.BitBucketSettings
+import com.github.jensim.megamanipulator.settings.types.CodeHostSettings.BitBucketSettings
 import com.intellij.notification.NotificationType
 import io.ktor.client.HttpClient
+import io.ktor.client.request.accept
 import io.ktor.client.request.delete
 import io.ktor.client.request.get
+import io.ktor.client.request.header
 import io.ktor.client.request.post
 import io.ktor.client.request.put
 import io.ktor.client.statement.HttpResponse
+import io.ktor.http.ContentType
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonElement
@@ -274,7 +277,9 @@ class BitbucketServerClient(
 
     suspend fun validateAccess(searchHost: String, codeHost: String, settings: BitBucketSettings): String = try {
         val client: HttpClient = httpClientProvider.getClient(searchHost, codeHost, settings)
-        val response = client.get<HttpResponse>("https://api.github.com/repos/jensim/mega-manipulator")
+        val response = client.get<HttpResponse>("${settings.baseUrl}/rest/api/1.0/inbox/pull-requests/count"){
+            accept(ContentType.Application.Json)
+        }
         "${response.status.value}:${response.status.description}"
     } catch (e: Exception) {
         e.printStackTrace()

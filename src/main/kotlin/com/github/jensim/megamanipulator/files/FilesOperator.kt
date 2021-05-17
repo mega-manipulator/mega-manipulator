@@ -1,7 +1,7 @@
 package com.github.jensim.megamanipulator.files
 
 import com.github.jensim.megamanipulator.actions.NotificationsOperator
-import com.github.jensim.megamanipulator.settings.ProjectOperator
+import com.github.jensim.megamanipulator.settings.passwords.ProjectOperator
 import com.intellij.notification.NotificationType
 import com.intellij.openapi.fileEditor.FileDocumentManager
 import com.intellij.openapi.vfs.LocalFileSystem
@@ -17,8 +17,8 @@ import java.nio.file.Path
 import java.nio.file.Paths
 
 class FilesOperator(
-    private val notificationsOperator: NotificationsOperator,
-    private val projectOperator: ProjectOperator,
+        private val notificationsOperator: NotificationsOperator,
+        private val projectOperator: ProjectOperator,
 ) {
 
     class VirtFile(

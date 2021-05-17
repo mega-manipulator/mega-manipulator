@@ -1,6 +1,7 @@
-package com.github.jensim.megamanipulator.settings
+package com.github.jensim.megamanipulator.settings.passwords
 
 import com.github.jensim.megamanipulator.actions.NotificationsOperator
+import com.github.jensim.megamanipulator.settings.SerializationHolder
 import com.intellij.credentialStore.CredentialAttributes
 import com.intellij.credentialStore.Credentials
 import com.intellij.ide.passwordSafe.PasswordSafe
@@ -20,8 +21,8 @@ import javax.swing.JOptionPane.QUESTION_MESSAGE
 
 @NotThreadSafe
 class IntelliJPasswordsOperator(
-    private val notificationsOperator: NotificationsOperator,
-    private val serializationHolder: SerializationHolder,
+        private val notificationsOperator: NotificationsOperator,
+        private val serializationHolder: SerializationHolder,
 ) : PasswordsOperator {
 
     companion object {

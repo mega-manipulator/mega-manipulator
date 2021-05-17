@@ -1,6 +1,6 @@
 package com.github.jensim.megamanipulator.actions.apply
 
-import com.github.jensim.megamanipulator.settings.ProjectOperator
+import com.github.jensim.megamanipulator.settings.passwords.ProjectOperator
 import com.github.jensim.megamanipulator.toolswindow.ToolWindowTab
 import com.github.jensim.megamanipulator.ui.GeneralListCellRenderer.addCellRenderer
 import com.intellij.openapi.fileEditor.FileDocumentManager
@@ -15,8 +15,8 @@ import java.io.File
 import javax.swing.JButton
 
 class ApplyWindow(
-    private val applyOperator: ApplyOperator,
-    private val projectOperator: ProjectOperator,
+        private val applyOperator: ApplyOperator,
+        private val projectOperator: ProjectOperator,
 ) : ToolWindowTab {
 
     private val resultList = JBList<ApplyOutput>()

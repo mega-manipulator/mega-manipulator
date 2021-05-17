@@ -1,4 +1,4 @@
-package com.github.jensim.megamanipulator.settings
+package com.github.jensim.megamanipulator.settings.types
 
 import com.github.ricky12awesome.jss.JsonSchema
 import kotlinx.serialization.SerialName

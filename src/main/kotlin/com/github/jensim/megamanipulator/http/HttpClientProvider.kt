@@ -1,15 +1,15 @@
 package com.github.jensim.megamanipulator.http
 
 import com.github.jensim.megamanipulator.actions.NotificationsOperator
-import com.github.jensim.megamanipulator.settings.AuthMethod
-import com.github.jensim.megamanipulator.settings.AuthMethod.JUST_TOKEN
-import com.github.jensim.megamanipulator.settings.AuthMethod.NONE
-import com.github.jensim.megamanipulator.settings.AuthMethod.USERNAME_TOKEN
-import com.github.jensim.megamanipulator.settings.CodeHostSettings
-import com.github.jensim.megamanipulator.settings.HostWithAuth
-import com.github.jensim.megamanipulator.settings.HttpsOverride
-import com.github.jensim.megamanipulator.settings.PasswordsOperator
-import com.github.jensim.megamanipulator.settings.SearchHostSettings
+import com.github.jensim.megamanipulator.settings.types.AuthMethod
+import com.github.jensim.megamanipulator.settings.types.AuthMethod.JUST_TOKEN
+import com.github.jensim.megamanipulator.settings.types.AuthMethod.NONE
+import com.github.jensim.megamanipulator.settings.types.AuthMethod.USERNAME_TOKEN
+import com.github.jensim.megamanipulator.settings.types.CodeHostSettings
+import com.github.jensim.megamanipulator.settings.types.HostWithAuth
+import com.github.jensim.megamanipulator.settings.types.HttpsOverride
+import com.github.jensim.megamanipulator.settings.passwords.PasswordsOperator
+import com.github.jensim.megamanipulator.settings.types.SearchHostSettings
 import com.github.jensim.megamanipulator.settings.SettingsFileOperator
 import com.intellij.notification.NotificationType
 import io.ktor.client.HttpClient
@@ -33,9 +33,9 @@ import org.apache.http.ssl.SSLContextBuilder
 import java.security.cert.X509Certificate
 
 class HttpClientProvider(
-    private val settingsFileOperator: SettingsFileOperator,
-    private val passwordsOperator: PasswordsOperator,
-    private val notificationsOperator: NotificationsOperator,
+        private val settingsFileOperator: SettingsFileOperator,
+        private val passwordsOperator: PasswordsOperator,
+        private val notificationsOperator: NotificationsOperator,
 ) {
 
     private class TrustAnythingStrategy : TrustStrategy {

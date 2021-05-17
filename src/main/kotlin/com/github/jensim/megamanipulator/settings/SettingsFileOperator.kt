@@ -1,6 +1,8 @@
 package com.github.jensim.megamanipulator.settings
 
 import com.github.jensim.megamanipulator.actions.NotificationsOperator
+import com.github.jensim.megamanipulator.settings.passwords.ProjectOperator
+import com.github.jensim.megamanipulator.settings.types.MegaManipulatorSettings
 import com.intellij.notification.NotificationType.WARNING
 import com.intellij.openapi.fileEditor.FileDocumentManager
 import kotlinx.serialization.decodeFromString
@@ -11,10 +13,10 @@ import java.util.concurrent.atomic.AtomicReference
 import kotlin.text.Charsets.UTF_8
 
 class SettingsFileOperator(
-    private val settingsFileName: String = "config/mega-manipulator.json",
-    private val scriptFileName: String = "config/mega-manipulator.bash",
-    private val projectOperator: ProjectOperator,
-    private val notificationsOperator: NotificationsOperator,
+        private val settingsFileName: String = "config/mega-manipulator.json",
+        private val scriptFileName: String = "config/mega-manipulator.bash",
+        private val projectOperator: ProjectOperator,
+        private val notificationsOperator: NotificationsOperator,
 ) {
 
     private val lastPeek = AtomicLong(0L)

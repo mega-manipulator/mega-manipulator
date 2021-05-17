@@ -6,7 +6,7 @@ import com.github.jensim.megamanipulator.actions.git.commit.CommitOperator
 import com.github.jensim.megamanipulator.actions.localrepo.LocalRepoOperator
 import com.github.jensim.megamanipulator.actions.vcs.PrRouter
 import com.github.jensim.megamanipulator.files.FilesOperator
-import com.github.jensim.megamanipulator.settings.ProjectOperator
+import com.github.jensim.megamanipulator.settings.passwords.ProjectOperator
 import com.github.jensim.megamanipulator.toolswindow.ToolWindowTab
 import com.github.jensim.megamanipulator.ui.CreatePullRequestDialog
 import com.github.jensim.megamanipulator.ui.DialogGenerator
@@ -30,14 +30,14 @@ private typealias DirResult = Pair<String, List<StepResult>>
 
 @SuppressWarnings("LongParameterList")
 class GitWindow(
-    private val localRepoOperator: LocalRepoOperator,
-    private val processOperator: ProcessOperator,
-    private val commitOperator: CommitOperator,
-    private val dialogGenerator: DialogGenerator,
-    private val filesOperator: FilesOperator,
-    private val projectOperator: ProjectOperator,
-    private val prRouter: PrRouter,
-    private val uiProtector: UiProtector,
+        private val localRepoOperator: LocalRepoOperator,
+        private val processOperator: ProcessOperator,
+        private val commitOperator: CommitOperator,
+        private val dialogGenerator: DialogGenerator,
+        private val filesOperator: FilesOperator,
+        private val projectOperator: ProjectOperator,
+        private val prRouter: PrRouter,
+        private val uiProtector: UiProtector,
 ) : ToolWindowTab {
 
     private val repoList = JBList<DirResult>().apply {

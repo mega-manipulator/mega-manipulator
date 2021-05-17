@@ -1,4 +1,4 @@
-package com.github.jensim.megamanipulator.settings
+package com.github.jensim.megamanipulator.settings.passwords
 
 import com.github.jensim.megamanipulator.project.MegaManipulatorModuleType.Companion.MODULE_TYPE_ID
 import com.intellij.openapi.application.ApplicationManager

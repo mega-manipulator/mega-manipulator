@@ -11,7 +11,7 @@ import com.github.jensim.megamanipulator.graphql.generated.sourcegraph.search.Co
 import com.github.jensim.megamanipulator.graphql.generated.sourcegraph.search.FileMatch
 import com.github.jensim.megamanipulator.graphql.generated.sourcegraph.search.Repository2
 import com.github.jensim.megamanipulator.http.HttpClientProvider
-import com.github.jensim.megamanipulator.settings.SearchHostSettings.SourceGraphSettings
+import com.github.jensim.megamanipulator.settings.types.SearchHostSettings.SourceGraphSettings
 import com.intellij.notification.NotificationType.ERROR
 import com.intellij.notification.NotificationType.WARNING
 import com.jetbrains.rd.util.printlnError

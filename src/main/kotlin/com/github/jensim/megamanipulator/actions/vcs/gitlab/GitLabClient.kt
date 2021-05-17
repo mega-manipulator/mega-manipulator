@@ -14,7 +14,7 @@ import com.github.jensim.megamanipulator.graphql.generated.gitlab.GetAuthoredPul
 import com.github.jensim.megamanipulator.graphql.generated.gitlab.GetCurrentUser
 import com.github.jensim.megamanipulator.graphql.generated.gitlab.SingleRepoQuery
 import com.github.jensim.megamanipulator.http.HttpClientProvider
-import com.github.jensim.megamanipulator.settings.CodeHostSettings.GitLabSettings
+import com.github.jensim.megamanipulator.settings.types.CodeHostSettings.GitLabSettings
 import com.intellij.util.containers.isNullOrEmpty
 import io.ktor.client.HttpClient
 import io.ktor.client.request.post
