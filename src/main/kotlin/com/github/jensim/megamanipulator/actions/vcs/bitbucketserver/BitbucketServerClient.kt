@@ -7,6 +7,7 @@ import com.github.jensim.megamanipulator.actions.vcs.BitBucketPullRequestWrapper
 import com.github.jensim.megamanipulator.actions.vcs.BitBucketRepoWrapping
 import com.github.jensim.megamanipulator.actions.vcs.PullRequestWrapper
 import com.github.jensim.megamanipulator.http.HttpClientProvider
+import com.github.jensim.megamanipulator.settings.types.CloneType
 import com.github.jensim.megamanipulator.settings.types.CodeHostSettings.BitBucketSettings
 import com.intellij.notification.NotificationType
 import io.ktor.client.HttpClient
@@ -242,11 +243,14 @@ class BitbucketServerClient(
             contentType(ContentType.Application.Json)
             accept(ContentType.Application.Json)
             body = BitBucketForkRequest(
-                slug = "${settings.forkRepoPrefix}${repo.repo}",
-                project = BitBucketProjectRequest(key = "~${settings.username}")
+                    slug = "${settings.forkRepoPrefix}${repo.repo}",
+                    project = BitBucketProjectRequest(key = "~${settings.username}")
             )
         }
-        return bbRepo.links?.clone?.firstOrNull { it.name == "ssh" }?.href
+        return when (settings.cloneType) {
+            CloneType.SSH -> bbRepo.links?.clone?.firstOrNull { it.name == "ssh" }?.href
+            CloneType.HTTPS -> bbRepo.links?.clone?.firstOrNull { it.name == "http" }?.href
+        }
     }
 
     /**
