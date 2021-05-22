@@ -11,6 +11,7 @@ import com.github.jensim.megamanipulator.graphql.generated.gitlab.CloseMergeRequ
 import com.github.jensim.megamanipulator.graphql.generated.gitlab.GetAuthoredPullRequests
 import com.github.jensim.megamanipulator.graphql.generated.gitlab.GetAuthoredPullRequests.Result
 import com.github.jensim.megamanipulator.graphql.generated.gitlab.GetCurrentUser
+import com.github.jensim.megamanipulator.graphql.generated.gitlab.GetForkRepos
 import com.github.jensim.megamanipulator.graphql.generated.gitlab.SingleRepoQuery
 import com.github.jensim.megamanipulator.http.HttpClientProvider
 import com.github.jensim.megamanipulator.settings.types.CodeHostSettings.GitLabSettings
@@ -104,9 +105,41 @@ class GitLabClient(
         }
     }
 
-    fun getPrivateForkReposWithoutPRs(searchHost: String, codeHost: String, settings: GitLabSettings): List<GitLabRepoWrapping> {
+    suspend fun getPrivateForkReposWithoutPRs(searchHost: String, codeHost: String, settings: GitLabSettings): List<GitLabRepoWrapping> {
         log.warn("Feature not yet supported. Get Private fork repos without prs")
-        return emptyList() // TODO
+        val client: GraphQLKtorClient = getClient(searchHost, codeHost, settings)
+        val forksAccumulator:MutableList<GitLabRepoWrapping> = ArrayList()
+        var lastCursor: String? = null
+        while (true) {
+            val vars = GetForkRepos.Variables(cursor = lastCursor)
+            val resp: GraphQLClientResponse<GetForkRepos.Result> = client.execute(GetForkRepos(vars))
+            when {
+                !resp.errors.isNullOrEmpty() -> {
+                    log.warn("Error received from gitlab {}", resp.errors)
+                    break
+                }
+                !resp.data?.currentUser?.projectMemberships?.nodes.isNullOrEmpty() ->
+                    resp.data?.currentUser?.projectMemberships?.nodes?.mapNotNull { member ->
+                        member?.project?.let { project ->
+                            val repoParts = project.fullPath.split("/")
+                            val repo = getRepo(SearchResult(project = repoParts[0], repo = repoParts[1], codeHostName = codeHost, searchHostName = searchHost),settings)
+                            forksAccumulator.add(repo)
+                        }
+                    }
+                else -> {
+                    log.warn("No errors no data...?")
+                    break
+                }
+            }
+            if (resp.data?.currentUser?.projectMemberships?.pageInfo?.hasNextPage == true &&
+                    resp.data?.currentUser?.projectMemberships?.pageInfo?.endCursor != null
+            ) {
+                lastCursor = resp.data?.currentUser?.projectMemberships?.pageInfo?.endCursor
+            } else {
+                break
+            }
+        }
+        return forksAccumulator
     }
 
     suspend fun closePr(dropFork: Boolean, dropBranch: Boolean, settings: GitLabSettings, pullRequest: GitLabPullRequestWrapper) {
