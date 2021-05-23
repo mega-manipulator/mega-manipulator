@@ -5,7 +5,9 @@ import com.expediagroup.graphql.client.serialization.GraphQLClientKotlinxSeriali
 import com.expediagroup.graphql.client.types.GraphQLClientResponse
 import com.github.jensim.megamanipulator.actions.localrepo.LocalRepoOperator
 import com.github.jensim.megamanipulator.actions.search.SearchResult
-import com.github.jensim.megamanipulator.actions.vcs.GitLabPullRequestWrapper
+import com.github.jensim.megamanipulator.actions.vcs.GitLabMergeRequestApiWrapper
+import com.github.jensim.megamanipulator.actions.vcs.GitLabMergeRequestListItemWrapper
+import com.github.jensim.megamanipulator.actions.vcs.GitLabMergeRequestWrapper
 import com.github.jensim.megamanipulator.actions.vcs.GitLabRepoWrapping
 import com.github.jensim.megamanipulator.graphql.generated.gitlab.CloseMergeRequest
 import com.github.jensim.megamanipulator.graphql.generated.gitlab.GetAuthoredPullRequests
@@ -22,6 +24,7 @@ import io.ktor.client.request.delete
 import io.ktor.client.request.post
 import io.ktor.client.request.put
 import io.ktor.client.statement.HttpResponse
+import io.ktor.client.statement.readText
 import io.ktor.http.ContentType
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.contentType
@@ -66,7 +69,7 @@ class GitLabClient(
         )
     }
 
-    suspend fun commentPR(comment: String, pullRequest: GitLabPullRequestWrapper, settings: GitLabSettings) {
+    suspend fun commentPR(comment: String, pullRequest: GitLabMergeRequestListItemWrapper, settings: GitLabSettings) {
         // https://docs.gitlab.com/ee/api/notes.html#create-new-issue-note
         // POST /api/v4/projects/:id/merge_requests/:merge_request_iid/notes
         val client: HttpClient = httpClientProvider.getClient(searchHostName = pullRequest.searchHost, codeHostName = pullRequest.codeHost, settings = settings)
@@ -142,17 +145,17 @@ class GitLabClient(
         return forksAccumulator
     }
 
-    suspend fun closePr(dropFork: Boolean, dropBranch: Boolean, settings: GitLabSettings, pullRequest: GitLabPullRequestWrapper) {
+    suspend fun closePr(dropFork: Boolean, dropBranch: Boolean, settings: GitLabSettings, pullRequest: GitLabMergeRequestListItemWrapper) {
         // https://docs.gitlab.com/ee/api/merge_requests.html#delete-a-merge-request
         val client: HttpClient = httpClientProvider.getClient(pullRequest.searchHost, pullRequest.codeHost, settings)
         val graphQLClient = GraphQLKtorClient(url = URL("${settings.baseUrl}/api/graphql"), httpClient = client)
         val response = graphQLClient.execute(
-            CloseMergeRequest(
-                CloseMergeRequest.Variables(
-                    projectPath = pullRequest.mergeRequest.targetProject.fullPath,
-                    iid = pullRequest.mergeRequest.iid
+                CloseMergeRequest(
+                        CloseMergeRequest.Variables(
+                                projectPath = pullRequest.mergeRequest.targetProject.fullPath,
+                                iid = pullRequest.mergeRequest.iid
+                        )
                 )
-            )
         )
         if (response.errors.isNullOrEmpty() && response.data?.mergeRequestUpdate?.errors.isNullOrEmpty()) {
             if (dropFork && pullRequest.isFork() &&
@@ -174,9 +177,9 @@ class GitLabClient(
         }
     }
 
-    suspend fun getAllPrs(searchHost: String, codeHost: String, settings: GitLabSettings): List<GitLabPullRequestWrapper> {
+    suspend fun getAllPrs(searchHost: String, codeHost: String, settings: GitLabSettings): List<GitLabMergeRequestListItemWrapper> {
         val client: GraphQLKtorClient = getClient(searchHost, codeHost, settings)
-        val accumulator: MutableList<GitLabPullRequestWrapper> = ArrayList()
+        val accumulator: MutableList<GitLabMergeRequestListItemWrapper> = ArrayList()
         var lastCursor: String? = null
         while (true) {
             val vars = GetAuthoredPullRequests.Variables(cursor = lastCursor)
@@ -190,7 +193,7 @@ class GitLabClient(
                     resp.data?.currentUser?.authoredMergeRequests?.nodes?.mapNotNull {
                         it?.let {
                             val raw = json.encodeToString(it)
-                            accumulator.add(GitLabPullRequestWrapper(searchHost, codeHost, it, raw))
+                            accumulator.add(GitLabMergeRequestListItemWrapper(searchHost = searchHost, codeHost = codeHost, mergeRequest = it, raw = raw))
                         }
                     }
                 else -> {
@@ -209,18 +212,27 @@ class GitLabClient(
         return accumulator
     }
 
-    suspend fun updatePr(newTitle: String, newDescription: String, settings: GitLabSettings, pullRequest: GitLabPullRequestWrapper) {
+    suspend fun updatePr(newTitle: String, newDescription: String, settings: GitLabSettings, pullRequest: GitLabMergeRequestWrapper): GitLabMergeRequestApiWrapper {
         // https://docs.gitlab.com/ee/api/merge_requests.html#update-mr
         // PUT /api/v4/projects/:id/merge_requests/:merge_request_iid
-        val client: HttpClient = httpClientProvider.getClient(pullRequest.searchHost, pullRequest.codeHost, settings)
-        val projectId = pullRequest.mergeRequest.targetProject.id.encodeURLPath()
-        val mergeRequestId = pullRequest.mergeRequest.id.encodeURLPath()
+        val client: HttpClient = httpClientProvider.getClient(pullRequest.searchHostName(), pullRequest.codeHostName(), settings)
+        val projectId = pullRequest.targetProjectId.encodeURLPath()
+        val mergeRequestId = pullRequest.mergeRequestId.encodeURLPath()
         val response: HttpResponse = client.put("${settings.baseUrl}/api/v4/projects/$projectId/merge_requests/$mergeRequestId") {
             body = mapOf("description" to newDescription, "title" to newTitle)
         }
         if (response.status != HttpStatusCode.OK) {
             log.warn("Failed updating MergeRequest ") // TODO improve visibility to user
         }
+        val content = response.readText()
+        val mergeRequest: GitLabMergeRequest = json.decodeFromString(GitLabMergeRequest.serializer(), content)
+        return GitLabMergeRequestApiWrapper(
+                searchHost = pullRequest.searchHostName(),
+                codeHost = pullRequest.codeHostName(),
+                mergeRequest = mergeRequest,
+                cloneable = pullRequest,
+                raw = content
+        )
     }
 
     suspend fun createFork(settings: GitLabSettings, repo: SearchResult): String? {
@@ -254,10 +266,10 @@ class GitLabClient(
         return null
     }
 
-    suspend fun createPr(title: String, description: String, settings: GitLabSettings, repo: SearchResult) {
+    suspend fun createPr(title: String, description: String, settings: GitLabSettings, repo: SearchResult): GitLabMergeRequestWrapper {
         // https://docs.gitlab.com/ee/api/merge_requests.html#create-mr
         // POST /api/v4/projects/:id/merge_requests
-        val gitlabTargetRepo = getRepo(repo, settings)
+        val gitlabTargetRepo: GitLabRepoWrapping = getRepo(repo, settings)
         val localBranch: String = localRepoOperator.getBranch(repo)!!
         val fork: Pair<String, String>? = localRepoOperator.getForkProject(repo)
         val fromProject = fork?.first ?: repo.project
@@ -278,9 +290,18 @@ class GitLabClient(
         if (response.status != HttpStatusCode.OK) {
             log.warn("Failed creating MergeRequest") // TODO improve visibility to user
         }
+        val content = response.readText()
+        val mergeRequest: GitLabMergeRequest = json.decodeFromString(GitLabMergeRequest.serializer(), content)
+        return GitLabMergeRequestApiWrapper(
+                searchHost = repo.searchHostName,
+                codeHost = repo.codeHostName,
+                mergeRequest = mergeRequest,
+                cloneable = GitLabGitCloneableRepoWrapper(source = gitlabSourceRepo, target = gitlabTargetRepo),
+                raw = content
+        )
     }
 
-    fun addDefaultReviewers(settings: GitLabSettings, pullRequest: GitLabPullRequestWrapper): GitLabPullRequestWrapper? {
+    fun addDefaultReviewers(settings: GitLabSettings, pullRequest: GitLabMergeRequestListItemWrapper): GitLabMergeRequestListItemWrapper? {
         // TODO("not implemented")
         return null
     }

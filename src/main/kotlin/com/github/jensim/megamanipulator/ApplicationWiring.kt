@@ -143,6 +143,7 @@ data class ApplicationWiring(
             httpClientProvider = this.httpClientProvider,
             json = this.json,
             graphQLClientKotlinxSerializer = this.graphQLClientKotlinxSerializer,
+            localRepoOperator = this.localRepoOperator,
         )
     }
     val searchOperator: SearchOperator by lazy {

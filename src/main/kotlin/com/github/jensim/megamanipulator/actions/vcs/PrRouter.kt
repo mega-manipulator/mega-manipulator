@@ -50,7 +50,7 @@ class PrRouter(
         return when {
             settings is BitBucketSettings && pullRequest is BitBucketPullRequestWrapper -> bitbucketServerClient.addDefaultReviewers(settings, pullRequest)
             settings is GitHubSettings && pullRequest is GithubComPullRequestWrapper -> githubComClient.addDefaultReviewers(settings, pullRequest)
-            settings is GitLabSettings && pullRequest is GitLabPullRequestWrapper -> gitLabClient.addDefaultReviewers(settings, pullRequest)
+            settings is GitLabSettings && pullRequest is GitLabMergeRequestListItemWrapper -> gitLabClient.addDefaultReviewers(settings, pullRequest)
             settings == null -> null
             else -> throw IllegalArgumentException("Unable to match config correctly")
         }
@@ -81,7 +81,7 @@ class PrRouter(
         return when {
             settings is BitBucketSettings && pullRequest is BitBucketPullRequestWrapper -> bitbucketServerClient.updatePr(newTitle, newDescription, settings, pullRequest)
             settings is GitHubSettings && pullRequest is GithubComPullRequestWrapper -> githubComClient.updatePr(newTitle, newDescription, settings, pullRequest)
-            settings is GitLabSettings && pullRequest is GitLabPullRequestWrapper -> gitLabClient.updatePr(newTitle, newDescription, settings, pullRequest)
+            settings is GitLabSettings && pullRequest is GitLabMergeRequestWrapper -> gitLabClient.updatePr(newTitle, newDescription, settings, pullRequest)
             settings == null -> null
             else -> throw IllegalArgumentException("Unable to match config correctly")
         }
@@ -102,7 +102,7 @@ class PrRouter(
         when {
             settings is BitBucketSettings && pullRequest is BitBucketPullRequestWrapper -> bitbucketServerClient.closePr(dropFork, dropBranch, settings, pullRequest)
             settings is GitHubSettings && pullRequest is GithubComPullRequestWrapper -> githubComClient.closePr(dropFork, dropBranch, settings, pullRequest)
-            settings is GitLabSettings && pullRequest is GitLabPullRequestWrapper -> gitLabClient.closePr(dropFork, dropBranch, settings, pullRequest)
+            settings is GitLabSettings && pullRequest is GitLabMergeRequestListItemWrapper -> gitLabClient.closePr(dropFork, dropBranch, settings, pullRequest)
             settings == null -> Unit
             else -> throw IllegalArgumentException("Unable to match config correctly")
         }
@@ -145,7 +145,7 @@ class PrRouter(
         when {
             settings is BitBucketSettings && pullRequest is BitBucketPullRequestWrapper -> bitbucketServerClient.commentPR(comment, pullRequest, settings)
             settings is GitHubSettings && pullRequest is GithubComPullRequestWrapper -> githubComClient.commentPR(comment, pullRequest, settings)
-            settings is GitLabSettings && pullRequest is GitLabPullRequestWrapper -> gitLabClient.commentPR(comment, pullRequest, settings)
+            settings is GitLabSettings && pullRequest is GitLabMergeRequestListItemWrapper -> gitLabClient.commentPR(comment, pullRequest, settings)
             settings == null -> Unit
             else -> throw IllegalArgumentException("Unable to match config correctly")
         }

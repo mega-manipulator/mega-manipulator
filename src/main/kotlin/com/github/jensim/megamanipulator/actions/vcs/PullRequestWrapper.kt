@@ -4,25 +4,19 @@ package com.github.jensim.megamanipulator.actions.vcs
 
 import com.github.jensim.megamanipulator.actions.vcs.bitbucketserver.BitBucketPullRequest
 import com.github.jensim.megamanipulator.actions.vcs.githubcom.GithubComPullRequest
+import com.github.jensim.megamanipulator.actions.vcs.gitlab.GitLabMergeRequest
 import com.github.jensim.megamanipulator.settings.types.CloneType
 import kotlinx.serialization.Serializable
 
 @Serializable
-sealed class PullRequestWrapper {
+sealed class PullRequestWrapper : GitCloneable {
     abstract fun codeHostName(): String
     abstract fun searchHostName(): String
-    abstract fun project(): String
-    abstract fun baseRepo(): String
     abstract fun title(): String
     abstract fun body(): String
     abstract fun fromBranch(): String
     abstract fun toBranch(): String
-
-    abstract fun isFork(): Boolean
-    abstract fun cloneUrlFrom(cloneType: CloneType): String?
-    abstract fun cloneUrlTo(cloneType: CloneType): String?
     abstract fun browseUrl(): String?
-
     abstract val raw: String
     fun asPathString(): String = "${searchHostName()}/${codeHostName()}/${project()}/${baseRepo()}"
 }
@@ -95,12 +89,19 @@ data class GithubComPullRequestWrapper(
     override fun browseUrl(): String = pullRequest.html_url
 }
 
-data class GitLabPullRequestWrapper(
+sealed class GitLabMergeRequestWrapper : PullRequestWrapper() {
+    abstract val targetProjectId : String
+    abstract val mergeRequestId: String
+}
+
+data class GitLabMergeRequestListItemWrapper(
     val searchHost: String,
     val codeHost: String,
     val mergeRequest: com.github.jensim.megamanipulator.graphql.generated.gitlab.getauthoredpullrequests.MergeRequest,
     override val raw: String,
-) : PullRequestWrapper() {
+) : GitLabMergeRequestWrapper() {
+    override val targetProjectId: String = mergeRequest.targetProject.id
+    override val mergeRequestId: String = mergeRequest.id
 
     override fun codeHostName(): String = codeHost
     override fun searchHostName(): String = searchHost
@@ -122,4 +123,28 @@ data class GitLabPullRequestWrapper(
     }
 
     override fun browseUrl(): String? = mergeRequest.webUrl
+}
+
+data class GitLabMergeRequestApiWrapper(
+        val searchHost: String,
+        val codeHost: String,
+        val mergeRequest: GitLabMergeRequest,
+        private val cloneable: GitCloneable,
+        override val raw: String,
+) : GitLabMergeRequestWrapper() {
+    override val targetProjectId: String = mergeRequest.target_project_id.toString()
+    override val mergeRequestId: String = mergeRequest.id.toString()
+
+    override fun codeHostName(): String = codeHost
+    override fun searchHostName(): String = searchHost
+    override fun project(): String = cloneable.project()
+    override fun baseRepo(): String = cloneable.baseRepo()
+    override fun title(): String = mergeRequest.title
+    override fun body(): String = mergeRequest.description
+    override fun fromBranch(): String = mergeRequest.source_branch
+    override fun toBranch(): String = mergeRequest.target_branch
+    override fun isFork(): Boolean = mergeRequest.source_project_id != mergeRequest.target_project_id
+    override fun cloneUrlFrom(cloneType: CloneType): String? = cloneable.cloneUrlFrom(cloneType)
+    override fun cloneUrlTo(cloneType: CloneType): String? = cloneable.cloneUrlTo(cloneType)
+    override fun browseUrl(): String = mergeRequest.web_url
 }
