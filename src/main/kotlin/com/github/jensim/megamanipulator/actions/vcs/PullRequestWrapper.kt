@@ -90,7 +90,7 @@ data class GithubComPullRequestWrapper(
 }
 
 sealed class GitLabMergeRequestWrapper : PullRequestWrapper() {
-    abstract val targetProjectId : String
+    abstract val targetProjectId: String
     abstract val mergeRequestId: String
 }
 
@@ -126,11 +126,11 @@ data class GitLabMergeRequestListItemWrapper(
 }
 
 data class GitLabMergeRequestApiWrapper(
-        val searchHost: String,
-        val codeHost: String,
-        val mergeRequest: GitLabMergeRequest,
-        private val cloneable: GitCloneable,
-        override val raw: String,
+    val searchHost: String,
+    val codeHost: String,
+    val mergeRequest: GitLabMergeRequest,
+    private val cloneable: GitCloneable,
+    override val raw: String,
 ) : GitLabMergeRequestWrapper() {
     override val targetProjectId: String = mergeRequest.target_project_id.toString()
     override val mergeRequestId: String = mergeRequest.id.toString()

@@ -46,7 +46,7 @@ class BitbucketServerClient(
 
     private suspend fun getDefaultReviewers(client: HttpClient, settings: BitBucketSettings, repo: SearchResult, fromBranchRef: String, toBranchRef: String): List<BitBucketUser> {
         val bitBucketRepo: BitBucketRepo = getRepo(client, settings, repo)
-        return client.get("${settings.baseUrl}/rest/default-reviewers/1.0/projects/${repo.project}/repos/${repo.repo}/reviewers?sourceRepoId=${bitBucketRepo.id}&targetRepoId=${bitBucketRepo.id}&sourceRefId=$fromBranchRef&targetRefId=$toBranchRef"){
+        return client.get("${settings.baseUrl}/rest/default-reviewers/1.0/projects/${repo.project}/repos/${repo.repo}/reviewers?sourceRepoId=${bitBucketRepo.id}&targetRepoId=${bitBucketRepo.id}&sourceRefId=$fromBranchRef&targetRefId=$toBranchRef") {
             accept(ContentType.Application.Json)
         }
     }
@@ -54,7 +54,7 @@ class BitbucketServerClient(
     suspend fun getRepo(searchResult: SearchResult, settings: BitBucketSettings): BitBucketRepoWrapping {
         val client: HttpClient = httpClientProvider.getClient(searchResult.searchHostName, searchResult.codeHostName, settings)
         val repo = getRepo(client, settings, searchResult)
-        val defaultBranch = client.get<BitBucketDefaultBranch>("${settings.baseUrl}/rest/api/1.0/projects/${repo.project}/repos/${repo.slug}/default-branch"){
+        val defaultBranch = client.get<BitBucketDefaultBranch>("${settings.baseUrl}/rest/api/1.0/projects/${repo.project}/repos/${repo.slug}/default-branch") {
             accept(ContentType.Application.Json)
         }.displayId
         return BitBucketRepoWrapping(
@@ -66,7 +66,7 @@ class BitbucketServerClient(
     }
 
     private suspend fun getRepo(client: HttpClient, settings: BitBucketSettings, repo: SearchResult): BitBucketRepo {
-        return client.get("${settings.baseUrl}/rest/api/1.0/projects/${repo.project}/repos/${repo.repo}"){
+        return client.get("${settings.baseUrl}/rest/api/1.0/projects/${repo.project}/repos/${repo.repo}") {
             accept(ContentType.Application.Json)
         }
     }
@@ -144,7 +144,7 @@ class BitbucketServerClient(
         var start = 0L
         while (true) {
             val response: BitBucketPage = try {
-                client.get("${settings.baseUrl}/rest/api/1.0/dashboard/pull-requests?state=OPEN&role=AUTHOR&start=$start&limit=100"){
+                client.get("${settings.baseUrl}/rest/api/1.0/dashboard/pull-requests?state=OPEN&role=AUTHOR&start=$start&limit=100") {
                     accept(ContentType.Application.Json)
                 }
             } catch (e: Exception) {
@@ -186,7 +186,7 @@ class BitbucketServerClient(
             if (dropFork && pullRequest.isFork()) {
                 val repository = pullRequest.bitbucketPR.fromRef.repository
                 // Get open PRs
-                val page: BitBucketPage = client.get("${settings.baseUrl}/rest/api/1.0/projects/${repository.project?.key!!}/repos/${repository.slug}/pull-requests?direction=OUTGOING&state=OPEN"){
+                val page: BitBucketPage = client.get("${settings.baseUrl}/rest/api/1.0/projects/${repository.project?.key!!}/repos/${repository.slug}/pull-requests?direction=OUTGOING&state=OPEN") {
                     accept(ContentType.Application.Json)
                 }
                 if ((page.size ?: 0) == 0) {
@@ -227,12 +227,12 @@ class BitbucketServerClient(
         val bbRepo: BitBucketRepo = try {
             if (repo.project.toLowerCase() == "~${settings.username.toLowerCase()}") {
                 // is private repo
-                client.get("${settings.baseUrl}/rest/api/1.0/projects/${repo.project}/repos/${repo.repo}"){
+                client.get("${settings.baseUrl}/rest/api/1.0/projects/${repo.project}/repos/${repo.repo}") {
                     accept(ContentType.Application.Json)
                 }
             } else {
                 // If repo with prefix already exists..
-                client.get("${settings.baseUrl}/rest/api/1.0/users/~${settings.username}/repos/${settings.forkRepoPrefix}${repo.repo}"){
+                client.get("${settings.baseUrl}/rest/api/1.0/users/~${settings.username}/repos/${settings.forkRepoPrefix}${repo.repo}") {
                     accept(ContentType.Application.Json)
                 }
             }
@@ -243,8 +243,8 @@ class BitbucketServerClient(
             contentType(ContentType.Application.Json)
             accept(ContentType.Application.Json)
             body = BitBucketForkRequest(
-                    slug = "${settings.forkRepoPrefix}${repo.repo}",
-                    project = BitBucketProjectRequest(key = "~${settings.username}")
+                slug = "${settings.forkRepoPrefix}${repo.repo}",
+                project = BitBucketProjectRequest(key = "~${settings.username}")
             )
         }
         return when (settings.cloneType) {
@@ -261,7 +261,7 @@ class BitbucketServerClient(
         var start = 0
         val collector = HashSet<BitBucketRepo>()
         while (true) {
-            val page: BitBucketPage = client.get("${settings.baseUrl}/rest/api/1.0/users/~${settings.username}/repos?start=$start"){
+            val page: BitBucketPage = client.get("${settings.baseUrl}/rest/api/1.0/users/~${settings.username}/repos?start=$start") {
                 accept(ContentType.Application.Json)
             }
             page.values.orEmpty()
@@ -272,7 +272,7 @@ class BitbucketServerClient(
             start += page.size ?: 0
         }
         return collector.filter {
-            val page: BitBucketPage = client.get("${settings.baseUrl}/rest/api/1.0/projects/${it.project?.key}/repos/${it.slug}/pull-requests?direction=OUTGOING&state=OPEN"){
+            val page: BitBucketPage = client.get("${settings.baseUrl}/rest/api/1.0/projects/${it.project?.key}/repos/${it.slug}/pull-requests?direction=OUTGOING&state=OPEN") {
                 accept(ContentType.Application.Json)
             }
             page.size == 0
