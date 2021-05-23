@@ -235,6 +235,7 @@ class GitLabClient(
         )
     }
 
+    @Suppress("ReturnCount")
     suspend fun createFork(settings: GitLabSettings, repo: SearchResult): String? {
         // https://docs.gitlab.com/ee/api/projects.html#fork-project
         try {
@@ -301,6 +302,7 @@ class GitLabClient(
         )
     }
 
+    @Suppress("FunctionOnlyReturningConstant")
     fun addDefaultReviewers(settings: GitLabSettings, pullRequest: GitLabMergeRequestListItemWrapper): GitLabMergeRequestListItemWrapper? {
         // TODO("not implemented")
         return null
