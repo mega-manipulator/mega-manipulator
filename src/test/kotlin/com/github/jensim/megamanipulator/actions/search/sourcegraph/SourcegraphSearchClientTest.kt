@@ -24,13 +24,13 @@ import org.junit.jupiter.api.Test
 internal class SourcegraphSearchClientTest {
 
     private val envHelper = EnvHelper()
-    private val password = envHelper.resolve(SRC_COM_ACCESS_TOKEN)
+    private val password = envHelper.resolve(SRC_COM_ACCESS_TOKEN)!!
     private val codeHostName = "github.com"
     private val sourceGraphSettings = SourceGraphSettings(
         baseUrl = "https://sourcegraph.com",
         codeHostSettings = mapOf(
             codeHostName to GitHubSettings(
-                username = envHelper.resolve(GITHUB_USERNAME),
+                username = envHelper.resolve(GITHUB_USERNAME)!!,
                 forkSetting = PLAIN_BRANCH,
             )
         )

@@ -11,7 +11,7 @@ query ($repoPath: ID!) {
     }
     fullPath
     namespace {
-      fullName
+      path
     }
   }
 }

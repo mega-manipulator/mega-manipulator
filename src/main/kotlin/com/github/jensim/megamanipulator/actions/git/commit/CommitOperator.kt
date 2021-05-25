@@ -92,11 +92,9 @@ class CommitOperator(
         val cloneUrl = prRouter.createFork(SearchResult.fromPath(dir))
         if (cloneUrl != null) {
             log += "fork" to ApplyOutput.dummy(dir = dir.path, std = "Created or found fork", exitCode = 0)
-            val fork = localRepoOperator.addForkRemote(dir, cloneUrl)
-                .also { output -> log += "fork" to output }
+            val fork = localRepoOperator.addForkRemote(dir, cloneUrl).also { output -> log += "fork" to output }
             if (fork.exitCode == 0) {
-                localRepoOperator.push(dir)
-                    .also { output -> log += "push" to output }
+                localRepoOperator.push(dir).also { output -> log += "push" to output }
             }
         } else {
             log += "fork" to ApplyOutput.dummy(dir = dir.path, std = "Failed creating or finding fork", exitCode = 1)

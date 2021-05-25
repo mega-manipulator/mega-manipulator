@@ -9,11 +9,18 @@ class EnvHelper {
     enum class EnvProperty(val defaultValue: String? = null, val fallBackEnv: List<String> = emptyList()) {
         SRC_COM_USERNAME(defaultValue = "jensim"),
         SRC_COM_ACCESS_TOKEN(fallBackEnv = listOf("SRC_ACCESS_TOKEN")),
+
         GITHUB_USERNAME(fallBackEnv = listOf("GITHUB_ACTOR"), defaultValue = "jensim"),
         GITHUB_TOKEN,
+        GITHUB_PROJECT(defaultValue = "mega-manipulator"),
+        GITHUB_REPO(defaultValue = "mega-manipulator-ci-dump"),
+
         BITBUCKET_SERVER_BASEURL(fallBackEnv = listOf("BITBUCKET_BASEURL")),
         BITBUCKET_SERVER_USER(fallBackEnv = listOf("BITBUCKET_USER")),
         BITBUCKET_SERVER_TOKEN(fallBackEnv = listOf("BITBUCKET_TOKEN")),
+        BITBUCKET_SERVER_PROJECT(fallBackEnv = listOf("BITBUCKET_PROJECT")),
+        BITBUCKET_SERVER_REPO(fallBackEnv = listOf("BITBUCKET_REPO")),
+
         GITLAB_USERNAME,
         GITLAB_TOKEN,
         GITLAB_GROUP(defaultValue = "mega-manipulator-ci"),
@@ -29,10 +36,10 @@ class EnvHelper {
         prop
     }
 
-    fun resolve(env: EnvProperty): String {
+    fun resolve(env: EnvProperty): String? {
         return dotEnvProperties[env.name]?.toString()
             ?: resolveSysEnv(env)
-            ?: env.defaultValue!!
+            ?: env.defaultValue
     }
 
     private fun resolveSysEnv(env: EnvProperty): String? {

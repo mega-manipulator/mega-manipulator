@@ -90,8 +90,11 @@ data class GithubComPullRequestWrapper(
 }
 
 sealed class GitLabMergeRequestWrapper : PullRequestWrapper() {
-    abstract val targetProjectId: String
-    abstract val mergeRequestId: String
+    abstract val targetProjectId: Long
+    abstract val sourceProjectId: Long
+    abstract val mergeRequestId: Long
+    abstract val mergeRequestIid: Long
+
 }
 
 data class GitLabMergeRequestListItemWrapper(
@@ -100,8 +103,10 @@ data class GitLabMergeRequestListItemWrapper(
     val mergeRequest: com.github.jensim.megamanipulator.graphql.generated.gitlab.getauthoredpullrequests.MergeRequest,
     override val raw: String,
 ) : GitLabMergeRequestWrapper() {
-    override val targetProjectId: String = mergeRequest.targetProject.id
-    override val mergeRequestId: String = mergeRequest.id
+    override val targetProjectId = mergeRequest.targetProject.id.removePrefix("gid://gitlab/Project/").toLong()
+    override val sourceProjectId = mergeRequest.sourceProject?.id?.removePrefix("gid://gitlab/Project/")?.toLong()!!
+    override val mergeRequestId = mergeRequest.id.removePrefix("gid://gitlab/MergeRequest/").toLong()
+    override val mergeRequestIid = mergeRequest.iid.toLong()
 
     override fun codeHostName(): String = codeHost
     override fun searchHostName(): String = searchHost
@@ -132,8 +137,10 @@ data class GitLabMergeRequestApiWrapper(
     private val cloneable: GitCloneable,
     override val raw: String,
 ) : GitLabMergeRequestWrapper() {
-    override val targetProjectId: String = mergeRequest.target_project_id.toString()
-    override val mergeRequestId: String = mergeRequest.id.toString()
+    override val targetProjectId = mergeRequest.target_project_id
+    override val sourceProjectId = mergeRequest.source_project_id
+    override val mergeRequestId = mergeRequest.id
+    override val mergeRequestIid = mergeRequest.iid
 
     override fun codeHostName(): String = codeHost
     override fun searchHostName(): String = searchHost

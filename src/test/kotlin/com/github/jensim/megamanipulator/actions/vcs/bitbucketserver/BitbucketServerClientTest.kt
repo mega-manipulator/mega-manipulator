@@ -40,12 +40,12 @@ internal class BitbucketServerClientTest {
     }
 
     private val bitBucketSettings = BitBucketSettings(
-        username = envHelper.resolve(BITBUCKET_SERVER_USER),
+        username = envHelper.resolve(BITBUCKET_SERVER_USER)!!,
         forkSetting = PLAIN_BRANCH,
-        baseUrl = envHelper.resolve(BITBUCKET_SERVER_BASEURL),
+        baseUrl = envHelper.resolve(BITBUCKET_SERVER_BASEURL)!!,
         cloneType = HTTPS,
     )
-    private val password = envHelper.resolve(BITBUCKET_SERVER_TOKEN)
+    private val password = envHelper.resolve(BITBUCKET_SERVER_TOKEN)!!
     private val codeHost = "bitbucket_server"
     private val searchHost = "sourcegraph.com"
     private val settings = MegaManipulatorSettings(

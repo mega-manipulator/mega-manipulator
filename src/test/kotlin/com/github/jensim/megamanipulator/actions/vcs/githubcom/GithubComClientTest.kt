@@ -30,11 +30,11 @@ class GithubComClientTest {
 
     private val envHelper = EnvHelper()
     private val githubSettings = GitHubSettings(
-        username = envHelper.resolve(GITHUB_USERNAME),
+        username = envHelper.resolve(GITHUB_USERNAME)!!,
         forkSetting = PLAIN_BRANCH,
         cloneType = HTTPS,
     )
-    private val password = envHelper.resolve(GITHUB_USERNAME)
+    private val password = envHelper.resolve(GITHUB_USERNAME)!!
     private val codeHost = "github.com"
     private val searchHost = "sourcegraph.com"
     private val settings = MegaManipulatorSettings(

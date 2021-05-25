@@ -5,11 +5,12 @@ import com.expediagroup.graphql.client.serialization.GraphQLClientKotlinxSeriali
 import com.expediagroup.graphql.client.types.GraphQLClientResponse
 import com.github.jensim.megamanipulator.actions.localrepo.LocalRepoOperator
 import com.github.jensim.megamanipulator.actions.search.SearchResult
+import com.github.jensim.megamanipulator.actions.vcs.GitLabApiRepoWrapping
 import com.github.jensim.megamanipulator.actions.vcs.GitLabMergeRequestApiWrapper
 import com.github.jensim.megamanipulator.actions.vcs.GitLabMergeRequestListItemWrapper
 import com.github.jensim.megamanipulator.actions.vcs.GitLabMergeRequestWrapper
+import com.github.jensim.megamanipulator.actions.vcs.GitLabRepoGraphQlWrapping
 import com.github.jensim.megamanipulator.actions.vcs.GitLabRepoWrapping
-import com.github.jensim.megamanipulator.graphql.generated.gitlab.CloseMergeRequest
 import com.github.jensim.megamanipulator.graphql.generated.gitlab.GetAuthoredPullRequests
 import com.github.jensim.megamanipulator.graphql.generated.gitlab.GetAuthoredPullRequests.Result
 import com.github.jensim.megamanipulator.graphql.generated.gitlab.GetCurrentUser
@@ -21,20 +22,21 @@ import com.intellij.util.containers.isNullOrEmpty
 import io.ktor.client.HttpClient
 import io.ktor.client.request.accept
 import io.ktor.client.request.delete
+import io.ktor.client.request.get
 import io.ktor.client.request.post
 import io.ktor.client.request.put
 import io.ktor.client.statement.HttpResponse
 import io.ktor.client.statement.readText
 import io.ktor.http.ContentType
-import io.ktor.http.HttpStatusCode
 import io.ktor.http.contentType
 import io.ktor.http.encodeURLPath
+import java.lang.RuntimeException
+import java.net.URL
+import java.util.concurrent.atomic.AtomicInteger
 import kotlinx.coroutines.delay
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import org.slf4j.LoggerFactory
-import java.net.URL
-import java.util.concurrent.atomic.AtomicInteger
 
 @Suppress("debtUnusedPrivateMember", "TooManyFunctions", "LoopWithTooManyJumpStatements", "UnusedPrivateMember")
 class GitLabClient(
@@ -55,6 +57,25 @@ class GitLabClient(
         serializer = graphQLClientKotlinxSerializer,
     )
 
+    private suspend fun getRepo(pullRequest: GitLabMergeRequestWrapper, projectId: Long, client: HttpClient, settings: GitLabSettings): GitLabRepoWrapping {
+        // https://docs.gitlab.com/ee/api/projects.html#get-single-project
+        // GET /api/v4/projects/:id
+        val response = client.get<HttpResponse>("${settings.baseUrl}/api/v4/projects/$projectId") {
+            accept(ContentType.Application.Json)
+        }
+        if (response.status.value >= 300) {
+            throw RuntimeException("Failed getting repo ${response.readText()}")
+        }else{
+            val content = response.readText()
+            val project = json.decodeFromString(GitLabProject.serializer(),content)
+            return GitLabApiRepoWrapping(
+                    searchHost = pullRequest.searchHostName(),
+                    codeHost = pullRequest.codeHostName(),
+                    gitLabProject = project
+            )
+        }
+    }
+
     suspend fun getRepo(searchResult: SearchResult, settings: GitLabSettings): GitLabRepoWrapping {
         val client = getClient(searchResult.searchHostName, searchResult.codeHostName, settings)
         val variables = SingleRepoQuery.Variables("${searchResult.project}/${searchResult.repo}")
@@ -62,22 +83,25 @@ class GitLabClient(
         repo.errors?.let {
             log.warn("Errors returned from gitlab query: {}", it)
         }
-        return GitLabRepoWrapping(
-            searchHost = searchResult.searchHostName,
-            codeHost = searchResult.codeHostName,
-            repo = repo.data?.project!!
+        return GitLabRepoGraphQlWrapping(
+                searchHost = searchResult.searchHostName,
+                codeHost = searchResult.codeHostName,
+                gitLabProject = repo.data?.project!!
         )
     }
 
-    suspend fun commentPR(comment: String, pullRequest: GitLabMergeRequestListItemWrapper, settings: GitLabSettings) {
+    suspend fun commentPR(comment: String, pullRequest: GitLabMergeRequestWrapper, settings: GitLabSettings) {
+        // https://docs.gitlab.com/ee/api/merge_requests.html#comments-on-merge-requests
         // https://docs.gitlab.com/ee/api/notes.html#create-new-issue-note
         // POST /api/v4/projects/:id/merge_requests/:merge_request_iid/notes
-        val client: HttpClient = httpClientProvider.getClient(searchHostName = pullRequest.searchHost, codeHostName = pullRequest.codeHost, settings = settings)
-        val project: String = pullRequest.mergeRequest.targetProject.fullPath.encodeURLPath()
-        val iid: String = pullRequest.mergeRequest.iid
-        client.post<HttpResponse>("${settings.baseUrl}/api/v4/projects/$project/merge_requests/$iid/notes") {
-            body = mapOf("body" to comment)
+        val client: HttpClient = httpClientProvider.getClient(searchHostName = pullRequest.searchHostName(), codeHostName = pullRequest.codeHostName(), settings = settings)
+        val iid = pullRequest.mergeRequestIid
+        val response = client.post<HttpResponse>("${settings.baseUrl}/api/v4/projects/${pullRequest.targetProjectId}/merge_requests/$iid/notes") {
             contentType(ContentType.Application.Json)
+            body = mapOf("body" to comment)
+        }
+        if (response.status.value >= 300) {
+            log.warn("Failed creatibg comment '${response.readText()}'")
         }
     }
 
@@ -97,14 +121,14 @@ class GitLabClient(
     suspend fun deletePrivateRepo(fork: GitLabRepoWrapping, settings: GitLabSettings) {
         // https://docs.gitlab.com/ee/api/projects.html#delete-project
         // DELETE /api/v4/projects/:id
-        if (fork.repo.path != settings.username) {
+        if (fork.getProject() != settings.username) {
             throw IllegalArgumentException("Stopped deletion attempt for repo that was not a private fork")
         }
         val client: HttpClient = httpClientProvider.getClient(fork.getSearchHost(), fork.getCodeHost(), settings)
-        val projectId = fork.repo.id.encodeURLPath()
+        val projectId = fork.projectId
         val response: HttpResponse = client.delete("${settings.baseUrl}/api/v4/projects/$projectId")
-        if (response.status != HttpStatusCode.OK) {
-            log.warn("Failed deleting Gitlab repo ${fork.repo.fullPath} http status code ${response.status}")
+        if (response.status.value >= 300) {
+            log.warn("Failed deleting Gitlab repo ${fork.fullPath} http status code ${response.status} and message '${response.readText()}'")
         }
     }
 
@@ -145,32 +169,25 @@ class GitLabClient(
         return forksAccumulator
     }
 
-    suspend fun closePr(dropFork: Boolean, dropBranch: Boolean, settings: GitLabSettings, pullRequest: GitLabMergeRequestListItemWrapper) {
+    suspend fun closePr(dropFork: Boolean, dropBranch: Boolean, settings: GitLabSettings, pullRequest: GitLabMergeRequestWrapper) {
         // https://docs.gitlab.com/ee/api/merge_requests.html#delete-a-merge-request
-        val client: HttpClient = httpClientProvider.getClient(pullRequest.searchHost, pullRequest.codeHost, settings)
-        val graphQLClient = GraphQLKtorClient(url = URL("${settings.baseUrl}/api/graphql"), httpClient = client)
-        val response = graphQLClient.execute(
-            CloseMergeRequest(
-                CloseMergeRequest.Variables(
-                    projectPath = pullRequest.mergeRequest.targetProject.fullPath,
-                    iid = pullRequest.mergeRequest.iid
-                )
-            )
-        )
-        if (response.errors.isNullOrEmpty() && response.data?.mergeRequestUpdate?.errors.isNullOrEmpty()) {
-            if (dropFork && pullRequest.isFork() &&
-                pullRequest.mergeRequest.sourceProject?.fullPath?.takeWhile { it != '/' } == settings.username
-            ) {
-                val projectParts = pullRequest.mergeRequest.sourceProject.fullPath.split("/")
-                val repo = getRepo(SearchResult(project = projectParts[0], repo = projectParts[1], codeHostName = pullRequest.codeHost, searchHostName = pullRequest.searchHost), settings)
+        // DELETE /api/v4/projects/:id/merge_requests/:merge_request_iid
+        val client: HttpClient = httpClientProvider.getClient(searchHostName = pullRequest.searchHostName(), codeHostName = pullRequest.codeHostName(), settings = settings)
+        val response = client.delete<HttpResponse>("${settings.baseUrl}/api/v4/projects/${pullRequest.targetProjectId}/merge_requests/${pullRequest.mergeRequestIid}")
+
+        if (response.status.value >= 300) {
+            log.warn("Failed deleting merge request '${response.readText()}'")
+        } else {
+            if (dropFork && pullRequest.isFork()) {
+                val repo = getRepo(pullRequest,pullRequest.sourceProjectId,client,settings)
                 deletePrivateRepo(repo, settings)
             } else if (dropBranch && !pullRequest.isFork()) {
                 // https://docs.gitlab.com/ee/api/branches.html#delete-repository-branch
                 // DELETE /api/v4/projects/:id/repository/branches/:branch
-                val sourceProjectId = pullRequest.mergeRequest.sourceProject?.id?.encodeURLPath()
-                val sourceBranch = pullRequest.mergeRequest.sourceBranch.encodeURLPath()
+                val sourceProjectId = pullRequest.sourceProjectId
+                val sourceBranch = pullRequest.fromBranch()
                 val branchResponse: HttpResponse = client.delete("${settings.baseUrl}/api/v4/projects/$sourceProjectId/repository/branches/$sourceBranch")
-                if (branchResponse.status != HttpStatusCode.OK) {
+                if (branchResponse.status.value >= 300) {
                     log.warn("Failed deleting branch '$sourceBranch' for '${pullRequest.asPathString()}'")
                 }
             }
@@ -216,19 +233,20 @@ class GitLabClient(
         // https://docs.gitlab.com/ee/api/merge_requests.html#update-mr
         // PUT /api/v4/projects/:id/merge_requests/:merge_request_iid
         val client: HttpClient = httpClientProvider.getClient(pullRequest.searchHostName(), pullRequest.codeHostName(), settings)
-        val projectId = pullRequest.targetProjectId.encodeURLPath()
-        val mergeRequestId = pullRequest.mergeRequestId.encodeURLPath()
-        val response: HttpResponse = client.put("${settings.baseUrl}/api/v4/projects/$projectId/merge_requests/$mergeRequestId") {
+        val projectId = pullRequest.targetProjectId
+        val mergeRequestIid = pullRequest.mergeRequestIid
+        val response: HttpResponse = client.put("${settings.baseUrl}/api/v4/projects/$projectId/merge_requests/$mergeRequestIid") {
+            contentType(ContentType.Application.Json)
             body = mapOf("description" to newDescription, "title" to newTitle)
         }
-        if (response.status != HttpStatusCode.OK) {
+        if (response.status.value >= 300) {
             log.warn("Failed updating MergeRequest ") // TODO improve visibility to user
         }
         val content = response.readText()
         val mergeRequest: GitLabMergeRequest = json.decodeFromString(GitLabMergeRequest.serializer(), content)
         return GitLabMergeRequestApiWrapper(
-            searchHost = pullRequest.searchHostName(),
-            codeHost = pullRequest.codeHostName(),
+                searchHost = pullRequest.searchHostName(),
+                codeHost = pullRequest.codeHostName(),
             mergeRequest = mergeRequest,
             cloneable = pullRequest,
             raw = content
@@ -247,7 +265,7 @@ class GitLabClient(
         }
         val groupRepo: GitLabRepoWrapping = getRepo(searchResult = repo, settings = settings)
         val client: HttpClient = httpClientProvider.getClient(repo.searchHostName, repo.codeHostName, settings)
-        client.post<Void>("${settings.baseUrl}/api/v4/projects/${groupRepo.repo.id.encodeURLPath()}/fork") {
+        client.post<Void>("${settings.baseUrl}/api/v4/projects/${groupRepo.projectId}/fork") {
             contentType(ContentType.Application.Json)
             accept(ContentType.Application.Json)
             body = mapOf<String, String>()
@@ -276,29 +294,34 @@ class GitLabClient(
         val fromProject = fork?.first ?: repo.project
         val fromRepo = fork?.second ?: repo.repo
         val gitlabSourceRepo = getRepo(SearchResult(fromProject, fromRepo, repo.codeHostName, repo.searchHostName), settings)
-        val sourceProjectId = gitlabSourceRepo.repo.id.encodeURLPath()
+        val sourceProjectId = gitlabSourceRepo.projectId
 
         val client: HttpClient = httpClientProvider.getClient(repo.searchHostName, repo.codeHostName, settings)
-        val response: HttpResponse = client.post("${settings.baseUrl}/api/v4/projects/$sourceProjectId/merge_requests") {
-            body = mapOf(
-                "source_branch" to localBranch,
-                "target_branch" to gitlabTargetRepo,
-                "target_project_id" to gitlabTargetRepo.repo.id,
-                "title" to title,
-                "description" to description
-            )
-        }
-        if (response.status != HttpStatusCode.OK) {
-            log.warn("Failed creating MergeRequest") // TODO improve visibility to user
+        val urlString = "${settings.baseUrl}/api/v4/projects/$sourceProjectId/merge_requests"
+        val targetProjectIdNumeric: Long = gitlabTargetRepo.projectId
+        val body = GitLabMergeRequestRequest(
+                source_branch = localBranch,
+                target_branch = gitlabTargetRepo.getDefaultBranch()!!,
+                target_project_id = targetProjectIdNumeric,
+                title = title,
+                description = description
+        )
+        val response: HttpResponse = client.post(urlString) {
+            contentType(ContentType.Application.Json)
+            accept(ContentType.Application.Json)
+            this.body = body
         }
         val content = response.readText()
+        if (response.status.value >= 300) {
+            log.warn("Failed creating MergeRequest $content") // TODO improve visibility to user
+        }
         val mergeRequest: GitLabMergeRequest = json.decodeFromString(GitLabMergeRequest.serializer(), content)
         return GitLabMergeRequestApiWrapper(
-            searchHost = repo.searchHostName,
-            codeHost = repo.codeHostName,
-            mergeRequest = mergeRequest,
-            cloneable = GitLabGitCloneableRepoWrapper(source = gitlabSourceRepo, target = gitlabTargetRepo),
-            raw = content
+                searchHost = repo.searchHostName,
+                codeHost = repo.codeHostName,
+                mergeRequest = mergeRequest,
+                cloneable = GitLabGitCloneableRepoWrapper(source = gitlabSourceRepo, target = gitlabTargetRepo),
+                raw = content
         )
     }
 

@@ -2,6 +2,7 @@ package com.github.jensim.megamanipulator.actions.vcs
 
 import com.github.jensim.megamanipulator.actions.vcs.bitbucketserver.BitBucketRepo
 import com.github.jensim.megamanipulator.actions.vcs.githubcom.GithubComRepo
+import com.github.jensim.megamanipulator.actions.vcs.gitlab.GitLabProject
 import com.github.jensim.megamanipulator.graphql.generated.gitlab.singlerepoquery.Project
 import com.github.jensim.megamanipulator.settings.types.CloneType
 import com.github.jensim.megamanipulator.settings.types.CloneType.HTTPS
@@ -56,19 +57,44 @@ data class GithubComRepoWrapping(
     override fun getDefaultBranch(): String = repo.default_branch
 }
 
-data class GitLabRepoWrapping(
+sealed class GitLabRepoWrapping : RepoWrapper() {
+    abstract val fullPath:String
+    abstract val projectId:Long
+}
+
+data class GitLabRepoGraphQlWrapping(
     private val searchHost: String,
     private val codeHost: String,
-    val repo: Project
-) : RepoWrapper() {
+    val gitLabProject: Project
+) : GitLabRepoWrapping() {
+    override val fullPath: String = gitLabProject.fullPath
+    override val projectId: Long = gitLabProject.id.removePrefix("gid://gitlab/Project/").toLong()
+    override fun getSearchHost(): String = searchHost
+    override fun getCodeHost(): String = codeHost
+    override fun getProject(): String = gitLabProject.namespace?.path!!
+    override fun getRepo(): String = gitLabProject.path
+    override fun getCloneUrl(cloneType: CloneType): String? = when (cloneType) {
+        SSH -> gitLabProject.sshUrlToRepo
+        HTTPS -> gitLabProject.httpUrlToRepo
+    }
+    override fun getDefaultBranch(): String? = gitLabProject.repository?.rootRef
+}
+
+data class GitLabApiRepoWrapping(
+        private val searchHost: String,
+        private val codeHost: String,
+        private val gitLabProject: GitLabProject
+) : GitLabRepoWrapping(){
+    override val fullPath: String = "${gitLabProject.path}/${gitLabProject.namespace.path}"
+    override val projectId: Long = gitLabProject.id
 
     override fun getSearchHost(): String = searchHost
     override fun getCodeHost(): String = codeHost
-    override fun getProject(): String = repo.namespace?.fullName!!
-    override fun getRepo(): String = repo.path
-    override fun getCloneUrl(cloneType: CloneType): String? = when (cloneType) {
-        SSH -> repo.sshUrlToRepo
-        HTTPS -> repo.httpUrlToRepo
+    override fun getProject(): String = gitLabProject.namespace.path
+    override fun getRepo(): String = gitLabProject.path
+    override fun getCloneUrl(cloneType: CloneType): String = when (cloneType) {
+        SSH -> gitLabProject.ssh_url_to_repo
+        HTTPS -> gitLabProject.http_url_to_repo
     }
-    override fun getDefaultBranch(): String? = repo.repository?.rootRef
+    override fun getDefaultBranch(): String = gitLabProject.default_branch
 }

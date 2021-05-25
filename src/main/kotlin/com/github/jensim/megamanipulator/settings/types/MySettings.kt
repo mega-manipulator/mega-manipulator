@@ -192,8 +192,6 @@ sealed class CodeHostSettings
         override val forkSetting: ForkSetting = ForkSetting.LAZY_FORK,
         @JsonSchema.Description(["It's strongly recommended to use SSH clone type."])
         override val cloneType: CloneType = CloneType.SSH,
-        @JsonSchema.Description(["Prefix forked repos with a recognizable char sequence"])
-        val forkRepoPrefix: String = "mm_",
     ) : CodeHostSettings() {
 
         override val authMethod: AuthMethod = AuthMethod.USERNAME_TOKEN

@@ -41,7 +41,7 @@ class SearchOperatorTest {
         baseUrl = "https://sourcegraph.com",
         codeHostSettings = mapOf(
             codeHostName to CodeHostSettings.GitHubSettings(
-                username = envHelper.resolve(SRC_COM_USERNAME),
+                username = envHelper.resolve(SRC_COM_USERNAME)!!,
                 forkSetting = ForkSetting.PLAIN_BRANCH,
             )
         )

@@ -108,7 +108,7 @@ class HttpClientProvider(
     } catch (e: Exception) {
         notificationsOperator.show(
             title = "Password not set",
-            body = "Password was not set for $authMethod:$username@$baseUrl",
+            body = "Password was not set for $authMethod: $username@$baseUrl",
             type = NotificationType.WARNING
         )
         throw e

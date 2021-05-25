@@ -31,7 +31,6 @@ data class BitBucketPullRequestRequest(
     val locked: Boolean = false,
     val fromRef: BitBucketBranchRef,
     val toRef: BitBucketBranchRef,
-    val author: BitBucketParticipant? = null,
     val reviewers: List<BitBucketParticipant>,
 )
 

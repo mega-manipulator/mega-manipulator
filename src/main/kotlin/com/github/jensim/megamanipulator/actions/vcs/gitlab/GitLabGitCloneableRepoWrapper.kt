@@ -12,5 +12,5 @@ data class GitLabGitCloneableRepoWrapper(
     override fun baseRepo(): String = target.getRepo()
     override fun cloneUrlFrom(cloneType: CloneType): String? = source.getCloneUrl(cloneType)
     override fun cloneUrlTo(cloneType: CloneType): String? = target.getCloneUrl(cloneType)
-    override fun isFork(): Boolean = target.repo.fullPath != source.repo.fullPath
+    override fun isFork(): Boolean = target.fullPath != source.fullPath
 }

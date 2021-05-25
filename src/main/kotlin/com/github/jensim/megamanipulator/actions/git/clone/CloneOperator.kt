@@ -19,6 +19,7 @@ import com.github.jensim.megamanipulator.settings.types.MegaManipulatorSettings
 import com.github.jensim.megamanipulator.ui.UiProtector
 import com.intellij.notification.NotificationType.INFORMATION
 import com.intellij.notification.NotificationType.WARNING
+import io.ktor.http.encodeURLPath
 import java.io.File
 
 private typealias Action = Pair<String, ApplyOutput>
@@ -63,7 +64,9 @@ class CloneOperator(
         return when (codeSettings.cloneType) {
             SSH -> cloneUrl
             HTTPS -> {
-                "${cloneUrl.substringBefore("://")}://${codeSettings.username!!}:${passwordsOperator.getPassword(codeSettings.username!!,codeSettings.baseUrl)!!}@${cloneUrl.substringAfter("://")}"
+                val password = passwordsOperator.aggressivePercentEncoding(passwordsOperator.getPassword(codeSettings.username!!, codeSettings.baseUrl)!!)
+                val username = passwordsOperator.aggressivePercentEncoding(codeSettings.username!!)
+                "${cloneUrl.substringBefore("://")}://$username:$password@${cloneUrl.substringAfter("://")}"
             }
         }
     }
