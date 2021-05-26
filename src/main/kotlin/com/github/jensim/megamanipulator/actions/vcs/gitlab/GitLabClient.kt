@@ -29,14 +29,14 @@ import io.ktor.client.request.put
 import io.ktor.client.statement.HttpResponse
 import io.ktor.client.statement.readText
 import io.ktor.http.ContentType
+import io.ktor.http.HttpStatusCode
 import io.ktor.http.contentType
+import java.net.URL
+import java.util.concurrent.atomic.AtomicInteger
 import kotlinx.coroutines.delay
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import org.slf4j.LoggerFactory
-import java.lang.RuntimeException
-import java.net.URL
-import java.util.concurrent.atomic.AtomicInteger
 
 @Suppress("debtUnusedPrivateMember", "TooManyFunctions", "LoopWithTooManyJumpStatements", "UnusedPrivateMember")
 class GitLabClient(
@@ -129,6 +129,8 @@ class GitLabClient(
         val response: HttpResponse = client.delete("${settings.baseUrl}/api/v4/projects/$projectId")
         if (response.status.value >= 300) {
             log.warn("Failed deleting Gitlab repo ${fork.fullPath} http status code ${response.status} and message '${response.readText()}'")
+        } else {
+            log.info("Deleted private repo ${fork.asPathString()}")
         }
     }
 
@@ -178,6 +180,7 @@ class GitLabClient(
         if (response.status.value >= 300) {
             log.warn("Failed deleting merge request '${response.readText()}'")
         } else {
+            log.info("Closed MergeRequest for ${pullRequest.asPathString()} with title '${pullRequest.title()}'")
             if (dropFork && pullRequest.isFork()) {
                 val repo = getRepo(pullRequest, pullRequest.sourceProjectId, client, settings)
                 deletePrivateRepo(repo, settings)
@@ -265,10 +268,14 @@ class GitLabClient(
         }
         val groupRepo: GitLabRepoWrapping = getRepo(searchResult = repo, settings = settings)
         val client: HttpClient = httpClientProvider.getClient(repo.searchHostName, repo.codeHostName, settings)
-        client.post<Void>("${settings.baseUrl}/api/v4/projects/${groupRepo.projectId}/fork") {
+        val response = client.post<HttpResponse>("${settings.baseUrl}/api/v4/projects/${groupRepo.projectId}/fork") {
             contentType(ContentType.Application.Json)
             accept(ContentType.Application.Json)
             body = mapOf<String, String>()
+        }
+        if (response.status.value >= 300) {
+            val status = HttpStatusCode.fromValue(response.status.value)
+            throw RuntimeException("Failed forking repo ${repo.asPathString()} due to httpStatus:$status and message: '${response.readText()}'")
         }
         val counter = AtomicInteger()
         while (counter.getAndIncrement() < 30) {

@@ -227,7 +227,7 @@ class BitbucketServerClient(
                 removeRemoteBranch(settings, pullRequest, client)
             }
         } catch (e: Exception) {
-            e.printStackTrace()
+            log.error("Failed declining PR", e)
             notificationsOperator.show(
                 title = "Failed declining PR",
                 body = "${e.message}",

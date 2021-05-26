@@ -8,8 +8,10 @@ import com.github.jensim.megamanipulator.toolswindow.MyToolWindowFactory
 import com.intellij.openapi.wm.ToolWindow
 import com.intellij.ui.content.ContentFactory
 import com.intellij.util.io.delete
+import io.mockk.clearAllMocks
 import io.mockk.every
 import io.mockk.mockk
+import io.mockk.verify
 import kotlinx.coroutines.runBlocking
 import org.hamcrest.MatcherAssert.assertThat
 import org.hamcrest.Matchers.equalTo
@@ -26,6 +28,7 @@ import org.junit.jupiter.params.provider.MethodSource
 import java.io.File
 import java.util.UUID
 import kotlin.io.path.ExperimentalPathApi
+import org.junit.jupiter.api.fail
 
 @ExperimentalPathApi
 class IntegrationTest {
@@ -127,7 +130,12 @@ class IntegrationTest {
 
         // decline
         runBlocking {
-            wiring.applicationWiring.prRouter.closePr(dropFork = true, dropBranch = true, pullRequest = updatedPR!!)
+            try {
+                wiring.applicationWiring.prRouter.closePr(dropFork = true, dropBranch = true, pullRequest = updatedPR!!)
+            }catch (e:Exception){
+                e.printStackTrace()
+                fail { "Failed closing PR" }
+            }
         }
     }
 }
