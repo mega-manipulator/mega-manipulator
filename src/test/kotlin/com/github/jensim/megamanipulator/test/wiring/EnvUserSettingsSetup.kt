@@ -67,7 +67,7 @@ object EnvUserSettingsSetup {
 
     val githubSettings: Pair<String, CodeHostSettings.GitHubSettings> by lazy {
         "github.com" to CodeHostSettings.GitHubSettings(
-            username = helper.resolve(EnvHelper.EnvProperty.GITLAB_USERNAME)!!,
+            username = helper.resolve(EnvHelper.EnvProperty.GITHUB_USERNAME)!!,
             forkSetting = ForkSetting.EAGER_FORK,
             cloneType = CloneType.HTTPS,
         )
