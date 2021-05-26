@@ -3,16 +3,15 @@ package com.github.jensim.megamanipulator.actions.apply
 import com.github.jensim.megamanipulator.actions.ProcessOperator
 import com.github.jensim.megamanipulator.actions.localrepo.LocalRepoOperator
 import com.github.jensim.megamanipulator.files.FilesOperator
-import com.github.jensim.megamanipulator.settings.CloneType.HTTPS
-import com.github.jensim.megamanipulator.settings.MegaManipulatorSettings
-import com.github.jensim.megamanipulator.settings.ProjectOperator
-import com.github.jensim.megamanipulator.settings.SearchHostSettings
 import com.github.jensim.megamanipulator.settings.SettingsFileOperator
+import com.github.jensim.megamanipulator.settings.passwords.ProjectOperator
+import com.github.jensim.megamanipulator.settings.types.CloneType
+import com.github.jensim.megamanipulator.settings.types.MegaManipulatorSettings
+import com.github.jensim.megamanipulator.settings.types.SearchHostSettings
 import com.github.jensim.megamanipulator.ui.TestUiProtector
 import com.github.jensim.megamanipulator.ui.UiProtector
 import com.intellij.openapi.project.Project
 import io.mockk.every
-import io.mockk.junit5.MockKExtension
 import io.mockk.mockk
 import io.mockk.verify
 import kotlinx.coroutines.CompletableDeferred
@@ -24,14 +23,12 @@ import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.extension.ExtendWith
 import java.io.File
 import java.nio.file.Path
 import kotlin.io.path.ExperimentalPathApi
 import kotlin.io.path.createTempDirectory
 
 @ExperimentalPathApi
-@ExtendWith(MockKExtension::class)
 class ApplyOperatorTest {
 
     private val filesOperator: FilesOperator = mockk(relaxed = true)
@@ -47,7 +44,7 @@ class ApplyOperatorTest {
             every { resolveSettings(any(), any()) } returns (
                 mockk<SearchHostSettings>() to mockk {
                     every { username } returns "username"
-                    every { cloneType } returns HTTPS
+                    every { cloneType } returns CloneType.HTTPS
                     every { baseUrl } returns "https://example"
                 }
                 )
