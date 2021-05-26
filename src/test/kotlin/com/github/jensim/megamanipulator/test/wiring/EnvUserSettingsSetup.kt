@@ -8,6 +8,7 @@ import com.github.jensim.megamanipulator.settings.types.ForkSetting
 import com.github.jensim.megamanipulator.settings.types.HttpsOverride
 import com.github.jensim.megamanipulator.settings.types.MegaManipulatorSettings
 import com.github.jensim.megamanipulator.settings.types.SearchHostSettings
+import com.github.jensim.megamanipulator.test.CiDetector
 import com.github.jensim.megamanipulator.test.EnvHelper
 import com.github.jensim.megamanipulator.test.TestPasswordOperator
 import org.slf4j.LoggerFactory
@@ -68,7 +69,7 @@ object EnvUserSettingsSetup {
     val githubSettings: Pair<String, CodeHostSettings.GitHubSettings> by lazy {
         "github.com" to CodeHostSettings.GitHubSettings(
             username = helper.resolve(EnvHelper.EnvProperty.GITHUB_USERNAME)!!,
-            forkSetting = ForkSetting.EAGER_FORK,
+            forkSetting = if (CiDetector.isCI) ForkSetting.PLAIN_BRANCH else ForkSetting.EAGER_FORK,
             cloneType = CloneType.HTTPS,
         )
     }
@@ -81,7 +82,7 @@ object EnvUserSettingsSetup {
                 baseUrl = helper.resolve(EnvHelper.EnvProperty.BITBUCKET_SERVER_BASEURL)!!,
                 httpsOverride = HttpsOverride.ALLOW_ANYTHING,
                 username = helper.resolve(EnvHelper.EnvProperty.BITBUCKET_SERVER_USER)!!,
-                forkSetting = ForkSetting.EAGER_FORK,
+                forkSetting = if (CiDetector.isCI) ForkSetting.PLAIN_BRANCH else ForkSetting.EAGER_FORK,
                 cloneType = CloneType.HTTPS,
             )
         } catch (e: NullPointerException) {
@@ -96,7 +97,7 @@ object EnvUserSettingsSetup {
             helper.resolve(EnvHelper.EnvProperty.GITLAB_PROJECT)!!
             "gitlab.com" to CodeHostSettings.GitLabSettings(
                 username = helper.resolve(EnvHelper.EnvProperty.GITLAB_USERNAME)!!,
-                forkSetting = ForkSetting.EAGER_FORK,
+                forkSetting = if (CiDetector.isCI) ForkSetting.PLAIN_BRANCH else ForkSetting.EAGER_FORK,
                 cloneType = CloneType.HTTPS
             )
         } catch (e: NullPointerException) {
