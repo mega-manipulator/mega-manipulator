@@ -33,8 +33,7 @@ internal class GitLabClientTest {
 
         @JvmStatic
         fun enabled(): Boolean = try {
-            envHelper.resolve(GITLAB_TOKEN)
-            true
+            envHelper.resolve(GITLAB_TOKEN) != null
         } catch (e: NullPointerException) {
             false
         }

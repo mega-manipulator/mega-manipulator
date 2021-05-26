@@ -32,8 +32,7 @@ internal class BitbucketServerClientTest {
 
         @JvmStatic
         fun enabled(): Boolean = try {
-            envHelper.resolve(BITBUCKET_SERVER_BASEURL)
-            true
+            envHelper.resolve(BITBUCKET_SERVER_BASEURL) != null
         } catch (e: NullPointerException) {
             false
         }
