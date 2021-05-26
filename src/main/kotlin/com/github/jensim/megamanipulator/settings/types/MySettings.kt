@@ -104,7 +104,7 @@ sealed class SearchHostSettings : HostWithAuth {
         override val codeHostSettings: Map<String, CodeHostSettings>,
     ) : SearchHostSettings() {
 
-        override val docLinkHref: String = "https://jensim.github.io/mega-manipulator/docs/Search%20hosts/etsy_hound"
+        override val docLinkHref: String = "https://mega-manipulator.github.io/docs/Search%20hosts/etsy_hound"
         override val username = "none"
         override val authMethod = AuthMethod.NONE
         override fun getAuthHeaderValue(password: String?): String? = null
@@ -134,7 +134,7 @@ sealed class SearchHostSettings : HostWithAuth {
     ) : SearchHostSettings() {
 
         override val username: String = "token"
-        override val docLinkHref: String = "https://jensim.github.io/mega-manipulator/docs/Search%20hosts/sourcegraph"
+        override val docLinkHref: String = "https://mega-manipulator.github.io/docs/Search%20hosts/sourcegraph"
 
         init {
             require(codeHostSettings.isNotEmpty()) {

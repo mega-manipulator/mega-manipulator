@@ -9,6 +9,7 @@
 
 ### Changed
 - Use GraphQL lib
+- Moved docs into the new namespace 'mega-manipulator'
 
 ### Deprecated
 
@@ -17,6 +18,7 @@
 ### Fixed
 
 ### Security
+
 ## [0.0.23]
 ### Added
 - Doc links

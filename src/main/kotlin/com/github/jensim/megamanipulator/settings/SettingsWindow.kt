@@ -77,7 +77,7 @@ class SettingsWindow(
                         component(
                             JButton("Docs", AllIcons.Toolwindows.Documentation).apply {
                                 addActionListener {
-                                    com.intellij.ide.BrowserUtil.browse("https://jensim.github.io/mega-manipulator/")
+                                    com.intellij.ide.BrowserUtil.browse("https://mega-manipulator.github.io")
                                 }
                             }
                         )
