@@ -14,6 +14,7 @@ import com.github.jensim.megamanipulator.settings.passwords.ProjectOperator
 import com.github.jensim.megamanipulator.settings.types.CloneType.HTTPS
 import com.github.jensim.megamanipulator.settings.types.MegaManipulatorSettings
 import com.github.jensim.megamanipulator.settings.types.SearchHostSettings
+import com.github.jensim.megamanipulator.test.TestPasswordOperator
 import com.github.jensim.megamanipulator.ui.TestUiProtector
 import com.github.jensim.megamanipulator.ui.UiProtector
 import com.intellij.notification.NotificationType
@@ -65,9 +66,12 @@ class CloneOperatorTest {
     private val settingsFileOperator: SettingsFileOperator = mockk {
         every { readSettings() } returns settings
     }
-    private val passwordsOperator: PasswordsOperator = mockk {
-        every { getPassword("username", "https://example") } returns "password"
-    }
+    private val passwordsOperator: PasswordsOperator = TestPasswordOperator(
+        mapOf(
+            "username" to "https://example" to "password"
+        )
+    )
+
     private val cloneOperator = CloneOperator(
         filesOperator = filesOperator,
         projectOperator = projectOperator,

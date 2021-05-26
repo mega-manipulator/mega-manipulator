@@ -19,7 +19,6 @@ import com.github.jensim.megamanipulator.settings.types.MegaManipulatorSettings
 import com.github.jensim.megamanipulator.ui.UiProtector
 import com.intellij.notification.NotificationType.INFORMATION
 import com.intellij.notification.NotificationType.WARNING
-import io.ktor.http.encodeURLPath
 import java.io.File
 
 private typealias Action = Pair<String, ApplyOutput>

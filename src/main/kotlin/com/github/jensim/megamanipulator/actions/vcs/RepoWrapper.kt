@@ -58,8 +58,8 @@ data class GithubComRepoWrapping(
 }
 
 sealed class GitLabRepoWrapping : RepoWrapper() {
-    abstract val fullPath:String
-    abstract val projectId:Long
+    abstract val fullPath: String
+    abstract val projectId: Long
 }
 
 data class GitLabRepoGraphQlWrapping(
@@ -81,10 +81,10 @@ data class GitLabRepoGraphQlWrapping(
 }
 
 data class GitLabApiRepoWrapping(
-        private val searchHost: String,
-        private val codeHost: String,
-        private val gitLabProject: GitLabProject
-) : GitLabRepoWrapping(){
+    private val searchHost: String,
+    private val codeHost: String,
+    private val gitLabProject: GitLabProject
+) : GitLabRepoWrapping() {
     override val fullPath: String = "${gitLabProject.path}/${gitLabProject.namespace.path}"
     override val projectId: Long = gitLabProject.id
 

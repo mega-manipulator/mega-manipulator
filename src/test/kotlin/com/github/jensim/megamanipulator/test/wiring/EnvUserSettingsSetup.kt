@@ -16,7 +16,7 @@ object EnvUserSettingsSetup {
 
     private val log = LoggerFactory.getLogger(javaClass)
 
-    val sourcegraphName = "sourcegraph.com"
+    const val sourcegraphName = "sourcegraph.com"
     val helper = EnvHelper()
 
     val passwordsOperator: PasswordsOperator by lazy {

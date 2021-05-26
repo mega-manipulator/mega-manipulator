@@ -1,6 +1,6 @@
 query ($cursor: String) {
   currentUser {
-    authoredMergeRequests(after: $cursor) {
+    authoredMergeRequests(after: $cursor, state:opened) {
       count
       pageInfo {
         hasNextPage

@@ -8,6 +8,7 @@ import com.github.jensim.megamanipulator.settings.SettingsFileOperator
 import com.github.jensim.megamanipulator.settings.types.CloneType.HTTPS
 import com.github.jensim.megamanipulator.settings.types.CodeHostSettings.BitBucketSettings
 import com.github.jensim.megamanipulator.settings.types.ForkSetting.PLAIN_BRANCH
+import com.github.jensim.megamanipulator.settings.types.HttpsOverride
 import com.github.jensim.megamanipulator.settings.types.MegaManipulatorSettings
 import com.github.jensim.megamanipulator.settings.types.SearchHostSettings.SourceGraphSettings
 import com.github.jensim.megamanipulator.test.EnvHelper

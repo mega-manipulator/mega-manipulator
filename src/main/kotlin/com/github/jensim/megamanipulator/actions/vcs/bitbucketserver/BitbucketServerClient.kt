@@ -19,6 +19,7 @@ import io.ktor.client.request.put
 import io.ktor.client.statement.HttpResponse
 import io.ktor.client.statement.readText
 import io.ktor.http.ContentType
+import io.ktor.http.HttpStatusCode
 import io.ktor.http.contentType
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
@@ -86,31 +87,33 @@ class BitbucketServerClient(
         val fromProject = fork?.first ?: repo.project
         val fromRepo = fork?.second ?: repo.repo
         val sourceRepo = repo.copy(project = fromProject, repo = fromRepo)
-        val reviewers = getDefaultReviewers(client = client,
-                settings = settings,
-                repo = repo,
-                sourceRepo = sourceRepo,
-                fromBranchRef = localBranch,
-                toBranchRef = defaultBranch)
-                .map { BitBucketParticipant(BitBucketUser(name = it.name)) }
+        val reviewers = getDefaultReviewers(
+            client = client,
+            settings = settings,
+            repo = repo,
+            sourceRepo = sourceRepo,
+            fromBranchRef = localBranch,
+            toBranchRef = defaultBranch
+        )
+            .map { BitBucketParticipant(BitBucketUser(name = it.name)) }
         val request = BitBucketPullRequestRequest(
-                title = title,
-                description = description,
-                fromRef = BitBucketBranchRef(
-                        id = localBranch,
-                        repository = BitBucketRepo(
-                                slug = fromRepo,
-                                project = BitBucketProject(key = fromProject),
-                        )
-                ),
-                toRef = BitBucketBranchRef(
-                        id = defaultBranch,
-                        repository = BitBucketRepo(
-                                slug = repo.repo,
-                                project = BitBucketProject(key = repo.project),
-                        )
-                ),
-                reviewers = reviewers,
+            title = title,
+            description = description,
+            fromRef = BitBucketBranchRef(
+                id = localBranch,
+                repository = BitBucketRepo(
+                    slug = fromRepo,
+                    project = BitBucketProject(key = fromProject),
+                )
+            ),
+            toRef = BitBucketBranchRef(
+                id = defaultBranch,
+                repository = BitBucketRepo(
+                    slug = repo.repo,
+                    project = BitBucketProject(key = repo.project),
+                )
+            ),
+            reviewers = reviewers,
         )
         val prResponse: HttpResponse = client.post("${settings.baseUrl}/rest/api/1.0/projects/${repo.project}/repos/${repo.repo}/pull-requests") {
             contentType(ContentType.Application.Json)
@@ -124,10 +127,10 @@ class BitbucketServerClient(
         val pr: BitBucketPullRequest = json.decodeFromString(BitBucketPullRequest.serializer(), prRaw)
 
         return BitBucketPullRequestWrapper(
-                searchHost = repo.searchHostName,
-                codeHost = repo.codeHostName,
-                bitbucketPR = pr,
-                raw = prRaw,
+            searchHost = repo.searchHostName,
+            codeHost = repo.codeHostName,
+            bitbucketPR = pr,
+            raw = prRaw,
         )
     }
 
@@ -200,7 +203,7 @@ class BitbucketServerClient(
                 contentType(ContentType.Application.Json)
                 body = emptyMap<String, String>()
             }
-            if (response.status.value >= 300){
+            if (response.status.value >= 300) {
                 log.error("Failed declining PullRequest")
             }
             if (dropFork && pullRequest.isFork()) {
@@ -257,21 +260,21 @@ class BitbucketServerClient(
                 }
             }
         } catch (e: Exception) {
-             log.warn("Failed finding fork", e)
+            log.warn("Failed finding fork", e)
             // Repo does not exist - lets fork
             null
         } ?: try {
             client.post("${settings.baseUrl}/rest/api/1.0/projects/${repo.project}/repos/${repo.repo}") {
                 contentType(ContentType.Application.Json)
                 accept(ContentType.Application.Json)
-                body = mapOf<String,String>()
+                body = mapOf<String, String>()
 //                body = BitBucketForkRequest(
 //                        slug = repo.repo,
 //                        project = BitBucketProjectRequest(key = "~${settings.username}")
 //                )
             }
         } catch (e: Throwable) {
-            log.error("Failed forking repo",e)
+            log.error("Failed forking repo", e)
             throw e
         }
 
@@ -347,7 +350,8 @@ class BitbucketServerClient(
         val response = client.get<HttpResponse>("${settings.baseUrl}/rest/api/1.0/inbox/pull-requests/count") {
             accept(ContentType.Application.Json)
         }
-        "${response.status.value}:${response.status.description}"
+        val desc = HttpStatusCode.fromValue(response.status.value).description
+        "${response.status.value}:$desc"
     } catch (e: Exception) {
         e.printStackTrace()
         "Client error"

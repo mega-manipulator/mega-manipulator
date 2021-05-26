@@ -94,7 +94,6 @@ sealed class GitLabMergeRequestWrapper : PullRequestWrapper() {
     abstract val sourceProjectId: Long
     abstract val mergeRequestId: Long
     abstract val mergeRequestIid: Long
-
 }
 
 data class GitLabMergeRequestListItemWrapper(
