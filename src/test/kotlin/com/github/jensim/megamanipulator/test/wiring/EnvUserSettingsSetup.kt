@@ -67,6 +67,12 @@ object EnvUserSettingsSetup {
     }
 
     val githubSettings: Pair<String, CodeHostSettings.GitHubSettings> by lazy {
+        listOf(
+            EnvHelper.EnvProperty.GITHUB_USERNAME,
+            EnvHelper.EnvProperty.GITHUB_TOKEN,
+            EnvHelper.EnvProperty.GITHUB_REPO,
+            EnvHelper.EnvProperty.GITHUB_PROJECT,
+        ).verifyUnset("GitHub")
         "github.com" to CodeHostSettings.GitHubSettings(
             username = helper.resolve(EnvHelper.EnvProperty.GITHUB_USERNAME)!!,
             forkSetting = if (CiDetector.isCI) ForkSetting.PLAIN_BRANCH else ForkSetting.EAGER_FORK,
@@ -76,8 +82,12 @@ object EnvUserSettingsSetup {
 
     val bitbucketSettings: Pair<String, CodeHostSettings.BitBucketSettings>? by lazy {
         try {
-            helper.resolve(EnvHelper.EnvProperty.BITBUCKET_SERVER_PROJECT)!!
-            helper.resolve(EnvHelper.EnvProperty.BITBUCKET_SERVER_REPO)!!
+            listOf(
+                EnvHelper.EnvProperty.BITBUCKET_SERVER_PROJECT,
+                EnvHelper.EnvProperty.BITBUCKET_SERVER_REPO,
+                EnvHelper.EnvProperty.BITBUCKET_SERVER_BASEURL,
+                EnvHelper.EnvProperty.BITBUCKET_SERVER_USER,
+            ).verifyUnset("BitBucket")
             "bitbucket_server" to CodeHostSettings.BitBucketSettings(
                 baseUrl = helper.resolve(EnvHelper.EnvProperty.BITBUCKET_SERVER_BASEURL)!!,
                 httpsOverride = HttpsOverride.ALLOW_ANYTHING,
@@ -85,23 +95,27 @@ object EnvUserSettingsSetup {
                 forkSetting = if (CiDetector.isCI) ForkSetting.PLAIN_BRANCH else ForkSetting.EAGER_FORK,
                 cloneType = CloneType.HTTPS,
             )
-        } catch (e: NullPointerException) {
-            log.warn("BitBucket user settings not set up", e)
+        } catch (e: MissingPropertyException) {
+            log.warn(e.message)
             null
         }
     }
 
     val gitlabSettings: Pair<String, CodeHostSettings.GitLabSettings>? by lazy {
         try {
-            helper.resolve(EnvHelper.EnvProperty.GITLAB_GROUP)!!
-            helper.resolve(EnvHelper.EnvProperty.GITLAB_PROJECT)!!
+            listOf(
+                EnvHelper.EnvProperty.GITLAB_USERNAME,
+                EnvHelper.EnvProperty.GITLAB_TOKEN,
+                EnvHelper.EnvProperty.GITLAB_PROJECT,
+                EnvHelper.EnvProperty.GITLAB_GROUP,
+            ).verifyUnset("GitLab")
             "gitlab.com" to CodeHostSettings.GitLabSettings(
                 username = helper.resolve(EnvHelper.EnvProperty.GITLAB_USERNAME)!!,
                 forkSetting = if (CiDetector.isCI) ForkSetting.PLAIN_BRANCH else ForkSetting.EAGER_FORK,
                 cloneType = CloneType.HTTPS
             )
-        } catch (e: NullPointerException) {
-            log.warn("GitLab user settings not set up", e)
+        } catch (e: MissingPropertyException) {
+            log.warn(e.message)
             null
         }
     }
@@ -119,4 +133,8 @@ object EnvUserSettingsSetup {
             )
         )
     }
+
+    private class MissingPropertyException(service: String, missing: List<EnvHelper.EnvProperty>) : Exception("$service missing properties ${missing.joinToString(separator = ", ", prefix = "[", postfix = "]") { it.name }}")
+
+    private fun List<EnvHelper.EnvProperty>.verifyUnset(service: String) = this.filter { helper.resolve(it) == null }.let { if (it.isNotEmpty()) throw MissingPropertyException(service, it) }
 }
