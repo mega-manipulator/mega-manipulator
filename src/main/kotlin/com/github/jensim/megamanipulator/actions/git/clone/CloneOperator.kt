@@ -3,6 +3,7 @@ package com.github.jensim.megamanipulator.actions.git.clone
 import com.github.jensim.megamanipulator.actions.NotificationsOperator
 import com.github.jensim.megamanipulator.actions.ProcessOperator
 import com.github.jensim.megamanipulator.actions.apply.ApplyOutput
+import com.github.jensim.megamanipulator.actions.git.GitUrlHelper
 import com.github.jensim.megamanipulator.actions.localrepo.LocalRepoOperator
 import com.github.jensim.megamanipulator.actions.search.SearchResult
 import com.github.jensim.megamanipulator.actions.vcs.PrRouter
@@ -12,6 +13,7 @@ import com.github.jensim.megamanipulator.files.FilesOperator
 import com.github.jensim.megamanipulator.settings.SettingsFileOperator
 import com.github.jensim.megamanipulator.settings.passwords.PasswordsOperator
 import com.github.jensim.megamanipulator.settings.passwords.ProjectOperator
+import com.github.jensim.megamanipulator.settings.types.CloneType
 import com.github.jensim.megamanipulator.settings.types.CloneType.HTTPS
 import com.github.jensim.megamanipulator.settings.types.CloneType.SSH
 import com.github.jensim.megamanipulator.settings.types.CodeHostSettings
@@ -33,7 +35,7 @@ class CloneOperator(
     private val notificationsOperator: NotificationsOperator,
     private val uiProtector: UiProtector,
     private val settingsFileOperator: SettingsFileOperator,
-    private val passwordsOperator: PasswordsOperator,
+    private val gitUrlHelper: GitUrlHelper,
 ) {
 
     fun clone(repos: Set<SearchResult>) {
@@ -48,7 +50,7 @@ class CloneOperator(
         ) { repo ->
             val codeSettings: CodeHostSettings = settings.resolveSettings(repo.searchHostName, repo.codeHostName)!!.second
             prRouter.getRepo(repo)?.let { vcsRepo: RepoWrapper ->
-                val cloneUrl = buildCloneUrl(codeSettings, vcsRepo)
+                val cloneUrl = gitUrlHelper.buildCloneUrl(codeSettings, vcsRepo)
                 val defaultBranch = prRouter.getRepo(repo)?.getDefaultBranch()!!
                 val dir = File(basePath, "clones/${repo.asPathString()}")
                 clone(dir, cloneUrl, defaultBranch)
@@ -58,17 +60,7 @@ class CloneOperator(
         reportState(state)
     }
 
-    private fun buildCloneUrl(codeSettings: CodeHostSettings, vcsRepo: RepoWrapper): String {
-        val cloneUrl = vcsRepo.getCloneUrl(codeSettings.cloneType)!!
-        return when (codeSettings.cloneType) {
-            SSH -> cloneUrl
-            HTTPS -> {
-                val password = passwordsOperator.aggressivePercentEncoding(passwordsOperator.getPassword(codeSettings.username!!, codeSettings.baseUrl)!!)
-                val username = passwordsOperator.aggressivePercentEncoding(codeSettings.username!!)
-                "${cloneUrl.substringBefore("://")}://$username:$password@${cloneUrl.substringAfter("://")}"
-            }
-        }
-    }
+
 
     private fun reportState(state: List<Pair<Any, List<Action>?>>) {
         val badState = state.filter { it.second == null || it.second!!.isNotEmpty() }

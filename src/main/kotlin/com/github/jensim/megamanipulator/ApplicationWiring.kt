@@ -6,6 +6,7 @@ import com.github.jensim.megamanipulator.actions.ProcessOperator
 import com.github.jensim.megamanipulator.actions.apply.ApplyOperator
 import com.github.jensim.megamanipulator.actions.apply.ApplyWindow
 import com.github.jensim.megamanipulator.actions.forks.ForksWindow
+import com.github.jensim.megamanipulator.actions.git.GitUrlHelper
 import com.github.jensim.megamanipulator.actions.git.GitWindow
 import com.github.jensim.megamanipulator.actions.git.clone.CloneOperator
 import com.github.jensim.megamanipulator.actions.git.commit.CommitOperator
@@ -153,6 +154,11 @@ data class ApplicationWiring(
             houndClient = this.houndClient,
         )
     }
+    val gitUrlHelper:GitUrlHelper by lazy {
+        GitUrlHelper(
+            passwordsOperator = this.passwordsOperator,
+        )
+    }
     val cloneOperator: CloneOperator by lazy {
         cloneOperatorOverride ?: CloneOperator(
             filesOperator = this.filesOperator,
@@ -163,7 +169,7 @@ data class ApplicationWiring(
             notificationsOperator = this.notificationsOperator,
             uiProtector = this.uiProtector,
             settingsFileOperator = this.settingsFileOperator,
-            passwordsOperator = this.passwordsOperator,
+            gitUrlHelper = this.gitUrlHelper,
         )
     }
     val uiProtector: UiProtector by lazy {
@@ -201,6 +207,7 @@ data class ApplicationWiring(
             processOperator = this.processOperator,
             prRouter = this.prRouter,
             uiProtector = this.uiProtector,
+            gitUrlHelper = this.gitUrlHelper,
         )
     }
     val dialogGenerator: DialogGenerator by lazy {

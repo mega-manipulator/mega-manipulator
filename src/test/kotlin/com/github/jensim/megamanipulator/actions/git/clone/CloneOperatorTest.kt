@@ -3,6 +3,7 @@ package com.github.jensim.megamanipulator.actions.git.clone
 import com.github.jensim.megamanipulator.actions.NotificationsOperator
 import com.github.jensim.megamanipulator.actions.ProcessOperator
 import com.github.jensim.megamanipulator.actions.apply.ApplyOutput
+import com.github.jensim.megamanipulator.actions.git.GitUrlHelper
 import com.github.jensim.megamanipulator.actions.localrepo.LocalRepoOperator
 import com.github.jensim.megamanipulator.actions.search.SearchResult
 import com.github.jensim.megamanipulator.actions.vcs.PrRouter
@@ -71,6 +72,7 @@ class CloneOperatorTest {
             "username" to "https://example" to "password"
         )
     )
+    private val gitUrlHelper = GitUrlHelper(passwordsOperator)
 
     private val cloneOperator = CloneOperator(
         filesOperator = filesOperator,
@@ -81,7 +83,7 @@ class CloneOperatorTest {
         notificationsOperator = notificationsOperator,
         uiProtector = uiProtector,
         settingsFileOperator = settingsFileOperator,
-        passwordsOperator = passwordsOperator
+        gitUrlHelper = gitUrlHelper
     )
 
     private val tempDirPath: Path = createTempDirectory(prefix = null, attributes = emptyArray())

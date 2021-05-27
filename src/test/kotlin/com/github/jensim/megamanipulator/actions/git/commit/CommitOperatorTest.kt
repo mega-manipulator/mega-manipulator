@@ -2,6 +2,7 @@ package com.github.jensim.megamanipulator.actions.git.commit
 
 import com.github.jensim.megamanipulator.actions.ProcessOperator
 import com.github.jensim.megamanipulator.actions.apply.ApplyOutput
+import com.github.jensim.megamanipulator.actions.git.GitUrlHelper
 import com.github.jensim.megamanipulator.actions.localrepo.LocalRepoOperator
 import com.github.jensim.megamanipulator.actions.search.SearchResult
 import com.github.jensim.megamanipulator.actions.vcs.PrRouter
@@ -46,14 +47,16 @@ class CommitOperatorTest {
     private val processOperator: ProcessOperator = mockk()
     private val prRouter: PrRouter = mockk()
     private val uiProtector: TestUiProtector = TestUiProtector()
+    private val gitUrlHelper: GitUrlHelper = mockk()
 
     private val commitOperator: CommitOperator = CommitOperator(
-        dialogGenerator,
-        settingsFileOperator,
-        localRepoOperator,
-        processOperator,
-        prRouter,
-        uiProtector
+        dialogGenerator = dialogGenerator,
+        settingsFileOperator = settingsFileOperator,
+        localRepoOperator = localRepoOperator,
+        processOperator = processOperator,
+        prRouter = prRouter,
+        uiProtector = uiProtector,
+        gitUrlHelper = gitUrlHelper,
     )
     private val tempDirPath: Path = createTempDirectory(prefix = null, attributes = emptyArray())
     private val tempDir: File = File(tempDirPath.toUri())

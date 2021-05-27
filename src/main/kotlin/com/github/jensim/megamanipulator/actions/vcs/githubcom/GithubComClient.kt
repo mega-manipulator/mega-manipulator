@@ -5,6 +5,7 @@ import com.github.jensim.megamanipulator.actions.search.SearchResult
 import com.github.jensim.megamanipulator.actions.vcs.GithubComPullRequestWrapper
 import com.github.jensim.megamanipulator.actions.vcs.GithubComRepoWrapping
 import com.github.jensim.megamanipulator.http.HttpClientProvider
+import com.github.jensim.megamanipulator.settings.types.CloneType
 import com.github.jensim.megamanipulator.settings.types.CodeHostSettings.GitHubSettings
 import io.ktor.client.HttpClient
 import io.ktor.client.request.accept
@@ -79,9 +80,16 @@ class GithubComClient(
         return if (ghrepo == null) {
             // TODO fix fork repo name
             val previewRepo: GithubComRepo = client.post("${settings.baseUrl}/repos/${repo.project}/${repo.repo}/forks") { emptyMap<String, Any>() }
-            previewRepo.ssh_url
+            when(settings.cloneType){
+                CloneType.SSH -> previewRepo.ssh_url
+                CloneType.HTTPS -> previewRepo.clone_url
+            }
         } else {
-            ghrepo.ssh_url
+            when(settings.cloneType){
+                CloneType.SSH -> ghrepo.ssh_url
+                CloneType.HTTPS -> ghrepo.clone_url
+            }
+
         }
     }
 

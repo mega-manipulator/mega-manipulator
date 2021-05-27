@@ -2,6 +2,7 @@ package com.github.jensim.megamanipulator.actions.git.commit
 
 import com.github.jensim.megamanipulator.actions.ProcessOperator
 import com.github.jensim.megamanipulator.actions.apply.ApplyOutput
+import com.github.jensim.megamanipulator.actions.git.GitUrlHelper
 import com.github.jensim.megamanipulator.actions.localrepo.LocalRepoOperator
 import com.github.jensim.megamanipulator.actions.search.SearchResult
 import com.github.jensim.megamanipulator.actions.vcs.PrRouter
@@ -15,12 +16,13 @@ import java.io.File
 import java.util.concurrent.ConcurrentHashMap
 
 class CommitOperator(
-    private val dialogGenerator: DialogGenerator,
-    private val settingsFileOperator: SettingsFileOperator,
-    private val localRepoOperator: LocalRepoOperator,
-    private val processOperator: ProcessOperator,
-    private val prRouter: PrRouter,
-    private val uiProtector: UiProtector,
+        private val dialogGenerator: DialogGenerator,
+        private val settingsFileOperator: SettingsFileOperator,
+        private val localRepoOperator: LocalRepoOperator,
+        private val processOperator: ProcessOperator,
+        private val prRouter: PrRouter,
+        private val uiProtector: UiProtector,
+        private val gitUrlHelper: GitUrlHelper,
 ) {
 
     fun commit(): Map<String, List<Pair<String, ApplyOutput>>> {
@@ -89,12 +91,19 @@ class CommitOperator(
     }
 
     private suspend fun forkAndPush(dir: File, log: MutableList<Pair<String, ApplyOutput>>) {
-        val cloneUrl = prRouter.createFork(SearchResult.fromPath(dir))
+        val repo = SearchResult.fromPath(dir)
+        val cloneUrl = prRouter.createFork(repo)
         if (cloneUrl != null) {
             log += "fork" to ApplyOutput.dummy(dir = dir.path, std = "Created or found fork", exitCode = 0)
-            val fork = localRepoOperator.addForkRemote(dir, cloneUrl).also { output -> log += "fork" to output }
-            if (fork.exitCode == 0) {
-                localRepoOperator.push(dir).also { output -> log += "push" to output }
+            val settings = settingsFileOperator.readSettings()?.searchHostSettings?.get(repo.searchHostName)?.codeHostSettings?.get(repo.codeHostName)
+            if (settings == null) {
+                log += "settings" to ApplyOutput.dummy(err = "No settings for ${repo.asPathString()}")
+            } else {
+                val actualGitUrl = gitUrlHelper.buildCloneUrl(settings, cloneUrl)
+                val fork = localRepoOperator.addForkRemote(dir, actualGitUrl).also { output -> log += "fork" to output }
+                if (fork.exitCode == 0) {
+                    localRepoOperator.push(dir).also { output -> log += "push" to output }
+                }
             }
         } else {
             log += "fork" to ApplyOutput.dummy(dir = dir.path, std = "Failed creating or finding fork", exitCode = 1)

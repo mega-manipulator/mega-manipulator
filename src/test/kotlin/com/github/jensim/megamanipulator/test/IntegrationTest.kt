@@ -108,7 +108,7 @@ class IntegrationTest {
         val commitResult: List<Pair<String, ApplyOutput>> = commitResults.values.first()
         val exitCode: Int = commitResult.last().second.exitCode
         assertThat(
-            "Last exit code was not zero for ${commitResult.last().first}\n${commitResult.last().second.getFullDescription()}",
+            "Of all the steps ${commitResult.map { it.first }}, the last exit code was not zero for ${commitResult.last().first}\n${commitResult.last().second.getFullDescription()}",
             exitCode,
             equalTo(0)
         )

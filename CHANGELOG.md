@@ -16,6 +16,7 @@
 ### Removed
 
 ### Fixed
+- Forks using https clone type
 
 ### Security
 
