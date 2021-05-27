@@ -16,6 +16,11 @@
 name: Build
 on:
   workflow_dispatch:
+    inputs:
+      extra_args_gradle:
+        description: 'Add additional arguments to the gradle run commands, enabling extra output'
+        required: false
+        default: '--stacktrace --info'
   push:
     paths-ignore:
       - ".github/**/*"
@@ -77,7 +82,7 @@ jobs:
 
       # Run detekt, ktlint and tests
       - name: Run Linters and Test
-        run: ./gradlew check --stacktrace --info
+        run: ./gradlew check ${{ github.event.inputs.extra_args_gradle }}
         env:
           GITHUB_USERNAME: ${{ secrets.GIT_HUB_CI_USER_NAME }}
           GITHUB_TOKEN: ${{ secrets.GIT_HUB_CI_TOKEN }}
@@ -89,7 +94,7 @@ jobs:
 
       # Run verifyPlugin Gradle task
       - name: Verify Plugin
-        run: ./gradlew verifyPlugin --stacktrace --info
+        run: ./gradlew verifyPlugin ${{ github.event.inputs.extra_args_gradle }}
 
   # Build plugin with buildPlugin Gradle task and provide the artifact for the next workflow jobs
   # Requires test job to be passed
@@ -149,7 +154,7 @@ jobs:
 
       # Build artifact using buildPlugin Gradle task
       - name: Build Plugin
-        run: ./gradlew buildPlugin --stacktrace --info
+        run: ./gradlew buildPlugin ${{ github.event.inputs.extra_args_gradle }}
 
       # Upload plugin artifact to make it available in the next jobs
       - name: Upload artifact
