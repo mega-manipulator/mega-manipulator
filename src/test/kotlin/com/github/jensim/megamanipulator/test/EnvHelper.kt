@@ -10,7 +10,7 @@ class EnvHelper {
         SRC_COM_USERNAME(defaultValue = "jensim"),
         SRC_COM_ACCESS_TOKEN(fallBackEnv = listOf("SRC_ACCESS_TOKEN")),
 
-        GITHUB_USERNAME(fallBackEnv = listOf("GITHUB_ACTOR"), defaultValue = "jensim"),
+        GITHUB_USERNAME,
         GITHUB_TOKEN,
         GITHUB_PROJECT(defaultValue = "mega-manipulator"),
         GITHUB_REPO(defaultValue = "mega-manipulator-ci-dump"),
