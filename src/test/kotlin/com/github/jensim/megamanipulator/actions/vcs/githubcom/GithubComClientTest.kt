@@ -22,6 +22,7 @@ import org.hamcrest.MatcherAssert.assertThat
 import org.hamcrest.Matchers.empty
 import org.hamcrest.Matchers.equalTo
 import org.hamcrest.Matchers.not
+import org.hamcrest.Matchers.nullValue
 import org.hamcrest.Matchers.startsWith
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
@@ -81,7 +82,7 @@ class GithubComClientTest {
         }
 
         // then
-        assertThat(prs, not(empty()))
+        assertThat(prs, not(nullValue()))
         // No duplicates
         val prIds = prs.map { it.pullRequest.id }
         val uniquePrIds = prIds.toSet()
