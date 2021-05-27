@@ -63,7 +63,8 @@ class GithubComClientTest {
     )
 
     companion object {
-        private const val MEGA_MANIPULATOR_REPO = "mega-manipulator"
+        private const val MEGA_MANIPULATOR_GROUP = "mega-manipulator"
+        private const val MEGA_MANIPULATOR_REPO = "mega-manipulator.github.io"
     }
 
     @Test
@@ -93,7 +94,7 @@ class GithubComClientTest {
         val repo = SearchResult(
             searchHostName = searchHost,
             codeHostName = codeHost,
-            project = githubSettings.username,
+            project = MEGA_MANIPULATOR_GROUP,
             repo = MEGA_MANIPULATOR_REPO,
         )
 
