@@ -8,7 +8,6 @@ import com.github.jensim.megamanipulator.settings.types.ForkSetting
 import com.github.jensim.megamanipulator.settings.types.HttpsOverride
 import com.github.jensim.megamanipulator.settings.types.MegaManipulatorSettings
 import com.github.jensim.megamanipulator.settings.types.SearchHostSettings
-import com.github.jensim.megamanipulator.test.CiDetector
 import com.github.jensim.megamanipulator.test.EnvHelper
 import com.github.jensim.megamanipulator.test.TestPasswordOperator
 import org.slf4j.LoggerFactory
@@ -75,7 +74,7 @@ object EnvUserSettingsSetup {
         ).verifyUnset("GitHub")
         "github.com" to CodeHostSettings.GitHubSettings(
             username = helper.resolve(EnvHelper.EnvProperty.GITHUB_USERNAME)!!,
-            forkSetting = if (CiDetector.isCI) ForkSetting.PLAIN_BRANCH else ForkSetting.EAGER_FORK,
+            forkSetting = ForkSetting.LAZY_FORK,
             cloneType = CloneType.HTTPS,
         )
     }
@@ -92,7 +91,7 @@ object EnvUserSettingsSetup {
                 baseUrl = helper.resolve(EnvHelper.EnvProperty.BITBUCKET_SERVER_BASEURL)!!,
                 httpsOverride = HttpsOverride.ALLOW_ANYTHING,
                 username = helper.resolve(EnvHelper.EnvProperty.BITBUCKET_SERVER_USER)!!,
-                forkSetting = if (CiDetector.isCI) ForkSetting.PLAIN_BRANCH else ForkSetting.EAGER_FORK,
+                forkSetting = ForkSetting.LAZY_FORK,
                 cloneType = CloneType.HTTPS,
             )
         } catch (e: MissingPropertyException) {
@@ -111,7 +110,7 @@ object EnvUserSettingsSetup {
             ).verifyUnset("GitLab")
             "gitlab.com" to CodeHostSettings.GitLabSettings(
                 username = helper.resolve(EnvHelper.EnvProperty.GITLAB_USERNAME)!!,
-                forkSetting = if (CiDetector.isCI) ForkSetting.PLAIN_BRANCH else ForkSetting.EAGER_FORK,
+                forkSetting = ForkSetting.LAZY_FORK,
                 cloneType = CloneType.HTTPS
             )
         } catch (e: MissingPropertyException) {
