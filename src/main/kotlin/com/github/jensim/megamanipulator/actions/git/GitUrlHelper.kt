@@ -6,7 +6,7 @@ import com.github.jensim.megamanipulator.settings.types.CloneType
 import com.github.jensim.megamanipulator.settings.types.CodeHostSettings
 
 class GitUrlHelper(
-        private val passwordsOperator: PasswordsOperator,
+    private val passwordsOperator: PasswordsOperator,
 ) {
 
     fun buildCloneUrl(codeSettings: CodeHostSettings, vcsRepo: RepoWrapper): String {
@@ -14,7 +14,7 @@ class GitUrlHelper(
         return buildCloneUrl(codeSettings, cloneUrl)
     }
 
-    fun buildCloneUrl(codeSettings: CodeHostSettings, cloneUrl:String): String {
+    fun buildCloneUrl(codeSettings: CodeHostSettings, cloneUrl: String): String {
         return when (codeSettings.cloneType) {
             CloneType.SSH -> cloneUrl
             CloneType.HTTPS -> {

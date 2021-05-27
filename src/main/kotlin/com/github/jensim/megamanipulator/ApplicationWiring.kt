@@ -154,7 +154,7 @@ data class ApplicationWiring(
             houndClient = this.houndClient,
         )
     }
-    val gitUrlHelper:GitUrlHelper by lazy {
+    val gitUrlHelper: GitUrlHelper by lazy {
         GitUrlHelper(
             passwordsOperator = this.passwordsOperator,
         )

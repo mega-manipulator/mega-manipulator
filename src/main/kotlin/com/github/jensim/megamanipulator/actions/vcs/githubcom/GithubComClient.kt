@@ -80,16 +80,15 @@ class GithubComClient(
         return if (ghrepo == null) {
             // TODO fix fork repo name
             val previewRepo: GithubComRepo = client.post("${settings.baseUrl}/repos/${repo.project}/${repo.repo}/forks") { emptyMap<String, Any>() }
-            when(settings.cloneType){
+            when (settings.cloneType) {
                 CloneType.SSH -> previewRepo.ssh_url
                 CloneType.HTTPS -> previewRepo.clone_url
             }
         } else {
-            when(settings.cloneType){
+            when (settings.cloneType) {
                 CloneType.SSH -> ghrepo.ssh_url
                 CloneType.HTTPS -> ghrepo.clone_url
             }
-
         }
     }
 

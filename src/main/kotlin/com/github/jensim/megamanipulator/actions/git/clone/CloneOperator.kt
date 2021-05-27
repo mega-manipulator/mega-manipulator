@@ -11,11 +11,7 @@ import com.github.jensim.megamanipulator.actions.vcs.PullRequestWrapper
 import com.github.jensim.megamanipulator.actions.vcs.RepoWrapper
 import com.github.jensim.megamanipulator.files.FilesOperator
 import com.github.jensim.megamanipulator.settings.SettingsFileOperator
-import com.github.jensim.megamanipulator.settings.passwords.PasswordsOperator
 import com.github.jensim.megamanipulator.settings.passwords.ProjectOperator
-import com.github.jensim.megamanipulator.settings.types.CloneType
-import com.github.jensim.megamanipulator.settings.types.CloneType.HTTPS
-import com.github.jensim.megamanipulator.settings.types.CloneType.SSH
 import com.github.jensim.megamanipulator.settings.types.CodeHostSettings
 import com.github.jensim.megamanipulator.settings.types.MegaManipulatorSettings
 import com.github.jensim.megamanipulator.ui.UiProtector
@@ -59,8 +55,6 @@ class CloneOperator(
         filesOperator.refreshClones()
         reportState(state)
     }
-
-
 
     private fun reportState(state: List<Pair<Any, List<Action>?>>) {
         val badState = state.filter { it.second == null || it.second!!.isNotEmpty() }

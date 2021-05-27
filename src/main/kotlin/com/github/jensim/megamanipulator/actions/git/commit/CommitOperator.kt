@@ -16,13 +16,13 @@ import java.io.File
 import java.util.concurrent.ConcurrentHashMap
 
 class CommitOperator(
-        private val dialogGenerator: DialogGenerator,
-        private val settingsFileOperator: SettingsFileOperator,
-        private val localRepoOperator: LocalRepoOperator,
-        private val processOperator: ProcessOperator,
-        private val prRouter: PrRouter,
-        private val uiProtector: UiProtector,
-        private val gitUrlHelper: GitUrlHelper,
+    private val dialogGenerator: DialogGenerator,
+    private val settingsFileOperator: SettingsFileOperator,
+    private val localRepoOperator: LocalRepoOperator,
+    private val processOperator: ProcessOperator,
+    private val prRouter: PrRouter,
+    private val uiProtector: UiProtector,
+    private val gitUrlHelper: GitUrlHelper,
 ) {
 
     fun commit(): Map<String, List<Pair<String, ApplyOutput>>> {
