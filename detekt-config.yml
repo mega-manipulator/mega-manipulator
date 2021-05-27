@@ -33,5 +33,8 @@ style:
 complexity:
   LongParameterList:
     ignoreDefaultParameters: true
+    functionThreshold: 8
+    constructorThreshold: 10
+
   NestedBlockDepth:
     threshold: 8

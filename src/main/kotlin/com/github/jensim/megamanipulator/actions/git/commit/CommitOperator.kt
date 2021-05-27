@@ -95,7 +95,7 @@ class CommitOperator(
         val cloneUrl = prRouter.createFork(repo)
         if (cloneUrl != null) {
             log += "fork" to ApplyOutput.dummy(dir = dir.path, std = "Created or found fork", exitCode = 0)
-            val settings = settingsFileOperator.readSettings()?.searchHostSettings?.get(repo.searchHostName)?.codeHostSettings?.get(repo.codeHostName)
+            val settings = settingsFileOperator.readSettings()?.resolveSettings(dir)?.second
             if (settings == null) {
                 log += "settings" to ApplyOutput.dummy(err = "No settings for ${repo.asPathString()}")
             } else {

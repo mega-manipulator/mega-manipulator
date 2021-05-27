@@ -190,7 +190,7 @@ class CommitOperatorTest {
         }
         val searchResultSlot = slot<SearchResult>()
         val commitMessage = "This is my first commit"
-
+        every { gitUrlHelper.buildCloneUrl(any(), any<String>()) } returns "clonedUrl"
         every { settingsFileOperator.readSettings() } returns settings
         every { localRepoOperator.getLocalRepoFiles() } returns listOf(file)
         every { processOperator.runCommandAsync(file, any()) } returns CompletableDeferred(successOutput)
@@ -213,11 +213,12 @@ class CommitOperatorTest {
 
     @Test
     fun `commit process and push with eager fork`() = runBlocking {
+        // given
         val codeHostSettings: CodeHostSettings = mockk {
             every { forkSetting } returns ForkSetting.EAGER_FORK
         }
         val settings: MegaManipulatorSettings = mockk {
-            every { resolveSettings(any())!!.second } returns codeHostSettings
+            every { resolveSettings(any()) } returns Pair(mockk(), codeHostSettings)
         }
         val file: File = mockk {
             every { path } returns ".tmp"
@@ -228,7 +229,7 @@ class CommitOperatorTest {
         }
         val searchResultSlot = slot<SearchResult>()
         val commitMessage = "This is my first commit"
-
+        every { gitUrlHelper.buildCloneUrl(any(), any<String>()) } returns "clonedUrl"
         every { settingsFileOperator.readSettings() } returns settings
         every { localRepoOperator.getLocalRepoFiles() } returns listOf(file)
         every { processOperator.runCommandAsync(file, any()) } returns CompletableDeferred(successOutput)
@@ -236,10 +237,12 @@ class CommitOperatorTest {
         coEvery { localRepoOperator.push(file) } returns successOutput
         coEvery { prRouter.createFork(capture(searchResultSlot)) } returns "clonedUrl"
         coEvery { localRepoOperator.addForkRemote(file, "clonedUrl") } returns successOutput
+        val resultAggregate = ConcurrentHashMap<String, MutableList<Pair<String, ApplyOutput>>>()
 
-        val result = ConcurrentHashMap<String, MutableList<Pair<String, ApplyOutput>>>()
-        commitOperator.commitProcess(file, result, commitMessage, true, settings)
+        // when
+        commitOperator.commitProcess(it = file, result = resultAggregate, commitMessage = commitMessage, push = true, settings = settings)
 
+        // then
         verify(exactly = 2) { processOperator.runCommandAsync(file, any()) }
         coVerify { prRouter.createFork(searchResultSlot.captured) }
 
