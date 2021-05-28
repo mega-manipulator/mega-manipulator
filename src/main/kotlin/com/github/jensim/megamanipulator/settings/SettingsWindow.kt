@@ -92,7 +92,24 @@ class SettingsWindow(
                                 val tokens: Map<String, Deferred<String>> = searchOperator.validateTokens() + prRouter.validateAccess()
                                 validationOutputLabel.text = tokens
                                     .map { "<tr><td>${it.key}</td><td>${it.value.await()}</td></tr>" }
-                                    .joinToString(separator = "\n", prefix = "<html><body><table><tr><th>Config</th><th>Status</th>", postfix = "</table></body></html>")
+                                    .joinToString(
+                                        separator = "\n",
+                                        prefix = """
+                                            <html>
+                                            <head>
+                                            <style>
+                                            table, th, td {
+                                              border: 1px solid;
+                                              border-collapse: collapse;
+                                            }
+                                            </style>
+                                            </head>
+                                            <body>
+                                            <table>
+                                            <tr><th>Config</th><th>Status</th></tr>
+                                        """.trimIndent(),
+                                        postfix = "</table></body></html>"
+                                    )
                             }
                         }
                         component(hostConfigSelect)

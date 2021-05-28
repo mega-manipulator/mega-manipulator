@@ -8,12 +8,14 @@
 - HttpClient logging
 
 ### Changed
-- Use GraphQL lib
+- Use GraphQL lib for som gitlab interations and sourcegraph
 - Moved docs into the new namespace 'mega-manipulator'
+- Added a border to the html table on validate tokens
 
 ### Deprecated
 
 ### Removed
+- Fork name prefix
 
 ### Fixed
 - Forks using https clone type
