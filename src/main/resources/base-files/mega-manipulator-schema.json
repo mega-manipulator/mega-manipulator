@@ -117,10 +117,6 @@
                           ],
                           "description": "It's strongly recommended to use SSH clone type."
                         },
-                        "forkRepoPrefix": {
-                          "type": "string",
-                          "description": "Prefix forked repos with a recognizable char sequence"
-                        },
                         "authMethod": {
                           "type": "string",
                           "enum": [
@@ -357,10 +353,6 @@
                             "HTTPS"
                           ],
                           "description": "It's strongly recommended to use SSH clone type."
-                        },
-                        "forkRepoPrefix": {
-                          "type": "string",
-                          "description": "Prefix forked repos with a recognizable char sequence"
                         },
                         "authMethod": {
                           "type": "string",

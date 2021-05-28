@@ -82,9 +82,11 @@ class SettingsFileOperatorTest {
     @Test
     @Disabled("Use to test schema validity, disabled because lib doesn't support minProperties for additionalProperties")
     fun `generate json schema and compare to file`() {
-        val fileSystemSchema = File("src/main/resources/base-files/mega-manipulator-schema.json").readText().trim()
-        val generatedSchema = globalJson.encodeToSchema(MegaManipulatorSettings.serializer(), generateDefinitions = false)
+        val baseFile = File("src/main/resources/base-files/mega-manipulator-schema.json")
+        val fileSystemSchema: String = baseFile.readText().trim()
+        val generatedSchema: String = globalJson.encodeToSchema(MegaManipulatorSettings.serializer(), generateDefinitions = false)
 
+        // baseFile.writeText(generatedSchema)
         assertEquals(fileSystemSchema, generatedSchema)
     }
 }
