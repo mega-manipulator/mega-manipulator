@@ -63,7 +63,7 @@ jobs:
             fi
           done
           if [ -n "$MISSING" ]; then
-            echo "Missing tokens: [ ${ MISSING:2 } ]"
+            echo "Missing tokens: [${MISSING:2}]"
           fi
           if [ "$FAIL" == 'true' ]; then
             exit 1
