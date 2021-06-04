@@ -29,11 +29,51 @@ on:
       - "*.txt"
 
 jobs:
+  validateEnvs:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Validate env
+        env:
+          GITHUB_USERNAME: ${{ secrets.GIT_HUB_CI_USER_NAME }}
+          GITHUB_TOKEN: ${{ secrets.GIT_HUB_CI_TOKEN }}
+          SRC_COM_ACCESS_TOKEN: ${{ secrets.SRC_COM_ACCESS_TOKEN }}
+          GITLAB_USERNAME: ${{ secrets.GITLAB_USERNAME }}
+          GITLAB_TOKEN: ${{ secrets.GITLAB_TOKEN }}
+          GITLAB_GROUP: ${{ secrets.GITLAB_GROUP }}
+          GITLAB_PROJECT: ${{ secrets.GITLAB_PROJECT }}
+        shell: bash
+        run: |
+          #!/bin/bash
 
-  # Run Gradle Wrapper Validation Action to verify the wrapper's checksum
+          set -e
+
+          MISSING=""
+          for env in GITHUB_USERNAME GITHUB_TOKEN SRC_COM_ACCESS_TOKEN ; do
+            if [ -z "${!env}" ]; then
+              MISSING="$MISSING,$env"
+            fi
+          done
+          FAIL=false
+          if [ -n "$MISSING" ]; then
+            FAIL=true
+          fi
+          for env in GITLAB_USERNAME GITLAB_TOKEN GITLAB_GROUP GITLAB_PROJECT ; do
+            if [ -z "${!env}" ]; then
+              MISSING="$MISSING, $env"
+            fi
+          done
+          if [ -n "$MISSING" ]; then
+            echo "Missing tokens: [ ${ MISSING:2 } ]"
+          fi
+          if [ "$FAIL" == 'true' ]; then
+            exit 1
+          fi
+
+      # Run Gradle Wrapper Validation Action to verify the wrapper's checksum
   gradleValidation:
     name: Gradle Wrapper
     runs-on: ubuntu-latest
+    needs: validateEnvs
     steps:
 
       # Check out current repository
