@@ -14,6 +14,7 @@
 ### Fixed
 
 ### Security
+
 ## [0.0.24]
 ### Added
 - GitLab code host
@@ -24,15 +25,11 @@
 - Moved docs into the new namespace 'mega-manipulator'
 - Added a border to the html table on validate tokens
 
-### Deprecated
-
 ### Removed
 - Fork name prefix
 
 ### Fixed
 - Forks using https clone type
-
-### Security
 
 ## [0.0.23]
 ### Added
@@ -40,14 +37,6 @@
 
 ### Changed
 - Reorder search tab
-
-### Deprecated
-
-### Removed
-
-### Fixed
-
-### Security
 
 ## [0.0.22]
 ### Added

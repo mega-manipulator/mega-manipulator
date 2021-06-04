@@ -6,6 +6,8 @@
 
 ## Improvements
 * <strong>High prio</strong>
+  * [ ] Oauth "passwords"
+  * [ ] Move TODO:s to github projects/issues
   * [ ] Retry mechanics
   * [ ] Improve testing
   * [ ] Notify on missing conf for code host or search host
@@ -23,9 +25,8 @@
   not readable in dark mode
   * [ ] Git view  
   See changed files tree
-  * [ ] Separate questions for dropping `branches` and `forks` when declining PRs  
   * [ ] Better interactions for the clones tab  
-Buttons clutter the UI
+  Buttons clutter the UI
 * <strong>Low prio</strong>
   * [ ] General tables
   * [ ] Table sorting
