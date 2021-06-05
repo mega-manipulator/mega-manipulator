@@ -25,6 +25,8 @@ import java.io.File
 import java.nio.file.Path
 import kotlin.io.path.ExperimentalPathApi
 import kotlin.io.path.createTempDirectory
+import org.hamcrest.Matchers
+import org.hamcrest.Matchers.either
 
 @ExperimentalPathApi
 @ExtendWith(MockKExtension::class)
@@ -71,7 +73,7 @@ class LocalRepoOperatorTest {
 
         val searchResult = localRepoOperator.getLocalRepos()[0]
         val branch = localRepoOperator.getBranch(searchResult)
-        assertThat(branch, equalTo("master"))
+        assertThat(branch, either(equalTo("master")).or(equalTo("main")))
     }
 
     @Test
