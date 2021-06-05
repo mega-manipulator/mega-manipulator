@@ -13,6 +13,7 @@ import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.runBlocking
 import org.hamcrest.MatcherAssert.assertThat
 import org.hamcrest.Matchers.containsString
+import org.hamcrest.Matchers.either
 import org.hamcrest.Matchers.equalTo
 import org.hamcrest.Matchers.nullValue
 import org.junit.jupiter.api.AfterEach
@@ -25,8 +26,6 @@ import java.io.File
 import java.nio.file.Path
 import kotlin.io.path.ExperimentalPathApi
 import kotlin.io.path.createTempDirectory
-import org.hamcrest.Matchers
-import org.hamcrest.Matchers.either
 
 @ExperimentalPathApi
 @ExtendWith(MockKExtension::class)
