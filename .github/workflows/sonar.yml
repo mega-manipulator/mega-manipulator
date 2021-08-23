@@ -32,7 +32,7 @@ jobs:
 
       - name: Setup git user
         run: |
-          git config --global user.email "jens.brimfors@gmail.com"
+          git config --global user.email "3663856+jensim@users.noreply.github.com"
           git config --global user.name "Jens Brimfors"
 
       - name: Jacoco report
