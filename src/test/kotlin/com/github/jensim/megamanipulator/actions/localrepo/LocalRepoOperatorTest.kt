@@ -9,12 +9,6 @@ import io.mockk.every
 import io.mockk.junit5.MockKExtension
 import io.mockk.mockk
 import io.mockk.slot
-import java.io.File
-import java.nio.file.Path
-import java.time.Clock
-import java.time.LocalDateTime
-import kotlin.io.path.ExperimentalPathApi
-import kotlin.io.path.createTempDirectory
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.runBlocking
 import org.hamcrest.MatcherAssert.assertThat
@@ -31,6 +25,10 @@ import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
+import java.io.File
+import java.nio.file.Path
+import kotlin.io.path.ExperimentalPathApi
+import kotlin.io.path.createTempDirectory
 
 @ExperimentalPathApi
 @ExtendWith(MockKExtension::class)
@@ -92,7 +90,8 @@ class LocalRepoOperatorTest {
         val files = localRepoOperator.getLocalRepoFiles()
         assertThat(files.size, equalTo(2))
         assertThat(
-            files.map { it.absolutePath }, containsInAnyOrder(
+            files.map { it.absolutePath },
+            containsInAnyOrder(
                 endsWith("projectGit1/depth1/depth2/depth3"),
                 endsWith("projectGit2/depth1/depth2/depth3"),
             )
