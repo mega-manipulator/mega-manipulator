@@ -9,12 +9,21 @@ import io.mockk.every
 import io.mockk.junit5.MockKExtension
 import io.mockk.mockk
 import io.mockk.slot
+import java.io.File
+import java.nio.file.Path
+import java.time.Clock
+import java.time.LocalDateTime
+import kotlin.io.path.ExperimentalPathApi
+import kotlin.io.path.createTempDirectory
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.runBlocking
 import org.hamcrest.MatcherAssert.assertThat
+import org.hamcrest.Matchers.containsInAnyOrder
 import org.hamcrest.Matchers.containsString
 import org.hamcrest.Matchers.either
+import org.hamcrest.Matchers.endsWith
 import org.hamcrest.Matchers.equalTo
+import org.hamcrest.Matchers.everyItem
 import org.hamcrest.Matchers.nullValue
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Assertions.assertEquals
@@ -22,10 +31,6 @@ import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
-import java.io.File
-import java.nio.file.Path
-import kotlin.io.path.ExperimentalPathApi
-import kotlin.io.path.createTempDirectory
 
 @ExperimentalPathApi
 @ExtendWith(MockKExtension::class)
@@ -67,8 +72,12 @@ class LocalRepoOperatorTest {
     @Test
     fun `get branch`() = runBlocking {
         processOperator.runCommandAsync(tempDir, listOf("mkdir", "clones")).await()
-        processOperator.runCommandAsync(File(tempDir, "clones"), listOf("mkdir", "-p", "projectGit1/depth1/depth2/depth3")).await()
-        processOperator.runCommandAsync(File(tempDir, "clones/projectGit1/depth1/depth2/depth3"), listOf("git", "init")).await()
+        processOperator.runCommandAsync(
+            File(tempDir, "clones"),
+            listOf("mkdir", "-p", "projectGit1/depth1/depth2/depth3")
+        ).await()
+        processOperator.runCommandAsync(File(tempDir, "clones/projectGit1/depth1/depth2/depth3"), listOf("git", "init"))
+            .await()
 
         val searchResult = localRepoOperator.getLocalRepos()[0]
         val branch = localRepoOperator.getBranch(searchResult)
@@ -82,8 +91,12 @@ class LocalRepoOperatorTest {
 
         val files = localRepoOperator.getLocalRepoFiles()
         assertThat(files.size, equalTo(2))
-        assertTrue(files[0].absolutePath.endsWith("projectGit1/depth1/depth2/depth3"))
-        assertTrue(files[1].absolutePath.endsWith("projectGit2/depth1/depth2/depth3"))
+        assertThat(
+            files.map { it.absolutePath }, containsInAnyOrder(
+                endsWith("projectGit1/depth1/depth2/depth3"),
+                endsWith("projectGit2/depth1/depth2/depth3"),
+            )
+        )
     }
 
     @Test
@@ -99,14 +112,10 @@ class LocalRepoOperatorTest {
 
         val searchResults = localRepoOperator.getLocalRepos()
         assertThat(searchResults.size, equalTo(2))
-        assertThat(searchResults[0].searchHostName, equalTo("projectGit1"))
-        assertThat(searchResults[0].codeHostName, equalTo("depth1"))
-        assertThat(searchResults[0].project, equalTo("depth2"))
-        assertThat(searchResults[0].repo, equalTo("depth3"))
-        assertThat(searchResults[1].searchHostName, equalTo("projectGit2"))
-        assertThat(searchResults[1].codeHostName, equalTo("depth1"))
-        assertThat(searchResults[1].project, equalTo("depth2"))
-        assertThat(searchResults[1].repo, equalTo("depth3"))
+        assertThat(searchResults.map { it.searchHostName }, containsInAnyOrder("projectGit1", "projectGit2"))
+        assertThat(searchResults.map { it.codeHostName }, everyItem(equalTo("depth1")))
+        assertThat(searchResults.map { it.project }, everyItem(equalTo("depth2")))
+        assertThat(searchResults.map { it.repo }, everyItem(equalTo("depth3")))
     }
 
     @Test
@@ -117,7 +126,9 @@ class LocalRepoOperatorTest {
         processOperator.runCommandAsync(tempDir, listOf("git", "init")).await()
         processOperator.runCommandAsync(tempDir, listOf("git", "checkout", "-b", "foo")).await()
 
-        every { processOperatorMock.runCommandAsync(tempDir, capture(listSlot)) } returns CompletableDeferred(successOutput)
+        every { processOperatorMock.runCommandAsync(tempDir, capture(listSlot)) } returns CompletableDeferred(
+            successOutput
+        )
         localRepoOperator.push(tempDir)
         val list = listSlot.captured
         assertThat(list[3], equalTo("origin"))
@@ -130,9 +141,14 @@ class LocalRepoOperatorTest {
         localRepoOperator = LocalRepoOperator(projectOperator, processOperatorMock, uiProtector)
         processOperator.runCommandAsync(tempDir, listOf("git", "init")).await()
         processOperator.runCommandAsync(tempDir, listOf("git", "checkout", "-b", "foo")).await()
-        processOperator.runCommandAsync(tempDir, listOf("git", "remote", "add", "fork", "git@github.com:foo/mega-manipulator.git")).await()
+        processOperator.runCommandAsync(
+            tempDir,
+            listOf("git", "remote", "add", "fork", "git@github.com:foo/mega-manipulator.git")
+        ).await()
 
-        every { processOperatorMock.runCommandAsync(tempDir, capture(listSlot)) } returns CompletableDeferred(successOutput)
+        every { processOperatorMock.runCommandAsync(tempDir, capture(listSlot)) } returns CompletableDeferred(
+            successOutput
+        )
         localRepoOperator.push(tempDir)
         val list = listSlot.captured
         assertThat(list[3], equalTo("fork"))
@@ -141,9 +157,16 @@ class LocalRepoOperatorTest {
     @Test
     fun `get fork project`() = runBlocking {
         processOperator.runCommandAsync(tempDir, listOf("mkdir", "clones")).await()
-        processOperator.runCommandAsync(File(tempDir, "clones"), listOf("mkdir", "-p", "projectGit1/depth1/depth2/depth3")).await()
-        processOperator.runCommandAsync(File(tempDir, "clones/projectGit1/depth1/depth2/depth3"), listOf("git", "init")).await()
-        localRepoOperator.addForkRemote(File(tempDir, "clones/projectGit1/depth1/depth2/depth3"), "git@github.com:foo/mega-manipulator.git")
+        processOperator.runCommandAsync(
+            File(tempDir, "clones"),
+            listOf("mkdir", "-p", "projectGit1/depth1/depth2/depth3")
+        ).await()
+        processOperator.runCommandAsync(File(tempDir, "clones/projectGit1/depth1/depth2/depth3"), listOf("git", "init"))
+            .await()
+        localRepoOperator.addForkRemote(
+            File(tempDir, "clones/projectGit1/depth1/depth2/depth3"),
+            "git@github.com:foo/mega-manipulator.git"
+        )
 
         val fork = localRepoOperator.getForkProject(localRepoOperator.getLocalRepos()[0])
         assertThat(fork!!.first, equalTo("foo"))
@@ -153,9 +176,16 @@ class LocalRepoOperatorTest {
     @Test
     fun `get fork project exception`() = runBlocking {
         processOperator.runCommandAsync(tempDir, listOf("mkdir", "clones")).await()
-        processOperator.runCommandAsync(File(tempDir, "clones"), listOf("mkdir", "-p", "projectGit1/depth1/depth2/depth3")).await()
-        processOperator.runCommandAsync(File(tempDir, "clones/projectGit1/depth1/depth2/depth3"), listOf("git", "init")).await()
-        localRepoOperator.addForkRemote(File(tempDir, "clones/projectGit1/depth1/depth2/depth3"), "git@github.comfoomega-manipulator.git")
+        processOperator.runCommandAsync(
+            File(tempDir, "clones"),
+            listOf("mkdir", "-p", "projectGit1/depth1/depth2/depth3")
+        ).await()
+        processOperator.runCommandAsync(File(tempDir, "clones/projectGit1/depth1/depth2/depth3"), listOf("git", "init"))
+            .await()
+        localRepoOperator.addForkRemote(
+            File(tempDir, "clones/projectGit1/depth1/depth2/depth3"),
+            "git@github.comfoomega-manipulator.git"
+        )
 
         val fork = localRepoOperator.getForkProject(localRepoOperator.getLocalRepos()[0])
         assertThat(fork, nullValue())
