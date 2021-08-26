@@ -10,6 +10,7 @@
 ### Deprecated
 
 ### Removed
+- Removed support for older versions of IntelliJ
 
 ### Fixed
 
