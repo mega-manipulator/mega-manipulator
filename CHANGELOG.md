@@ -13,6 +13,7 @@
 
 ### Fixed
 - Fixed error for accessing classPath-resources with leading slash
+- Fix warning for using internal APIs
 
 ### Security
 

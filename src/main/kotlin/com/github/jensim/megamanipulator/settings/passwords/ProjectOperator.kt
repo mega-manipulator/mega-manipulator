@@ -3,6 +3,7 @@ package com.github.jensim.megamanipulator.settings.passwords
 import com.github.jensim.megamanipulator.project.MegaManipulatorModuleType.Companion.MODULE_TYPE_ID
 import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.module.ModuleManager
+import com.intellij.openapi.module.ModuleType
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.roots.ModifiableRootModel
 import com.intellij.openapi.roots.ModuleRootManager
@@ -12,7 +13,7 @@ import java.io.File
 class ProjectOperator(val project: Project) {
 
     private val moduleRootManager: ModuleRootManager?
-        get() = ModuleManager.getInstance(project).modules.filter { it.moduleTypeName == MODULE_TYPE_ID }.let { modules ->
+        get() = ModuleManager.getInstance(project).modules.filter { ModuleType.get(it).id == MODULE_TYPE_ID }.let { modules ->
             if (modules.size == 1) {
                 ModuleRootManager.getInstance(modules.first())
             } else {

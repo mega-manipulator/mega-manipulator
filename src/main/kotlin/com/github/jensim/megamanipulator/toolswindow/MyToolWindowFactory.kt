@@ -3,6 +3,7 @@ package com.github.jensim.megamanipulator.toolswindow
 import com.github.jensim.megamanipulator.ApplicationWiring
 import com.github.jensim.megamanipulator.project.MegaManipulatorModuleType.Companion.MODULE_TYPE_ID
 import com.intellij.openapi.module.ModuleManager
+import com.intellij.openapi.module.ModuleType
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.wm.ToolWindow
 import com.intellij.openapi.wm.ToolWindowFactory
@@ -60,7 +61,7 @@ class MyToolWindowFactory(
 
     private fun isMegaManipulator(project: Project): Boolean {
         return ModuleManager.getInstance(project).modules.any {
-            it.moduleTypeName == MODULE_TYPE_ID
+            ModuleType.get(it).id == MODULE_TYPE_ID
         } && super.isApplicable(project)
     }
 }
