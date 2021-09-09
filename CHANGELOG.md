@@ -10,11 +10,16 @@
 ### Deprecated
 
 ### Removed
-- Removed support for older versions of IntelliJ
 
 ### Fixed
+- Fixed error for accessing classPath-resources with leading slash
 
 ### Security
+
+## [0.0.26]
+
+### Removed
+- Removed support for older versions of IntelliJ
 
 ## [0.0.24]
 ### Added

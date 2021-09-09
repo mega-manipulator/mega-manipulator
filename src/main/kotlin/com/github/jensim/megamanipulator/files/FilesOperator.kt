@@ -87,7 +87,7 @@ class FilesOperator(
         .plus(VirtFile(".gitignore", "clones\n.idea\n".toByteArray()))
 
     private fun findAllClasspathFiles(dir: String): List<VirtFile> {
-        val uri: URI = FilesOperator::class.java.classLoader.getResource("/$dir")?.toURI()!!
+        val uri: URI = FilesOperator::class.java.classLoader.getResource("$dir")?.toURI()!!
         return if (uri.scheme.equals("jar")) {
             FileSystems.newFileSystem(uri, emptyMap<String, Any>()).use { fileSystem: FileSystem ->
                 fileSystem.getPath("/$dir").toVirtConfFiles()
