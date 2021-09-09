@@ -12,10 +12,14 @@
 ### Removed
 
 ### Fixed
-- Fixed error for accessing classPath-resources with leading slash
-- Fix warning for using internal APIs
 
 ### Security
+
+## [0.0.27]
+
+### Fixed
+- Fixed error for accessing classPath-resources with leading slash
+- Fix warning for using internal APIs
 
 ## [0.0.26]
 
