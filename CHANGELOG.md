@@ -3,12 +3,8 @@
 # mega-manipulator Changelog
 
 ## [Unreleased]
+
 ### Added
-- Fetch review PRs
-- Added PR actions
-  - approving
-  - disapproving
-  - merging
 
 ### Changed
 
@@ -19,6 +15,15 @@
 ### Fixed
 
 ### Security
+
+## [0.0.28]
+
+### Added
+- Fetch review PRs
+- Added PR actions
+  - approving
+  - disapproving
+  - merging
 
 ## [0.0.27]
 
@@ -32,6 +37,7 @@
 - Removed support for older versions of IntelliJ
 
 ## [0.0.24]
+
 ### Added
 - GitLab code host
 - HttpClient logging
@@ -75,13 +81,10 @@
 ### Fixed
 - Remove branches from GitHub
 
-### Security
 ## [0.0.19]
 ### Fixed
 - Fixed pagination start index for GitHub client, fetch forked repos without outgoing PRs.
 This will eliminate repos being listed twice
-
-### Security
 
 ## [0.0.18]
 ### Added
