@@ -31,7 +31,7 @@ class UiProtectorImpl(
             override fun compute(indicator: ProgressIndicator): T? = runBlocking {
                 indicator.isIndeterminate = true
                 try {
-                    val deferred = async {
+                    val deferred = GlobalScope.async {
                         try {
                             action()
                         } catch (e: Exception) {

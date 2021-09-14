@@ -69,8 +69,7 @@ internal class BitbucketServerClientTest {
     private val client = BitbucketServerClient(
         httpClientProvider = clientProvider,
         localRepoOperator = localRepoMock,
-        json = SerializationHolder.instance.readableJson,
-        notificationsOperator = notificationsMock
+        json = SerializationHolder.instance.readableJson
     )
 
     @Test

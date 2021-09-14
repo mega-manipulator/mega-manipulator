@@ -116,6 +116,7 @@ class HttpClientProvider(
 
     fun getClient(httpsOverride: HttpsOverride?, auth: HostWithAuth, password: String): HttpClient {
         return bakeClient {
+
             install(HttpTimeout) {
                 connectTimeoutMillis = 1_000
                 requestTimeoutMillis = 60_000

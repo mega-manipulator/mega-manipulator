@@ -4,6 +4,11 @@
 
 ## [Unreleased]
 ### Added
+- Fetch review PRs
+- Added PR actions
+  - approving
+  - disapproving
+  - merging
 
 ### Changed
 

@@ -2,6 +2,8 @@ package com.github.jensim.megamanipulator.test
 
 import com.github.jensim.megamanipulator.actions.apply.ApplyOutput
 import com.github.jensim.megamanipulator.actions.search.SearchResult
+import com.github.jensim.megamanipulator.actions.vcs.PrActionStatus
+import com.github.jensim.megamanipulator.actions.vcs.PullRequestWrapper
 import com.github.jensim.megamanipulator.test.wiring.EnvUserSettingsSetup
 import com.github.jensim.megamanipulator.test.wiring.TestApplicationWiring
 import com.github.jensim.megamanipulator.toolswindow.MyToolWindowFactory
@@ -26,6 +28,7 @@ import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.MethodSource
 import java.io.File
 import java.util.UUID
+import java.util.concurrent.TimeUnit
 import kotlin.io.path.ExperimentalPathApi
 
 @ExperimentalPathApi
@@ -103,7 +106,8 @@ class IntegrationTest {
             )
         } returns true
 
-        val commitResults: Map<String, List<Pair<String, ApplyOutput>>> = wiring.applicationWiring.commitOperator.commit()
+        val commitResults: Map<String, List<Pair<String, ApplyOutput>>> =
+            wiring.applicationWiring.commitOperator.commit()
         assertThat(commitResults.keys, hasSize(1))
         val commitResult: List<Pair<String, ApplyOutput>> = commitResults.values.first()
         val exitCode: Int = commitResult.last().second.exitCode
@@ -114,20 +118,37 @@ class IntegrationTest {
         )
 
         // pr
-        val newPr = runBlocking { wiring.applicationWiring.prRouter.createPr(branch, "Don't mind me, im an integration test", result) }
+        val newPr = runBlocking {
+            wiring.applicationWiring.prRouter.createPr(
+                branch,
+                "Don't mind me, im an integration test",
+                result
+            )
+        }
         assertNotNull(newPr)
         println("PR Created: $newPr")
 
         // reword
-        val updatedPR = runBlocking {
+        val newTitle = "Updated: $branch"
+        val status: PrActionStatus = runBlocking {
             wiring.applicationWiring.prRouter.commentPR("Woops! I need to update the PR!", newPr!!)
-            wiring.applicationWiring.prRouter.updatePr("Updated: $branch", "#UPDATED! :-D\n----\n\n${newPr.body()}", newPr)
+            wiring.applicationWiring.prRouter.updatePr(
+                newTitle = newTitle,
+                newDescription = "#UPDATED! :-D\n----\n\n${newPr.body()}",
+                pullRequest = newPr
+            )
         }
-        assertNotNull(updatedPR)
-        println("PR Updated: $updatedPR")
+        assertTrue(status.success)
 
-        // decline
-        runBlocking {
+        val updatedPR: PullRequestWrapper = org.awaitility.Awaitility.await("Finding PR")
+            .atMost(10, TimeUnit.SECONDS).until({
+                // Must fetch the updated PR in order to decline it
+                runBlocking {
+                    wiring.applicationWiring.prRouter.getAllAuthorPrs(newPr!!.searchHostName(), newPr.codeHostName())
+                }?.firstOrNull { it.title() == newTitle }
+            }) { it != null }!!
+
+        val closeStatus: PrActionStatus = runBlocking {
             try {
                 wiring.applicationWiring.prRouter.closePr(dropFork = true, dropBranch = true, pullRequest = updatedPR!!)
             } catch (e: Exception) {
@@ -135,5 +156,6 @@ class IntegrationTest {
                 fail { "Failed closing PR" }
             }
         }
+        assertTrue(closeStatus.success, "Failed closing PR with msg: ${closeStatus.msg}")
     }
 }

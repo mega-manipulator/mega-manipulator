@@ -51,6 +51,7 @@ object Dependencies {
             "com.expediagroup:graphql-kotlin-client-serialization:${Versions.graphql}",
     )
     val testImplementation = setOf(
+            "org.awaitility:awaitility:4.1.0",
             "io.mockk:mockk:${Versions.mockk}",
             "org.hamcrest:hamcrest:${Versions.hamcrest}",
             "org.hamcrest:hamcrest-library:${Versions.hamcrest}",

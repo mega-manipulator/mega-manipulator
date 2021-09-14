@@ -73,7 +73,7 @@ class GithubComClientTest {
 
         // when
         val prs = runBlocking {
-            client.getAllPrs(
+            client.getAllAuthorPrs(
                 searchHost = settings.searchHostSettings.keys.first(),
                 codeHost = codeHost,
                 settings = githubSettings,

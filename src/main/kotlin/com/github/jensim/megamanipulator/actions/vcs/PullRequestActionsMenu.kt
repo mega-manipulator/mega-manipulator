@@ -6,6 +6,7 @@ import com.github.jensim.megamanipulator.ui.DialogGenerator
 import com.github.jensim.megamanipulator.ui.EditPullRequestDialog
 import com.github.jensim.megamanipulator.ui.UiProtector
 import com.intellij.notification.NotificationType
+import org.slf4j.LoggerFactory
 import java.awt.Desktop
 import javax.swing.JMenuItem
 import javax.swing.JOptionPane
@@ -24,6 +25,8 @@ class PullRequestActionsMenu(
     private val uiProtector: UiProtector,
 ) : JPopupMenu() {
 
+    private val log = LoggerFactory.getLogger(javaClass)
+
     var prProvider: () -> List<PullRequestWrapper> = { emptyList() }
     var postActionHook: () -> Unit = {}
     var codeHostName: String? = null
@@ -32,17 +35,39 @@ class PullRequestActionsMenu(
     init {
         val declineMenuItem = JMenuItem("Decline PRs").apply {
             addActionListener { _ ->
-                if (dialogGenerator.showConfirm("Decline selected PRs", "No undo path available im afraid..\nDecline selected PRs?")) {
-                    val dropBranchesAns = JOptionPane.showConfirmDialog(null, "Drop source branches?", "Drop branches?", OK_CANCEL_OPTION, QUESTION_MESSAGE, null)
+                if (dialogGenerator.showConfirm(
+                        "Decline selected PRs",
+                        "No undo path available im afraid..\nDecline selected PRs?"
+                    )
+                ) {
+                    val dropBranchesAns = JOptionPane.showConfirmDialog(
+                        null,
+                        "Drop source branches?",
+                        "Drop branches?",
+                        OK_CANCEL_OPTION,
+                        QUESTION_MESSAGE,
+                        null
+                    )
                     if (!listOf(OK_OPTION, CANCEL_OPTION).contains(dropBranchesAns)) return@addActionListener
-                    val dropForksAns = JOptionPane.showConfirmDialog(null, "Also drop source forks?", "Drop forks?", OK_CANCEL_OPTION, QUESTION_MESSAGE, null)
+                    val dropForksAns = JOptionPane.showConfirmDialog(
+                        null,
+                        "Also drop source forks?",
+                        "Drop forks?",
+                        OK_CANCEL_OPTION,
+                        QUESTION_MESSAGE,
+                        null
+                    )
                     if (!listOf(OK_OPTION, CANCEL_OPTION).contains(dropForksAns)) return@addActionListener
                     uiProtector.mapConcurrentWithProgress(
                         title = "Declining prs",
                         extraText2 = { "${it.codeHostName()}/${it.project()}/${it.baseRepo()} ${it.fromBranch()}" },
                         data = prProvider(),
                     ) { pullRequest: PullRequestWrapper ->
-                        prRouter.closePr(dropFork = dropForksAns == OK_OPTION, dropBranch = dropBranchesAns == OK_OPTION, pullRequest)
+                        prRouter.closePr(
+                            dropFork = dropForksAns == OK_OPTION,
+                            dropBranch = dropBranchesAns == OK_OPTION,
+                            pullRequest
+                        )
                     }
                     postActionHook()
                 }
@@ -52,18 +77,25 @@ class PullRequestActionsMenu(
             addActionListener {
                 val prs = prProvider()
                 if (prs.isEmpty()) {
-                    notificationsOperator.show("No PRs selected", "Please select at least one PR to use this", NotificationType.WARNING)
+                    notificationsOperator.show(
+                        "No PRs selected",
+                        "Please select at least one PR to use this",
+                        NotificationType.WARNING
+                    )
                 } else {
                     val dialog = EditPullRequestDialog(prs)
                     if (dialog.showAndGet()) {
-                        uiProtector.mapConcurrentWithProgress(
-                            title = "Reword PRs",
-                            extraText1 = "Setting new title and body for Pull requests",
-                            extraText2 = { "${it.codeHostName()}/${it.project()}/${it.baseRepo()} ${it.fromBranch()}" },
-                            data = prs,
-                        ) { pr ->
-                            prRouter.updatePr(dialog.prTitle!!, dialog.prDescription!!, pr)
-                        }
+                        prFeedback(
+                            "rewordPRs",
+                            uiProtector.mapConcurrentWithProgress(
+                                title = "Reword PRs",
+                                extraText1 = "Setting new title and body for Pull requests",
+                                extraText2 = { "${it.codeHostName()}/${it.project()}/${it.baseRepo()} ${it.fromBranch()}" },
+                                data = prs,
+                            ) { pr ->
+                                prRouter.updatePr(dialog.prTitle!!, dialog.prDescription!!, pr)
+                            }
+                        )
                         postActionHook()
                     } else {
                         notificationsOperator.show("No PRs edited", "Cancelled or missing data")
@@ -74,18 +106,16 @@ class PullRequestActionsMenu(
         val defaultReviewersMenuItem = JMenuItem("Add default reviewers").apply {
             addActionListener { _ ->
                 if (dialogGenerator.showConfirm(title = "Add default reviewers", message = "Add default reviewers")) {
-                    uiProtector.mapConcurrentWithProgress(
-                        title = "Add default reviewers",
-                        extraText2 = { "${it.codeHostName()}/${it.project()}/${it.baseRepo()} ${it.fromBranch()}" },
-                        data = prProvider(),
-                    ) { pr ->
-                        val codeHostName = codeHostName
-                        val searchHostName = searchHostName
-                        if (codeHostName == null || searchHostName == null) {
-                            return@mapConcurrentWithProgress
+                    prFeedback(
+                        "setDefaultReviewers",
+                        uiProtector.mapConcurrentWithProgress(
+                            title = "Add default reviewers",
+                            extraText2 = { "${it.codeHostName()}/${it.project()}/${it.baseRepo()} ${it.fromBranch()}" },
+                            data = prProvider(),
+                        ) { pr ->
+                            prRouter.addDefaultReviewers(pr)
                         }
-                        prRouter.addDefaultReviewers(pr)
-                    }
+                    )
                     postActionHook()
                 }
             }
@@ -93,8 +123,13 @@ class PullRequestActionsMenu(
         val cloneMenuItem = JMenuItem("Clone PRs").apply {
             addActionListener {
                 val prs = prProvider()
-                if (dialogGenerator.showConfirm(title = "Clone...", message = "Clone ${prs.size} selected PR branches")) {
+                if (dialogGenerator.showConfirm(
+                        title = "Clone...",
+                        message = "Clone ${prs.size} selected PR branches"
+                    )
+                ) {
                     cloneOperator.clone(prs)
+                    postActionHook()
                 }
             }
         }
@@ -141,7 +176,59 @@ class PullRequestActionsMenu(
                         ) {
                             prRouter.commentPR(comment, it)
                         }
+                        postActionHook()
                     }
+                }
+            }
+        }
+        val approveMenuItem = JMenuItem("Mark Approved").apply {
+            addActionListener {
+                if (dialogGenerator.showConfirm(
+                        title = "Mark Approved",
+                        message = "Mark the selected pull requests as approved"
+                    )
+                ) {
+                    prFeedback(
+                        "setStatus(approved)",
+                        uiProtector.mapConcurrentWithProgress(title = "Mark Approved", data = prProvider()) {
+                            prRouter.approvePr(it)
+                        }
+                    )
+                    postActionHook()
+                }
+            }
+        }
+        val needsWorkMenuItem = JMenuItem("Mark Needs work").apply {
+            addActionListener {
+                if (dialogGenerator.showConfirm(
+                        title = "Mark Needs work",
+                        message = "Mark the selected pull requests as Needs work"
+                    )
+                ) {
+                    prFeedback(
+                        "setStatus(needsWork)",
+                        uiProtector.mapConcurrentWithProgress(title = "Mark Needs work", data = prProvider()) {
+                            prRouter.disapprovePr(it)
+                        }
+                    )
+                    postActionHook()
+                }
+            }
+        }
+        val mergeMenuItem = JMenuItem("Merge").apply {
+            addActionListener {
+                if (dialogGenerator.showConfirm(
+                        title = "Merge",
+                        message = "Merge the selected pull requests"
+                    )
+                ) {
+                    prFeedback(
+                        "merge",
+                        uiProtector.mapConcurrentWithProgress(title = "Merge", data = prProvider()) {
+                            prRouter.mergePr(it)
+                        }
+                    )
+                    postActionHook()
                 }
             }
         }
@@ -154,6 +241,23 @@ class PullRequestActionsMenu(
             add(openInBrowserMenuItem)
         }
         add(commentMenuItem)
+        add(approveMenuItem)
+        add(needsWorkMenuItem)
+        add(mergeMenuItem)
+    }
+
+    private fun prFeedback(action: String, list: List<Pair<PullRequestWrapper, PrActionStatus?>>) {
+        val failed = list.filter { it.second?.success != true }.map {
+            it.first.asPathString() to (it.second?.msg ?: "<NO_INFO>")
+        }
+        if (failed.isNotEmpty()) {
+            log.error("${failed.size}/${list.size} failed. ${failed.joinToString()}")
+            notificationsOperator.show(
+                title = "${failed.size}/${list.size} $action failed",
+                body = "Check log for more info",
+                type = NotificationType.WARNING
+            )
+        }
     }
 
     private fun isBrowsingAllowed(): Boolean = try {

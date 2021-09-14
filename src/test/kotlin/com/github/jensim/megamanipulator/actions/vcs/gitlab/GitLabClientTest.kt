@@ -90,12 +90,29 @@ internal class GitLabClientTest {
     }
 
     @Test
-    fun getAllPrs() {
+    fun getAllAuthoredPrs() {
         // given
 
         // when
         val prs: List<PullRequestWrapper> = runBlocking {
-            wiring.applicationWiring.gitLabClient.getAllPrs(
+            wiring.applicationWiring.gitLabClient.getAllAuthorPrs(
+                searchHost = EnvUserSettingsSetup.sourcegraphName,
+                codeHost = EnvUserSettingsSetup.gitlabSettings?.first!!,
+                settings = gitlabSettings
+            )
+        }
+
+        // then
+        assertThat(prs, not(nullValue()))
+    }
+
+    @Test
+    fun getAllAssignedPrs() {
+        // given
+
+        // when
+        val prs: List<PullRequestWrapper> = runBlocking {
+            wiring.applicationWiring.gitLabClient.getAllReviewPrs(
                 searchHost = EnvUserSettingsSetup.sourcegraphName,
                 codeHost = EnvUserSettingsSetup.gitlabSettings?.first!!,
                 settings = gitlabSettings

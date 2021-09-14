@@ -4,6 +4,7 @@ import com.github.jensim.megamanipulator.actions.localrepo.LocalRepoOperator
 import com.github.jensim.megamanipulator.actions.search.SearchResult
 import com.github.jensim.megamanipulator.actions.vcs.GithubComPullRequestWrapper
 import com.github.jensim.megamanipulator.actions.vcs.GithubComRepoWrapping
+import com.github.jensim.megamanipulator.actions.vcs.PrActionStatus
 import com.github.jensim.megamanipulator.http.HttpClientProvider
 import com.github.jensim.megamanipulator.settings.types.CloneType
 import com.github.jensim.megamanipulator.settings.types.CodeHostSettings.GitHubSettings
@@ -15,6 +16,7 @@ import io.ktor.client.request.patch
 import io.ktor.client.request.post
 import io.ktor.client.statement.HttpResponse
 import io.ktor.client.statement.HttpStatement
+import io.ktor.client.statement.readText
 import io.ktor.http.ContentType
 import io.ktor.http.contentType
 import kotlinx.coroutines.flow.Flow
@@ -29,18 +31,29 @@ import kotlinx.serialization.json.decodeFromJsonElement
 import java.util.concurrent.atomic.AtomicInteger
 import java.util.regex.Pattern
 
-@SuppressWarnings("TooManyFunctions")
+@SuppressWarnings("TooManyFunctions", "ReturnCount")
 class GithubComClient(
     private val httpClientProvider: HttpClientProvider,
     private val localRepoOperator: LocalRepoOperator,
     private val json: Json,
 ) {
 
-    fun addDefaultReviewers(settings: GitHubSettings, pullRequest: GithubComPullRequestWrapper): GithubComPullRequestWrapper {
-        throw UnsupportedOperationException("Might never implement  ¯\\_(ツ)_/¯ ${settings.username}@${pullRequest.searchHost}/${pullRequest.codeHost}")
+    fun addDefaultReviewers(
+        settings: GitHubSettings,
+        pullRequest: GithubComPullRequestWrapper
+    ): PrActionStatus {
+        return PrActionStatus(
+            success = false,
+            msg = "Might never implement  ¯\\_(ツ)_/¯ ${settings.username}@${pullRequest.searchHost}/${pullRequest.codeHost}"
+        )
     }
 
-    suspend fun createPr(title: String, description: String, settings: GitHubSettings, repo: SearchResult): GithubComPullRequestWrapper {
+    suspend fun createPr(
+        title: String,
+        description: String,
+        settings: GitHubSettings,
+        repo: SearchResult
+    ): GithubComPullRequestWrapper {
         val client: HttpClient = httpClientProvider.getClient(repo.searchHostName, repo.codeHostName, settings)
         val fork: Pair<String, String>? = localRepoOperator.getForkProject(repo)
         val localBranch: String = localRepoOperator.getBranch(repo)!!
@@ -79,7 +92,8 @@ class GithubComClient(
         // Recover or create fork
         return if (ghrepo == null) {
             // TODO fix fork repo name
-            val previewRepo: GithubComRepo = client.post("${settings.baseUrl}/repos/${repo.project}/${repo.repo}/forks") { emptyMap<String, Any>() }
+            val previewRepo: GithubComRepo =
+                client.post("${settings.baseUrl}/repos/${repo.project}/${repo.repo}/forks") { emptyMap<String, Any>() }
             when (settings.cloneType) {
                 CloneType.SSH -> previewRepo.ssh_url
                 CloneType.HTTPS -> previewRepo.clone_url
@@ -92,28 +106,58 @@ class GithubComClient(
         }
     }
 
-    suspend fun updatePr(newTitle: String, newDescription: String, settings: GitHubSettings, pullRequest: GithubComPullRequestWrapper): GithubComPullRequestWrapper {
+    suspend fun updatePr(
+        newTitle: String,
+        newDescription: String,
+        settings: GitHubSettings,
+        pullRequest: GithubComPullRequestWrapper
+    ): PrActionStatus {
         val client: HttpClient = httpClientProvider.getClient(pullRequest.searchHost, pullRequest.codeHost, settings)
-        val prRaw: JsonElement = client.patch(pullRequest.pullRequest.url) {
+        val response: HttpResponse = client.patch(pullRequest.pullRequest.url) {
             contentType(ContentType.Application.Json)
             body = mapOf("title" to newTitle, "body" to newDescription)
         }
-        val pr: GithubComPullRequest = json.decodeFromJsonElement(prRaw)
-        val prString = json.encodeToString(prRaw)
-        return GithubComPullRequestWrapper(
-            searchHost = pullRequest.searchHost,
-            codeHost = pullRequest.codeHost,
-            pullRequest = pr,
-            raw = prString,
-        )
+        return if (response.status.value >= 300) {
+            PrActionStatus(success = false, msg = "Failed updating PR due to: '${response.readText()}'")
+        } else {
+            PrActionStatus(success = true)
+        }
     }
 
-    suspend fun getAllPrs(searchHost: String, codeHost: String, settings: GitHubSettings): List<GithubComPullRequestWrapper> {
+    suspend fun getAllAuthorPrs(
+        searchHost: String,
+        codeHost: String,
+        settings: GitHubSettings
+    ): List<GithubComPullRequestWrapper> = getAllPrs(
+        searchHost = searchHost,
+        codeHost = codeHost,
+        settings = settings,
+        type = "author"
+    )
+
+    suspend fun getAllReviewerPrs(
+        searchHost: String,
+        codeHost: String,
+        settings: GitHubSettings
+    ): List<GithubComPullRequestWrapper> = getAllPrs(
+        searchHost = searchHost,
+        codeHost = codeHost,
+        settings = settings,
+        type = "assignee"
+    )
+
+    private suspend fun getAllPrs(
+        searchHost: String,
+        codeHost: String,
+        settings: GitHubSettings,
+        type: String
+    ): List<GithubComPullRequestWrapper> {
         val client: HttpClient = httpClientProvider.getClient(searchHost, codeHost, settings)
         val seq: Flow<GithubComIssue> = flow {
             val page = AtomicInteger(1)
             while (true) {
-                val result: GithubComSearchResult<GithubComIssue> = client.get("${settings.baseUrl}/search/issues?per_page=100&page=${page.getAndIncrement()}&q=state%3Aopen+author%3A${settings.username}+type%3Apr")
+                val result: GithubComSearchResult<GithubComIssue> =
+                    client.get("${settings.baseUrl}/search/issues?per_page=100&page=${page.getAndIncrement()}&q=state%3Aopen+$type%3A${settings.username}+type%3Apr")
                 result.items.forEach { emit(it) }
                 if (result.items.isEmpty()) break
             }
@@ -133,31 +177,53 @@ class GithubComClient(
             }
     }
 
-    suspend fun closePr(dropFork: Boolean, dropBranch: Boolean, settings: GitHubSettings, pullRequest: GithubComPullRequestWrapper) {
+    suspend fun closePr(
+        dropFork: Boolean,
+        dropBranch: Boolean,
+        settings: GitHubSettings,
+        pullRequest: GithubComPullRequestWrapper
+    ): PrActionStatus {
         val client: HttpClient = httpClientProvider.getClient(pullRequest.searchHost, pullRequest.codeHost, settings)
-        val updatedPr: GithubComPullRequest = client.patch(pullRequest.pullRequest.url) {
+        val response: HttpResponse = client.patch(pullRequest.pullRequest.url) {
             contentType(ContentType.Application.Json)
             body = mapOf<String, Any>("state" to "closed")
         }
-
-        if (updatedPr.head?.repo != null) {
-            if (dropFork && updatedPr.head.repo.fork && updatedPr.head.repo.id != updatedPr.base?.repo?.id) {
-                if (updatedPr.head.repo.open_issues_count == 0L && updatedPr.head.repo.owner.login == settings.username) {
-                    client.delete<String?>("${settings.baseUrl}/repos/${settings.username}/${updatedPr.head.repo.name}")
+        if (response.status.value >= 300) {
+            return PrActionStatus(false, response.readText())
+        } else {
+            if (pullRequest.pullRequest.head?.repo != null) {
+                if (dropFork && pullRequest.pullRequest.head.repo.fork && pullRequest.pullRequest.head.repo.id != pullRequest.pullRequest.base?.repo?.id) {
+                    if (pullRequest.pullRequest.head.repo.open_issues_count == 0L && pullRequest.pullRequest.head.repo.owner.login == settings.username) {
+                        client.delete<HttpResponse>("${settings.baseUrl}/repos/${settings.username}/${pullRequest.pullRequest.head.repo.name}").let { response: HttpResponse ->
+                            if (response.status.value >= 300) {
+                                return PrActionStatus(false, "Failed dropFork due to ${response.readText()}")
+                            }
+                        }
+                    }
+                } else if (dropBranch && pullRequest.pullRequest.head.repo.id == pullRequest.pullRequest.base?.repo?.id) {
+                    // https://docs.github.com/en/rest/reference/git#delete-a-reference
+                    client.delete<HttpResponse>("${settings.baseUrl}/repos/${pullRequest.pullRequest.head.repo.owner.login}/${pullRequest.pullRequest.head.repo.name}/git/refs/heads/${pullRequest.pullRequest.head.ref}").let { response: HttpResponse ->
+                        if (response.status.value >= 300) {
+                            return PrActionStatus(false, "Failed dropBranch due to ${response.readText()}")
+                        }
+                    }
                 }
-            } else if (dropBranch && updatedPr.head.repo.id == updatedPr.base?.repo?.id) {
-                // https://docs.github.com/en/rest/reference/git#delete-a-reference
-                client.delete<String?>("${settings.baseUrl}/repos/${updatedPr.head.repo.owner.login}/${updatedPr.head.repo.name}/git/refs/heads/${updatedPr.head.ref}")
             }
+            return PrActionStatus(true)
         }
     }
 
-    suspend fun getPrivateForkReposWithoutPRs(searchHost: String, codeHost: String, settings: GitHubSettings): List<GithubComRepoWrapping> {
+    suspend fun getPrivateForkReposWithoutPRs(
+        searchHost: String,
+        codeHost: String,
+        settings: GitHubSettings
+    ): List<GithubComRepoWrapping> {
         val client: HttpClient = httpClientProvider.getClient(searchHost, codeHost, settings)
         val repoFlow: Flow<GithubComRepo> = flow {
             val pageCount = AtomicInteger(1)
             while (true) {
-                val page: List<GithubComRepo> = client.get("${settings.baseUrl}/users/${settings.username}/repos?page=${pageCount.getAndIncrement()}")
+                val page: List<GithubComRepo> =
+                    client.get("${settings.baseUrl}/users/${settings.username}/repos?page=${pageCount.getAndIncrement()}")
                 page.forEach { emit(it) }
                 if (page.isEmpty()) break
             }
@@ -173,7 +239,8 @@ class GithubComClient(
     }
 
     suspend fun getRepo(searchResult: SearchResult, settings: GitHubSettings): GithubComRepoWrapping {
-        val client: HttpClient = httpClientProvider.getClient(searchResult.searchHostName, searchResult.codeHostName, settings)
+        val client: HttpClient =
+            httpClientProvider.getClient(searchResult.searchHostName, searchResult.codeHostName, settings)
         val repo: GithubComRepo = client.get("${settings.baseUrl}/repos/${searchResult.project}/${searchResult.repo}")
         return GithubComRepoWrapping(searchResult.searchHostName, searchResult.codeHostName, repo)
     }
@@ -190,7 +257,8 @@ class GithubComClient(
 
     suspend fun validateAccess(searchHost: String, codeHost: String, settings: GitHubSettings): String = try {
         val client: HttpClient = httpClientProvider.getClient(searchHost, codeHost, settings)
-        val response: HttpResponse = client.get<HttpStatement>("https://api.github.com/repos/jensim/mega-manipulator").execute()
+        val response: HttpResponse =
+            client.get<HttpStatement>("https://api.github.com/repos/jensim/mega-manipulator").execute()
         val scopeString = response.headers["X-OAuth-Scopes"]
         val scopes = scopeString.orEmpty().split(Pattern.compile(",")).map { it.trim() }
         val expected = listOf("repo", "delete_repo")
@@ -200,5 +268,17 @@ class GithubComClient(
     } catch (e: Exception) {
         e.printStackTrace()
         "Client error"
+    }
+
+    suspend fun approvePr(pullRequest: GithubComPullRequestWrapper, settings: GitHubSettings): PrActionStatus {
+        return PrActionStatus(false, msg = "Not yet implemented ${pullRequest.asPathString()} ${settings.username}")
+    }
+
+    suspend fun disapprovePr(pullRequest: GithubComPullRequestWrapper, settings: GitHubSettings): PrActionStatus {
+        return PrActionStatus(false, msg = "Not yet implemented ${pullRequest.asPathString()} ${settings.username}")
+    }
+
+    suspend fun merge(pullRequest: GithubComPullRequestWrapper, settings: GitHubSettings): PrActionStatus {
+        return PrActionStatus(false, msg = "Not yet implemented ${pullRequest.asPathString()} ${settings.username}")
     }
 }

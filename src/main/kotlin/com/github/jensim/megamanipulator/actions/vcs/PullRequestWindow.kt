@@ -14,6 +14,7 @@ import com.intellij.ui.components.JBTextField
 import com.intellij.ui.layout.panel
 import kotlinx.serialization.encodeToString
 import me.xdrop.fuzzywuzzy.FuzzySearch
+import org.slf4j.LoggerFactory
 import java.awt.Dimension
 import java.awt.event.MouseEvent
 import java.awt.event.MouseListener
@@ -29,6 +30,8 @@ class PullRequestWindow(
     private val pullRequestActionsMenu: PullRequestActionsMenu,
     settingsFileOperator: SettingsFileOperator,
 ) : ToolWindowTab {
+
+    private val log = LoggerFactory.getLogger(javaClass)
 
     override val index: Int = 4
 
@@ -48,8 +51,11 @@ class PullRequestWindow(
     override val content: JComponent = panel {
         row {
             component(codeHostSelect)
-            button("Fetch PRs") {
-                fetchPRs()
+            button("Fetch author PRs") {
+                fetchAuthoredPRs()
+            }
+            button("Fetch assigned PRs") {
+                fetchAssignedPRs()
             }
             component(search)
             right {
@@ -112,22 +118,37 @@ class PullRequestWindow(
         codeHostSelect.load()
     }
 
-    private fun fetchPRs() {
+    private fun fetchAssignedPRs() {
         prList.setListData(emptyArray())
         (codeHostSelect.selectedItem)?.let { selected ->
             search.text = ""
             val prs: List<PullRequestWrapper>? = uiProtector.uiProtectedOperation("Fetching PRs") {
-                prRouter.getAllPrs(selected.searchHostName, selected.codeHostName)
+                prRouter.getAllReviewPrs(selected.searchHostName, selected.codeHostName)
             }
-            pullRequests.clear()
-            prs?.let { pullRequests.addAll(it) }
-            val filtered = updateFilteredPrs()
-            if (filtered.isNotEmpty()) {
-                prList.setSelectedValue(filtered.first(), true)
+            setPrs(prs)
+        } ?: log.warn("No codeHost selected")
+    }
+    private fun fetchAuthoredPRs() {
+        prList.setListData(emptyArray())
+        (codeHostSelect.selectedItem)?.let { selected ->
+            search.text = ""
+            val prs: List<PullRequestWrapper>? = uiProtector.uiProtectedOperation("Fetching PRs") {
+                prRouter.getAllAuthorPrs(selected.searchHostName, selected.codeHostName)
             }
-            content.validate()
-            content.repaint()
+            setPrs(prs)
+        } ?: log.warn("No codeHost selected")
+    }
+
+    private fun setPrs(prs: List<PullRequestWrapper>?) {
+        log.info("Setting prs, new count is ${prs?.size}")
+        pullRequests.clear()
+        prs?.let { pullRequests.addAll(it) }
+        val filtered = updateFilteredPrs()
+        if (filtered.isNotEmpty()) {
+            prList.setSelectedValue(filtered.first(), true)
         }
+        content.validate()
+        content.repaint()
     }
 
     private fun updateFilteredPrs(): List<PullRequestWrapper> {

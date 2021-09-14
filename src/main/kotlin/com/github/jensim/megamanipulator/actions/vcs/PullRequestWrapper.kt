@@ -129,6 +129,39 @@ data class GitLabMergeRequestListItemWrapper(
     override fun browseUrl(): String? = mergeRequest.webUrl
 }
 
+data class GitLabAssignedMergeRequestListItemWrapper(
+    val searchHost: String,
+    val codeHost: String,
+    val mergeRequest: com.github.jensim.megamanipulator.graphql.generated.gitlab.getassignedpullrequests.MergeRequest,
+    override val raw: String,
+) : GitLabMergeRequestWrapper() {
+    override val targetProjectId = mergeRequest.targetProject.id.removePrefix("gid://gitlab/Project/").toLong()
+    override val sourceProjectId = mergeRequest.sourceProject?.id?.removePrefix("gid://gitlab/Project/")?.toLong()!!
+    override val mergeRequestId = mergeRequest.id.removePrefix("gid://gitlab/MergeRequest/").toLong()
+    override val mergeRequestIid = mergeRequest.iid.toLong()
+
+    override fun codeHostName(): String = codeHost
+    override fun searchHostName(): String = searchHost
+    override fun project(): String = mergeRequest.targetProject.path
+    override fun baseRepo(): String = mergeRequest.targetProject.group?.path ?: "<?>"
+    override fun title(): String = mergeRequest.title
+    override fun body(): String = mergeRequest.description ?: ""
+    override fun fromBranch(): String = mergeRequest.sourceBranch
+    override fun toBranch(): String = mergeRequest.targetBranch
+    override fun isFork(): Boolean = mergeRequest.sourceProject?.path != mergeRequest.targetProject.path
+    override fun cloneUrlFrom(cloneType: CloneType): String? = when (cloneType) {
+        CloneType.SSH -> mergeRequest.sourceProject?.sshUrlToRepo
+        CloneType.HTTPS -> mergeRequest.sourceProject?.httpUrlToRepo
+    }
+
+    override fun cloneUrlTo(cloneType: CloneType): String? = when (cloneType) {
+        CloneType.SSH -> mergeRequest.targetProject.sshUrlToRepo
+        CloneType.HTTPS -> mergeRequest.targetProject.httpUrlToRepo
+    }
+
+    override fun browseUrl(): String? = mergeRequest.webUrl
+}
+
 data class GitLabMergeRequestApiWrapper(
     val searchHost: String,
     val codeHost: String,

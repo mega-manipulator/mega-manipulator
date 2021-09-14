@@ -128,7 +128,6 @@ data class ApplicationWiring(
         bitbucketServerClientOverride ?: BitbucketServerClient(
             httpClientProvider = this.httpClientProvider,
             localRepoOperator = this.localRepoOperator,
-            notificationsOperator = this.notificationsOperator,
             json = this.json,
         )
     }

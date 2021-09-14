@@ -35,6 +35,26 @@ data class BitBucketPullRequestRequest(
 )
 
 @Serializable
+data class BitBucketRemoveBranchRequest(
+    val name: String,
+    val dryRun: Boolean
+)
+
+@Serializable
+data class BitBucketParticipantStatusRequest(
+    val user: BitBucketUser,
+    val approved: Boolean,
+    val status: BitBucketPullRequestStatus
+)
+
+@Serializable
+enum class BitBucketPullRequestStatus {
+    APPROVED,
+    UNAPPROVED,
+    NEEDS_WORK
+}
+
+@Serializable
 data class BitBucketComment(
     val text: String
 )

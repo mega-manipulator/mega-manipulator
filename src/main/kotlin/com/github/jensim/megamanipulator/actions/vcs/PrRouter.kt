@@ -45,14 +45,13 @@ class PrRouter(
         return resolved
     }
 
-    suspend fun addDefaultReviewers(pullRequest: PullRequestWrapper): PullRequestWrapper? {
+    suspend fun addDefaultReviewers(pullRequest: PullRequestWrapper): PrActionStatus {
         val settings = resolve(pullRequest.searchHostName(), pullRequest.codeHostName())
         return when {
             settings is BitBucketSettings && pullRequest is BitBucketPullRequestWrapper -> bitbucketServerClient.addDefaultReviewers(settings, pullRequest)
             settings is GitHubSettings && pullRequest is GithubComPullRequestWrapper -> githubComClient.addDefaultReviewers(settings, pullRequest)
             settings is GitLabSettings && pullRequest is GitLabMergeRequestListItemWrapper -> gitLabClient.addDefaultReviewers(settings, pullRequest)
-            settings == null -> null
-            else -> throw IllegalArgumentException("Unable to match config correctly")
+            else -> PrActionStatus(success = false, msg = "Unable to match config correctly")
         }
     }
 
@@ -76,35 +75,42 @@ class PrRouter(
         }
     }
 
-    suspend fun updatePr(newTitle: String, newDescription: String, pullRequest: PullRequestWrapper): PullRequestWrapper? {
+    suspend fun updatePr(newTitle: String, newDescription: String, pullRequest: PullRequestWrapper): PrActionStatus {
         val settings = resolve(pullRequest.searchHostName(), pullRequest.codeHostName())
         return when {
             settings is BitBucketSettings && pullRequest is BitBucketPullRequestWrapper -> bitbucketServerClient.updatePr(newTitle, newDescription, settings, pullRequest)
             settings is GitHubSettings && pullRequest is GithubComPullRequestWrapper -> githubComClient.updatePr(newTitle, newDescription, settings, pullRequest)
             settings is GitLabSettings && pullRequest is GitLabMergeRequestWrapper -> gitLabClient.updatePr(newTitle, newDescription, settings, pullRequest)
-            settings == null -> null
-            else -> throw IllegalArgumentException("Unable to match config correctly")
+            else -> PrActionStatus(false, "Unable to match config correctly")
         }
     }
 
-    suspend fun getAllPrs(searchHost: String, codeHost: String): List<PullRequestWrapper>? {
+    suspend fun getAllReviewPrs(searchHost: String, codeHost: String): List<PullRequestWrapper>? {
         return resolve(searchHost, codeHost)?.let {
             when (it) {
-                is BitBucketSettings -> bitbucketServerClient.getAllPrs(searchHost, codeHost, it)
-                is GitHubSettings -> githubComClient.getAllPrs(searchHost, codeHost, it)
-                is GitLabSettings -> gitLabClient.getAllPrs(searchHost, codeHost, it)
+                is BitBucketSettings -> bitbucketServerClient.getAllReviewerPrs(searchHost, codeHost, it)
+                is GitHubSettings -> githubComClient.getAllReviewerPrs(searchHost, codeHost, it)
+                is GitLabSettings -> gitLabClient.getAllReviewPrs(searchHost, codeHost, it)
+            }
+        }
+    }
+    suspend fun getAllAuthorPrs(searchHost: String, codeHost: String): List<PullRequestWrapper>? {
+        return resolve(searchHost, codeHost)?.let {
+            when (it) {
+                is BitBucketSettings -> bitbucketServerClient.getAllAuthorPrs(searchHost, codeHost, it)
+                is GitHubSettings -> githubComClient.getAllAuthorPrs(searchHost, codeHost, it)
+                is GitLabSettings -> gitLabClient.getAllAuthorPrs(searchHost, codeHost, it)
             }
         }
     }
 
-    suspend fun closePr(dropFork: Boolean, dropBranch: Boolean, pullRequest: PullRequestWrapper) {
+    suspend fun closePr(dropFork: Boolean, dropBranch: Boolean, pullRequest: PullRequestWrapper): PrActionStatus {
         val settings = resolve(pullRequest.searchHostName(), pullRequest.codeHostName())
-        when {
+        return when {
             settings is BitBucketSettings && pullRequest is BitBucketPullRequestWrapper -> bitbucketServerClient.closePr(dropFork, dropBranch, settings, pullRequest)
             settings is GitHubSettings && pullRequest is GithubComPullRequestWrapper -> githubComClient.closePr(dropFork, dropBranch, settings, pullRequest)
             settings is GitLabSettings && pullRequest is GitLabMergeRequestWrapper -> gitLabClient.closePr(dropFork, dropBranch, settings, pullRequest)
-            settings == null -> Unit
-            else -> throw IllegalArgumentException("Unable to match config correctly")
+            else -> PrActionStatus(success = false, msg = "Unable to match config correctly")
         }
     }
 
@@ -163,5 +169,35 @@ class PrRouter(
                 }
             }
         }.toMap()
+    }
+
+    suspend fun approvePr(pullRequest: PullRequestWrapper): PrActionStatus {
+        val settings = resolve(pullRequest.searchHostName(), pullRequest.codeHostName())
+        return when {
+            settings is BitBucketSettings && pullRequest is BitBucketPullRequestWrapper -> bitbucketServerClient.approvePr(pullRequest, settings)
+            settings is GitHubSettings && pullRequest is GithubComPullRequestWrapper -> githubComClient.approvePr(pullRequest, settings)
+            settings is GitLabSettings && pullRequest is GitLabMergeRequestWrapper -> gitLabClient.approvePr(pullRequest, settings)
+            else -> throw IllegalArgumentException("Unable to match config correctly")
+        }
+    }
+
+    suspend fun disapprovePr(pullRequest: PullRequestWrapper): PrActionStatus {
+        val settings = resolve(pullRequest.searchHostName(), pullRequest.codeHostName())
+        return when {
+            settings is BitBucketSettings && pullRequest is BitBucketPullRequestWrapper -> bitbucketServerClient.disapprovePr(pullRequest, settings)
+            settings is GitHubSettings && pullRequest is GithubComPullRequestWrapper -> githubComClient.disapprovePr(pullRequest, settings)
+            settings is GitLabSettings && pullRequest is GitLabMergeRequestWrapper -> gitLabClient.disapprovePr(pullRequest, settings)
+            else -> throw IllegalArgumentException("Unable to match config correctly")
+        }
+    }
+
+    suspend fun mergePr(pullRequest: PullRequestWrapper): PrActionStatus {
+        val settings = resolve(pullRequest.searchHostName(), pullRequest.codeHostName())
+        return when {
+            settings is BitBucketSettings && pullRequest is BitBucketPullRequestWrapper -> bitbucketServerClient.merge(pullRequest, settings)
+            settings is GitHubSettings && pullRequest is GithubComPullRequestWrapper -> githubComClient.merge(pullRequest, settings)
+            settings is GitLabSettings && pullRequest is GitLabMergeRequestWrapper -> gitLabClient.merge(pullRequest, settings)
+            else -> throw IllegalArgumentException("Unable to match config correctly")
+        }
     }
 }
