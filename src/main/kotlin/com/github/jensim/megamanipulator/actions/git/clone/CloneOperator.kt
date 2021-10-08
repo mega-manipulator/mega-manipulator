@@ -34,7 +34,7 @@ class CloneOperator(
     private val gitUrlHelper: GitUrlHelper,
 ) {
 
-    fun clone(repos: Set<SearchResult>) {
+    fun clone(repos: Set<SearchResult>, branchName: String) {
         val basePath = projectOperator.project.basePath!!
         filesOperator.refreshConf()
         val settings = settingsFileOperator.readSettings()!!
@@ -49,7 +49,7 @@ class CloneOperator(
                 val cloneUrl = gitUrlHelper.buildCloneUrl(codeSettings, vcsRepo)
                 val defaultBranch = prRouter.getRepo(repo)?.getDefaultBranch()!!
                 val dir = File(basePath, "clones/${repo.asPathString()}")
-                clone(dir, cloneUrl, defaultBranch)
+                clone(dir, cloneUrl, defaultBranch, branchName)
             }
         }
         filesOperator.refreshClones()
@@ -105,33 +105,27 @@ class CloneOperator(
     }
 
     @SuppressWarnings("ReturnCount")
-    private suspend fun clone(dir: File, cloneUrl: String, branch: String): List<Action> {
+    private suspend fun clone(dir: File, cloneUrl: String, defaultBranch: String, branch: String = defaultBranch): List<Action> {
         val badState: MutableList<Action> = mutableListOf()
         dir.mkdirs()
         if (File(dir, ".git").exists()) {
             badState.add("Repo already cloned" to ApplyOutput.dummy(dir = dir.path, std = "Repo already cloned"))
             return badState
         }
-        val p0 = processOperator.runCommandAsync(
-            dir.parentFile,
-            listOf("git", "clone", cloneUrl, "--depth", "1", "--branch", branch, dir.absolutePath)
-        ).await()
-        if (p0.exitCode == 0) {
-            return badState
-        }
-        badState.add("Failed shallow clone attempt" to p0)
-        val p1 = processOperator.runCommandAsync(dir.parentFile, listOf("git", "clone", cloneUrl, dir.absolutePath)).await()
+        val p1 = processOperator.runCommandAsync(dir.parentFile, listOf("git", "clone", "--branch", defaultBranch, cloneUrl, dir.absolutePath)).await()
         if (p1.exitCode != 0) {
-            badState.add("Failed full clone attempt" to p1)
+            badState.add("Failed clone" to p1)
             return badState
         }
-        val p2 = processOperator.runCommandAsync(dir, listOf("git", "checkout", branch)).await()
-        if (p2.exitCode == 0) {
-            return badState
-        }
-        val p3 = processOperator.runCommandAsync(dir, listOf("git", "checkout", "-b", branch)).await()
-        if (p3.exitCode != 0) {
-            badState.add("Branch switch failed" to p3)
+        if (defaultBranch != branch) {
+            val p2 = processOperator.runCommandAsync(dir, listOf("git", "checkout", branch)).await()
+            if (p2.exitCode == 0) {
+                return badState
+            }
+            val p3 = processOperator.runCommandAsync(dir, listOf("git", "checkout", "-b", branch)).await()
+            if (p3.exitCode != 0) {
+                badState.add("Branch switch failed" to p3)
+            }
         }
         return badState
     }

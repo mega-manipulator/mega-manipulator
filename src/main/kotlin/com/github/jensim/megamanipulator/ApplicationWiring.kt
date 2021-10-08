@@ -250,6 +250,7 @@ data class ApplicationWiring(
             settingsFileOperator = this.settingsFileOperator,
             cloneOperator = this.cloneOperator,
             uiProtector = this.uiProtector,
+            dialogGenerator = this.dialogGenerator,
         )
     }
     val tabApply: ApplyWindow by lazy {

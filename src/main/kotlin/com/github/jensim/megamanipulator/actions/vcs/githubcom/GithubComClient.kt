@@ -14,6 +14,7 @@ import io.ktor.client.request.delete
 import io.ktor.client.request.get
 import io.ktor.client.request.patch
 import io.ktor.client.request.post
+import io.ktor.client.request.put
 import io.ktor.client.statement.HttpResponse
 import io.ktor.client.statement.HttpStatement
 import io.ktor.client.statement.readText
@@ -194,17 +195,17 @@ class GithubComClient(
             if (pullRequest.pullRequest.head?.repo != null) {
                 if (dropFork && pullRequest.pullRequest.head.repo.fork && pullRequest.pullRequest.head.repo.id != pullRequest.pullRequest.base?.repo?.id) {
                     if (pullRequest.pullRequest.head.repo.open_issues_count == 0L && pullRequest.pullRequest.head.repo.owner.login == settings.username) {
-                        client.delete<HttpResponse>("${settings.baseUrl}/repos/${settings.username}/${pullRequest.pullRequest.head.repo.name}").let { response: HttpResponse ->
-                            if (response.status.value >= 300) {
-                                return PrActionStatus(false, "Failed dropFork due to ${response.readText()}")
+                        client.delete<HttpResponse>("${settings.baseUrl}/repos/${settings.username}/${pullRequest.pullRequest.head.repo.name}").let {
+                            if (it.status.value >= 300) {
+                                return PrActionStatus(false, "Failed dropFork due to ${it.readText()}")
                             }
                         }
                     }
                 } else if (dropBranch && pullRequest.pullRequest.head.repo.id == pullRequest.pullRequest.base?.repo?.id) {
                     // https://docs.github.com/en/rest/reference/git#delete-a-reference
-                    client.delete<HttpResponse>("${settings.baseUrl}/repos/${pullRequest.pullRequest.head.repo.owner.login}/${pullRequest.pullRequest.head.repo.name}/git/refs/heads/${pullRequest.pullRequest.head.ref}").let { response: HttpResponse ->
-                        if (response.status.value >= 300) {
-                            return PrActionStatus(false, "Failed dropBranch due to ${response.readText()}")
+                    client.delete<HttpResponse>("${settings.baseUrl}/repos/${pullRequest.pullRequest.head.repo.owner.login}/${pullRequest.pullRequest.head.repo.name}/git/refs/heads/${pullRequest.pullRequest.head.ref}").let {
+                        if (it.status.value >= 300) {
+                            return PrActionStatus(false, "Failed dropBranch due to ${it.readText()}")
                         }
                     }
                 }
@@ -257,8 +258,7 @@ class GithubComClient(
 
     suspend fun validateAccess(searchHost: String, codeHost: String, settings: GitHubSettings): String = try {
         val client: HttpClient = httpClientProvider.getClient(searchHost, codeHost, settings)
-        val response: HttpResponse =
-            client.get<HttpStatement>("https://api.github.com/repos/jensim/mega-manipulator").execute()
+        val response: HttpResponse = client.get<HttpStatement>("${settings.baseUrl}/repos/jensim/mega-manipulator").execute()
         val scopeString = response.headers["X-OAuth-Scopes"]
         val scopes = scopeString.orEmpty().split(Pattern.compile(",")).map { it.trim() }
         val expected = listOf("repo", "delete_repo")
@@ -271,14 +271,48 @@ class GithubComClient(
     }
 
     suspend fun approvePr(pullRequest: GithubComPullRequestWrapper, settings: GitHubSettings): PrActionStatus {
-        return PrActionStatus(false, msg = "Not yet implemented ${pullRequest.asPathString()} ${settings.username}")
+        return createReview(GithubReviewEvent.APPROVE, pullRequest, settings)
     }
 
     suspend fun disapprovePr(pullRequest: GithubComPullRequestWrapper, settings: GitHubSettings): PrActionStatus {
-        return PrActionStatus(false, msg = "Not yet implemented ${pullRequest.asPathString()} ${settings.username}")
+        return createReview(GithubReviewEvent.REQUEST_CHANGES, pullRequest, settings)
+    }
+
+    private suspend fun createReview(event: GithubReviewEvent, pullRequest: GithubComPullRequestWrapper, settings: GitHubSettings): PrActionStatus {
+        // https://docs.github.com/en/rest/reference/pulls#create-a-review-for-a-pull-request
+        // POST /repos/{owner}/{repo}/pulls/{pull_number}/reviews
+
+        val client: HttpClient = httpClientProvider.getClient(pullRequest.searchHostName(), pullRequest.codeHostName(), settings)
+        val response: HttpResponse = client.post("${settings.baseUrl}/repos/${pullRequest.pullRequest.base?.repo?.full_name}/pulls/${pullRequest.pullRequest.id}/reviews") {
+            contentType(ContentType.Application.Json)
+            accept(ContentType.Application.Json)
+            body = mapOf(
+                "event" to event.name,
+                "body" to "Bulk ${event.name.toLowerCase()} using <a href=\"https://mega-manipulator.github.io/\">mega-manipulator</a>"
+            )
+        }
+        return if (response.status.value >= 300) {
+            PrActionStatus(success = false, msg = "Failed ${event.name.toLowerCase()} PR due to: '${response.readText()}'")
+        } else {
+            PrActionStatus(success = true)
+        }
+    }
+
+    private enum class GithubReviewEvent {
+        APPROVE, REQUEST_CHANGES // , COMMENT, PENDING
     }
 
     suspend fun merge(pullRequest: GithubComPullRequestWrapper, settings: GitHubSettings): PrActionStatus {
-        return PrActionStatus(false, msg = "Not yet implemented ${pullRequest.asPathString()} ${settings.username}")
+        // https://docs.github.com/en/rest/reference/pulls#merge-a-pull-request
+        // PUT /repos/{owner}/{repo}/pulls/{pull_number}/merge
+        val client: HttpClient = httpClientProvider.getClient(pullRequest.searchHostName(), pullRequest.codeHostName(), settings)
+        val response: HttpResponse = client.put("${settings.baseUrl}/repos/${pullRequest.pullRequest.base?.repo?.full_name}/pulls/${pullRequest.pullRequest.id}/merge") {
+            accept(ContentType.Application.Json)
+        }
+        return if (response.status.value >= 300) {
+            PrActionStatus(success = false, msg = "Failed merge PR due to: '${response.readText()}'")
+        } else {
+            PrActionStatus(success = true)
+        }
     }
 }

@@ -96,6 +96,7 @@ sealed class GitLabMergeRequestWrapper : PullRequestWrapper() {
     abstract val mergeRequestIid: Long
 }
 
+@Serializable
 data class GitLabMergeRequestListItemWrapper(
     val searchHost: String,
     val codeHost: String,
@@ -129,6 +130,7 @@ data class GitLabMergeRequestListItemWrapper(
     override fun browseUrl(): String? = mergeRequest.webUrl
 }
 
+@Serializable
 data class GitLabAssignedMergeRequestListItemWrapper(
     val searchHost: String,
     val codeHost: String,
@@ -162,6 +164,7 @@ data class GitLabAssignedMergeRequestListItemWrapper(
     override fun browseUrl(): String? = mergeRequest.webUrl
 }
 
+@Serializable
 data class GitLabMergeRequestApiWrapper(
     val searchHost: String,
     val codeHost: String,

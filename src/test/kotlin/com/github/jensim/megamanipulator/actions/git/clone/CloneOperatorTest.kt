@@ -117,7 +117,7 @@ class CloneOperatorTest {
         coEvery { processOperator.runCommandAsync(any(), any()) } returns GlobalScope.async { ApplyOutput.dummy(exitCode = 0) }
 
         // When
-        cloneOperator.clone(setOf(input))
+        cloneOperator.clone(setOf(input), "main")
 
         // Then
         verify { filesOperator.refreshClones() }
@@ -229,60 +229,46 @@ class CloneOperatorTest {
     }
 
     @Test
-    fun `clone repos failed on both attempts`() = runBlocking {
-        // Given
-        val pullRequest: PullRequestWrapper = mockk(relaxed = true) {
-            every { searchHostName() } returns "test"
-            every { codeHostName() } returns "codeHostName"
-            every { project() } returns PROJECT
-            every { baseRepo() } returns BASE_REPO
-            every { cloneUrlFrom(HTTPS) } returns "any-url-from"
-            every { fromBranch() } returns "main"
-            every { isFork() } returns false
-        }
-        val applyOutput = ApplyOutput("anydir", "anystd", "", 1)
-
-        every { processOperator.runCommandAsync(any(), any()) } returns CompletableDeferred(applyOutput)
-
-        // When
-        val states = cloneOperator.cloneRepos(pullRequest, settings)
-
-        // Then
-        verify(exactly = 2) { processOperator.runCommandAsync(any(), any()) }
-        assertThat(states.size, equalTo(2))
-        assertThat(states[0].first, equalTo("Failed shallow clone attempt"))
-        assertThat(states[1].first, equalTo("Failed full clone attempt"))
-    }
-
-    @Test
     fun `clone repos and failed to switch branch`() = runBlocking {
         // Given
-        val pullRequest = mockk<PullRequestWrapper>()
-        val file = mockFile(pullRequest)
-        val applyOutput = ApplyOutput("anydir", "anystd", "", 1)
+        val input = SearchResult(searchHostName = "search", codeHostName = "code", project = "project", repo = "repo")
+        coEvery { prRouter.getRepo(input) } returns mockk {
+            every { getDefaultBranch() } returns "main"
+            every { getCloneUrl(HTTPS) } returns "https://example.com"
+        }
         val applyOutputCloneSuccess = ApplyOutput("anydir", "anystd", "", 0)
-
-        val fullPath = "${project.basePath}/clones/${pullRequest.asPathString()}"
-
-        every { file.mkdirs() } returns true
-        every { file.exists() } returns false
-        every { file.parentFile } returns file
-        every { processOperator.runCommandAsync(any(), any()) } returns CompletableDeferred(applyOutput)
+        val fullPath = "${project.basePath}/clones/${input.asPathString()}"
+        val dir = File(fullPath)
+        every { processOperator.runCommandAsync(eq(dir), any<List<String>>()) } returns CompletableDeferred(
+            ApplyOutput.dummy()
+        )
         every {
             processOperator.runCommandAsync(
-                any(),
-                listOf("git", "clone", "any-url-from", fullPath)
+                eq(dir.parentFile),
+                listOf("git", "clone", "--branch", "main", "https://username:password@example.com", dir.absolutePath)
             )
         } returns CompletableDeferred(applyOutputCloneSuccess)
 
         // When
-        val states = cloneOperator.cloneRepos(pullRequest, settings)
+        cloneOperator.clone(setOf(input), "prBranch")
 
         // Then
-        verify(exactly = 4) { processOperator.runCommandAsync(any(), any()) }
-        assertThat(states.size, equalTo(2))
-        assertThat(states[0].first, equalTo("Failed shallow clone attempt"))
-        assertThat(states[1].first, equalTo("Branch switch failed"))
+        verify {
+            processOperator.runCommandAsync(
+                eq(dir.parentFile),
+                eq(listOf("git", "clone", "--branch", "main", "https://username:password@example.com", dir.absolutePath))
+            )
+        }
+        verify { processOperator.runCommandAsync(eq(dir), eq(listOf("git", "checkout", "prBranch"))) }
+        verify { processOperator.runCommandAsync(eq(dir), eq(listOf("git", "checkout", "-b", "prBranch"))) }
+        verify { filesOperator.refreshClones() }
+        verify {
+            notificationsOperator.show(
+                "Cloning done with failures",
+                "Failed cloning 1/1 repos, details in ide logs",
+                NotificationType.WARNING
+            )
+        }
     }
 
     @Test

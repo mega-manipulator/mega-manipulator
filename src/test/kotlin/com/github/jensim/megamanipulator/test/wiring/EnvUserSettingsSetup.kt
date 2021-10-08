@@ -79,7 +79,7 @@ object EnvUserSettingsSetup {
         )
     }
 
-    val bitbucketSettings: Pair<String, CodeHostSettings.BitBucketSettings>? by lazy {
+    private val bitbucketSettings: Pair<String, CodeHostSettings.BitBucketSettings>? by lazy {
         try {
             listOf(
                 EnvHelper.EnvProperty.BITBUCKET_SERVER_PROJECT,
@@ -118,7 +118,7 @@ object EnvUserSettingsSetup {
             null
         }
     }
-    val sourceGraphSettings: SearchHostSettings.SourceGraphSettings by lazy {
+    private val sourceGraphSettings: SearchHostSettings.SourceGraphSettings by lazy {
         SearchHostSettings.SourceGraphSettings(
             baseUrl = "https://sourcegraph.com",
             codeHostSettings = codeHostSettings,

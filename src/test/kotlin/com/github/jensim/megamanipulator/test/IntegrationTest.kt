@@ -7,11 +7,13 @@ import com.github.jensim.megamanipulator.actions.vcs.PullRequestWrapper
 import com.github.jensim.megamanipulator.test.wiring.EnvUserSettingsSetup
 import com.github.jensim.megamanipulator.test.wiring.TestApplicationWiring
 import com.github.jensim.megamanipulator.toolswindow.MyToolWindowFactory
+import com.intellij.notification.NotificationType
 import com.intellij.openapi.wm.ToolWindow
 import com.intellij.ui.content.ContentFactory
 import com.intellij.util.io.delete
 import io.mockk.every
 import io.mockk.mockk
+import io.mockk.verify
 import kotlinx.coroutines.runBlocking
 import org.hamcrest.MatcherAssert.assertThat
 import org.hamcrest.Matchers.equalTo
@@ -68,7 +70,8 @@ class IntegrationTest {
     fun `run naive scenarios`(result: SearchResult) {
         // clone
         val results: Set<SearchResult> = setOf(result)
-        wiring.applicationWiring.cloneOperator.clone(results)
+        wiring.applicationWiring.cloneOperator.clone(results, "main")
+        verify { wiring.applicationWiring.notificationsOperator.show(any(), any(), eq(NotificationType.INFORMATION)) }
         assertTrue(File(wiring.tempDir, "clones/${result.asPathString()}/.git").exists())
 
         // branch
@@ -150,7 +153,7 @@ class IntegrationTest {
 
         val closeStatus: PrActionStatus = runBlocking {
             try {
-                wiring.applicationWiring.prRouter.closePr(dropFork = true, dropBranch = true, pullRequest = updatedPR!!)
+                wiring.applicationWiring.prRouter.closePr(dropFork = true, dropBranch = true, pullRequest = updatedPR)
             } catch (e: Exception) {
                 e.printStackTrace()
                 fail { "Failed closing PR" }

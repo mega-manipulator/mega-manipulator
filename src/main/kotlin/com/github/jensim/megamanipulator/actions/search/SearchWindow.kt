@@ -4,6 +4,7 @@ import com.github.jensim.megamanipulator.actions.git.clone.CloneOperator
 import com.github.jensim.megamanipulator.settings.SettingsFileOperator
 import com.github.jensim.megamanipulator.settings.types.SearchHostSettings
 import com.github.jensim.megamanipulator.toolswindow.ToolWindowTab
+import com.github.jensim.megamanipulator.ui.DialogGenerator
 import com.github.jensim.megamanipulator.ui.GeneralListCellRenderer.addCellRenderer
 import com.github.jensim.megamanipulator.ui.UiProtector
 import com.intellij.icons.AllIcons
@@ -23,6 +24,7 @@ class SearchWindow(
     private val settingsFileOperator: SettingsFileOperator,
     private val cloneOperator: CloneOperator,
     private val uiProtector: UiProtector,
+    private val dialogGenerator: DialogGenerator,
 ) : ToolWindowTab {
 
     private val searchHostSelect = ComboBox<Pair<String, SearchHostSettings>>()
@@ -88,8 +90,10 @@ class SearchWindow(
         }
         cloneButton.addActionListener {
             val selected = selector.selectedValuesList.toSet()
+            val defaultBranchName = "feature/batch_change"
+            val branch = dialogGenerator.askForInput("Branch", "branch name", defaultBranchName) ?: defaultBranchName
             if (selected.isNotEmpty()) {
-                cloneOperator.clone(selected)
+                cloneOperator.clone(selected, branch)
                 selector.clearSelection()
             }
         }

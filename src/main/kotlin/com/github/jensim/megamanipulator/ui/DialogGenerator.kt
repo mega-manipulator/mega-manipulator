@@ -29,10 +29,13 @@ class DialogGenerator {
         }
     }
 
-    fun askForInput(title: String, message: String): String? {
+    fun askForInput(title: String, message: String, prefill: String? = null): String? {
         return try {
             val field = JBTextArea().apply {
                 minimumSize = Dimension(500, 300)
+                if (prefill != null) {
+                    text = prefill
+                }
             }
             val panel = panel {
                 row {

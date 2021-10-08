@@ -415,8 +415,7 @@ class GitLabClient(
         val fork: Pair<String, String>? = localRepoOperator.getForkProject(repo)
         val fromProject = fork?.first ?: repo.project
         val fromRepo = fork?.second ?: repo.repo
-        val gitlabSourceRepo =
-            getRepo(SearchResult(fromProject, fromRepo, repo.codeHostName, repo.searchHostName), settings)
+        val gitlabSourceRepo = getRepo(SearchResult(fromProject, fromRepo, repo.codeHostName, repo.searchHostName), settings)
         val sourceProjectId = gitlabSourceRepo.projectId
 
         val client: HttpClient = httpClientProvider.getClient(repo.searchHostName, repo.codeHostName, settings)
@@ -454,14 +453,39 @@ class GitLabClient(
     }
 
     suspend fun approvePr(pullRequest: GitLabMergeRequestWrapper, settings: GitLabSettings): PrActionStatus {
-        return PrActionStatus(false, msg = "Not yet implemented")
+        return setPrOpinion(pullRequest, settings, "approve")
     }
 
     suspend fun disapprovePr(pullRequest: GitLabMergeRequestWrapper, settings: GitLabSettings): PrActionStatus {
-        return PrActionStatus(false, msg = "Not yet implemented")
+        return setPrOpinion(pullRequest, settings, "unapprove")
+    }
+
+    private suspend fun setPrOpinion(pullRequest: GitLabMergeRequestWrapper, settings: GitLabSettings, endpoint: String): PrActionStatus {
+        // https://docs.gitlab.com/ee/api/merge_request_approvals.html#unapprove-merge-request
+        // POST /api/v4/projects/:id/merge_requests/:merge_request_iid/unapprove
+        val client: HttpClient = httpClientProvider.getClient(pullRequest.searchHostName(), pullRequest.codeHostName(), settings)
+        val response: HttpResponse = client.post("${settings.baseUrl}/api/v4/projects/${pullRequest.targetProjectId}/merge_requests/${pullRequest.mergeRequestIid}/$endpoint") {
+            accept(ContentType.Application.Json)
+        }
+        return if (response.status.value >= 300) {
+            PrActionStatus(success = false, msg = "Failed $endpoint PR due to: '${response.readText()}'")
+        } else {
+            PrActionStatus(success = true)
+        }
     }
 
     suspend fun merge(pullRequest: GitLabMergeRequestWrapper, settings: GitLabSettings): PrActionStatus {
-        return PrActionStatus(false, msg = "Not yet implemented")
+        // https://docs.gitlab.com/ee/api/merge_requests.html#accept-mr
+        // PUT /projects/:id/merge_requests/:merge_request_iid/merge
+        val client: HttpClient = httpClientProvider.getClient(pullRequest.searchHostName(), pullRequest.codeHostName(), settings)
+        val response: HttpResponse = client.put("${settings.baseUrl}/api/v4/projects/${pullRequest.targetProjectId}/merge_requests/${pullRequest.mergeRequestIid}/merge") {
+            contentType(ContentType.Application.Json)
+            accept(ContentType.Application.Json)
+        }
+        return if (response.status.value >= 300) {
+            PrActionStatus(success = false, msg = "Failed disapproving PR due to: '${response.readText()}'")
+        } else {
+            PrActionStatus(success = true)
+        }
     }
 }
