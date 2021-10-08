@@ -5,18 +5,24 @@
 ## [Unreleased]
 
 ### Added
-- approve, unapprove & merge for GitHub
 
 ### Changed
 
 ### Deprecated
 
 ### Removed
-- shallow clone feature, as it messes up the forked repo remotes integration
 
 ### Fixed
 
 ### Security
+
+## [0.0.29]
+
+### Added
+- approve, unapprove & merge for GitHub
+
+### Removed
+- shallow clone feature, as it messes up the forked repo remotes integration
 
 ## [0.0.28]
 
