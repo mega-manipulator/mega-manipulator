@@ -23,7 +23,6 @@ import com.github.jensim.megamanipulator.actions.vcs.githubcom.GithubComClient
 import com.github.jensim.megamanipulator.actions.vcs.gitlab.GitLabClient
 import com.github.jensim.megamanipulator.files.FilesOperator
 import com.github.jensim.megamanipulator.http.HttpClientProvider
-import com.github.jensim.megamanipulator.settings.SerializationHolder
 import com.github.jensim.megamanipulator.settings.SettingsFileOperator
 import com.github.jensim.megamanipulator.settings.SettingsWindow
 import com.github.jensim.megamanipulator.settings.passwords.IntelliJPasswordsOperator
@@ -34,7 +33,6 @@ import com.github.jensim.megamanipulator.ui.UiProtector
 import com.github.jensim.megamanipulator.ui.UiProtectorImpl
 import com.intellij.notification.NotificationGroupManager
 import com.intellij.openapi.project.Project
-import kotlinx.serialization.json.Json
 
 data class ApplicationWiring(
     val projectOperator: ProjectOperator,
