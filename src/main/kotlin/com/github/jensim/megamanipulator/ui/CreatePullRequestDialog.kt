@@ -1,5 +1,7 @@
 package com.github.jensim.megamanipulator.ui
 
+import com.github.jensim.megamanipulator.project.PrefillString
+import com.github.jensim.megamanipulator.project.PrefillStringSuggestionOperator
 import com.intellij.openapi.ui.DialogPanel
 import com.intellij.ui.components.JBScrollPane
 import com.intellij.ui.components.JBTextArea
@@ -32,7 +34,19 @@ open class CreatePullRequestDialog {
         }
 
     private fun show(): Int {
-        return JOptionPane.showConfirmDialog(null, panel, title, OK_CANCEL_OPTION, QUESTION_MESSAGE, null)
+        PrefillStringSuggestionOperator.getPrefill(PrefillString.PR_TITLE)?.let { title ->
+            titleField.text = title
+        }
+        PrefillStringSuggestionOperator.getPrefill(PrefillString.PR_BODY)?.let { body ->
+            descriptionField.text = title
+        }
+        val response = JOptionPane
+            .showConfirmDialog(null, panel, title, OK_CANCEL_OPTION, QUESTION_MESSAGE, null)
+        if (response == OK_OPTION) {
+            PrefillStringSuggestionOperator.setPrefill(PrefillString.PR_TITLE, titleField.text)
+            PrefillStringSuggestionOperator.setPrefill(PrefillString.PR_BODY, descriptionField.text)
+        }
+        return response
     }
 
     fun showAndGet(): Boolean = show() == OK_OPTION && !prTitle.isNullOrBlank() && !prDescription.isNullOrBlank()

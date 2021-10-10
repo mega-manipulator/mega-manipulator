@@ -15,6 +15,7 @@ class MegaManipulatorSettingsState : PersistentStateComponent<MegaManipulatorSet
 
     val seenOnboarding: MutableMap<OnboardingId, Boolean> = mutableMapOf()
     var lastSearch: String = "repo:github.com/mega-manipulator/mega-manipulator"
+    val prefillString: MutableMap<PrefillString, String> = mutableMapOf()
 
     companion object {
         fun getInstance(): MegaManipulatorSettingsState? = try {
