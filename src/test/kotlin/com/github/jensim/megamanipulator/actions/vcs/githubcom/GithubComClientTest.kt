@@ -5,7 +5,6 @@ import com.github.jensim.megamanipulator.actions.localrepo.LocalRepoOperator
 import com.github.jensim.megamanipulator.actions.search.SearchResult
 import com.github.jensim.megamanipulator.actions.vcs.GithubComRepoWrapping
 import com.github.jensim.megamanipulator.http.HttpClientProvider
-import com.github.jensim.megamanipulator.settings.SerializationHolder
 import com.github.jensim.megamanipulator.settings.SettingsFileOperator
 import com.github.jensim.megamanipulator.settings.types.CloneType.HTTPS
 import com.github.jensim.megamanipulator.settings.types.CodeHostSettings.GitHubSettings
@@ -59,7 +58,6 @@ class GithubComClientTest {
     private val client = GithubComClient(
         httpClientProvider = clientProvider,
         localRepoOperator = localRepoMock,
-        json = SerializationHolder.instance.readableJson
     )
 
     companion object {

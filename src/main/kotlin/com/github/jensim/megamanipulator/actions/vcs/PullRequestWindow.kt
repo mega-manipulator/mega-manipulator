@@ -25,7 +25,6 @@ import javax.swing.event.DocumentListener
 
 class PullRequestWindow(
     private val prRouter: PrRouter,
-    private val serializationHolder: SerializationHolder,
     private val uiProtector: UiProtector,
     private val pullRequestActionsMenu: PullRequestActionsMenu,
     settingsFileOperator: SettingsFileOperator,
@@ -103,7 +102,7 @@ class PullRequestWindow(
             val selected: List<PullRequestWrapper> = prList.selectedValuesList
             if (selected.isNotEmpty()) {
                 if (selected.size == 1) {
-                    peekArea.text = serializationHolder.readableJson.encodeToString(selected.first())
+                    peekArea.text = SerializationHolder.readableJson.encodeToString(selected.first())
                 }
                 menuOpenButton.isEnabled = true
             } else {

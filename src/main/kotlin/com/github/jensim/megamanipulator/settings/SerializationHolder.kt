@@ -2,11 +2,7 @@ package com.github.jensim.megamanipulator.settings
 
 import kotlinx.serialization.json.Json
 
-class SerializationHolder {
-
-    companion object {
-        val instance by lazy { SerializationHolder() }
-    }
+object SerializationHolder {
 
     val readableJson: Json by lazy {
         Json {

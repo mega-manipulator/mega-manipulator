@@ -4,6 +4,7 @@ import com.github.jensim.megamanipulator.actions.search.SearchResult
 import com.github.jensim.megamanipulator.actions.search.hound.HoundTypes.HoundRepo
 import com.github.jensim.megamanipulator.actions.search.hound.HoundTypes.HoundSearchResults
 import com.github.jensim.megamanipulator.http.HttpClientProvider
+import com.github.jensim.megamanipulator.settings.SerializationHolder
 import com.github.jensim.megamanipulator.settings.types.SearchHostSettings.HoundSettings
 import io.ktor.client.request.get
 import io.ktor.client.request.header
@@ -15,8 +16,9 @@ import kotlinx.serialization.json.Json
 
 class HoundClient(
     private val httpClientProvider: HttpClientProvider,
-    private val json: Json,
 ) {
+
+    private val json: Json = SerializationHolder.readableJson
 
     suspend fun search(searchHostName: String, settings: HoundSettings, search: String): Set<SearchResult> {
         val client = httpClientProvider.getClient(searchHostName, settings)

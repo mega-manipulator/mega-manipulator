@@ -5,6 +5,8 @@
 ## [Unreleased]
 
 ### Added
+- Force recreate base files
+- Force open tabs when opening an MM project
 
 ### Changed
 

@@ -1,15 +1,18 @@
 package com.github.jensim.megamanipulator.toolswindow
 
 import com.github.jensim.megamanipulator.ApplicationWiring
-import com.github.jensim.megamanipulator.project.MegaManipulatorModuleType.Companion.MODULE_TYPE_ID
-import com.intellij.openapi.module.ModuleManager
-import com.intellij.openapi.module.ModuleType
+import com.github.jensim.megamanipulator.project.MegaManipulatorUtil.isMM
+import com.intellij.openapi.fileEditor.FileEditorManager
 import com.intellij.openapi.project.Project
+import com.intellij.openapi.vfs.VirtualFile
+import com.intellij.openapi.vfs.VirtualFileManager
 import com.intellij.openapi.wm.ToolWindow
 import com.intellij.openapi.wm.ToolWindowFactory
+import com.intellij.ui.content.Content
 import com.intellij.ui.content.ContentFactory
 import com.intellij.ui.content.ContentManagerEvent
 import com.intellij.ui.content.ContentManagerListener
+import java.io.File
 import java.util.function.Supplier
 
 class MyToolWindowFactory(
@@ -37,7 +40,7 @@ class MyToolWindowFactory(
             if (index == 0) {
                 tab.refresh()
             }
-            val content1 = contentFactory.createContent(tab.content, wiring.myBundle.message(headerKey), false)
+            val content1: Content = contentFactory.createContent(tab.content, wiring.myBundle.message(headerKey), false)
             toolWindow.contentManager.addContent(content1)
         }
         toolWindow.addContentManagerListener(object : ContentManagerListener {
@@ -49,19 +52,19 @@ class MyToolWindowFactory(
             }
         })
         wiring.filesOperator.makeUpBaseFiles()
+        VirtualFileManager.getInstance()?.let {
+            it.findFileByNioPath(File("${project.basePath}/config/mega-manipulator.md").toPath())
+                ?.let { file: VirtualFile ->
+                    FileEditorManager.getInstance(project).openFile(file, true)
+                }
+        }
     }
 
     override fun isApplicable(project: Project): Boolean {
-        return super.isApplicable(project) && isMegaManipulator(project)
+        return super.isApplicable(project) && isMM(project)
     }
 
     override fun shouldBeAvailable(project: Project): Boolean {
-        return super.shouldBeAvailable(project) && isMegaManipulator(project)
-    }
-
-    private fun isMegaManipulator(project: Project): Boolean {
-        return ModuleManager.getInstance(project).modules.any {
-            ModuleType.get(it).id == MODULE_TYPE_ID
-        } && super.isApplicable(project)
+        return super.shouldBeAvailable(project) && isMM(project)
     }
 }

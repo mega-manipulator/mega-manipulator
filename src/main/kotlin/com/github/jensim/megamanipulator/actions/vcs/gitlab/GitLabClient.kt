@@ -20,6 +20,7 @@ import com.github.jensim.megamanipulator.graphql.generated.gitlab.GetCurrentUser
 import com.github.jensim.megamanipulator.graphql.generated.gitlab.GetForkRepos
 import com.github.jensim.megamanipulator.graphql.generated.gitlab.SingleRepoQuery
 import com.github.jensim.megamanipulator.http.HttpClientProvider
+import com.github.jensim.megamanipulator.settings.SerializationHolder
 import com.github.jensim.megamanipulator.settings.types.CodeHostSettings.GitLabSettings
 import com.intellij.util.containers.isNullOrEmpty
 import com.intellij.util.io.encodeUrlQueryParameter
@@ -44,11 +45,11 @@ import java.util.concurrent.atomic.AtomicInteger
 @Suppress("debtUnusedPrivateMember", "TooManyFunctions", "LoopWithTooManyJumpStatements", "UnusedPrivateMember")
 class GitLabClient(
     private val httpClientProvider: HttpClientProvider,
-    private val json: Json,
     private val graphQLClientKotlinxSerializer: GraphQLClientKotlinxSerializer,
     private val localRepoOperator: LocalRepoOperator,
 ) {
 
+    private val json: Json = SerializationHolder.readableJson
     private val log = LoggerFactory.getLogger(this.javaClass)
 
     // https://gitlab.com/-/graphql-explorer

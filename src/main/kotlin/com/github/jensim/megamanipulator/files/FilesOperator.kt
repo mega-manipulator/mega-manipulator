@@ -48,9 +48,15 @@ class FilesOperator(
             System.err.println("Failed saving docs, due to: ${e.message}")
         }
         try {
-            findBaseFiles().forEach { baseFile: VirtFile ->
-                makeUpBaseFile(baseFile)
-            }
+            findBaseFiles("soft")
+                .plus(VirtFile(".gitignore", "clones\n.idea\n".toByteArray()))
+                .forEach { baseFile: VirtFile ->
+                    makeUpBaseFile(baseFile, false)
+                }
+            findBaseFiles("hard")
+                .forEach { baseFile: VirtFile ->
+                    makeUpBaseFile(baseFile, true)
+                }
         } catch (e: Exception) {
             notificationsOperator.show(
                 title = "Failed reading base files",
@@ -61,11 +67,11 @@ class FilesOperator(
         }
     }
 
-    private fun makeUpBaseFile(baseFile: VirtFile) {
+    private fun makeUpBaseFile(baseFile: VirtFile, hard: Boolean) {
         val file = File(projectOperator.project.basePath!!, baseFile.nameWithPath)
 
         try {
-            if (!file.exists()) {
+            if (hard || !file.exists()) {
                 file.parentFile.mkdirs()
                 file.createNewFile()
                 file.writeBytes(baseFile.content)
@@ -83,11 +89,10 @@ class FilesOperator(
         }
     }
 
-    private fun findBaseFiles(): List<VirtFile> = findAllClasspathFiles("base-files")
-        .plus(VirtFile(".gitignore", "clones\n.idea\n".toByteArray()))
+    private fun findBaseFiles(category: String): List<VirtFile> = findAllClasspathFiles("base-files/$category")
 
     private fun findAllClasspathFiles(dir: String): List<VirtFile> {
-        val uri: URI = FilesOperator::class.java.classLoader.getResource("$dir")?.toURI()!!
+        val uri: URI = FilesOperator::class.java.classLoader.getResource(dir)?.toURI()!!
         return if (uri.scheme.equals("jar")) {
             FileSystems.newFileSystem(uri, emptyMap<String, Any>()).use { fileSystem: FileSystem ->
                 fileSystem.getPath("/$dir").toVirtConfFiles()

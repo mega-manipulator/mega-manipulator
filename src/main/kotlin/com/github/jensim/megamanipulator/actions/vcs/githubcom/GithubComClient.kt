@@ -6,6 +6,7 @@ import com.github.jensim.megamanipulator.actions.vcs.GithubComPullRequestWrapper
 import com.github.jensim.megamanipulator.actions.vcs.GithubComRepoWrapping
 import com.github.jensim.megamanipulator.actions.vcs.PrActionStatus
 import com.github.jensim.megamanipulator.http.HttpClientProvider
+import com.github.jensim.megamanipulator.settings.SerializationHolder
 import com.github.jensim.megamanipulator.settings.types.CloneType
 import com.github.jensim.megamanipulator.settings.types.CodeHostSettings.GitHubSettings
 import io.ktor.client.HttpClient
@@ -36,8 +37,9 @@ import java.util.regex.Pattern
 class GithubComClient(
     private val httpClientProvider: HttpClientProvider,
     private val localRepoOperator: LocalRepoOperator,
-    private val json: Json,
 ) {
+
+    private val json: Json = SerializationHolder.readableJson
 
     fun addDefaultReviewers(
         settings: GitHubSettings,

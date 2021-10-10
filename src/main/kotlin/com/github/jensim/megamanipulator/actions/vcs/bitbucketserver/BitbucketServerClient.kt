@@ -7,6 +7,7 @@ import com.github.jensim.megamanipulator.actions.vcs.BitBucketRepoWrapping
 import com.github.jensim.megamanipulator.actions.vcs.PrActionStatus
 import com.github.jensim.megamanipulator.actions.vcs.PullRequestWrapper
 import com.github.jensim.megamanipulator.http.HttpClientProvider
+import com.github.jensim.megamanipulator.settings.SerializationHolder
 import com.github.jensim.megamanipulator.settings.types.CloneType
 import com.github.jensim.megamanipulator.settings.types.CodeHostSettings.BitBucketSettings
 import io.ktor.client.HttpClient
@@ -30,9 +31,9 @@ import org.slf4j.LoggerFactory
 class BitbucketServerClient(
     private val httpClientProvider: HttpClientProvider,
     private val localRepoOperator: LocalRepoOperator,
-    private val json: Json,
 ) {
 
+    private val json: Json = SerializationHolder.readableJson
     private val log = LoggerFactory.getLogger(javaClass)
 
     private suspend fun getDefaultReviewers(

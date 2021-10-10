@@ -22,7 +22,6 @@ import javax.swing.JOptionPane.QUESTION_MESSAGE
 @NotThreadSafe
 class IntelliJPasswordsOperator(
     private val notificationsOperator: NotificationsOperator,
-    private val serializationHolder: SerializationHolder,
 ) : PasswordsOperator {
 
     companion object {
@@ -112,7 +111,7 @@ class IntelliJPasswordsOperator(
             null
         } else {
             PasswordSafe.instance.getPassword(credentialAttributes)?.let { passMapStr ->
-                val passMap: Map<String, String> = serializationHolder.readableJson.decodeFromString(passMapStr)
+                val passMap: Map<String, String> = SerializationHolder.readableJson.decodeFromString(passMapStr)
                 passMap[usernameKey]
             }
         }
@@ -130,14 +129,14 @@ class IntelliJPasswordsOperator(
             val preexisting: String? = PasswordSafe.instance.getPassword(credentialAttributes)
             if (preexisting == null) {
                 val passwordsMap = mapOf(usernameKey to password)
-                val passMapStr = serializationHolder.readableJson.encodeToString(passwordsMap)
+                val passMapStr = SerializationHolder.readableJson.encodeToString(passwordsMap)
                 val credentials = Credentials(serviceUsername, passMapStr)
                 PasswordSafe.instance.set(credentialAttributes, credentials)
             } else {
                 PasswordSafe.instance.getPassword(credentialAttributes)?.let { passMapStr: String ->
-                    val passMap: MutableMap<String, String> = serializationHolder.readableJson.decodeFromString(passMapStr)
+                    val passMap: MutableMap<String, String> = SerializationHolder.readableJson.decodeFromString(passMapStr)
                     passMap[usernameKey] = password
-                    val passMapStrMod = serializationHolder.readableJson.encodeToString(passMap)
+                    val passMapStrMod = SerializationHolder.readableJson.encodeToString(passMap)
                     val credentials = Credentials(serviceUsername, passMapStrMod)
                     PasswordSafe.instance.set(credentialAttributes, credentials)
                 }

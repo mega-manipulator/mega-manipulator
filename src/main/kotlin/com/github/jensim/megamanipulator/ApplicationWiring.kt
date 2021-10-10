@@ -74,9 +74,6 @@ data class ApplicationWiring(
 
     constructor(project: Project) : this(projectOperator = ProjectOperator(project))
 
-    val serializationHolder: SerializationHolder by lazy {
-        serializationHolderOverride ?: SerializationHolder()
-    }
     val pullRequestActionsMenu: PullRequestActionsMenu by lazy {
         pullRequestActionsMenuOverride ?: PullRequestActionsMenu(
             prRouter = this.prRouter,
@@ -89,7 +86,6 @@ data class ApplicationWiring(
     val passwordsOperator: PasswordsOperator by lazy {
         passwordsOperatorOverride ?: IntelliJPasswordsOperator(
             notificationsOperator = this.notificationsOperator,
-            serializationHolder = this.serializationHolder,
         )
     }
     val settingsFileOperator: SettingsFileOperator by lazy {
@@ -105,9 +101,6 @@ data class ApplicationWiring(
             notificationsOperator = this.notificationsOperator,
         )
     }
-    val json: Json by lazy {
-        jsonOverride ?: serializationHolder.readableJson
-    }
     val graphQLClientKotlinxSerializer: GraphQLClientKotlinxSerializer by lazy {
         graphQLClientKotlinxSerializerOverride ?: GraphQLClientKotlinxSerializer()
     }
@@ -121,27 +114,23 @@ data class ApplicationWiring(
     val houndClient: HoundClient by lazy {
         houndClientOverride ?: HoundClient(
             httpClientProvider = this.httpClientProvider,
-            json = this.json,
         )
     }
     val bitbucketServerClient: BitbucketServerClient by lazy {
         bitbucketServerClientOverride ?: BitbucketServerClient(
             httpClientProvider = this.httpClientProvider,
             localRepoOperator = this.localRepoOperator,
-            json = this.json,
         )
     }
     val githubComClient: GithubComClient by lazy {
         githubComClientOverride ?: GithubComClient(
             httpClientProvider = this.httpClientProvider,
             localRepoOperator = this.localRepoOperator,
-            json = this.json,
         )
     }
     val gitLabClient: GitLabClient by lazy {
         gitLabClientOverride ?: GitLabClient(
             httpClientProvider = this.httpClientProvider,
-            json = this.json,
             graphQLClientKotlinxSerializer = this.graphQLClientKotlinxSerializer,
             localRepoOperator = this.localRepoOperator,
         )
@@ -274,7 +263,6 @@ data class ApplicationWiring(
     val tabPRsManage: PullRequestWindow by lazy {
         tabPRsManageOverride ?: PullRequestWindow(
             prRouter = this.prRouter,
-            serializationHolder = this.serializationHolder,
             uiProtector = this.uiProtector,
             pullRequestActionsMenu = this.pullRequestActionsMenu,
             settingsFileOperator = this.settingsFileOperator,

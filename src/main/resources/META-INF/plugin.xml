@@ -14,5 +14,6 @@
                     implementationClass="com.github.jensim.megamanipulator.project.MegaManipulatorModuleType"/>
         <moduleBuilder builderClass="com.github.jensim.megamanipulator.project.MegaManipulatorModuleBuilder"/>
         <notificationGroup id="Mega Manipulator" displayType="BALLOON"/>
+        <postStartupActivity implementation="com.github.jensim.megamanipulator.listener.OnStartListener"/>
     </extensions>
 </idea-plugin>
