@@ -60,7 +60,6 @@ data class ApplicationWiring(
     private val commitOperatorOverride: CommitOperator? = null,
     private val dialogGeneratorOverride: DialogGenerator? = null,
     private val prRouterOverride: PrRouter? = null,
-    private val serializationHolderOverride: SerializationHolder? = null,
     private val pullRequestActionsMenuOverride: PullRequestActionsMenu? = null,
     private val sourcegraphSearchClientOverride: SourcegraphSearchClient? = null,
     private val graphQLClientKotlinxSerializerOverride: GraphQLClientKotlinxSerializer? = null,
@@ -69,7 +68,6 @@ data class ApplicationWiring(
     private val githubComClientOverride: GithubComClient? = null,
     private val gitLabClientOverride: GitLabClient? = null,
     private val httpClientProviderOverride: HttpClientProvider? = null,
-    private val jsonOverride: Json? = null,
 ) {
 
     constructor(project: Project) : this(projectOperator = ProjectOperator(project))

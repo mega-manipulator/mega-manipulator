@@ -1,6 +1,6 @@
 # mega-manipulator
 
-[![Build](https://github.com/jensim/mega-manipulator/workflows/Build/badge.svg)](https://github.com/jensim/mega-manipulator/actions/workflows/build.yml)
+[![Build](https://github.com/mega-manipulator/mega-manipulator/workflows/Build/badge.svg)](https://github.com/mega-manipulator/mega-manipulator/actions/workflows/build.yml)
 [![Version](https://img.shields.io/jetbrains/plugin/v/16396.svg)](https://plugins.jetbrains.com/plugin/16396)
 [![Downloads](https://img.shields.io/jetbrains/plugin/d/16396.svg)](https://plugins.jetbrains.com/plugin/16396)
  
@@ -63,7 +63,7 @@ Spend less time making small, or big, changes
 
 - Manually:
 
-  Download the [latest release](https://github.com/jensim/mega-manipulator/releases/latest) and install it manually using
+  Download the [latest release](https://github.com/mega-manipulator/mega-manipulator/releases/latest) and install it manually using
   <kbd>Settings/Preferences</kbd> > <kbd>Plugins</kbd> > <kbd>⚙️</kbd> > <kbd>Install plugin from disk...</kbd>
 
 ## Contribution
