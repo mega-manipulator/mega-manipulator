@@ -72,7 +72,7 @@ class SettingsFileOperatorTest {
 
     @Test
     fun `test default settings`() {
-        val defaultFileContent = File("src/main/resources/base-files/mega-manipulator.json").readText()
+        val defaultFileContent = File("src/main/resources/base-files/soft/mega-manipulator.json").readText()
 
         val fromFile = readableJson.decodeFromString<MegaManipulatorSettings>(defaultFileContent)
         assertEquals(fromFile, testData)
@@ -81,7 +81,7 @@ class SettingsFileOperatorTest {
     @Test
     @Disabled("Use to test schema validity, disabled because lib doesn't support minProperties for additionalProperties")
     fun `generate json schema and compare to file`() {
-        val baseFile = File("src/main/resources/base-files/mega-manipulator-schema.json")
+        val baseFile = File("src/main/resources/base-files/hard/mega-manipulator-schema.json")
         val fileSystemSchema: String = baseFile.readText().trim()
         val generatedSchema: String = globalJson.encodeToSchema(MegaManipulatorSettings.serializer(), generateDefinitions = false)
 

@@ -52,11 +52,15 @@ class MyToolWindowFactory(
             }
         })
         wiring.filesOperator.makeUpBaseFiles()
-        VirtualFileManager.getInstance()?.let {
-            it.findFileByNioPath(File("${project.basePath}/config/mega-manipulator.md").toPath())
-                ?.let { file: VirtualFile ->
-                    FileEditorManager.getInstance(project).openFile(file, true)
-                }
+        try {
+            VirtualFileManager.getInstance().let {
+                it.findFileByNioPath(File("${project.basePath}/config/mega-manipulator.md").toPath())
+                    ?.let { file: VirtualFile ->
+                        FileEditorManager.getInstance(project).openFile(file, true)
+                    }
+            }
+        } catch (e: NullPointerException) {
+            e.printStackTrace()
         }
     }
 
