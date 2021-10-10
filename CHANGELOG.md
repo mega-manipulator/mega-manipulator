@@ -7,6 +7,8 @@
 ### Added
 - Force recreate base files
 - Force open tabs when opening an MM project
+- Onboarding for settings window
+- Remember search string
 
 ### Changed
 

@@ -1,6 +1,7 @@
 package com.github.jensim.megamanipulator.actions.search
 
 import com.github.jensim.megamanipulator.actions.git.clone.CloneOperator
+import com.github.jensim.megamanipulator.project.MegaManipulatorSettingsState
 import com.github.jensim.megamanipulator.settings.SettingsFileOperator
 import com.github.jensim.megamanipulator.settings.types.SearchHostSettings
 import com.github.jensim.megamanipulator.toolswindow.ToolWindowTab
@@ -78,15 +79,19 @@ class SearchWindow(
             searchButton.isEnabled = false
             cloneButton.isEnabled = false
             selector.setListData(emptyArray())
+            val searchText = searchField.text
             val result: Array<SearchResult> = searchHostSelect.selectedItem?.let { searchHost: Any ->
                 searchHost.castSafelyTo<Pair<String, SearchHostSettings>>()?.first?.let { searchHostName ->
                     uiProtector.uiProtectedOperation("Seraching") {
-                        searchOperator.search(searchHostName, searchField.text)
+                        searchOperator.search(searchHostName, searchText)
                     }
                 }
             }.orEmpty().toTypedArray()
             selector.setListData(result)
             searchButton.isEnabled = true
+            MegaManipulatorSettingsState.getInstance()?.let {
+                it.lastSearch = searchText
+            }
         }
         cloneButton.addActionListener {
             val selected = selector.selectedValuesList.toSet()
@@ -106,5 +111,10 @@ class SearchWindow(
             searchHostSelect.addItem(it.toPair())
         }
         searchButton.isEnabled = searchHostSelect.itemCount > 0
+        if (searchField.text.isNullOrBlank()) {
+            MegaManipulatorSettingsState.getInstance()?.let {
+                searchField.text = it.lastSearch
+            }
+        }
     }
 }

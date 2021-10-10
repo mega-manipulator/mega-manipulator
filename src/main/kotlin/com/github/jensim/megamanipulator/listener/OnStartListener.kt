@@ -1,5 +1,6 @@
 package com.github.jensim.megamanipulator.listener
 
+import com.github.jensim.megamanipulator.onboarding.OnboardingId
 import com.github.jensim.megamanipulator.onboarding.OnboardingOperator
 import com.github.jensim.megamanipulator.project.MegaManipulatorUtil.isMM
 import com.intellij.openapi.project.Project
@@ -17,7 +18,9 @@ class OnStartListener : StartupActivity {
             ToolWindowManager.getInstance(project)?.let {
                 it.getToolWindow("Mega Manipulator")?.show()
             }
-            // TODO OnboardingOperator.display(OnboardingId.WELCOME)
+            OnboardingOperator.display(OnboardingId.WELCOME)
+        } else {
+            OnboardingOperator.display(OnboardingId.MM_PROJECT_INSTRUCTION)
         }
     }
 }

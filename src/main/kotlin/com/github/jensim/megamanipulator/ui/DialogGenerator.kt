@@ -10,13 +10,6 @@ import javax.swing.JOptionPane.QUESTION_MESSAGE
 
 class DialogGenerator {
 
-    companion object {
-
-        val instance by lazy {
-            DialogGenerator()
-        }
-    }
-
     fun showConfirm(title: String, message: String): Boolean {
         return try {
             when (JOptionPane.showConfirmDialog(null, message, title, OK_CANCEL_OPTION, QUESTION_MESSAGE, null)) {

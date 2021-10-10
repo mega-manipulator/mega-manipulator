@@ -3,6 +3,9 @@ package com.github.jensim.megamanipulator.settings
 import com.github.jensim.megamanipulator.actions.search.SearchOperator
 import com.github.jensim.megamanipulator.actions.vcs.PrRouter
 import com.github.jensim.megamanipulator.files.FilesOperator
+import com.github.jensim.megamanipulator.onboarding.OnboardingId
+import com.github.jensim.megamanipulator.onboarding.OnboardingOperator
+import com.github.jensim.megamanipulator.project.MegaManipulatorSettingsState
 import com.github.jensim.megamanipulator.settings.passwords.PasswordsOperator
 import com.github.jensim.megamanipulator.settings.passwords.ProjectOperator
 import com.github.jensim.megamanipulator.settings.types.AuthMethod
@@ -51,7 +54,9 @@ class SettingsWindow(
     }
 
     private val validationOutputLabel = JBLabel()
-    private val configButton = JButton("Validate config")
+    private val configButton = JButton("Validate config").apply {
+        OnboardingOperator.registerTarget(OnboardingId.SETTINGS_TAB_BTN_VALIDATE_CONF, this)
+    }
     private val hostConfigSelect = JBList<ConfigHostHolder>()
 
     override val content: JComponent = panel(constraints = arrayOf(LCFlags.noGrid)) {
@@ -62,22 +67,39 @@ class SettingsWindow(
                         component(configButton)
                     }
                     row {
-                        button("Toggle clones index") {
-                            val b: Component = it.source as Component
-                            b.isEnabled = false
-                            try {
-                                projectOperator.toggleExcludeClones()
-                                filesOperator.refreshClones()
-                            } finally {
-                                b.isEnabled = true
+                        component(
+                            JButton("Toggle clones index").apply {
+                                OnboardingOperator.registerTarget(OnboardingId.SETTINGS_TAB_BUTTON_TOGGLE_CLONES, this)
+                                addActionListener {
+                                    val b: Component = it.source as Component
+                                    b.isEnabled = false
+                                    try {
+                                        projectOperator.toggleExcludeClones()
+                                        filesOperator.refreshClones()
+                                    } finally {
+                                        b.isEnabled = true
+                                    }
+                                }
                             }
-                        }
+                        )
                     }
                     row {
                         component(
                             JButton("Docs", AllIcons.Toolwindows.Documentation).apply {
+                                OnboardingOperator.registerTarget(OnboardingId.SETTINGS_TAB_BUTTON_DOCS, this)
                                 addActionListener {
                                     com.intellij.ide.BrowserUtil.browse("https://mega-manipulator.github.io")
+                                }
+                            }
+                        )
+                    }
+                    row {
+                        component(
+                            JButton("Reset onboarding", AllIcons.Toolwindows.Problems).apply {
+                                OnboardingOperator.registerTarget(OnboardingId.SETTINGS_TAB_BUTTON_RESET_ONBOARDING, this)
+                                addActionListener {
+                                    MegaManipulatorSettingsState.resetOnBoarding()
+                                    refresh()
                                 }
                             }
                         )
@@ -87,14 +109,17 @@ class SettingsWindow(
             component(
                 panel(title = "Tokens", constraints = arrayOf(LCFlags.flowY)) {
                     row {
-                        button("Validate tokens") {
-                            uiProtector.uiProtectedOperation("Validating tokens") {
-                                val tokens: Map<String, Deferred<String>> = searchOperator.validateTokens() + prRouter.validateAccess()
-                                validationOutputLabel.text = tokens
-                                    .map { "<tr><td>${it.key}</td><td>${it.value.await()}</td></tr>" }
-                                    .joinToString(
-                                        separator = "\n",
-                                        prefix = """
+                        component(
+                            JButton("Validate tokens").apply {
+                                OnboardingOperator.registerTarget(OnboardingId.SETTINGS_TAB_BUTTON_VALIDATE_TOKENS, this)
+                                addActionListener {
+                                    uiProtector.uiProtectedOperation("Validating tokens") {
+                                        val tokens: Map<String, Deferred<String>> = searchOperator.validateTokens() + prRouter.validateAccess()
+                                        validationOutputLabel.text = tokens
+                                            .map { "<tr><td>${it.key}</td><td>${it.value.await()}</td></tr>" }
+                                            .joinToString(
+                                                separator = "\n",
+                                                prefix = """
                                             <html>
                                             <head>
                                             <style>
@@ -107,11 +132,13 @@ class SettingsWindow(
                                             <body>
                                             <table>
                                             <tr><th>Config</th><th>Status</th></tr>
-                                        """.trimIndent(),
-                                        postfix = "</table></body></html>"
-                                    )
+                                                """.trimIndent(),
+                                                postfix = "</table></body></html>"
+                                            )
+                                    }
+                                }
                             }
-                        }
+                        )
                         component(hostConfigSelect)
                     }
                 }
@@ -127,6 +154,7 @@ class SettingsWindow(
     }
 
     init {
+        OnboardingOperator.registerTarget(OnboardingId.SETTINGS_TAB, content)
         hostConfigSelect.addCellRenderer({ if (testPassword(it)) null else Color.ORANGE }, { it.toString() })
         hostConfigSelect.selectionMode = ListSelectionModel.SINGLE_SELECTION
         hostConfigSelect.addListSelectionListener {
@@ -177,6 +205,7 @@ class SettingsWindow(
                     ).toTypedArray()
             hostConfigSelect.setListData(arrayOf)
         }
+        OnboardingOperator.display(OnboardingId.SETTINGS_TAB)
     }
 
     override val index: Int = 0
