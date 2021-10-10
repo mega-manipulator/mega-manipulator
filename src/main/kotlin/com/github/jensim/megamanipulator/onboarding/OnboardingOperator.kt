@@ -31,7 +31,12 @@ object OnboardingOperator {
             return
         }
 
-        val popupFactory: JBPopupFactory = JBPopupFactory.getInstance()
+        val popupFactory: JBPopupFactory = try {
+            JBPopupFactory.getInstance()
+        } catch (e: Exception) {
+            e.printStackTrace()
+            return
+        }
         val popupLocation: RelativePoint? = reg[id]?.let { popupFactory.guessBestPopupLocation(it) }
 
         val closeButton = JButton("Ok")
