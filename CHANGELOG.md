@@ -11,6 +11,7 @@
 - Remember search string
 
 ### Changed
+- New look and feel of dialogs
 
 ### Deprecated
 

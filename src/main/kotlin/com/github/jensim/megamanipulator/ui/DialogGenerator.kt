@@ -1,63 +1,108 @@
 package com.github.jensim.megamanipulator.ui
 
+import com.intellij.openapi.ui.popup.Balloon
 import com.intellij.openapi.ui.popup.JBPopupFactory
-import com.intellij.ui.components.JBTextArea
+import com.intellij.ui.awt.RelativePoint
+import com.intellij.ui.components.JBLabel
+import com.intellij.ui.components.JBScrollPane
+import com.intellij.ui.components.JBTextField
 import com.intellij.ui.layout.panel
-import java.awt.Dimension
+import javax.swing.JButton
 import javax.swing.JComponent
-import javax.swing.JOptionPane
-import javax.swing.JOptionPane.OK_CANCEL_OPTION
-import javax.swing.JOptionPane.OK_OPTION
-import javax.swing.JOptionPane.QUESTION_MESSAGE
+import javax.swing.text.JTextComponent
 
 class DialogGenerator {
 
     fun showConfirm(
         title: String,
-        focusComponent: JComponent? = null,
+        message: String,
+        focusComponent: JComponent,
+        position: Balloon.Position = Balloon.Position.above,
+        convertMultiLine: Boolean = true,
         yesText: String = "Yes",
         noText: String = "No",
         onNo: () -> Unit = {},
-        onYes: () -> Unit
+        onYes: () -> Unit,
     ) {
         try {
-            val popupFactory: JBPopupFactory = try {
-                JBPopupFactory.getInstance()
-            } catch (e: Exception) {
-                e.printStackTrace()
-                return
+            val popupFactory: JBPopupFactory = JBPopupFactory.getInstance()
+            val yesBtn = JButton(yesText)
+            val noBtn = JButton(noText)
+            val message1 = if (convertMultiLine) message.convertMultiLineToHtml() else message
+            val panel = panel {
+                row {
+                    component(JBScrollPane(JBLabel(message1)))
+                }
+                row {
+                    component(yesBtn)
+                    component(noBtn)
+                }
             }
-            val popup = popupFactory.createConfirmation(title, yesText, noText, onYes, onNo, 0)
-            focusComponent?.let { component ->
-                val location = popupFactory.guessBestPopupLocation(component)
-                popup.show(location)
-            } ?: popup.showInFocusCenter()
+            val popup = popupFactory.createDialogBalloonBuilder(panel, title).createBalloon()
+            yesBtn.addActionListener {
+                popup.hide()
+                onYes()
+            }
+            noBtn.addActionListener {
+                popup.hide()
+                onNo()
+            }
+            val location = popupFactory.guessBestPopupLocation(focusComponent)
+            popup.show(location, position)
         } catch (e: Exception) {
             e.printStackTrace()
         }
     }
 
-    fun askForInput(title: String, message: String, prefill: String? = null): String? {
-        return try {
-            val field = JBTextArea().apply {
-                minimumSize = Dimension(500, 300)
-                if (prefill != null) {
-                    text = prefill
-                }
+    private fun String.convertMultiLineToHtml() = "<html>${replace("\n", "<br>\n")}</html>"
+
+    fun askForInput(
+        title: String,
+        message: String,
+        prefill: String? = null,
+        field: JTextComponent = JBTextField(),
+        focusComponent: JComponent,
+        position: Balloon.Position = Balloon.Position.above,
+        yesText: String = "Ok",
+        noText: String = "Cancel",
+        onNo: () -> Unit = {},
+        onYes: (String) -> Unit
+    ) {
+        try {
+            val popupFactory: JBPopupFactory = JBPopupFactory.getInstance()
+            val btnYes = JButton(yesText)
+            val btnNo = JButton(noText)
+            val scrollPane = JBScrollPane(field)
+            if (prefill != null) {
+                field.text = prefill
             }
             val panel = panel {
                 row {
                     label(message)
-                    component(field)
+                }
+                row {
+                    component(scrollPane)
+                }
+                row {
+                    component(btnYes)
+                    component(btnNo)
                 }
             }
-            when (JOptionPane.showConfirmDialog(null, panel, title, OK_CANCEL_OPTION, QUESTION_MESSAGE, null)) {
-                OK_OPTION -> field.text
-                else -> null
+            val popup = popupFactory.createDialogBalloonBuilder(panel, title)
+                .createBalloon()
+            btnYes.addActionListener {
+                popup.hide()
+                onYes(field.text)
             }
+            btnNo.addActionListener {
+                popup.hide()
+                onNo()
+            }
+            val location: RelativePoint = popupFactory.guessBestPopupLocation(focusComponent)
+
+            popup.show(location, position)
         } catch (e: Exception) {
             e.printStackTrace()
-            null
         }
     }
 }

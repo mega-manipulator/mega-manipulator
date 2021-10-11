@@ -2,12 +2,17 @@ package com.github.jensim.megamanipulator.actions.vcs
 
 import com.github.jensim.megamanipulator.actions.NotificationsOperator
 import com.github.jensim.megamanipulator.actions.git.clone.CloneOperator
+import com.github.jensim.megamanipulator.project.PrefillString
+import com.github.jensim.megamanipulator.project.PrefillStringSuggestionOperator
 import com.github.jensim.megamanipulator.ui.DialogGenerator
 import com.github.jensim.megamanipulator.ui.EditPullRequestDialog
 import com.github.jensim.megamanipulator.ui.UiProtector
 import com.intellij.notification.NotificationType
+import com.intellij.openapi.ui.popup.Balloon
+import com.intellij.ui.components.JBTextArea
 import org.slf4j.LoggerFactory
 import java.awt.Desktop
+import javax.swing.JComponent
 import javax.swing.JMenuItem
 import javax.swing.JOptionPane
 import javax.swing.JOptionPane.CANCEL_OPTION
@@ -27,8 +32,8 @@ class PullRequestActionsMenu(
 
     private val log = LoggerFactory.getLogger(javaClass)
 
-    var prProvider: () -> List<PullRequestWrapper> = { emptyList() }
-    var postActionHook: () -> Unit = {}
+    lateinit var focusComponent: JComponent
+    lateinit var prProvider: () -> List<PullRequestWrapper>
     var codeHostName: String? = null
     var searchHostName: String? = null
 
@@ -36,10 +41,12 @@ class PullRequestActionsMenu(
         val declineMenuItem = JMenuItem("Decline PRs").apply {
             addActionListener { _ ->
                 dialogGenerator.showConfirm(
-                    title = """
-                    Decline selected PRs
-                    No undo path available im afraid..
-                    """.trimIndent()
+                    title = "Decline PRs",
+                    message = """
+                        No undo path available I'm afraid..
+                        Decline selected PRs?
+                    """.trimIndent(),
+                    focusComponent = focusComponent,
                 ) {
                     val dropBranchesAns = JOptionPane.showConfirmDialog(
                         null,
@@ -70,7 +77,6 @@ class PullRequestActionsMenu(
                             pullRequest
                         )
                     }
-                    postActionHook()
                 }
             }
         }
@@ -84,8 +90,8 @@ class PullRequestActionsMenu(
                         NotificationType.WARNING
                     )
                 } else {
-                    val dialog = EditPullRequestDialog(prs)
-                    if (dialog.showAndGet()) {
+                    EditPullRequestDialog(prs).show(focusComponent) { title, description ->
+
                         prFeedback(
                             "rewordPRs",
                             uiProtector.mapConcurrentWithProgress(
@@ -94,19 +100,20 @@ class PullRequestActionsMenu(
                                 extraText2 = { "${it.codeHostName()}/${it.project()}/${it.baseRepo()} ${it.fromBranch()}" },
                                 data = prs,
                             ) { pr ->
-                                prRouter.updatePr(dialog.prTitle!!, dialog.prDescription!!, pr)
+                                prRouter.updatePr(title, description, pr)
                             }
                         )
-                        postActionHook()
-                    } else {
-                        notificationsOperator.show("No PRs edited", "Cancelled or missing data")
                     }
                 }
             }
         }
         val defaultReviewersMenuItem = JMenuItem("Add default reviewers").apply {
             addActionListener { _ ->
-                dialogGenerator.showConfirm(title = "Add default reviewers") {
+                dialogGenerator.showConfirm(
+                    title = "Add default reviewers",
+                    message = "Add default reviewers",
+                    focusComponent = focusComponent,
+                ) {
                     prFeedback(
                         "setDefaultReviewers",
                         uiProtector.mapConcurrentWithProgress(
@@ -117,16 +124,18 @@ class PullRequestActionsMenu(
                             prRouter.addDefaultReviewers(pr)
                         }
                     )
-                    postActionHook()
                 }
             }
         }
         val cloneMenuItem = JMenuItem("Clone PRs").apply {
             addActionListener {
                 val prs = prProvider()
-                dialogGenerator.showConfirm(title = "Clone ${prs.size} selected PR branches") {
+                dialogGenerator.showConfirm(
+                    title = "Clone",
+                    message = "Clone ${prs.size} selected PR branches",
+                    focusComponent = focusComponent,
+                ) {
                     cloneOperator.clone(prs)
-                    postActionHook()
                 }
             }
         }
@@ -162,58 +171,71 @@ class PullRequestActionsMenu(
             addActionListener {
                 val prs = prProvider()
                 if (prs.isNotEmpty()) {
-                    val comment = dialogGenerator.askForInput(
+                    val prefill: String? = PrefillStringSuggestionOperator.getPrefill(PrefillString.COMMENT)
+                    dialogGenerator.askForInput(
                         title = "Comment selected pull requests",
-                        message = "Comment"
-                    )
-                    comment?.let { comment ->
+                        message = "Comment",
+                        field = JBTextArea(8, 80),
+                        focusComponent = focusComponent,
+                        position = Balloon.Position.atLeft,
+                        prefill = prefill
+                    ) { comment ->
                         uiProtector.mapConcurrentWithProgress(
                             title = "Add comments",
                             data = prs
                         ) {
                             prRouter.commentPR(comment, it)
                         }
-                        postActionHook()
+                        PrefillStringSuggestionOperator.setPrefill(PrefillString.COMMENT, comment)
                     }
                 }
             }
         }
         val approveMenuItem = JMenuItem("Mark Approved").apply {
-            addActionListener {
-                dialogGenerator.showConfirm(title = "Mark the selected pull requests as Approved") {
+            addActionListener { _ ->
+                dialogGenerator.showConfirm(
+                    title = "Mark Approved",
+                    message = "Mark the selected pull requests as Approved",
+                    focusComponent = focusComponent,
+                ) {
                     prFeedback(
                         "setStatus(approved)",
                         uiProtector.mapConcurrentWithProgress(title = "Mark Approved", data = prProvider()) {
                             prRouter.approvePr(it)
                         }
                     )
-                    postActionHook()
                 }
             }
         }
         val needsWorkMenuItem = JMenuItem("Mark Needs work").apply {
             addActionListener {
-                dialogGenerator.showConfirm(title = "Mark the selected pull requests as Needs work") {
+                dialogGenerator.showConfirm(
+                    title = "Mark Needs work",
+                    message = "Mark the selected pull requests as Needs work",
+                    focusComponent = focusComponent,
+                ) {
                     prFeedback(
                         "setStatus(needsWork)",
                         uiProtector.mapConcurrentWithProgress(title = "Mark Needs work", data = prProvider()) {
                             prRouter.disapprovePr(it)
                         }
                     )
-                    postActionHook()
                 }
             }
         }
         val mergeMenuItem = JMenuItem("Merge").apply {
             addActionListener {
-                dialogGenerator.showConfirm(title = "Merge the selected pull requests") {
+                dialogGenerator.showConfirm(
+                    title = "Merge",
+                    message = "Merge the selected pull requests",
+                    focusComponent = focusComponent,
+                ) {
                     prFeedback(
                         "merge",
                         uiProtector.mapConcurrentWithProgress(title = "Merge", data = prProvider()) {
                             prRouter.mergePr(it)
                         }
                     )
-                    postActionHook()
                 }
             }
         }

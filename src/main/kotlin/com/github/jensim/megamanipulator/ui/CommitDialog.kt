@@ -12,7 +12,10 @@ import javax.swing.JComponent
 
 object CommitDialog {
 
-    fun openCommitDialog(relativeComponent: JComponent, onOk: (commitMessage: String, push: Boolean) -> Unit) {
+    fun openCommitDialog(
+        relativeComponent: JComponent,
+        onOk: (commitMessage: String, push: Boolean) -> Unit
+    ) {
         val commitMessage = JBTextField()
         PrefillStringSuggestionOperator.getPrefill(PrefillString.COMMIT_MESSAGE)?.let {
             commitMessage.text = it

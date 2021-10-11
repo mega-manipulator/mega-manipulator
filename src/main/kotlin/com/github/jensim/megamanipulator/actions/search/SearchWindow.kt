@@ -2,6 +2,8 @@ package com.github.jensim.megamanipulator.actions.search
 
 import com.github.jensim.megamanipulator.actions.git.clone.CloneOperator
 import com.github.jensim.megamanipulator.project.MegaManipulatorSettingsState
+import com.github.jensim.megamanipulator.project.PrefillString
+import com.github.jensim.megamanipulator.project.PrefillStringSuggestionOperator
 import com.github.jensim.megamanipulator.settings.SettingsFileOperator
 import com.github.jensim.megamanipulator.settings.types.SearchHostSettings
 import com.github.jensim.megamanipulator.toolswindow.ToolWindowTab
@@ -95,11 +97,18 @@ class SearchWindow(
         }
         cloneButton.addActionListener {
             val selected = selector.selectedValuesList.toSet()
-            val defaultBranchName = "feature/batch_change"
-            val branch = dialogGenerator.askForInput("Branch", "branch name", defaultBranchName) ?: defaultBranchName
             if (selected.isNotEmpty()) {
-                cloneOperator.clone(selected, branch)
-                selector.clearSelection()
+                val prefill: String? = PrefillStringSuggestionOperator.getPrefill(PrefillString.BRANCH)
+                dialogGenerator.askForInput(
+                    title = "Branch",
+                    message = "branch name",
+                    prefill = prefill,
+                    focusComponent = cloneButton
+                ) { branch ->
+                    cloneOperator.clone(selected, branch)
+                    selector.clearSelection()
+                    PrefillStringSuggestionOperator.setPrefill(PrefillString.BRANCH, branch)
+                }
             }
         }
     }

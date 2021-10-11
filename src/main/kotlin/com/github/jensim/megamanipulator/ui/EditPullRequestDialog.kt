@@ -6,8 +6,10 @@ import com.intellij.openapi.ui.ComboBox
 import com.intellij.openapi.ui.DialogPanel
 import com.intellij.ui.layout.panel
 
-class EditPullRequestDialog(pullRequests: List<PullRequestWrapper>) : CreatePullRequestDialog() {
-    override val title: String = "Edit pull request"
+class EditPullRequestDialog(pullRequests: List<PullRequestWrapper>) : CreatePullRequestDialog(
+    yesText = "Edit PRs",
+    title = "Edit pull request",
+) {
     private val preExistingSelect: ComboBox<PullRequestWrapper?> = ComboBox(pullRequests.toTypedArray()).also { select ->
         select.addActionListener {
             prTitle = select.item?.title()
@@ -20,8 +22,12 @@ class EditPullRequestDialog(pullRequests: List<PullRequestWrapper>) : CreatePull
     }
     override val panel: DialogPanel = panel {
         row(label = "Template from") { component(preExistingSelect) }
-        row(label = "PR Title") { component(titleField) }
-        row(label = "PR Description") { component(descriptionScrollArea) }
+        row(label = "PR Title") { component(titlePane) }
+        row(label = "PR Description") { component(descriptionPane) }
+        row {
+            component(okButton)
+            component(cancelButton)
+        }
     }
     private fun String.fixedLength(len: Int) = take(len).padEnd(len, ' ')
 }

@@ -10,8 +10,8 @@ import com.intellij.openapi.wm.ToolWindowManager
 class OnStartListener : StartupActivity {
 
     override fun runActivity(project: Project) {
+        OnboardingOperator.registerProject(project)
         if (isMM(project)) {
-            OnboardingOperator.registerProject(project)
             ToolWindowManager.getInstance(project)?.let {
                 it.getToolWindow("Project")?.show()
             }

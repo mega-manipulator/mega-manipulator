@@ -6,6 +6,8 @@ import com.github.jensim.megamanipulator.actions.git.commit.CommitOperator
 import com.github.jensim.megamanipulator.actions.localrepo.LocalRepoOperator
 import com.github.jensim.megamanipulator.actions.vcs.PrRouter
 import com.github.jensim.megamanipulator.files.FilesOperator
+import com.github.jensim.megamanipulator.project.PrefillString
+import com.github.jensim.megamanipulator.project.PrefillStringSuggestionOperator
 import com.github.jensim.megamanipulator.settings.SettingsFileOperator
 import com.github.jensim.megamanipulator.settings.passwords.ProjectOperator
 import com.github.jensim.megamanipulator.settings.types.MegaManipulatorSettings
@@ -28,7 +30,6 @@ import java.io.File
 import java.util.concurrent.ConcurrentHashMap
 import javax.swing.JButton
 import javax.swing.JComponent
-import javax.swing.JOptionPane
 import javax.swing.ListSelectionModel
 
 private typealias StepResult = Pair<String, ApplyOutput>
@@ -75,13 +76,33 @@ class GitWindow(
                 button("List branches") {
                     refresh()
                 }
-                button("Set branch") {
-                    val branch: String? = JOptionPane.showInputDialog("This will not reset the repos to origin/default-branch first!!\nSelect branch name")
-                    if (branch != null && branch.isNotEmpty() || !branch!!.contains(' ')) {
-                        localRepoOperator.switchBranch(branch)
-                        refresh()
+                component(
+                    JButton("Set branch").apply {
+                        addActionListener {
+                            val prefill: String? = PrefillStringSuggestionOperator.getPrefill(PrefillString.BRANCH)
+                            dialogGenerator.askForInput(
+                                title = "Select branch name",
+                                message = "This will NOT reset the repos to origin/default-branch first!!",
+                                prefill = prefill,
+                                focusComponent = this,
+                            ) { branch: String ->
+                                val pattern = "[^a-z0-9/_ -]"
+                                if (branch.isBlank() || branch.isEmpty() || branch.contains(Regex(pattern))) {
+                                    dialogGenerator.showConfirm(
+                                        title = "Bad branch name.",
+                                        message = "$branch didnt match pattern $pattern",
+                                        yesText = "Ok",
+                                        noText = "Cancel",
+                                        focusComponent = this
+                                    ) {}
+                                } else {
+                                    localRepoOperator.switchBranch(branch)
+                                    refresh()
+                                }
+                            }
+                        }
                     }
-                }
+                )
                 component(
                     JButton("Commit & Push").apply {
                         addActionListener { _: ActionEvent ->
@@ -107,7 +128,11 @@ class GitWindow(
                 component(
                     JButton("Push").apply {
                         addActionListener {
-                            dialogGenerator.showConfirm(title = "Push local commits to remote?", focusComponent = this) {
+                            dialogGenerator.showConfirm(
+                                title = "Push",
+                                message = "Push local commits to remote?",
+                                focusComponent = this,
+                            ) {
                                 val result = ConcurrentHashMap<String, MutableList<Pair<String, ApplyOutput>>>()
 
                                 val dirs = localRepoOperator.getLocalRepoFiles()
@@ -127,47 +152,64 @@ class GitWindow(
                         }
                     }
                 )
-                button("Create PRs") {
-                    val dialog = CreatePullRequestDialog()
-                    if (dialog.showAndGet()) {
-                        val prTitle = dialog.prTitle
-                        val prDescription = dialog.prDescription
-                        if (!prTitle.isNullOrBlank() && !prDescription.isNullOrBlank()) {
-                            val repos = localRepoOperator.getLocalRepos()
-                            uiProtector.mapConcurrentWithProgress(
-                                title = "Creating PRs",
-                                extraText1 = prTitle,
-                                extraText2 = { it.asPathString() },
-                                data = repos
-                            ) {
-                                prRouter.createPr(prTitle, prDescription, it)
+                component(
+                    JButton("Create PRs").apply {
+                        addActionListener { _ ->
+                            CreatePullRequestDialog().show(
+                                focusComponent = this,
+                            ) { title, description ->
+                                if (title.isNotBlank() && description.isNotBlank()) {
+                                    val repos = localRepoOperator.getLocalRepos()
+                                    uiProtector.mapConcurrentWithProgress(
+                                        title = "Creating PRs",
+                                        extraText1 = title,
+                                        extraText2 = { it.asPathString() },
+                                        data = repos
+                                    ) {
+                                        prRouter.createPr(title, description, it)
+                                    }
+                                } else {
+                                    dialogGenerator.showConfirm(
+                                        title = "Failed",
+                                        message = "Title and description must not be blank",
+                                        focusComponent = this,
+                                        yesText = "Ok",
+                                        noText = "Cancel",
+                                    ) {}
+                                }
                             }
                         }
                     }
-                }
+                )
             }
-            button("Clean away local repos") {
-                dialogGenerator.showConfirm(
-                    title = """
-                        Are you sure?!
-                        This will remove the entire clones dir from disk.
-                        No recovery available!
-                    """.trimIndent()
-                ) {
-                    val output: ApplyOutput = projectOperator.project.basePath?.let { dir ->
-                        uiProtector.uiProtectedOperation(title = "Remove all local clones") {
-                            processOperator.runCommandAsync(File(dir), listOf("rm", "-rf", "clones")).await()
+            component(
+                JButton("Clean away local repos").apply {
+                    addActionListener { _ ->
+                        dialogGenerator.showConfirm(
+                            title = "Clean local repos",
+                            message = """
+                            Are you sure?!
+                            This will remove the entire clones dir from disk.
+                            No recovery available!
+                            """.trimIndent(),
+                            focusComponent = this,
+                        ) {
+                            val output: ApplyOutput = projectOperator.project.basePath?.let { dir ->
+                                uiProtector.uiProtectedOperation(title = "Remove all local clones") {
+                                    processOperator.runCommandAsync(File(dir), listOf("rm", "-rf", "clones")).await()
+                                }
+                            } ?: ApplyOutput(
+                                dir = ".",
+                                std = "Unable to perform clean operation",
+                                err = "Unable to perform clean operation",
+                                exitCode = 1
+                            )
+                            repoList.setListData(arrayOf(Pair("Clean", listOf("rm" to output))))
+                            filesOperator.refreshClones()
                         }
-                    } ?: ApplyOutput(
-                        dir = ".",
-                        std = "Unable to perform clean operation",
-                        err = "Unable to perform clean operation",
-                        exitCode = 1
-                    )
-                    repoList.setListData(arrayOf(Pair("Clean", listOf("rm" to output))))
-                    filesOperator.refreshClones()
+                    }
                 }
-            }
+            )
         }
         row {
             component(splitLeft)

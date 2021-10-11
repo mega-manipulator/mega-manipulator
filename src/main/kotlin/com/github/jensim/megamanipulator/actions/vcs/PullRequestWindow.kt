@@ -68,6 +68,7 @@ class PullRequestWindow(
 
     init {
         pullRequestActionsMenu.prProvider = { prList.selectedValuesList }
+        pullRequestActionsMenu.focusComponent = menuOpenButton
         menuOpenButton.isEnabled = false
         menuOpenButton.addMouseListener(object : MouseListener {
             override fun mouseClicked(e: MouseEvent) {
