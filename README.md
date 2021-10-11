@@ -20,13 +20,30 @@ See this as an alternative to sourcegraph campaigns, without the docker layer in
 </p>
 
 <p>
-Use sourcegraph queries to find target repos.
+Use sourcegraph queries to find target repos.<br>
 Then a forEach approach is provided for each of the following actions:
-Apply changes (using scripts),
-Commit,
-Push,
-Fork (lazy, eager, never),
-PR.
+<ul>
+<li>Apply changes 
+  <ul>
+    <li>InteliJ Search & Replace</li>
+    <li>Using script</li>
+    <li>Direct terminal access</li>
+  </ul>
+</li>
+<li>Commit</li>
+<li>Push</li>
+<li>Fork (lazy, eager, never)</li>
+<li>PR
+<ul>
+  <li>Create</li>
+  <li>Edit</li>
+  <li>Approve</li>
+  <li>Comment</li>
+  <li>Merge</li>
+  <li>Close</li>
+  <li>Clone</li>
+</ul></li>
+</ul>
 </p>
 
 <h2><b>Search</b></h2>
@@ -57,9 +74,7 @@ Spend less time making small, or big, changes
 
 - Using IDE built-in plugin system:
 
-  <kbd>Settings/Preferences</kbd> > <kbd>Plugins</kbd> > <kbd>Marketplace</kbd> > <kbd>Search for "
-  mega-manipulator"</kbd> >
-  <kbd>Install Plugin</kbd>
+  <kbd>Settings/Preferences</kbd> > <kbd>Plugins</kbd> > <kbd>Marketplace</kbd> > <kbd>Search for "mega-manipulator"</kbd> > <kbd>Install Plugin</kbd>
 
 - Manually:
 
