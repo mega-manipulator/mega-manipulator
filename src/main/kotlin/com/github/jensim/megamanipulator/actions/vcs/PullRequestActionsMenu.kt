@@ -35,10 +35,11 @@ class PullRequestActionsMenu(
     init {
         val declineMenuItem = JMenuItem("Decline PRs").apply {
             addActionListener { _ ->
-                if (dialogGenerator.showConfirm(
-                        "Decline selected PRs",
-                        "No undo path available im afraid..\nDecline selected PRs?"
-                    )
+                dialogGenerator.showConfirm(
+                    title = """
+                    Decline selected PRs
+                    No undo path available im afraid..
+                    """.trimIndent()
                 ) {
                     val dropBranchesAns = JOptionPane.showConfirmDialog(
                         null,
@@ -48,7 +49,7 @@ class PullRequestActionsMenu(
                         QUESTION_MESSAGE,
                         null
                     )
-                    if (!listOf(OK_OPTION, CANCEL_OPTION).contains(dropBranchesAns)) return@addActionListener
+                    if (!listOf(OK_OPTION, CANCEL_OPTION).contains(dropBranchesAns)) return@showConfirm
                     val dropForksAns = JOptionPane.showConfirmDialog(
                         null,
                         "Also drop source forks?",
@@ -57,7 +58,7 @@ class PullRequestActionsMenu(
                         QUESTION_MESSAGE,
                         null
                     )
-                    if (!listOf(OK_OPTION, CANCEL_OPTION).contains(dropForksAns)) return@addActionListener
+                    if (!listOf(OK_OPTION, CANCEL_OPTION).contains(dropForksAns)) return@showConfirm
                     uiProtector.mapConcurrentWithProgress(
                         title = "Declining prs",
                         extraText2 = { "${it.codeHostName()}/${it.project()}/${it.baseRepo()} ${it.fromBranch()}" },
@@ -105,7 +106,7 @@ class PullRequestActionsMenu(
         }
         val defaultReviewersMenuItem = JMenuItem("Add default reviewers").apply {
             addActionListener { _ ->
-                if (dialogGenerator.showConfirm(title = "Add default reviewers", message = "Add default reviewers")) {
+                dialogGenerator.showConfirm(title = "Add default reviewers") {
                     prFeedback(
                         "setDefaultReviewers",
                         uiProtector.mapConcurrentWithProgress(
@@ -123,11 +124,7 @@ class PullRequestActionsMenu(
         val cloneMenuItem = JMenuItem("Clone PRs").apply {
             addActionListener {
                 val prs = prProvider()
-                if (dialogGenerator.showConfirm(
-                        title = "Clone...",
-                        message = "Clone ${prs.size} selected PR branches"
-                    )
-                ) {
+                dialogGenerator.showConfirm(title = "Clone ${prs.size} selected PR branches") {
                     cloneOperator.clone(prs)
                     postActionHook()
                 }
@@ -183,11 +180,7 @@ class PullRequestActionsMenu(
         }
         val approveMenuItem = JMenuItem("Mark Approved").apply {
             addActionListener {
-                if (dialogGenerator.showConfirm(
-                        title = "Mark Approved",
-                        message = "Mark the selected pull requests as approved"
-                    )
-                ) {
+                dialogGenerator.showConfirm(title = "Mark the selected pull requests as Approved") {
                     prFeedback(
                         "setStatus(approved)",
                         uiProtector.mapConcurrentWithProgress(title = "Mark Approved", data = prProvider()) {
@@ -200,11 +193,7 @@ class PullRequestActionsMenu(
         }
         val needsWorkMenuItem = JMenuItem("Mark Needs work").apply {
             addActionListener {
-                if (dialogGenerator.showConfirm(
-                        title = "Mark Needs work",
-                        message = "Mark the selected pull requests as Needs work"
-                    )
-                ) {
+                dialogGenerator.showConfirm(title = "Mark the selected pull requests as Needs work") {
                     prFeedback(
                         "setStatus(needsWork)",
                         uiProtector.mapConcurrentWithProgress(title = "Mark Needs work", data = prProvider()) {
@@ -217,11 +206,7 @@ class PullRequestActionsMenu(
         }
         val mergeMenuItem = JMenuItem("Merge").apply {
             addActionListener {
-                if (dialogGenerator.showConfirm(
-                        title = "Merge",
-                        message = "Merge the selected pull requests"
-                    )
-                ) {
+                dialogGenerator.showConfirm(title = "Merge the selected pull requests") {
                     prFeedback(
                         "merge",
                         uiProtector.mapConcurrentWithProgress(title = "Merge", data = prProvider()) {

@@ -6,8 +6,11 @@ import com.github.jensim.megamanipulator.actions.git.commit.CommitOperator
 import com.github.jensim.megamanipulator.actions.localrepo.LocalRepoOperator
 import com.github.jensim.megamanipulator.actions.vcs.PrRouter
 import com.github.jensim.megamanipulator.files.FilesOperator
+import com.github.jensim.megamanipulator.settings.SettingsFileOperator
 import com.github.jensim.megamanipulator.settings.passwords.ProjectOperator
+import com.github.jensim.megamanipulator.settings.types.MegaManipulatorSettings
 import com.github.jensim.megamanipulator.toolswindow.ToolWindowTab
+import com.github.jensim.megamanipulator.ui.CommitDialog
 import com.github.jensim.megamanipulator.ui.CreatePullRequestDialog
 import com.github.jensim.megamanipulator.ui.DialogGenerator
 import com.github.jensim.megamanipulator.ui.GeneralListCellRenderer.addCellRenderer
@@ -20,7 +23,10 @@ import com.intellij.ui.components.JBTextArea
 import com.intellij.ui.layout.panel
 import java.awt.Color
 import java.awt.Dimension
+import java.awt.event.ActionEvent
 import java.io.File
+import java.util.concurrent.ConcurrentHashMap
+import javax.swing.JButton
 import javax.swing.JComponent
 import javax.swing.JOptionPane
 import javax.swing.ListSelectionModel
@@ -31,6 +37,7 @@ private typealias DirResult = Pair<String, List<StepResult>>
 @SuppressWarnings("LongParameterList")
 class GitWindow(
     private val localRepoOperator: LocalRepoOperator,
+    private val settingsFileOperator: SettingsFileOperator,
     private val processOperator: ProcessOperator,
     private val commitOperator: CommitOperator,
     private val dialogGenerator: DialogGenerator,
@@ -75,12 +82,51 @@ class GitWindow(
                         refresh()
                     }
                 }
-                button("Commit and Push") {
-                    repoList.setListData(commitOperator.commit().toList().toTypedArray())
-                }
-                button("Push") {
-                    repoList.setListData(commitOperator.push().toList().toTypedArray())
-                }
+                component(
+                    JButton("Commit & Push").apply {
+                        addActionListener { _: ActionEvent ->
+                            CommitDialog.openCommitDialog(this) { commitMessage: String, push: Boolean ->
+                                val result = ConcurrentHashMap<String, MutableList<Pair<String, ApplyOutput>>>()
+                                val settings: MegaManipulatorSettings = settingsFileOperator.readSettings()!!
+                                var workTitle = "Commiting"
+                                if (push) workTitle += " & pushing"
+                                val dirs = localRepoOperator.getLocalRepoFiles()
+                                uiProtector.mapConcurrentWithProgress(
+                                    title = workTitle,
+                                    data = dirs,
+                                ) { commitOperator.commitProcess(it, result, commitMessage, push, settings) }
+                                if (result.isEmpty()) {
+                                    result["no result"] =
+                                        mutableListOf("nothing" to ApplyOutput(".", std = "", err = "", exitCode = 1))
+                                }
+                                repoList.setListData(result.toList().toTypedArray())
+                            }
+                        }
+                    }
+                )
+                component(
+                    JButton("Push").apply {
+                        addActionListener {
+                            dialogGenerator.showConfirm(title = "Push local commits to remote?", focusComponent = this) {
+                                val result = ConcurrentHashMap<String, MutableList<Pair<String, ApplyOutput>>>()
+
+                                val dirs = localRepoOperator.getLocalRepoFiles()
+                                val settings: MegaManipulatorSettings = settingsFileOperator.readSettings()!!
+                                uiProtector.mapConcurrentWithProgress(
+                                    title = "Pushing",
+                                    data = dirs
+                                ) { dir ->
+                                    commitOperator.push(settings, dir, result.computeIfAbsent(dir.path) { ArrayList() })
+                                }
+
+                                if (result.isEmpty()) {
+                                    result["no result"] = mutableListOf("nothing" to ApplyOutput(".", std = "", err = "", exitCode = 1))
+                                }
+                                repoList.setListData(result.toList().toTypedArray())
+                            }
+                        }
+                    }
+                )
                 button("Create PRs") {
                     val dialog = CreatePullRequestDialog()
                     if (dialog.showAndGet()) {
@@ -101,12 +147,23 @@ class GitWindow(
                 }
             }
             button("Clean away local repos") {
-                if (dialogGenerator.showConfirm(title = "Are you sure?!", message = "This will remove the entire clones dir from disk, no recovery available!")) {
+                dialogGenerator.showConfirm(
+                    title = """
+                        Are you sure?!
+                        This will remove the entire clones dir from disk.
+                        No recovery available!
+                    """.trimIndent()
+                ) {
                     val output: ApplyOutput = projectOperator.project.basePath?.let { dir ->
                         uiProtector.uiProtectedOperation(title = "Remove all local clones") {
                             processOperator.runCommandAsync(File(dir), listOf("rm", "-rf", "clones")).await()
                         }
-                    } ?: ApplyOutput(dir = ".", std = "Unable to perform clean operation", err = "Unable to perform clean operation", exitCode = 1)
+                    } ?: ApplyOutput(
+                        dir = ".",
+                        std = "Unable to perform clean operation",
+                        err = "Unable to perform clean operation",
+                        exitCode = 1
+                    )
                     repoList.setListData(arrayOf(Pair("Clean", listOf("rm" to output))))
                     filesOperator.refreshClones()
                 }

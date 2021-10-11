@@ -10,8 +10,6 @@ import com.github.jensim.megamanipulator.settings.SettingsFileOperator
 import com.github.jensim.megamanipulator.settings.types.CodeHostSettings
 import com.github.jensim.megamanipulator.settings.types.ForkSetting
 import com.github.jensim.megamanipulator.settings.types.MegaManipulatorSettings
-import com.github.jensim.megamanipulator.ui.DialogGenerator
-import com.github.jensim.megamanipulator.ui.TestUiProtector
 import io.mockk.Called
 import io.mockk.coEvery
 import io.mockk.coVerify
@@ -20,42 +18,37 @@ import io.mockk.junit5.MockKExtension
 import io.mockk.mockk
 import io.mockk.slot
 import io.mockk.verify
-import kotlinx.coroutines.CompletableDeferred
-import kotlinx.coroutines.runBlocking
-import org.hamcrest.MatcherAssert.assertThat
-import org.hamcrest.Matchers.equalTo
-import org.junit.jupiter.api.AfterEach
-import org.junit.jupiter.api.Assertions.assertTrue
-import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.extension.ExtendWith
-import org.junit.jupiter.params.ParameterizedTest
-import org.junit.jupiter.params.provider.NullAndEmptySource
-import org.junit.jupiter.params.provider.ValueSource
 import java.io.File
 import java.nio.file.Path
 import java.util.concurrent.ConcurrentHashMap
 import kotlin.io.path.ExperimentalPathApi
 import kotlin.io.path.createTempDirectory
+import kotlinx.coroutines.CompletableDeferred
+import kotlinx.coroutines.runBlocking
+import org.hamcrest.MatcherAssert.assertThat
+import org.hamcrest.Matchers.equalTo
+import org.junit.jupiter.api.AfterEach
+import org.junit.jupiter.api.Assertions.assertNotNull
+import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.extension.ExtendWith
+import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.ValueSource
 
 @ExperimentalPathApi
 @ExtendWith(MockKExtension::class)
 class CommitOperatorTest {
 
-    private val dialogGenerator: DialogGenerator = mockk()
     private val settingsFileOperator: SettingsFileOperator = mockk()
     private val localRepoOperator: LocalRepoOperator = mockk()
     private val processOperator: ProcessOperator = mockk()
     private val prRouter: PrRouter = mockk()
-    private val uiProtector: TestUiProtector = TestUiProtector()
     private val gitUrlHelper: GitUrlHelper = mockk()
 
     private val commitOperator: CommitOperator = CommitOperator(
-        dialogGenerator = dialogGenerator,
         settingsFileOperator = settingsFileOperator,
         localRepoOperator = localRepoOperator,
         processOperator = processOperator,
         prRouter = prRouter,
-        uiProtector = uiProtector,
         gitUrlHelper = gitUrlHelper,
     )
     private val tempDirPath: Path = createTempDirectory(prefix = null, attributes = emptyArray())
@@ -67,24 +60,6 @@ class CommitOperatorTest {
     @AfterEach
     internal fun tearDown() {
         tempDir.deleteRecursively()
-    }
-
-    @ParameterizedTest
-    @NullAndEmptySource
-    fun `commit with null or empty message`(response: String?) {
-        every { dialogGenerator.askForInput(any(), any()) } returns response
-        every { dialogGenerator.showConfirm(any(), any()) } returns true
-        val result = commitOperator.commit()
-
-        verify {
-            dialogGenerator.askForInput(
-                "Create commits for all changes in all checked out repositories",
-                "Commit message"
-            )
-        }
-        verify { dialogGenerator.showConfirm("Info", "No commit performed!") }
-
-        assertThat(result.keys.first(), equalTo("no result"))
     }
 
     @ParameterizedTest
@@ -104,30 +79,29 @@ class CommitOperatorTest {
             every { parentFile.parentFile.parentFile.name } returns "searchHostName"
         }
         val commitMessage = "This is my first commit"
-        every { dialogGenerator.askForInput(any(), any()) } returns commitMessage
         every { settingsFileOperator.readSettings() } returns settings
-        every { dialogGenerator.showConfirm(any(), any()) } returns push
         every { localRepoOperator.getLocalRepoFiles() } returns listOf(file)
         every { processOperator.runCommandAsync(file, any()) } returns CompletableDeferred(successOutput)
 
         val searchResultSlot = slot<SearchResult>()
+        every { gitUrlHelper.buildCloneUrl(any(), any<String>()) } returns "clonedUrl"
         every { settingsFileOperator.readSettings() } returns settings
         every { localRepoOperator.getLocalRepoFiles() } returns listOf(file)
         every { processOperator.runCommandAsync(file, any()) } returns CompletableDeferred(successOutput)
         every { localRepoOperator.hasFork(file) } returns false
-        coEvery { localRepoOperator.push(file) } returns unsuccessfulOutput
+        coEvery { localRepoOperator.push(file) } returnsMany listOf(unsuccessfulOutput, successOutput)
         coEvery { prRouter.createFork(capture(searchResultSlot)) } returns "clonedUrl"
         coEvery { localRepoOperator.addForkRemote(file, "clonedUrl") } returns successOutput
+        val result = ConcurrentHashMap<String, MutableList<Pair<String, ApplyOutput>>>()
 
-        commitOperator.commit()
+        runBlocking { commitOperator.commitProcess(file, result, commitMessage, push, settings) }
 
-        verify {
-            dialogGenerator.askForInput(
-                "Create commits for all changes in all checked out repositories",
-                "Commit message"
-            )
-        }
-        verify { dialogGenerator.showConfirm("Also push?", "Also push? $commitMessage") }
+        assertThat(result.size, equalTo(1))
+        val nextElement: MutableList<Pair<String, ApplyOutput>> = result.elements().nextElement()
+        assertNotNull(nextElement)
+        val (action, applyOutput) = nextElement.last()
+        assertThat(action, equalTo(if (push) "push" else "commit"))
+        assertThat(applyOutput.exitCode, equalTo(0))
     }
 
     @Test
@@ -212,7 +186,7 @@ class CommitOperatorTest {
     }
 
     @Test
-    fun `commit process and push with eager fork`() = runBlocking {
+    fun `commit process and push with eager fork`() {
         // given
         val codeHostSettings: CodeHostSettings = mockk {
             every { forkSetting } returns ForkSetting.EAGER_FORK
@@ -240,7 +214,15 @@ class CommitOperatorTest {
         val resultAggregate = ConcurrentHashMap<String, MutableList<Pair<String, ApplyOutput>>>()
 
         // when
-        commitOperator.commitProcess(it = file, result = resultAggregate, commitMessage = commitMessage, push = true, settings = settings)
+        runBlocking {
+            commitOperator.commitProcess(
+                it = file,
+                result = resultAggregate,
+                commitMessage = commitMessage,
+                push = true,
+                settings = settings
+            )
+        }
 
         // then
         verify(exactly = 2) { processOperator.runCommandAsync(file, any()) }
@@ -250,14 +232,6 @@ class CommitOperatorTest {
         assertThat(captured.searchHostName, equalTo("searchHostName"))
         coVerify { localRepoOperator.addForkRemote(file, "clonedUrl") }
         coVerify { localRepoOperator.push(file) }
-    }
-
-    @Test
-    fun pushWithoutConfirmation() {
-        every { dialogGenerator.showConfirm(any(), any()) } returns false
-        val result = commitOperator.push()
-        assertTrue(result.containsKey("no result"))
-        verify { dialogGenerator.showConfirm("Push", "Push local commits to remote") }
     }
 
     @Test
@@ -277,6 +251,7 @@ class CommitOperatorTest {
         }
         val searchResultSlot = slot<SearchResult>()
 
+        every { gitUrlHelper.buildCloneUrl(any(), any<String>()) } returns "clonedUrl"
         every { settingsFileOperator.readSettings() } returns settings
         every { localRepoOperator.getLocalRepoFiles() } returns listOf(file)
         every { processOperator.runCommandAsync(file, any()) } returns CompletableDeferred(successOutput)
@@ -284,12 +259,13 @@ class CommitOperatorTest {
         coEvery { localRepoOperator.push(file) } returns successOutput
         coEvery { prRouter.createFork(capture(searchResultSlot)) } returns "clonedUrl"
         coEvery { localRepoOperator.addForkRemote(file, "clonedUrl") } returns successOutput
-        every { dialogGenerator.showConfirm(any(), any()) } returns true
         every { settingsFileOperator.readSettings() } returns settings
         every { localRepoOperator.getLocalRepoFiles() } returns listOf(file)
         every { processOperator.runCommandAsync(file, any()) } returns CompletableDeferred(successOutput)
 
-        commitOperator.push()
-        verify { dialogGenerator.showConfirm("Push", "Push local commits to remote") }
+        val result = mutableListOf<Pair<String, ApplyOutput>>()
+        runBlocking { commitOperator.push(settings, file, result) }
+
+        coVerify { localRepoOperator.push(file) }
     }
 }

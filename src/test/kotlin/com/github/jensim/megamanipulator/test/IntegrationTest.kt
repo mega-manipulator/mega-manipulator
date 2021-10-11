@@ -30,6 +30,7 @@ import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.MethodSource
 import java.io.File
 import java.util.UUID
+import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.TimeUnit
 import kotlin.io.path.ExperimentalPathApi
 
@@ -72,7 +73,9 @@ class IntegrationTest {
         val results: Set<SearchResult> = setOf(result)
         wiring.applicationWiring.cloneOperator.clone(results, "main")
         verify { wiring.applicationWiring.notificationsOperator.show(any(), any(), eq(NotificationType.INFORMATION)) }
-        assertTrue(File(wiring.tempDir, "clones/${result.asPathString()}/.git").exists())
+        val dotGitDit = File(wiring.tempDir, "clones/${result.asPathString()}/.git")
+        assertTrue(dotGitDit.exists())
+        val repoDir = dotGitDit.parentFile
 
         // branch
         val branch = "integration_test/${UUID.randomUUID()}"
@@ -96,21 +99,11 @@ class IntegrationTest {
         assertThat(applyResult, everyItem(hasProperty("exitCode", equalTo(0))))
 
         // commit
-        every {
-            wiring.dialogGenerator.askForInput(
-                eq("Create commits for all changes in all checked out repositories"),
-                eq("Commit message"),
-            )
-        } returns "Integration test of branch $branch"
-        every {
-            wiring.dialogGenerator.showConfirm(
-                eq("Also push?"),
-                eq("Also push? Integration test of branch $branch"),
-            )
-        } returns true
-
-        val commitResults: Map<String, List<Pair<String, ApplyOutput>>> =
-            wiring.applicationWiring.commitOperator.commit()
+        val commitMessage = "Integration test of branch $branch"
+        val commitResults = ConcurrentHashMap<String, MutableList<Pair<String, ApplyOutput>>>()
+        runBlocking {
+            wiring.applicationWiring.commitOperator.commitProcess(repoDir, commitResults, commitMessage, true, wiring.settings)
+        }
         assertThat(commitResults.keys, hasSize(1))
         val commitResult: List<Pair<String, ApplyOutput>> = commitResults.values.first()
         val exitCode: Int = commitResult.last().second.exitCode

@@ -16,7 +16,6 @@
         <notificationGroup id="Mega Manipulator" displayType="BALLOON"/>
         <postStartupActivity implementation="com.github.jensim.megamanipulator.listener.OnStartListener"/>
         <applicationService serviceImplementation="com.github.jensim.megamanipulator.project.MegaManipulatorSettingsState"
-
                             id="com.github.jensim.megamanipulator.project.MegaManipulatorSettingsState"/>
     </extensions>
 </idea-plugin>

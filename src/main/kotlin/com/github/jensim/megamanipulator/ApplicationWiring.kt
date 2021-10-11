@@ -185,12 +185,10 @@ data class ApplicationWiring(
     }
     val commitOperator: CommitOperator by lazy {
         commitOperatorOverride ?: CommitOperator(
-            dialogGenerator = this.dialogGenerator,
             settingsFileOperator = this.settingsFileOperator,
             localRepoOperator = this.localRepoOperator,
             processOperator = this.processOperator,
             prRouter = this.prRouter,
-            uiProtector = this.uiProtector,
             gitUrlHelper = this.gitUrlHelper,
         )
     }
@@ -254,6 +252,7 @@ data class ApplicationWiring(
             projectOperator = this.projectOperator,
             prRouter = this.prRouter,
             uiProtector = this.uiProtector,
+            settingsFileOperator = this.settingsFileOperator,
         )
     }
     val tabPRsManage: PullRequestWindow by lazy {
