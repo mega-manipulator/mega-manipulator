@@ -5,13 +5,8 @@
 ## [Unreleased]
 
 ### Added
-- Force recreate base files
-- Force open tabs when opening an MM project
-- Onboarding for settings window
-- Remember search string
 
 ### Changed
-- New look and feel of dialogs
 
 ### Deprecated
 
@@ -20,6 +15,17 @@
 ### Fixed
 
 ### Security
+
+## [0.0.30]
+
+### Added
+- Force recreate base files
+- Force open tabs when opening an MM project
+- Onboarding for settings window
+- Remember search string
+
+### Changed
+- New look and feel of dialogs
 
 ## [0.0.29]
 
