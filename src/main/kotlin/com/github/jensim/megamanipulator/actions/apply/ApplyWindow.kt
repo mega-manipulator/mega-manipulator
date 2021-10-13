@@ -3,7 +3,9 @@ package com.github.jensim.megamanipulator.actions.apply
 import com.github.jensim.megamanipulator.settings.passwords.ProjectOperator
 import com.github.jensim.megamanipulator.toolswindow.ToolWindowTab
 import com.github.jensim.megamanipulator.ui.GeneralListCellRenderer.addCellRenderer
+import com.intellij.openapi.components.service
 import com.intellij.openapi.fileEditor.FileDocumentManager
+import com.intellij.openapi.project.Project
 import com.intellij.openapi.ui.DialogPanel
 import com.intellij.ui.JBSplitter
 import com.intellij.ui.components.JBList
@@ -14,10 +16,10 @@ import java.awt.Color
 import java.io.File
 import javax.swing.JButton
 
-class ApplyWindow(
-    private val applyOperator: ApplyOperator,
-    private val projectOperator: ProjectOperator,
-) : ToolWindowTab {
+class ApplyWindow(project: Project) : ToolWindowTab {
+
+    private val applyOperator: ApplyOperator by lazy { project.service() }
+    private val projectOperator: ProjectOperator by lazy { project.service() }
 
     private val resultList = JBList<ApplyOutput>()
     private val scrollableResult = JBScrollPane(resultList)

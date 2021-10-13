@@ -11,7 +11,7 @@ import javax.swing.JButton
 import javax.swing.JComponent
 import javax.swing.text.JTextComponent
 
-class DialogGenerator {
+object DialogGenerator {
 
     fun showConfirm(
         title: String,

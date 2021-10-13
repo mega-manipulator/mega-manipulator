@@ -18,6 +18,8 @@ import com.github.jensim.megamanipulator.ui.DialogGenerator
 import com.github.jensim.megamanipulator.ui.GeneralListCellRenderer.addCellRenderer
 import com.github.jensim.megamanipulator.ui.UiProtector
 import com.github.jensim.megamanipulator.ui.trimProjectPath
+import com.intellij.openapi.components.service
+import com.intellij.openapi.project.Project
 import com.intellij.ui.JBSplitter
 import com.intellij.ui.components.JBList
 import com.intellij.ui.components.JBScrollPane
@@ -36,17 +38,16 @@ private typealias StepResult = Pair<String, ApplyOutput>
 private typealias DirResult = Pair<String, List<StepResult>>
 
 @SuppressWarnings("LongParameterList")
-class GitWindow(
-    private val localRepoOperator: LocalRepoOperator,
-    private val settingsFileOperator: SettingsFileOperator,
-    private val processOperator: ProcessOperator,
-    private val commitOperator: CommitOperator,
-    private val dialogGenerator: DialogGenerator,
-    private val filesOperator: FilesOperator,
-    private val projectOperator: ProjectOperator,
-    private val prRouter: PrRouter,
-    private val uiProtector: UiProtector,
-) : ToolWindowTab {
+class GitWindow(project: Project) : ToolWindowTab {
+
+    private val localRepoOperator: LocalRepoOperator by lazy { project.service() }
+    private val settingsFileOperator: SettingsFileOperator by lazy { project.service() }
+    private val processOperator: ProcessOperator by lazy { project.service() }
+    private val commitOperator: CommitOperator by lazy { project.service() }
+    private val filesOperator: FilesOperator by lazy { project.service() }
+    private val projectOperator: ProjectOperator by lazy { project.service() }
+    private val prRouter: PrRouter by lazy { project.service() }
+    private val uiProtector: UiProtector by lazy { project.service() }
 
     private val repoList = JBList<DirResult>().apply {
         minimumSize = Dimension(250, 50)
@@ -80,7 +81,7 @@ class GitWindow(
                     JButton("Set branch").apply {
                         addActionListener {
                             val prefill: String? = PrefillStringSuggestionOperator.getPrefill(PrefillString.BRANCH)
-                            dialogGenerator.askForInput(
+                            DialogGenerator.askForInput(
                                 title = "Select branch name",
                                 message = "This will NOT reset the repos to origin/default-branch first!!",
                                 prefill = prefill,
@@ -88,7 +89,7 @@ class GitWindow(
                             ) { branch: String ->
                                 val pattern = "[^a-z0-9/_ -]"
                                 if (branch.isBlank() || branch.isEmpty() || branch.contains(Regex(pattern))) {
-                                    dialogGenerator.showConfirm(
+                                    DialogGenerator.showConfirm(
                                         title = "Bad branch name.",
                                         message = "$branch didnt match pattern $pattern",
                                         yesText = "Ok",
@@ -128,7 +129,7 @@ class GitWindow(
                 component(
                     JButton("Push").apply {
                         addActionListener {
-                            dialogGenerator.showConfirm(
+                            DialogGenerator.showConfirm(
                                 title = "Push",
                                 message = "Push local commits to remote?",
                                 focusComponent = this,
@@ -169,7 +170,7 @@ class GitWindow(
                                         prRouter.createPr(title, description, it)
                                     }
                                 } else {
-                                    dialogGenerator.showConfirm(
+                                    DialogGenerator.showConfirm(
                                         title = "Failed",
                                         message = "Title and description must not be blank",
                                         focusComponent = this,
@@ -185,7 +186,7 @@ class GitWindow(
             component(
                 JButton("Clean away local repos").apply {
                     addActionListener { _ ->
-                        dialogGenerator.showConfirm(
+                        DialogGenerator.showConfirm(
                             title = "Clean local repos",
                             message = """
                             Are you sure?!

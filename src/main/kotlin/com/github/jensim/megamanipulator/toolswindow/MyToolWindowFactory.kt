@@ -1,7 +1,14 @@
 package com.github.jensim.megamanipulator.toolswindow
 
-import com.github.jensim.megamanipulator.ApplicationWiring
+import com.github.jensim.megamanipulator.MyBundle
+import com.github.jensim.megamanipulator.actions.apply.ApplyWindow
+import com.github.jensim.megamanipulator.actions.forks.ForksWindow
+import com.github.jensim.megamanipulator.actions.git.GitWindow
+import com.github.jensim.megamanipulator.actions.search.SearchWindow
+import com.github.jensim.megamanipulator.actions.vcs.PullRequestWindow
+import com.github.jensim.megamanipulator.files.FilesOperator
 import com.github.jensim.megamanipulator.project.MegaManipulatorUtil.isMM
+import com.github.jensim.megamanipulator.settings.SettingsWindow
 import com.intellij.openapi.fileEditor.FileEditorManager
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.vfs.VirtualFile
@@ -13,45 +20,37 @@ import com.intellij.ui.content.ContentFactory
 import com.intellij.ui.content.ContentManagerEvent
 import com.intellij.ui.content.ContentManagerListener
 import java.io.File
-import java.util.function.Supplier
 
-class MyToolWindowFactory(
-    private val applicationWiring: ApplicationWiring?,
-    private val contentFactorySupplier: Supplier<ContentFactory>,
-) : ToolWindowFactory {
-
-    constructor() : this(
-        contentFactorySupplier = { ContentFactory.SERVICE.getInstance() },
-        applicationWiring = null
-    )
+class MyToolWindowFactory : ToolWindowFactory {
 
     override fun createToolWindowContent(project: Project, toolWindow: ToolWindow) {
-        val wiring = applicationWiring ?: ApplicationWiring(project)
-        val contentFactory: ContentFactory = contentFactorySupplier.get()
+        val contentFactory: ContentFactory = ContentFactory.SERVICE.getInstance()
+
         val tabs = listOf<Pair<String, ToolWindowTab>>(
-            "tabTitleSettings" to wiring.tabSettings,
-            "tabTitleSearch" to wiring.tabSearch,
-            "tabTitleApply" to wiring.tabApply,
-            "tabTitleClones" to wiring.tabClones,
-            "tabTitlePRsManage" to wiring.tabPRsManage,
-            "tabTitleForks" to wiring.tabForks,
+            "tabTitleSettings" to SettingsWindow(project),
+            "tabTitleSearch" to SearchWindow(project),
+            "tabTitleApply" to ApplyWindow(project),
+            "tabTitleClones" to GitWindow(project),
+            "tabTitlePRsManage" to PullRequestWindow(project),
+            "tabTitleForks" to ForksWindow(project),
         )
         tabs.sortedBy { it.second.index }.forEachIndexed { index, (headerKey, tab) ->
             if (index == 0) {
                 tab.refresh()
             }
-            val content1: Content = contentFactory.createContent(tab.content, wiring.myBundle.message(headerKey), false)
+            val content1: Content = contentFactory.createContent(tab.content, MyBundle.message(headerKey), false)
             toolWindow.contentManager.addContent(content1)
         }
+        val filesOperator = project.getService(FilesOperator::class.java)
         toolWindow.addContentManagerListener(object : ContentManagerListener {
             override fun selectionChanged(event: ContentManagerEvent) {
                 super.selectionChanged(event)
-                wiring.filesOperator.makeUpBaseFiles()
-                wiring.filesOperator.refreshConf()
+                filesOperator.makeUpBaseFiles()
+                filesOperator.refreshConf()
                 tabs.find { it.second.index == event.index }?.second?.refresh()
             }
         })
-        wiring.filesOperator.makeUpBaseFiles()
+        filesOperator.makeUpBaseFiles()
         try {
             VirtualFileManager.getInstance().let {
                 it.findFileByNioPath(File("${project.basePath}/config/mega-manipulator.md").toPath())

@@ -51,6 +51,7 @@ class ApplyOperatorTest {
         }
     }
     private val applyOperator = ApplyOperator(
+        project = project,
         settingsFileOperator = settingsFileOperator,
         filesOperator = filesOperator,
         processOperator = processOperator,

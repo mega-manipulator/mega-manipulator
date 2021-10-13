@@ -14,6 +14,8 @@ import com.github.jensim.megamanipulator.toolswindow.ToolWindowTab
 import com.github.jensim.megamanipulator.ui.GeneralListCellRenderer.addCellRenderer
 import com.github.jensim.megamanipulator.ui.UiProtector
 import com.intellij.icons.AllIcons
+import com.intellij.openapi.components.service
+import com.intellij.openapi.project.Project
 import com.intellij.ui.components.JBLabel
 import com.intellij.ui.components.JBList
 import com.intellij.ui.layout.LCFlags
@@ -26,15 +28,15 @@ import javax.swing.JComponent
 import javax.swing.ListSelectionModel
 
 @SuppressWarnings("LongParameterList")
-class SettingsWindow(
-    private val passwordsOperator: PasswordsOperator,
-    private val projectOperator: ProjectOperator,
-    private val filesOperator: FilesOperator,
-    private val settingsFileOperator: SettingsFileOperator,
-    private val uiProtector: UiProtector,
-    private val prRouter: PrRouter,
-    private val searchOperator: SearchOperator,
-) : ToolWindowTab {
+class SettingsWindow(project: Project) : ToolWindowTab {
+
+    private val passwordsOperator: PasswordsOperator by lazy { project.service() }
+    private val projectOperator: ProjectOperator by lazy { project.service() }
+    private val filesOperator: FilesOperator by lazy { project.service() }
+    private val settingsFileOperator: SettingsFileOperator by lazy { project.service() }
+    private val uiProtector: UiProtector by lazy { project.service() }
+    private val prRouter: PrRouter by lazy { project.service() }
+    private val searchOperator: SearchOperator by lazy { project.service() }
 
     private enum class HostType {
         SEARCH,

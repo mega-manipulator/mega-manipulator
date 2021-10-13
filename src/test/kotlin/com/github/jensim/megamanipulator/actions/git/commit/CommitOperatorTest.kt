@@ -10,6 +10,7 @@ import com.github.jensim.megamanipulator.settings.SettingsFileOperator
 import com.github.jensim.megamanipulator.settings.types.CodeHostSettings
 import com.github.jensim.megamanipulator.settings.types.ForkSetting
 import com.github.jensim.megamanipulator.settings.types.MegaManipulatorSettings
+import com.intellij.openapi.project.Project
 import io.mockk.Called
 import io.mockk.coEvery
 import io.mockk.coVerify
@@ -43,8 +44,10 @@ class CommitOperatorTest {
     private val processOperator: ProcessOperator = mockk()
     private val prRouter: PrRouter = mockk()
     private val gitUrlHelper: GitUrlHelper = mockk()
+    private val project: Project = mockk()
 
     private val commitOperator: CommitOperator = CommitOperator(
+        project = project,
         settingsFileOperator = settingsFileOperator,
         localRepoOperator = localRepoOperator,
         processOperator = processOperator,

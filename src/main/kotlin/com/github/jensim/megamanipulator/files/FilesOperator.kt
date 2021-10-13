@@ -1,10 +1,13 @@
 package com.github.jensim.megamanipulator.files
 
 import com.github.jensim.megamanipulator.actions.NotificationsOperator
+import com.github.jensim.megamanipulator.project.lazyService
 import com.github.jensim.megamanipulator.settings.passwords.ProjectOperator
 import com.intellij.notification.NotificationType
 import com.intellij.openapi.fileEditor.FileDocumentManager
+import com.intellij.openapi.project.Project
 import com.intellij.openapi.vfs.LocalFileSystem
+import com.intellij.serviceContainer.NonInjectable
 import com.intellij.util.io.inputStream
 import com.intellij.util.io.isDirectory
 import java.io.BufferedInputStream
@@ -16,10 +19,15 @@ import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.Paths
 
-class FilesOperator(
-    private val notificationsOperator: NotificationsOperator,
-    private val projectOperator: ProjectOperator,
+class FilesOperator @NonInjectable constructor(
+    project: Project,
+    notificationsOperator: NotificationsOperator?,
+    projectOperator: ProjectOperator?,
 ) {
+    constructor(project: Project) : this(project, null, null)
+
+    private val notificationsOperator: NotificationsOperator by lazyService(project, notificationsOperator)
+    private val projectOperator: ProjectOperator by lazyService(project, projectOperator)
 
     class VirtFile(
         val nameWithPath: String,

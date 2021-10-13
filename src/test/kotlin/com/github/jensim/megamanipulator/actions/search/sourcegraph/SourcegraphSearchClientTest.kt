@@ -1,6 +1,5 @@
 package com.github.jensim.megamanipulator.actions.search.sourcegraph
 
-import com.expediagroup.graphql.client.serialization.GraphQLClientKotlinxSerializer
 import com.github.jensim.megamanipulator.actions.NotificationsOperator
 import com.github.jensim.megamanipulator.actions.search.SearchResult
 import com.github.jensim.megamanipulator.http.HttpClientProvider
@@ -13,6 +12,7 @@ import com.github.jensim.megamanipulator.test.EnvHelper
 import com.github.jensim.megamanipulator.test.EnvHelper.EnvProperty.GITHUB_USERNAME
 import com.github.jensim.megamanipulator.test.EnvHelper.EnvProperty.SRC_COM_ACCESS_TOKEN
 import com.github.jensim.megamanipulator.test.TestPasswordOperator
+import com.intellij.openapi.project.Project
 import io.mockk.every
 import io.mockk.mockk
 import kotlinx.coroutines.runBlocking
@@ -23,6 +23,7 @@ import org.junit.jupiter.api.Test
 
 internal class SourcegraphSearchClientTest {
 
+    private val project: Project = mockk()
     private val envHelper = EnvHelper()
     private val password = envHelper.resolve(SRC_COM_ACCESS_TOKEN)!!
     private val codeHostName = "github.com"
@@ -46,16 +47,18 @@ internal class SourcegraphSearchClientTest {
     }
     private val passwordsOperator = TestPasswordOperator(mapOf("token" to sourceGraphSettings.baseUrl to password))
     private val notificationsMock: NotificationsOperator = mockk()
+
     private val clientProvider = HttpClientProvider(
+        project = mockk(),
         settingsFileOperator = settingsMock,
         passwordsOperator = passwordsOperator,
         notificationsOperator = notificationsMock
     )
-    private val graphQLClientKotlinxSerializer = GraphQLClientKotlinxSerializer()
+
     private val sourcegraphSearchClient = SourcegraphSearchClient(
+        project = project,
         httpClientProvider = clientProvider,
         notificationsOperator = notificationsMock,
-        graphQLClientKotlinxSerializer = graphQLClientKotlinxSerializer
     )
 
     @Test

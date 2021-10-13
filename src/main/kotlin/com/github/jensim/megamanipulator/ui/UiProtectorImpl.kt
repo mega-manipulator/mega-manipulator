@@ -1,6 +1,7 @@
 package com.github.jensim.megamanipulator.ui
 
 import com.github.jensim.megamanipulator.actions.NotificationsOperator
+import com.github.jensim.megamanipulator.project.lazyService
 import com.github.jensim.megamanipulator.settings.passwords.ProjectOperator
 import com.intellij.notification.NotificationType
 import com.intellij.openapi.progress.ProgressIndicator
@@ -17,9 +18,15 @@ import kotlinx.coroutines.withTimeout
 import java.util.concurrent.CancellationException
 
 class UiProtectorImpl(
-    private val projectOperator: ProjectOperator,
-    private val notificationsOperator: NotificationsOperator,
+    project: Project,
+    projectOperator: ProjectOperator?,
+    notificationsOperator: NotificationsOperator?,
 ) : UiProtector {
+
+    constructor(project: Project) : this(project, null, null)
+
+    private val projectOperator: ProjectOperator by lazyService(project, projectOperator)
+    private val notificationsOperator: NotificationsOperator by lazyService(project, notificationsOperator)
 
     private val project: Project get() = projectOperator.project
 
@@ -38,7 +45,11 @@ class UiProtectorImpl(
                             e.printStackTrace()
                             notificationsOperator.show(
                                 title = "Failed executing task $title",
-                                body = "Exception caught executing task:<br>${e.message}<br>${e.stackTrace.joinToString("<br>")}",
+                                body = "Exception caught executing task:<br>${e.message}<br>${
+                                e.stackTrace.joinToString(
+                                    "<br>"
+                                )
+                                }",
                                 type = NotificationType.ERROR
                             )
                             null

@@ -11,19 +11,32 @@ import com.github.jensim.megamanipulator.graphql.generated.sourcegraph.search.Co
 import com.github.jensim.megamanipulator.graphql.generated.sourcegraph.search.FileMatch
 import com.github.jensim.megamanipulator.graphql.generated.sourcegraph.search.Repository2
 import com.github.jensim.megamanipulator.http.HttpClientProvider
+import com.github.jensim.megamanipulator.project.lazyService
 import com.github.jensim.megamanipulator.settings.types.SearchHostSettings.SourceGraphSettings
 import com.intellij.notification.NotificationType.ERROR
 import com.intellij.notification.NotificationType.WARNING
+import com.intellij.openapi.project.Project
+import com.intellij.serviceContainer.NonInjectable
 import com.jetbrains.rd.util.printlnError
 import org.slf4j.LoggerFactory
 import java.net.URL
 
-class SourcegraphSearchClient(
-    private val httpClientProvider: HttpClientProvider,
-    private val notificationsOperator: NotificationsOperator,
-    private val graphQLClientKotlinxSerializer: GraphQLClientKotlinxSerializer,
+class SourcegraphSearchClient @NonInjectable constructor(
+    project: Project,
+    httpClientProvider: HttpClientProvider?,
+    notificationsOperator: NotificationsOperator?,
 ) {
 
+    constructor(project: Project) : this(
+        project = project,
+        httpClientProvider = null,
+        notificationsOperator = null
+    )
+
+    private val httpClientProvider: HttpClientProvider by lazyService(project, httpClientProvider)
+    private val notificationsOperator: NotificationsOperator by lazyService(project, notificationsOperator)
+
+    private val graphQLClientKotlinxSerializer = GraphQLClientKotlinxSerializer()
     private val log = LoggerFactory.getLogger(this.javaClass)
 
     suspend fun search(searchHostName: String, settings: SourceGraphSettings, search: String): Set<SearchResult> {
@@ -34,7 +47,11 @@ class SourcegraphSearchClient(
             }
             raw.data?.search?.results?.alert?.let {
                 printlnError("ALERT $it")
-                notificationsOperator.show(title = "Alert from SourceGraph search result", body = "More info in application logs", type = WARNING)
+                notificationsOperator.show(
+                    title = "Alert from SourceGraph search result",
+                    body = "More info in application logs",
+                    type = WARNING
+                )
             }
             return raw.data?.search?.results?.results.orEmpty().mapNotNull {
                 val repoName = when (it) {
@@ -55,7 +72,11 @@ class SourcegraphSearchClient(
         }
     }
 
-    private suspend fun rawSearch(searchHostName: String, settings: SourceGraphSettings, searchString: String): GraphQLClientResponse<Search.Result> {
+    private suspend fun rawSearch(
+        searchHostName: String,
+        settings: SourceGraphSettings,
+        searchString: String
+    ): GraphQLClientResponse<Search.Result> {
         val client = getClient(searchHostName, settings)
         val searchVars = Search.Variables(searchString)
         val search = Search(searchVars)

@@ -3,17 +3,29 @@ package com.github.jensim.megamanipulator.actions.apply
 import com.github.jensim.megamanipulator.actions.ProcessOperator
 import com.github.jensim.megamanipulator.actions.localrepo.LocalRepoOperator
 import com.github.jensim.megamanipulator.files.FilesOperator
+import com.github.jensim.megamanipulator.project.lazyService
 import com.github.jensim.megamanipulator.settings.SettingsFileOperator
 import com.github.jensim.megamanipulator.ui.UiProtector
+import com.intellij.openapi.project.Project
+import com.intellij.serviceContainer.NonInjectable
 import java.io.File
 
-class ApplyOperator(
-    private val settingsFileOperator: SettingsFileOperator,
-    private val filesOperator: FilesOperator,
-    private val processOperator: ProcessOperator,
-    private val localRepoOperator: LocalRepoOperator,
-    private val uiProtector: UiProtector,
+class ApplyOperator @NonInjectable constructor(
+    project: Project,
+    settingsFileOperator: SettingsFileOperator?,
+    filesOperator: FilesOperator?,
+    processOperator: ProcessOperator?,
+    localRepoOperator: LocalRepoOperator?,
+    uiProtector: UiProtector?,
 ) {
+
+    constructor(project: Project) : this(project, null, null, null, null, null)
+
+    private val settingsFileOperator: SettingsFileOperator by lazyService(project, settingsFileOperator)
+    private val filesOperator: FilesOperator by lazyService(project, filesOperator)
+    private val processOperator: ProcessOperator by lazyService(project, processOperator)
+    private val localRepoOperator: LocalRepoOperator by lazyService(project, localRepoOperator)
+    private val uiProtector: UiProtector by lazyService(project, uiProtector)
 
     fun apply(): List<ApplyOutput> {
         if (!settingsFileOperator.scriptFile.exists()) {

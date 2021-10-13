@@ -17,5 +17,28 @@
         <postStartupActivity implementation="com.github.jensim.megamanipulator.listener.OnStartListener"/>
         <applicationService serviceImplementation="com.github.jensim.megamanipulator.project.MegaManipulatorSettingsState"
                             id="com.github.jensim.megamanipulator.project.MegaManipulatorSettingsState"/>
+        <projectService serviceImplementation="com.github.jensim.megamanipulator.settings.passwords.ProjectOperator"/>
+        <projectService serviceImplementation="com.github.jensim.megamanipulator.actions.NotificationsOperator"/>
+        <projectService serviceImplementation="com.github.jensim.megamanipulator.settings.SettingsFileOperator"/>
+        <projectService serviceImplementation="com.github.jensim.megamanipulator.http.HttpClientProvider"/>
+        <projectService serviceImplementation="com.github.jensim.megamanipulator.actions.search.sourcegraph.SourcegraphSearchClient"/>
+        <projectService serviceImplementation="com.github.jensim.megamanipulator.actions.vcs.gitlab.GitLabClient"/>
+        <projectService serviceImplementation="com.github.jensim.megamanipulator.actions.vcs.githubcom.GithubComClient"/>
+        <projectService serviceImplementation="com.github.jensim.megamanipulator.actions.vcs.bitbucketserver.BitbucketServerClient"/>
+        <projectService serviceImplementation="com.github.jensim.megamanipulator.actions.search.hound.HoundClient"/>
+        <projectService serviceImplementation="com.github.jensim.megamanipulator.actions.git.GitUrlHelper"/>
+        <projectService serviceImplementation="com.github.jensim.megamanipulator.actions.git.clone.CloneOperator"/>
+        <projectService serviceImplementation="com.github.jensim.megamanipulator.settings.passwords.IntelliJPasswordsOperator"
+                        serviceInterface="com.github.jensim.megamanipulator.settings.passwords.PasswordsOperator"/>
+        <projectService serviceImplementation="com.github.jensim.megamanipulator.ui.UiProtectorImpl"
+                        serviceInterface="com.github.jensim.megamanipulator.ui.UiProtector"/>
+        <projectService serviceImplementation="com.github.jensim.megamanipulator.actions.apply.ApplyOperator"/>
+        <projectService serviceImplementation="com.github.jensim.megamanipulator.actions.localrepo.LocalRepoOperator"/>
+        <projectService serviceImplementation="com.github.jensim.megamanipulator.actions.ProcessOperator"/>
+        <projectService serviceImplementation="com.github.jensim.megamanipulator.actions.vcs.PrRouter"/>
+        <projectService serviceImplementation="com.github.jensim.megamanipulator.files.FilesOperator"/>
+        <projectService serviceImplementation="com.github.jensim.megamanipulator.actions.git.commit.CommitOperator"/>
+        <projectService serviceImplementation="com.github.jensim.megamanipulator.actions.search.SearchOperator"/>
+
     </extensions>
 </idea-plugin>

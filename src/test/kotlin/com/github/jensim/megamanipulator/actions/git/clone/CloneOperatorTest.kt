@@ -72,9 +72,10 @@ class CloneOperatorTest {
             "username" to "https://example" to "password"
         )
     )
-    private val gitUrlHelper = GitUrlHelper(passwordsOperator)
+    private val gitUrlHelper = GitUrlHelper(project = project, passwordsOperator = passwordsOperator)
 
     private val cloneOperator = CloneOperator(
+        project = project,
         filesOperator = filesOperator,
         projectOperator = projectOperator,
         prRouter = prRouter,

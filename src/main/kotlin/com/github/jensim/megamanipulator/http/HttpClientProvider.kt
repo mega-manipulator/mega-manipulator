@@ -1,6 +1,7 @@
 package com.github.jensim.megamanipulator.http
 
 import com.github.jensim.megamanipulator.actions.NotificationsOperator
+import com.github.jensim.megamanipulator.project.lazyService
 import com.github.jensim.megamanipulator.settings.SettingsFileOperator
 import com.github.jensim.megamanipulator.settings.passwords.PasswordsOperator
 import com.github.jensim.megamanipulator.settings.types.AuthMethod
@@ -12,6 +13,8 @@ import com.github.jensim.megamanipulator.settings.types.HostWithAuth
 import com.github.jensim.megamanipulator.settings.types.HttpsOverride
 import com.github.jensim.megamanipulator.settings.types.SearchHostSettings
 import com.intellij.notification.NotificationType
+import com.intellij.openapi.project.Project
+import com.intellij.serviceContainer.NonInjectable
 import io.ktor.client.HttpClient
 import io.ktor.client.HttpClientConfig
 import io.ktor.client.engine.apache.Apache
@@ -32,11 +35,23 @@ import org.apache.http.conn.ssl.TrustStrategy
 import org.apache.http.ssl.SSLContextBuilder
 import java.security.cert.X509Certificate
 
-class HttpClientProvider(
-    private val settingsFileOperator: SettingsFileOperator,
-    private val passwordsOperator: PasswordsOperator,
-    private val notificationsOperator: NotificationsOperator,
+class HttpClientProvider @NonInjectable constructor(
+    project: Project,
+    settingsFileOperator: SettingsFileOperator?,
+    passwordsOperator: PasswordsOperator?,
+    notificationsOperator: NotificationsOperator?,
 ) {
+
+    private val notificationsOperator: NotificationsOperator by lazyService(project, notificationsOperator)
+    private val settingsFileOperator: SettingsFileOperator by lazyService(project, settingsFileOperator)
+    private val passwordsOperator: PasswordsOperator by lazyService(project, passwordsOperator)
+
+    constructor(project: Project) : this(
+        project = project,
+        settingsFileOperator = null,
+        passwordsOperator = null,
+        notificationsOperator = null
+    )
 
     private class TrustAnythingStrategy : TrustStrategy {
         override fun isTrusted(p0: Array<out X509Certificate>?, p1: String?): Boolean = true
@@ -94,7 +109,8 @@ class HttpClientProvider(
     }
 
     fun getClient(searchHostName: String, codeHostName: String, settings: CodeHostSettings): HttpClient {
-        val httpsOverride: HttpsOverride? = settingsFileOperator.readSettings()?.resolveHttpsOverride(searchHostName, codeHostName)
+        val httpsOverride: HttpsOverride? =
+            settingsFileOperator.readSettings()?.resolveHttpsOverride(searchHostName, codeHostName)
         val password: String = getPassword(settings.authMethod, settings.baseUrl, settings.username ?: "token")
         return getClient(httpsOverride, settings, password)
     }

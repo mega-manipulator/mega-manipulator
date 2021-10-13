@@ -7,11 +7,7 @@ import org.jetbrains.annotations.PropertyKey
 @NonNls
 private const val BUNDLE = "messages.MyBundle"
 
-class MyBundle : AbstractBundle(BUNDLE) {
-
-    companion object {
-        val instance by lazy { MyBundle() }
-    }
+object MyBundle : AbstractBundle(BUNDLE) {
 
     fun message(@PropertyKey(resourceBundle = BUNDLE) key: String) = getMessage(key)
     fun message(@PropertyKey(resourceBundle = BUNDLE) key: String, param: Any) = getMessage(key, param)

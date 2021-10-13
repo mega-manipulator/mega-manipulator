@@ -6,6 +6,8 @@ import com.github.jensim.megamanipulator.toolswindow.ToolWindowTab
 import com.github.jensim.megamanipulator.ui.CodeHostSelector
 import com.github.jensim.megamanipulator.ui.GeneralListCellRenderer.addCellRenderer
 import com.github.jensim.megamanipulator.ui.UiProtector
+import com.intellij.openapi.components.service
+import com.intellij.openapi.project.Project
 import com.intellij.ui.JBSplitter
 import com.intellij.ui.components.JBList
 import com.intellij.ui.components.JBScrollPane
@@ -23,12 +25,11 @@ import javax.swing.JComponent
 import javax.swing.event.DocumentEvent
 import javax.swing.event.DocumentListener
 
-class PullRequestWindow(
-    private val prRouter: PrRouter,
-    private val uiProtector: UiProtector,
-    private val pullRequestActionsMenu: PullRequestActionsMenu,
-    settingsFileOperator: SettingsFileOperator,
-) : ToolWindowTab {
+class PullRequestWindow(project: Project) : ToolWindowTab {
+
+    private val prRouter: PrRouter by lazy { project.service() }
+    private val uiProtector: UiProtector by lazy { project.service() }
+    private val settingsFileOperator: SettingsFileOperator by lazy { project.service() }
 
     private val log = LoggerFactory.getLogger(javaClass)
 
@@ -67,14 +68,14 @@ class PullRequestWindow(
     }
 
     init {
-        pullRequestActionsMenu.prProvider = { prList.selectedValuesList }
-        pullRequestActionsMenu.focusComponent = menuOpenButton
         menuOpenButton.isEnabled = false
         menuOpenButton.addMouseListener(object : MouseListener {
             override fun mouseClicked(e: MouseEvent) {
-                val selected = codeHostSelect.selectedItem
-                pullRequestActionsMenu.codeHostName = selected?.codeHostName
-                pullRequestActionsMenu.searchHostName = selected?.searchHostName
+                val pullRequestActionsMenu = PullRequestActionsMenu(
+                    project = project,
+                    focusComponent = menuOpenButton,
+                    prProvider = { prList.selectedValuesList }
+                )
                 pullRequestActionsMenu.show(menuOpenButton, e.x, e.y)
             }
 
@@ -89,9 +90,11 @@ class PullRequestWindow(
             override fun insertUpdate(e: DocumentEvent?) {
                 updateFilteredPrs()
             }
+
             override fun removeUpdate(e: DocumentEvent?) {
                 updateFilteredPrs()
             }
+
             override fun changedUpdate(e: DocumentEvent?) {
                 updateFilteredPrs()
             }
@@ -128,6 +131,7 @@ class PullRequestWindow(
             setPrs(prs)
         } ?: log.warn("No codeHost selected")
     }
+
     private fun fetchAuthoredPRs() {
         prList.setListData(emptyArray())
         (codeHostSelect.selectedItem)?.let { selected ->

@@ -7,6 +7,7 @@
 ### Added
 
 ### Changed
+- Use plugin manifest for wiring
 
 ### Deprecated
 

@@ -2,19 +2,33 @@ package com.github.jensim.megamanipulator.actions.search
 
 import com.github.jensim.megamanipulator.actions.search.hound.HoundClient
 import com.github.jensim.megamanipulator.actions.search.sourcegraph.SourcegraphSearchClient
+import com.github.jensim.megamanipulator.project.lazyService
 import com.github.jensim.megamanipulator.settings.SettingsFileOperator
 import com.github.jensim.megamanipulator.settings.types.SearchHostSettings
 import com.github.jensim.megamanipulator.settings.types.SearchHostSettings.HoundSettings
 import com.github.jensim.megamanipulator.settings.types.SearchHostSettings.SourceGraphSettings
+import com.intellij.openapi.project.Project
+import com.intellij.serviceContainer.NonInjectable
 import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.async
 
-class SearchOperator(
-    private val settingsFileOperator: SettingsFileOperator,
-    private val sourcegraphSearchClient: SourcegraphSearchClient,
-    private val houndClient: HoundClient,
+class SearchOperator @NonInjectable constructor(
+    project: Project,
+    settingsFileOperator: SettingsFileOperator?,
+    sourcegraphSearchClient: SourcegraphSearchClient?,
+    houndClient: HoundClient?,
 ) {
+    constructor(project: Project) : this(
+        project = project,
+        settingsFileOperator = null,
+        sourcegraphSearchClient = null,
+        houndClient = null
+    )
+
+    private val settingsFileOperator: SettingsFileOperator by lazyService(project, settingsFileOperator)
+    private val sourcegraphSearchClient: SourcegraphSearchClient by lazyService(project, sourcegraphSearchClient)
+    private val houndClient: HoundClient by lazyService(project, houndClient)
 
     suspend fun search(searchHostName: String, search: String): Set<SearchResult> {
         val settings: SearchHostSettings = settingsFileOperator.readSettings()?.searchHostSettings?.get(searchHostName)
@@ -25,12 +39,13 @@ class SearchOperator(
         }
     }
 
-    suspend fun validateTokens(): Map<String, Deferred<String>> = settingsFileOperator.readSettings()?.searchHostSettings.orEmpty().map { (name, settings) ->
-        name to GlobalScope.async {
-            when (settings) {
-                is SourceGraphSettings -> sourcegraphSearchClient.validateToken(name, settings)
-                is HoundSettings -> houndClient.validate(name, settings)
+    suspend fun validateTokens(): Map<String, Deferred<String>> =
+        settingsFileOperator.readSettings()?.searchHostSettings.orEmpty().map { (name, settings) ->
+            name to GlobalScope.async {
+                when (settings) {
+                    is SourceGraphSettings -> sourcegraphSearchClient.validateToken(name, settings)
+                    is HoundSettings -> houndClient.validate(name, settings)
+                }
             }
-        }
-    }.toMap()
+        }.toMap()
 }

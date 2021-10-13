@@ -53,7 +53,7 @@ internal class GitLabClientTest {
 
         // when
         val repo: RepoWrapper = runBlocking {
-            wiring.applicationWiring.gitLabClient.getRepo(
+            wiring.gitLabClient.getRepo(
                 searchResult = SearchResult(
                     project = envHelper.resolve(GITLAB_GROUP)!!,
                     repo = envHelper.resolve(GITLAB_PROJECT)!!,
@@ -78,7 +78,7 @@ internal class GitLabClientTest {
 
         // when
         val result: String = runBlocking {
-            wiring.applicationWiring.gitLabClient.validateAccess(
+            wiring.gitLabClient.validateAccess(
                 searchHost = EnvUserSettingsSetup.sourcegraphName,
                 codeHost = EnvUserSettingsSetup.gitlabSettings?.first!!,
                 settings = gitlabSettings
@@ -95,7 +95,7 @@ internal class GitLabClientTest {
 
         // when
         val prs: List<PullRequestWrapper> = runBlocking {
-            wiring.applicationWiring.gitLabClient.getAllAuthorPrs(
+            wiring.gitLabClient.getAllAuthorPrs(
                 searchHost = EnvUserSettingsSetup.sourcegraphName,
                 codeHost = EnvUserSettingsSetup.gitlabSettings?.first!!,
                 settings = gitlabSettings
@@ -112,7 +112,7 @@ internal class GitLabClientTest {
 
         // when
         val prs: List<PullRequestWrapper> = runBlocking {
-            wiring.applicationWiring.gitLabClient.getAllReviewPrs(
+            wiring.gitLabClient.getAllReviewPrs(
                 searchHost = EnvUserSettingsSetup.sourcegraphName,
                 codeHost = EnvUserSettingsSetup.gitlabSettings?.first!!,
                 settings = gitlabSettings

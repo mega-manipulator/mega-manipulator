@@ -14,6 +14,7 @@ import com.github.jensim.megamanipulator.settings.types.SearchHostSettings.Sourc
 import com.github.jensim.megamanipulator.test.EnvHelper
 import com.github.jensim.megamanipulator.test.EnvHelper.EnvProperty.GITHUB_USERNAME
 import com.github.jensim.megamanipulator.test.TestPasswordOperator
+import com.intellij.openapi.project.Project
 import io.mockk.every
 import io.mockk.mockk
 import kotlinx.coroutines.runBlocking
@@ -27,6 +28,7 @@ import org.junit.jupiter.api.Test
 
 class GithubComClientTest {
 
+    private val project: Project = mockk()
     private val envHelper = EnvHelper()
     private val githubSettings = GitHubSettings(
         username = envHelper.resolve(GITHUB_USERNAME)!!,
@@ -50,12 +52,14 @@ class GithubComClientTest {
     private val passwordsOperator = TestPasswordOperator(mapOf(githubSettings.username to githubSettings.baseUrl to password))
     private val notificationsMock: NotificationsOperator = mockk()
     private val clientProvider = HttpClientProvider(
+        project = project,
         settingsFileOperator = settingsMock,
         passwordsOperator = passwordsOperator,
         notificationsOperator = notificationsMock
     )
     private val localRepoMock: LocalRepoOperator = mockk()
     private val client = GithubComClient(
+        project = project,
         httpClientProvider = clientProvider,
         localRepoOperator = localRepoMock,
     )

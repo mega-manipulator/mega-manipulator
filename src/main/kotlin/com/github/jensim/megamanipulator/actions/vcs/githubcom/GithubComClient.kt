@@ -6,9 +6,12 @@ import com.github.jensim.megamanipulator.actions.vcs.GithubComPullRequestWrapper
 import com.github.jensim.megamanipulator.actions.vcs.GithubComRepoWrapping
 import com.github.jensim.megamanipulator.actions.vcs.PrActionStatus
 import com.github.jensim.megamanipulator.http.HttpClientProvider
+import com.github.jensim.megamanipulator.project.lazyService
 import com.github.jensim.megamanipulator.settings.SerializationHolder
 import com.github.jensim.megamanipulator.settings.types.CloneType
 import com.github.jensim.megamanipulator.settings.types.CodeHostSettings.GitHubSettings
+import com.intellij.openapi.project.Project
+import com.intellij.serviceContainer.NonInjectable
 import io.ktor.client.HttpClient
 import io.ktor.client.request.accept
 import io.ktor.client.request.delete
@@ -34,10 +37,15 @@ import java.util.concurrent.atomic.AtomicInteger
 import java.util.regex.Pattern
 
 @SuppressWarnings("TooManyFunctions", "ReturnCount")
-class GithubComClient(
-    private val httpClientProvider: HttpClientProvider,
-    private val localRepoOperator: LocalRepoOperator,
+class GithubComClient @NonInjectable constructor(
+    project: Project,
+    httpClientProvider: HttpClientProvider?,
+    localRepoOperator: LocalRepoOperator?,
 ) {
+
+    constructor(project: Project) : this(project, null, null)
+    private val httpClientProvider: HttpClientProvider by lazyService(project, httpClientProvider)
+    private val localRepoOperator: LocalRepoOperator by lazyService(project, localRepoOperator)
 
     private val json: Json = SerializationHolder.readableJson
 

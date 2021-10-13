@@ -14,6 +14,7 @@ import com.github.jensim.megamanipulator.test.EnvHelper.EnvProperty.BITBUCKET_SE
 import com.github.jensim.megamanipulator.test.EnvHelper.EnvProperty.BITBUCKET_SERVER_TOKEN
 import com.github.jensim.megamanipulator.test.EnvHelper.EnvProperty.BITBUCKET_SERVER_USER
 import com.github.jensim.megamanipulator.test.TestPasswordOperator
+import com.intellij.openapi.project.Project
 import io.mockk.every
 import io.mockk.mockk
 import kotlinx.coroutines.runBlocking
@@ -59,13 +60,16 @@ internal class BitbucketServerClientTest {
     }
     private val passwordsOperator = TestPasswordOperator(mapOf(bitBucketSettings.username to bitBucketSettings.baseUrl to password))
     private val notificationsMock: NotificationsOperator = mockk()
+    private val project: Project = mockk()
     private val clientProvider = HttpClientProvider(
+        project = project,
         settingsFileOperator = settingsMock,
         passwordsOperator = passwordsOperator,
         notificationsOperator = notificationsMock
     )
     private val localRepoMock: LocalRepoOperator = mockk()
     private val client = BitbucketServerClient(
+        project = project,
         httpClientProvider = clientProvider,
         localRepoOperator = localRepoMock,
     )

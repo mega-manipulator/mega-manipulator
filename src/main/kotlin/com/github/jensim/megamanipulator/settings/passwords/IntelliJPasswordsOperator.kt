@@ -1,12 +1,15 @@
 package com.github.jensim.megamanipulator.settings.passwords
 
 import com.github.jensim.megamanipulator.actions.NotificationsOperator
+import com.github.jensim.megamanipulator.project.lazyService
 import com.github.jensim.megamanipulator.settings.SerializationHolder
 import com.intellij.credentialStore.CredentialAttributes
 import com.intellij.credentialStore.Credentials
 import com.intellij.ide.passwordSafe.PasswordSafe
 import com.intellij.notification.NotificationType
+import com.intellij.openapi.project.Project
 import com.intellij.remoteServer.util.CloudConfigurationUtil.createCredentialAttributes
+import com.intellij.serviceContainer.NonInjectable
 import com.intellij.ui.components.JBPasswordField
 import com.intellij.ui.components.JBTextField
 import com.intellij.ui.layout.panel
@@ -20,13 +23,18 @@ import javax.swing.JOptionPane.OK_OPTION
 import javax.swing.JOptionPane.QUESTION_MESSAGE
 
 @NotThreadSafe
-class IntelliJPasswordsOperator(
-    private val notificationsOperator: NotificationsOperator,
+class IntelliJPasswordsOperator @NonInjectable constructor(
+    project: Project,
+    notificationsOperator: NotificationsOperator?,
 ) : PasswordsOperator {
 
     companion object {
         private const val service = "mega-manipulator"
     }
+
+    constructor(project: Project) : this(project, null)
+
+    private val notificationsOperator: NotificationsOperator by lazyService(project, notificationsOperator)
 
     private val serviceUsername: String by lazy { System.getProperty("user.name") ?: service }
     private val passwordSetMap: MutableMap<String, Boolean> = ConcurrentHashMap()
@@ -56,7 +64,8 @@ class IntelliJPasswordsOperator(
                 component(passwordField)
             }
         }
-        val ans = JOptionPane.showConfirmDialog(null, content, "Password please", OK_CANCEL_OPTION, QUESTION_MESSAGE, null)
+        val ans =
+            JOptionPane.showConfirmDialog(null, content, "Password please", OK_CANCEL_OPTION, QUESTION_MESSAGE, null)
         return if (ans != OK_OPTION) {
             ""
         } else if (username == null && usernameField.text.isNullOrEmpty()) {
@@ -82,9 +91,10 @@ class IntelliJPasswordsOperator(
         }
     }
 
-    override fun isPasswordSet(username: String, baseUrl: String): Boolean = usernameToKey(username, baseUrl).let { userKey ->
-        passwordSetMap.computeIfAbsent(userKey) { getPassword(username, baseUrl) != null }
-    }
+    override fun isPasswordSet(username: String, baseUrl: String): Boolean =
+        usernameToKey(username, baseUrl).let { userKey ->
+            passwordSetMap.computeIfAbsent(userKey) { getPassword(username, baseUrl) != null }
+        }
 
     fun deletePasswords(username: String, baseUrl: String) {
         val unambiguousUsername = "${serviceUsername}___${username}___$baseUrl"
@@ -107,7 +117,11 @@ class IntelliJPasswordsOperator(
     private fun getPassword(usernameKey: String): String? {
         val credentialAttributes: CredentialAttributes? = createCredentialAttributes(service, serviceUsername)
         return if (credentialAttributes == null) {
-            notificationsOperator.show("Failed setting password", "Could not create CredentialAttributes", NotificationType.WARNING)
+            notificationsOperator.show(
+                "Failed setting password",
+                "Could not create CredentialAttributes",
+                NotificationType.WARNING
+            )
             null
         } else {
             PasswordSafe.instance.getPassword(credentialAttributes)?.let { passMapStr ->
@@ -124,7 +138,11 @@ class IntelliJPasswordsOperator(
     private fun setPassword(usernameKey: String, password: String) {
         val credentialAttributes: CredentialAttributes? = createCredentialAttributes(service, serviceUsername)
         if (credentialAttributes == null) {
-            notificationsOperator.show("Failed setting password", "Could not create CredentialAttributes", NotificationType.WARNING)
+            notificationsOperator.show(
+                "Failed setting password",
+                "Could not create CredentialAttributes",
+                NotificationType.WARNING
+            )
         } else {
             val preexisting: String? = PasswordSafe.instance.getPassword(credentialAttributes)
             if (preexisting == null) {
@@ -134,7 +152,8 @@ class IntelliJPasswordsOperator(
                 PasswordSafe.instance.set(credentialAttributes, credentials)
             } else {
                 PasswordSafe.instance.getPassword(credentialAttributes)?.let { passMapStr: String ->
-                    val passMap: MutableMap<String, String> = SerializationHolder.readableJson.decodeFromString(passMapStr)
+                    val passMap: MutableMap<String, String> =
+                        SerializationHolder.readableJson.decodeFromString(passMapStr)
                     passMap[usernameKey] = password
                     val passMapStrMod = SerializationHolder.readableJson.encodeToString(passMap)
                     val credentials = Credentials(serviceUsername, passMapStrMod)

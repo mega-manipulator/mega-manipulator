@@ -7,9 +7,12 @@ import com.github.jensim.megamanipulator.actions.vcs.BitBucketRepoWrapping
 import com.github.jensim.megamanipulator.actions.vcs.PrActionStatus
 import com.github.jensim.megamanipulator.actions.vcs.PullRequestWrapper
 import com.github.jensim.megamanipulator.http.HttpClientProvider
+import com.github.jensim.megamanipulator.project.lazyService
 import com.github.jensim.megamanipulator.settings.SerializationHolder
 import com.github.jensim.megamanipulator.settings.types.CloneType
 import com.github.jensim.megamanipulator.settings.types.CodeHostSettings.BitBucketSettings
+import com.intellij.openapi.project.Project
+import com.intellij.serviceContainer.NonInjectable
 import io.ktor.client.HttpClient
 import io.ktor.client.request.accept
 import io.ktor.client.request.delete
@@ -28,10 +31,20 @@ import kotlinx.serialization.json.decodeFromJsonElement
 import org.slf4j.LoggerFactory
 
 @SuppressWarnings("TooManyFunctions")
-class BitbucketServerClient(
-    private val httpClientProvider: HttpClientProvider,
-    private val localRepoOperator: LocalRepoOperator,
+class BitbucketServerClient @NonInjectable constructor(
+    project: Project,
+    httpClientProvider: HttpClientProvider?,
+    localRepoOperator: LocalRepoOperator?,
 ) {
+
+    constructor(project: Project) : this(
+        project = project,
+        httpClientProvider = null,
+        localRepoOperator = null
+    )
+
+    private val httpClientProvider: HttpClientProvider by lazyService(project, httpClientProvider)
+    private val localRepoOperator: LocalRepoOperator by lazyService(project, localRepoOperator)
 
     private val json: Json = SerializationHolder.readableJson
     private val log = LoggerFactory.getLogger(javaClass)

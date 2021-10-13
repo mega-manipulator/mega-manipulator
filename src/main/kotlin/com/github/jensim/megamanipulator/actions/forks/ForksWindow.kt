@@ -9,17 +9,19 @@ import com.github.jensim.megamanipulator.ui.CodeHostSelector
 import com.github.jensim.megamanipulator.ui.GeneralListCellRenderer.addCellRenderer
 import com.github.jensim.megamanipulator.ui.UiProtector
 import com.intellij.notification.NotificationType
+import com.intellij.openapi.components.service
+import com.intellij.openapi.project.Project
 import com.intellij.ui.components.JBList
 import com.intellij.ui.components.JBScrollPane
 import com.intellij.ui.layout.panel
 import javax.swing.JComponent
 
-class ForksWindow(
-    private val prRouter: PrRouter,
-    private val notificationsOperator: NotificationsOperator,
-    private val uiProtector: UiProtector,
-    settingsFileOperator: SettingsFileOperator,
-) : ToolWindowTab {
+class ForksWindow(project: Project) : ToolWindowTab {
+
+    private val prRouter: PrRouter by lazy { project.service() }
+    private val notificationsOperator: NotificationsOperator by lazy { project.service() }
+    private val uiProtector: UiProtector by lazy { project.service() }
+    private val settingsFileOperator: SettingsFileOperator by lazy { project.service() }
 
     override val index: Int = 5
 

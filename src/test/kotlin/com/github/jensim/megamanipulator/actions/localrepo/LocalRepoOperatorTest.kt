@@ -50,8 +50,8 @@ class LocalRepoOperatorTest {
         every { project.basePath } returns tempDir.absolutePath
         every { projectOperator.project } returns project
 
-        processOperator = ProcessOperator(projectOperator)
-        localRepoOperator = LocalRepoOperator(projectOperator, processOperator, uiProtector)
+        processOperator = ProcessOperator(project, projectOperator)
+        localRepoOperator = LocalRepoOperator(project, projectOperator, processOperator, uiProtector)
     }
 
     @AfterEach
@@ -121,7 +121,7 @@ class LocalRepoOperatorTest {
     fun `push origin`() = runBlocking {
         val processOperatorMock: ProcessOperator = mockk(relaxed = true)
         val listSlot = slot<List<String>>()
-        localRepoOperator = LocalRepoOperator(projectOperator, processOperatorMock, uiProtector)
+        localRepoOperator = LocalRepoOperator(project, projectOperator, processOperatorMock, uiProtector)
         processOperator.runCommandAsync(tempDir, listOf("git", "init")).await()
         processOperator.runCommandAsync(tempDir, listOf("git", "checkout", "-b", "foo")).await()
 
@@ -137,7 +137,7 @@ class LocalRepoOperatorTest {
     fun `push fork`() = runBlocking {
         val processOperatorMock: ProcessOperator = mockk(relaxed = true)
         val listSlot = slot<List<String>>()
-        localRepoOperator = LocalRepoOperator(projectOperator, processOperatorMock, uiProtector)
+        localRepoOperator = LocalRepoOperator(project, projectOperator, processOperatorMock, uiProtector)
         processOperator.runCommandAsync(tempDir, listOf("git", "init")).await()
         processOperator.runCommandAsync(tempDir, listOf("git", "checkout", "-b", "foo")).await()
         processOperator.runCommandAsync(

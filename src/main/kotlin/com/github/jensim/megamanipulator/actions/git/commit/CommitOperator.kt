@@ -6,20 +6,32 @@ import com.github.jensim.megamanipulator.actions.git.GitUrlHelper
 import com.github.jensim.megamanipulator.actions.localrepo.LocalRepoOperator
 import com.github.jensim.megamanipulator.actions.search.SearchResult
 import com.github.jensim.megamanipulator.actions.vcs.PrRouter
+import com.github.jensim.megamanipulator.project.lazyService
 import com.github.jensim.megamanipulator.settings.SettingsFileOperator
 import com.github.jensim.megamanipulator.settings.types.CodeHostSettings
 import com.github.jensim.megamanipulator.settings.types.ForkSetting
 import com.github.jensim.megamanipulator.settings.types.MegaManipulatorSettings
+import com.intellij.openapi.project.Project
+import com.intellij.serviceContainer.NonInjectable
 import java.io.File
 import java.util.concurrent.ConcurrentHashMap
 
-class CommitOperator(
-    private val settingsFileOperator: SettingsFileOperator,
-    private val localRepoOperator: LocalRepoOperator,
-    private val processOperator: ProcessOperator,
-    private val prRouter: PrRouter,
-    private val gitUrlHelper: GitUrlHelper,
+class CommitOperator @NonInjectable constructor(
+    project: Project,
+    settingsFileOperator: SettingsFileOperator?,
+    localRepoOperator: LocalRepoOperator?,
+    processOperator: ProcessOperator?,
+    prRouter: PrRouter?,
+    gitUrlHelper: GitUrlHelper?,
 ) {
+
+    constructor(project: Project) : this(project, null, null, null, null, null)
+
+    private val settingsFileOperator: SettingsFileOperator by lazyService(project = project, settingsFileOperator)
+    private val localRepoOperator: LocalRepoOperator by lazyService(project = project, localRepoOperator)
+    private val processOperator: ProcessOperator by lazyService(project = project, processOperator)
+    private val prRouter: PrRouter by lazyService(project = project, prRouter)
+    private val gitUrlHelper: GitUrlHelper by lazyService(project = project, gitUrlHelper)
 
     suspend fun commitProcess(
         it: File,

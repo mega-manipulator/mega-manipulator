@@ -4,8 +4,11 @@ import com.github.jensim.megamanipulator.actions.search.SearchResult
 import com.github.jensim.megamanipulator.actions.search.hound.HoundTypes.HoundRepo
 import com.github.jensim.megamanipulator.actions.search.hound.HoundTypes.HoundSearchResults
 import com.github.jensim.megamanipulator.http.HttpClientProvider
+import com.github.jensim.megamanipulator.project.lazyService
 import com.github.jensim.megamanipulator.settings.SerializationHolder
 import com.github.jensim.megamanipulator.settings.types.SearchHostSettings.HoundSettings
+import com.intellij.openapi.project.Project
+import com.intellij.serviceContainer.NonInjectable
 import io.ktor.client.request.get
 import io.ktor.client.request.header
 import io.ktor.client.request.parameter
@@ -14,15 +17,20 @@ import io.ktor.client.statement.readText
 import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.json.Json
 
-class HoundClient(
-    private val httpClientProvider: HttpClientProvider,
+class HoundClient @NonInjectable constructor(
+    project: Project,
+    httpClientProvider: HttpClientProvider?,
 ) {
+    constructor(project: Project) : this(project, null)
+
+    private val httpClientProvider: HttpClientProvider by lazyService(project, httpClientProvider)
 
     private val json: Json = SerializationHolder.readableJson
 
     suspend fun search(searchHostName: String, settings: HoundSettings, search: String): Set<SearchResult> {
         val client = httpClientProvider.getClient(searchHostName, settings)
-        val repos = client.get<Map<String, HoundRepo>>("${settings.baseUrl}/api/v1/repos").filterValues { it.vcs == "git" }
+        val repos =
+            client.get<Map<String, HoundRepo>>("${settings.baseUrl}/api/v1/repos").filterValues { it.vcs == "git" }
         val rawResp: HttpResponse = client.get("${settings.baseUrl}/api/v1/search") {
             parameter("q", search)
             parameter("stats", "nope") // fosho or nope (true or false)
@@ -49,13 +57,14 @@ class HoundClient(
     }
 
     private fun String.gitUrlToResult(searchHost: String): SearchResult? = try {
-        val center: String = if ((startsWith("http") || startsWith("ssh://")) && endsWith(".git")) { // https://github.com/hound-search/hound.git
-            substringAfter("://").dropLast(4)
-        } else if (startsWith("git@") && endsWith(".git")) { // git@github.com:hound-search/hound.git
-            drop(4).dropLast(4)
-        } else {
-            ""
-        }
+        val center: String =
+            if ((startsWith("http") || startsWith("ssh://")) && endsWith(".git")) { // https://github.com/hound-search/hound.git
+                substringAfter("://").dropLast(4)
+            } else if (startsWith("git@") && endsWith(".git")) { // git@github.com:hound-search/hound.git
+                drop(4).dropLast(4)
+            } else {
+                ""
+            }
         val parts: List<String> = if (center.count { it == '/' } == 2) {
             center.split('/')
         } else if (center.count { it == '/' } == 1 && (1..2).contains(center.count { it == ':' })) {

@@ -11,6 +11,8 @@ import com.github.jensim.megamanipulator.ui.DialogGenerator
 import com.github.jensim.megamanipulator.ui.GeneralListCellRenderer.addCellRenderer
 import com.github.jensim.megamanipulator.ui.UiProtector
 import com.intellij.icons.AllIcons
+import com.intellij.openapi.components.service
+import com.intellij.openapi.project.Project
 import com.intellij.openapi.ui.ComboBox
 import com.intellij.ui.components.JBList
 import com.intellij.ui.components.JBScrollPane
@@ -22,13 +24,12 @@ import java.awt.event.KeyEvent
 import java.awt.event.KeyListener
 import javax.swing.JButton
 
-class SearchWindow(
-    private val searchOperator: SearchOperator,
-    private val settingsFileOperator: SettingsFileOperator,
-    private val cloneOperator: CloneOperator,
-    private val uiProtector: UiProtector,
-    private val dialogGenerator: DialogGenerator,
-) : ToolWindowTab {
+class SearchWindow(project: Project) : ToolWindowTab {
+
+    private val searchOperator: SearchOperator by lazy { project.service() }
+    private val settingsFileOperator: SettingsFileOperator by lazy { project.service() }
+    private val cloneOperator: CloneOperator by lazy { project.service() }
+    private val uiProtector: UiProtector by lazy { project.service() }
 
     private val searchHostSelect = ComboBox<Pair<String, SearchHostSettings>>()
     private val searchHostLink = JButton("Docs", AllIcons.Toolwindows.Documentation)
@@ -99,7 +100,7 @@ class SearchWindow(
             val selected = selector.selectedValuesList.toSet()
             if (selected.isNotEmpty()) {
                 val prefill: String? = PrefillStringSuggestionOperator.getPrefill(PrefillString.BRANCH)
-                dialogGenerator.askForInput(
+                DialogGenerator.askForInput(
                     title = "Branch",
                     message = "branch name",
                     prefill = prefill,

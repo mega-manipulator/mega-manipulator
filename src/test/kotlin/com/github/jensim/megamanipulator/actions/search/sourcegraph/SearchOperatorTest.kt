@@ -10,6 +10,7 @@ import com.github.jensim.megamanipulator.settings.types.MegaManipulatorSettings
 import com.github.jensim.megamanipulator.settings.types.SearchHostSettings
 import com.github.jensim.megamanipulator.test.EnvHelper
 import com.github.jensim.megamanipulator.test.EnvHelper.EnvProperty.SRC_COM_USERNAME
+import com.intellij.openapi.project.Project
 import io.mockk.Called
 import io.mockk.coEvery
 import io.mockk.coVerify
@@ -25,10 +26,12 @@ import org.junit.jupiter.api.assertThrows
 
 class SearchOperatorTest {
 
+    private val project: Project = mockk()
     private val settingsFileOperatorMock: SettingsFileOperator = mockk()
     private val sourcegraphSearchClientMock: SourcegraphSearchClient = mockk()
     private val houndClientMock: HoundClient = mockk()
     private val searchOperator = SearchOperator(
+        project = project,
         settingsFileOperator = settingsFileOperatorMock,
         sourcegraphSearchClient = sourcegraphSearchClientMock,
         houndClient = houndClientMock,

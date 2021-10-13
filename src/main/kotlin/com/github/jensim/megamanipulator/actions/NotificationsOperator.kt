@@ -1,19 +1,27 @@
 package com.github.jensim.megamanipulator.actions
 
-import com.github.jensim.megamanipulator.settings.passwords.ProjectOperator
 import com.intellij.notification.NotificationGroup
+import com.intellij.notification.NotificationGroupManager
 import com.intellij.notification.NotificationType
+import com.intellij.openapi.project.Project
+import com.intellij.serviceContainer.NonInjectable
 
-class NotificationsOperator(
-    private val projectOperator: ProjectOperator,
-    private val notificationGroup: NotificationGroup,
+class NotificationsOperator @NonInjectable constructor(
+    private val project: Project,
+    notificationGroup: NotificationGroup? = null,
 ) {
+
+    constructor(project: Project) : this(project, null)
+
+    private val notificationGroup: NotificationGroup by lazy {
+        notificationGroup ?: NotificationGroupManager.getInstance().getNotificationGroup("Mega Manipulator")
+    }
 
     fun show(title: String, body: String, type: NotificationType = NotificationType.INFORMATION) {
         notificationGroup.createNotification(
             title = title,
             content = body,
             type = type,
-        ).notify(projectOperator.project)
+        ).notify(project)
     }
 }

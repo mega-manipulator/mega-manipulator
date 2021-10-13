@@ -4,10 +4,12 @@ import com.github.jensim.megamanipulator.actions.NotificationsOperator
 import com.github.jensim.megamanipulator.actions.git.clone.CloneOperator
 import com.github.jensim.megamanipulator.project.PrefillString
 import com.github.jensim.megamanipulator.project.PrefillStringSuggestionOperator
+import com.github.jensim.megamanipulator.project.lazyService
 import com.github.jensim.megamanipulator.ui.DialogGenerator
 import com.github.jensim.megamanipulator.ui.EditPullRequestDialog
 import com.github.jensim.megamanipulator.ui.UiProtector
 import com.intellij.notification.NotificationType
+import com.intellij.openapi.project.Project
 import com.intellij.openapi.ui.popup.Balloon
 import com.intellij.ui.components.JBTextArea
 import org.slf4j.LoggerFactory
@@ -21,26 +23,43 @@ import javax.swing.JOptionPane.OK_OPTION
 import javax.swing.JOptionPane.QUESTION_MESSAGE
 import javax.swing.JPopupMenu
 
-@SuppressWarnings("LongParameterList")
+@SuppressWarnings("LongParameterList", "ConstructorParameterNaming")
 class PullRequestActionsMenu(
-    private val prRouter: PrRouter,
-    private val notificationsOperator: NotificationsOperator,
-    private val dialogGenerator: DialogGenerator,
-    private val cloneOperator: CloneOperator,
-    private val uiProtector: UiProtector,
+    project: Project,
+    _prRouter: PrRouter?,
+    _notificationsOperator: NotificationsOperator?,
+    _cloneOperator: CloneOperator?,
+    _uiProtector: UiProtector?,
+
+    private val focusComponent: JComponent,
+    private val prProvider: () -> List<PullRequestWrapper>,
 ) : JPopupMenu() {
 
-    private val log = LoggerFactory.getLogger(javaClass)
+    constructor(
+        project: Project,
+        focusComponent: JComponent,
+        prProvider: () -> List<PullRequestWrapper>
+    ) : this(
+        project = project,
+        _prRouter = null,
+        _notificationsOperator = null,
+        _cloneOperator = null,
+        _uiProtector = null,
+        focusComponent = focusComponent,
+        prProvider = prProvider,
+    )
 
-    lateinit var focusComponent: JComponent
-    lateinit var prProvider: () -> List<PullRequestWrapper>
-    var codeHostName: String? = null
-    var searchHostName: String? = null
+    private val prRouter: PrRouter by lazyService(project, _prRouter)
+    private val notificationsOperator: NotificationsOperator by lazyService(project, _notificationsOperator)
+    private val cloneOperator: CloneOperator by lazyService(project, _cloneOperator)
+    private val uiProtector: UiProtector by lazyService(project, _uiProtector)
+
+    private val log = LoggerFactory.getLogger(javaClass)
 
     init {
         val declineMenuItem = JMenuItem("Decline PRs").apply {
             addActionListener { _ ->
-                dialogGenerator.showConfirm(
+                DialogGenerator.showConfirm(
                     title = "Decline PRs",
                     message = """
                         No undo path available I'm afraid..
@@ -109,7 +128,7 @@ class PullRequestActionsMenu(
         }
         val defaultReviewersMenuItem = JMenuItem("Add default reviewers").apply {
             addActionListener { _ ->
-                dialogGenerator.showConfirm(
+                DialogGenerator.showConfirm(
                     title = "Add default reviewers",
                     message = "Add default reviewers",
                     focusComponent = focusComponent,
@@ -130,7 +149,7 @@ class PullRequestActionsMenu(
         val cloneMenuItem = JMenuItem("Clone PRs").apply {
             addActionListener {
                 val prs = prProvider()
-                dialogGenerator.showConfirm(
+                DialogGenerator.showConfirm(
                     title = "Clone",
                     message = "Clone ${prs.size} selected PR branches",
                     focusComponent = focusComponent,
@@ -172,7 +191,7 @@ class PullRequestActionsMenu(
                 val prs = prProvider()
                 if (prs.isNotEmpty()) {
                     val prefill: String? = PrefillStringSuggestionOperator.getPrefill(PrefillString.COMMENT)
-                    dialogGenerator.askForInput(
+                    DialogGenerator.askForInput(
                         title = "Comment selected pull requests",
                         message = "Comment",
                         field = JBTextArea(8, 80),
@@ -193,7 +212,7 @@ class PullRequestActionsMenu(
         }
         val approveMenuItem = JMenuItem("Mark Approved").apply {
             addActionListener { _ ->
-                dialogGenerator.showConfirm(
+                DialogGenerator.showConfirm(
                     title = "Mark Approved",
                     message = "Mark the selected pull requests as Approved",
                     focusComponent = focusComponent,
@@ -209,7 +228,7 @@ class PullRequestActionsMenu(
         }
         val needsWorkMenuItem = JMenuItem("Mark Needs work").apply {
             addActionListener {
-                dialogGenerator.showConfirm(
+                DialogGenerator.showConfirm(
                     title = "Mark Needs work",
                     message = "Mark the selected pull requests as Needs work",
                     focusComponent = focusComponent,
@@ -225,7 +244,7 @@ class PullRequestActionsMenu(
         }
         val mergeMenuItem = JMenuItem("Merge").apply {
             addActionListener {
-                dialogGenerator.showConfirm(
+                DialogGenerator.showConfirm(
                     title = "Merge",
                     message = "Merge the selected pull requests",
                     focusComponent = focusComponent,

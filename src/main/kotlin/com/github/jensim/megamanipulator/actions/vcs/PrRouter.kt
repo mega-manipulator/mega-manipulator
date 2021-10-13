@@ -5,25 +5,44 @@ import com.github.jensim.megamanipulator.actions.search.SearchResult
 import com.github.jensim.megamanipulator.actions.vcs.bitbucketserver.BitbucketServerClient
 import com.github.jensim.megamanipulator.actions.vcs.githubcom.GithubComClient
 import com.github.jensim.megamanipulator.actions.vcs.gitlab.GitLabClient
+import com.github.jensim.megamanipulator.project.lazyService
 import com.github.jensim.megamanipulator.settings.SettingsFileOperator
 import com.github.jensim.megamanipulator.settings.types.CodeHostSettings
 import com.github.jensim.megamanipulator.settings.types.CodeHostSettings.BitBucketSettings
 import com.github.jensim.megamanipulator.settings.types.CodeHostSettings.GitHubSettings
 import com.github.jensim.megamanipulator.settings.types.CodeHostSettings.GitLabSettings
 import com.intellij.notification.NotificationType.WARNING
+import com.intellij.openapi.project.Project
+import com.intellij.serviceContainer.NonInjectable
 import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.async
 import java.util.concurrent.atomic.AtomicLong
 
 @SuppressWarnings("TooManyFunctions")
-class PrRouter(
-    private val settingsFileOperator: SettingsFileOperator,
-    private val bitbucketServerClient: BitbucketServerClient,
-    private val githubComClient: GithubComClient,
-    private val gitLabClient: GitLabClient,
-    private val notificationsOperator: NotificationsOperator,
+class PrRouter @NonInjectable constructor(
+    project: Project,
+    settingsFileOperator: SettingsFileOperator?,
+    bitbucketServerClient: BitbucketServerClient?,
+    githubComClient: GithubComClient?,
+    gitLabClient: GitLabClient?,
+    notificationsOperator: NotificationsOperator?,
 ) {
+
+    constructor(project: Project) : this(
+        project = project,
+        settingsFileOperator = null,
+        bitbucketServerClient = null,
+        githubComClient = null,
+        gitLabClient = null,
+        notificationsOperator = null
+    )
+
+    private val settingsFileOperator: SettingsFileOperator by lazyService(project, settingsFileOperator)
+    private val bitbucketServerClient: BitbucketServerClient by lazyService(project, bitbucketServerClient)
+    private val githubComClient: GithubComClient by lazyService(project, githubComClient)
+    private val gitLabClient: GitLabClient by lazyService(project, gitLabClient)
+    private val notificationsOperator: NotificationsOperator by lazyService(project, notificationsOperator)
 
     private val lastSettingsWarning = AtomicLong()
 

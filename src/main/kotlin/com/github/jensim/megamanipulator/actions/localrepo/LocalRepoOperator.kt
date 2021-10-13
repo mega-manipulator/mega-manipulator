@@ -3,8 +3,11 @@ package com.github.jensim.megamanipulator.actions.localrepo
 import com.github.jensim.megamanipulator.actions.ProcessOperator
 import com.github.jensim.megamanipulator.actions.apply.ApplyOutput
 import com.github.jensim.megamanipulator.actions.search.SearchResult
+import com.github.jensim.megamanipulator.project.lazyService
 import com.github.jensim.megamanipulator.settings.passwords.ProjectOperator
 import com.github.jensim.megamanipulator.ui.UiProtector
+import com.intellij.openapi.project.Project
+import com.intellij.serviceContainer.NonInjectable
 import org.eclipse.jgit.storage.file.FileRepositoryBuilder
 import java.io.File
 import java.nio.file.Files
@@ -13,16 +16,21 @@ import java.nio.file.attribute.BasicFileAttributes
 import java.util.stream.Collectors
 
 @SuppressWarnings("TooManyFunctions")
-class LocalRepoOperator(
-    private val projectOperator: ProjectOperator,
-    private val processOperator: ProcessOperator,
-    private val uiProtector: UiProtector,
+class LocalRepoOperator @NonInjectable constructor(
+    project: Project,
+    projectOperator: ProjectOperator?,
+    processOperator: ProcessOperator?,
+    uiProtector: UiProtector?,
 ) {
 
     companion object {
 
         private const val depth = 4
     }
+    constructor(project: Project) : this(project, null, null, null)
+    private val projectOperator: ProjectOperator by lazyService(project, projectOperator)
+    private val processOperator: ProcessOperator by lazyService(project, processOperator)
+    private val uiProtector: UiProtector by lazyService(project, uiProtector)
 
     fun getLocalRepoFiles(): List<File> {
         val clonesDir = File(projectOperator.project.basePath!!, "clones")
