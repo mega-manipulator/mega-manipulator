@@ -13,8 +13,8 @@ import com.github.jensim.megamanipulator.actions.vcs.githubcom.GithubComClient
 import com.github.jensim.megamanipulator.actions.vcs.gitlab.GitLabClient
 import com.github.jensim.megamanipulator.files.FilesOperator
 import com.github.jensim.megamanipulator.http.HttpClientProvider
+import com.github.jensim.megamanipulator.project.ProjectOperator
 import com.github.jensim.megamanipulator.settings.SettingsFileOperator
-import com.github.jensim.megamanipulator.settings.passwords.ProjectOperator
 import com.github.jensim.megamanipulator.ui.DialogGenerator
 import com.github.jensim.megamanipulator.ui.TestUiProtector
 import com.github.jensim.megamanipulator.ui.UiProtector
@@ -47,28 +47,26 @@ open class TestApplicationWiring {
         every { validationText } returns "Looks good..?"
     }
 
-    val gitUrlHelper by lazy {
+    val gitUrlHelper: GitUrlHelper by lazy {
         GitUrlHelper(
             project = mockProject,
             passwordsOperator = passwordsOperator,
         )
     }
 
-    val processOperator by lazy {
+    val processOperator: ProcessOperator by lazy {
         ProcessOperator(
             project = mockProject,
-            projectOperator = projectOperator,
         )
     }
-    val localRepoOperator by lazy {
+    val localRepoOperator: LocalRepoOperator by lazy {
         LocalRepoOperator(
             project = mockProject,
-            projectOperator = projectOperator,
             processOperator = processOperator,
             uiProtector = uiProtector,
         )
     }
-    val httpClientProvider by lazy {
+    val httpClientProvider: HttpClientProvider by lazy {
         HttpClientProvider(
             project = mockProject,
             settingsFileOperator = settingsFileOperator,
@@ -76,28 +74,28 @@ open class TestApplicationWiring {
             notificationsOperator = notificationsOperator,
         )
     }
-    val gitLabClient by lazy {
+    val gitLabClient: GitLabClient by lazy {
         GitLabClient(
             project = mockProject,
             httpClientProvider = httpClientProvider,
             localRepoOperator = localRepoOperator,
         )
     }
-    val bitbucketServerClient by lazy {
+    val bitbucketServerClient: BitbucketServerClient by lazy {
         BitbucketServerClient(
             project = mockProject,
             httpClientProvider = httpClientProvider,
             localRepoOperator = localRepoOperator,
         )
     }
-    val githubComClient by lazy {
+    val githubComClient: GithubComClient by lazy {
         GithubComClient(
             project = mockProject,
             httpClientProvider = httpClientProvider,
             localRepoOperator = localRepoOperator,
         )
     }
-    val prRouter by lazy {
+    val prRouter: PrRouter by lazy {
         PrRouter(
             project = mockProject,
             settingsFileOperator = settingsFileOperator,
@@ -107,11 +105,10 @@ open class TestApplicationWiring {
             notificationsOperator = notificationsOperator,
         )
     }
-    val cloneOperator by lazy {
+    val cloneOperator: CloneOperator by lazy {
         CloneOperator(
             project = mockProject,
             filesOperator = filesOperator,
-            projectOperator = projectOperator,
             prRouter = prRouter,
             localRepoOperator = localRepoOperator,
             processOperator = processOperator,
@@ -121,7 +118,7 @@ open class TestApplicationWiring {
             gitUrlHelper = gitUrlHelper,
         )
     }
-    val applyOperator by lazy {
+    val applyOperator: ApplyOperator by lazy {
         ApplyOperator(
             project = mockProject,
             settingsFileOperator = settingsFileOperator,
@@ -131,7 +128,7 @@ open class TestApplicationWiring {
             uiProtector = uiProtector,
         )
     }
-    val commitOperator by lazy {
+    val commitOperator: CommitOperator by lazy {
         CommitOperator(
             project = mockProject,
             settingsFileOperator = settingsFileOperator,

@@ -3,10 +3,8 @@ package com.github.jensim.megamanipulator.project
 import com.github.jensim.megamanipulator.onboarding.OnboardingId
 import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.components.PersistentStateComponent
-import com.intellij.openapi.components.RoamingType
 import com.intellij.openapi.components.State
 import com.intellij.openapi.components.Storage
-import com.intellij.util.xmlb.XmlSerializerUtil
 
 @State(
     name = "com.github.jensim.megamanipulator.project.MegaManipulatorSettingsState",

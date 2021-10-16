@@ -21,7 +21,7 @@ import com.intellij.ui.content.ContentManagerEvent
 import com.intellij.ui.content.ContentManagerListener
 import java.io.File
 
-class MyToolWindowFactory : ToolWindowFactory,TabServiceListener {
+class MyToolWindowFactory : ToolWindowFactory, TabServiceListener {
 
     private val refreshMap = mutableMapOf<String, ToolWindowTab>()
     private val selectMap = mutableMapOf<TabKey, Content>()

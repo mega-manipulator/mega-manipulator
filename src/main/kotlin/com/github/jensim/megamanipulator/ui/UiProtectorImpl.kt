@@ -21,10 +21,9 @@ class UiProtectorImpl(
     notificationsOperator: NotificationsOperator?,
 ) : UiProtector {
 
-    constructor(project: Project) : this(project,  null)
+    constructor(project: Project) : this(project, null)
 
     private val notificationsOperator: NotificationsOperator by lazyService(project, notificationsOperator)
-
 
     override fun <T> uiProtectedOperation(
         title: String,

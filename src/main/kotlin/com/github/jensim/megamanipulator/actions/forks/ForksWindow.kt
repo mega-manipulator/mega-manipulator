@@ -41,7 +41,7 @@ class ForksWindow(project: Project) : ToolWindowTab {
                     message = """
                                 Are you sure?
                                 Really, really, sure?
-                                """.trimIndent(),
+                    """.trimIndent(),
                     focusComponent = this
                 ) {
                     uiProtector.mapConcurrentWithProgress(

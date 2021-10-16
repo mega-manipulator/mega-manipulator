@@ -25,7 +25,7 @@ class LocalRepoOperator @NonInjectable constructor(
 
         private const val depth = 4
     }
-    constructor(project: Project) : this(project,  null, null)
+    constructor(project: Project) : this(project, null, null)
     private val processOperator: ProcessOperator by lazyService(project, processOperator)
     private val uiProtector: UiProtector by lazyService(project, uiProtector)
 

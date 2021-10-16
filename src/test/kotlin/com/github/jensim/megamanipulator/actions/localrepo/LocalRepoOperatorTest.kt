@@ -2,7 +2,6 @@ package com.github.jensim.megamanipulator.actions.localrepo
 
 import com.github.jensim.megamanipulator.actions.ProcessOperator
 import com.github.jensim.megamanipulator.actions.apply.ApplyOutput
-import com.github.jensim.megamanipulator.project.ProjectOperator
 import com.github.jensim.megamanipulator.ui.TestUiProtector
 import com.intellij.openapi.project.Project
 import io.mockk.every

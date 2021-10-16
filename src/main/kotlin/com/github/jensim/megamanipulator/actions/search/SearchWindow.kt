@@ -6,7 +6,6 @@ import com.github.jensim.megamanipulator.onboarding.OnboardingOperator
 import com.github.jensim.megamanipulator.project.MegaManipulatorSettingsState
 import com.github.jensim.megamanipulator.project.PrefillString
 import com.github.jensim.megamanipulator.project.PrefillStringSuggestionOperator
-import com.github.jensim.megamanipulator.project.lazyService
 import com.github.jensim.megamanipulator.settings.SettingsFileOperator
 import com.github.jensim.megamanipulator.settings.types.SearchHostSettings
 import com.github.jensim.megamanipulator.toolswindow.ToolWindowTab
@@ -17,7 +16,6 @@ import com.intellij.icons.AllIcons
 import com.intellij.openapi.components.service
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.ui.ComboBox
-import com.intellij.openapi.wm.WindowManager
 import com.intellij.ui.components.JBList
 import com.intellij.ui.components.JBScrollPane
 import com.intellij.ui.components.JBTextField
@@ -126,9 +124,9 @@ class SearchWindow(
     override fun refresh() {
         onboardingOperator.registerTarget(OnboardingId.SEARCH_TAB, content)
         onboardingOperator.registerTarget(OnboardingId.SEARCH_DOC_BUTTON, searchHostLink)
-        onboardingOperator.registerTarget(OnboardingId.SEARCH_HOST_SELECT,searchHostSelect)
+        onboardingOperator.registerTarget(OnboardingId.SEARCH_HOST_SELECT, searchHostSelect)
         onboardingOperator.registerTarget(OnboardingId.SEARCH_INPUT, searchField)
-        onboardingOperator.registerTarget(OnboardingId.SEARCH_BUTTON,searchButton)
+        onboardingOperator.registerTarget(OnboardingId.SEARCH_BUTTON, searchButton)
         onboardingOperator.registerTarget(OnboardingId.SEARCH_CLONE_BUTTON, cloneButton)
 
         searchHostSelect.removeAllItems()

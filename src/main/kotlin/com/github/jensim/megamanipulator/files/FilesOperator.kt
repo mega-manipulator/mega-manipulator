@@ -22,7 +22,7 @@ class FilesOperator @NonInjectable constructor(
     private val project: Project,
     notificationsOperator: NotificationsOperator?,
 ) {
-    constructor(project: Project) : this(project,  null)
+    constructor(project: Project) : this(project, null)
 
     private val notificationsOperator: NotificationsOperator by lazyService(project, notificationsOperator)
 

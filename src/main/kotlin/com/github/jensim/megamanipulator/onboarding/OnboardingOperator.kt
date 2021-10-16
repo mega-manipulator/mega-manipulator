@@ -16,7 +16,6 @@ import java.util.EnumMap
 import javax.swing.JButton
 import javax.swing.JComponent
 import javax.swing.JLayeredPane
-import javax.swing.JTextArea
 
 class OnboardingOperator @NonInjectable constructor(
     private val project: Project,

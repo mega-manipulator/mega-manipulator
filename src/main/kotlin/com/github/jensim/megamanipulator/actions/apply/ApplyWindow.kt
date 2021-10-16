@@ -15,8 +15,6 @@ import com.intellij.ui.JBSplitter
 import com.intellij.ui.components.JBList
 import com.intellij.ui.components.JBScrollPane
 import com.intellij.ui.components.JBTextArea
-import com.intellij.ui.layout.LCFlags
-import com.intellij.ui.layout.migLayout.createLayoutConstraints
 import com.intellij.ui.layout.panel
 import java.awt.Color
 import java.io.File

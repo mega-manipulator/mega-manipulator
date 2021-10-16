@@ -20,12 +20,12 @@ import com.intellij.ui.components.JBLabel
 import com.intellij.ui.components.JBList
 import com.intellij.ui.layout.LCFlags
 import com.intellij.ui.layout.panel
+import kotlinx.coroutines.Deferred
 import java.awt.Color
 import java.awt.Component
 import javax.swing.JButton
 import javax.swing.JComponent
 import javax.swing.ListSelectionModel
-import kotlinx.coroutines.Deferred
 
 @SuppressWarnings("LongParameterList")
 class SettingsWindow(project: Project) : ToolWindowTab {
@@ -51,7 +51,7 @@ class SettingsWindow(project: Project) : ToolWindowTab {
         val username: String,
         val hostNaming: String,
 
-        ) {
+    ) {
         override fun toString(): String = "$hostType: $hostNaming"
     }
 
@@ -135,7 +135,7 @@ class SettingsWindow(project: Project) : ToolWindowTab {
                             <body>
                             <table>
                             <tr><th>Config</th><th>Status</th></tr>
-                            """.trimIndent(),
+                        """.trimIndent(),
                         postfix = "</table></body></html>"
                     )
             }
@@ -180,27 +180,27 @@ class SettingsWindow(project: Project) : ToolWindowTab {
         if (settings != null) {
             val arrayOf: Array<ConfigHostHolder> =
                 (
-                        settings.searchHostSettings.map {
+                    settings.searchHostSettings.map {
+                        ConfigHostHolder(
+                            hostType = HostType.SEARCH,
+                            authMethod = it.value.authMethod,
+                            baseUri = it.value.baseUrl,
+                            username = it.value.username,
+                            hostNaming = it.key
+                        )
+                    } + settings.searchHostSettings.values.flatMap {
+                        it.codeHostSettings.map {
+
                             ConfigHostHolder(
-                                hostType = HostType.SEARCH,
+                                hostType = HostType.CODE,
                                 authMethod = it.value.authMethod,
                                 baseUri = it.value.baseUrl,
-                                username = it.value.username,
+                                username = it.value.username ?: "token",
                                 hostNaming = it.key
                             )
-                        } + settings.searchHostSettings.values.flatMap {
-                            it.codeHostSettings.map {
-
-                                ConfigHostHolder(
-                                    hostType = HostType.CODE,
-                                    authMethod = it.value.authMethod,
-                                    baseUri = it.value.baseUrl,
-                                    username = it.value.username ?: "token",
-                                    hostNaming = it.key
-                                )
-                            }
                         }
-                        ).toTypedArray()
+                    }
+                    ).toTypedArray()
             hostConfigSelect.setListData(arrayOf)
         }
         onboardingOperator.display(OnboardingId.WELCOME)

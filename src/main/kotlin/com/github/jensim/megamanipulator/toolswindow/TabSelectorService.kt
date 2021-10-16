@@ -4,11 +4,11 @@ class TabSelectorService {
 
     private val listeners: MutableList<TabServiceListener> = mutableListOf()
 
-    fun connectTabListener(listener:TabServiceListener){
+    fun connectTabListener(listener: TabServiceListener) {
         listeners.add(listener)
     }
 
-    fun selectTab(tabKey: TabKey){
+    fun selectTab(tabKey: TabKey) {
         listeners.forEach {
             try {
                 it.tabSelectionRequested(tabKey)

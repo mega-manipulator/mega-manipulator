@@ -2,6 +2,5 @@ package com.github.jensim.megamanipulator.toolswindow
 
 interface TabServiceListener {
 
-    fun tabSelectionRequested(tabKey:TabKey)
-
+    fun tabSelectionRequested(tabKey: TabKey)
 }

@@ -14,14 +14,14 @@ enum class OnboardingId(
             Convenience button to find and open the script file,
             otherwise locates here:
             ./config/mega-manipulator.bash
-            """.trimIndent(),
+        """.trimIndent(),
         tab = TabKey.tabTitleApply,
     ),
     APPLY_BUTTON(
         text = """
             Apply scripted changes defined in the
             ./config/mega-manipulator.bash file
-            """.trimIndent(),
+        """.trimIndent(),
         next = APPLY_SCRIPT_OPEN_BUTTON,
         tab = TabKey.tabTitleApply,
     ),
@@ -55,7 +55,7 @@ enum class OnboardingId(
             Select your code host here if you have several.
             Reorder the hosts in the config file for them to appear in that order here.
             Top one is preselected.
-            """.trimIndent(),
+        """.trimIndent(),
         tab = TabKey.tabTitleSearch,
         next = SEARCH_INPUT,
     ),
@@ -70,7 +70,7 @@ enum class OnboardingId(
             This is where each search and replace journey begins.
             Different search hosts behave a bit differently,
             so be aware of that.
-            """.trimIndent(),
+        """.trimIndent(),
         tab = TabKey.tabTitleSearch,
         next = SEARCH_DOC_BUTTON,
     ),
@@ -140,6 +140,6 @@ enum class OnboardingId(
             To use the mega-manipulator plugin, 
             you must create a intelliJ project of type 
             "Mega Manipulator"
-            """.trimIndent()
+        """.trimIndent()
     )
 }
