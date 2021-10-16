@@ -17,7 +17,7 @@
         <postStartupActivity implementation="com.github.jensim.megamanipulator.listener.OnStartListener"/>
         <applicationService serviceImplementation="com.github.jensim.megamanipulator.project.MegaManipulatorSettingsState"
                             id="com.github.jensim.megamanipulator.project.MegaManipulatorSettingsState"/>
-        <projectService serviceImplementation="com.github.jensim.megamanipulator.settings.passwords.ProjectOperator"/>
+        <projectService serviceImplementation="com.github.jensim.megamanipulator.project.ProjectOperator"/>
         <projectService serviceImplementation="com.github.jensim.megamanipulator.actions.NotificationsOperator"/>
         <projectService serviceImplementation="com.github.jensim.megamanipulator.settings.SettingsFileOperator"/>
         <projectService serviceImplementation="com.github.jensim.megamanipulator.http.HttpClientProvider"/>
@@ -39,6 +39,7 @@
         <projectService serviceImplementation="com.github.jensim.megamanipulator.files.FilesOperator"/>
         <projectService serviceImplementation="com.github.jensim.megamanipulator.actions.git.commit.CommitOperator"/>
         <projectService serviceImplementation="com.github.jensim.megamanipulator.actions.search.SearchOperator"/>
-
+        <projectService serviceImplementation="com.github.jensim.megamanipulator.toolswindow.TabSelectorService"/>
+        <projectService serviceImplementation="com.github.jensim.megamanipulator.onboarding.OnboardingOperator"/>
     </extensions>
 </idea-plugin>

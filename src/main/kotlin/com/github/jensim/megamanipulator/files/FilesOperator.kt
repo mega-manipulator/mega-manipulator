@@ -2,7 +2,6 @@ package com.github.jensim.megamanipulator.files
 
 import com.github.jensim.megamanipulator.actions.NotificationsOperator
 import com.github.jensim.megamanipulator.project.lazyService
-import com.github.jensim.megamanipulator.settings.passwords.ProjectOperator
 import com.intellij.notification.NotificationType
 import com.intellij.openapi.fileEditor.FileDocumentManager
 import com.intellij.openapi.project.Project
@@ -20,14 +19,12 @@ import java.nio.file.Path
 import java.nio.file.Paths
 
 class FilesOperator @NonInjectable constructor(
-    project: Project,
+    private val project: Project,
     notificationsOperator: NotificationsOperator?,
-    projectOperator: ProjectOperator?,
 ) {
-    constructor(project: Project) : this(project, null, null)
+    constructor(project: Project) : this(project,  null)
 
     private val notificationsOperator: NotificationsOperator by lazyService(project, notificationsOperator)
-    private val projectOperator: ProjectOperator by lazyService(project, projectOperator)
 
     class VirtFile(
         val nameWithPath: String,
@@ -43,7 +40,7 @@ class FilesOperator @NonInjectable constructor(
     }
 
     private fun refresh(dir: String) {
-        val projectRoot = File(projectOperator.project.basePath!!)
+        val projectRoot = File(project.basePath!!)
         val root = File(projectRoot, dir)
         val tree = root.walkTopDown().onEnter { it.isDirectory }.iterator().asSequence().toList()
         LocalFileSystem.getInstance().refreshIoFiles(tree + root + projectRoot)
@@ -76,7 +73,7 @@ class FilesOperator @NonInjectable constructor(
     }
 
     private fun makeUpBaseFile(baseFile: VirtFile, hard: Boolean) {
-        val file = File(projectOperator.project.basePath!!, baseFile.nameWithPath)
+        val file = File(project.basePath!!, baseFile.nameWithPath)
 
         try {
             if (hard || !file.exists()) {

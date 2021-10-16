@@ -1,31 +1,38 @@
 package com.github.jensim.megamanipulator.actions.apply
 
-import com.github.jensim.megamanipulator.settings.passwords.ProjectOperator
+import com.github.jensim.megamanipulator.onboarding.OnboardingId
+import com.github.jensim.megamanipulator.onboarding.OnboardingOperator
 import com.github.jensim.megamanipulator.toolswindow.ToolWindowTab
 import com.github.jensim.megamanipulator.ui.GeneralListCellRenderer.addCellRenderer
 import com.intellij.openapi.components.service
 import com.intellij.openapi.fileEditor.FileDocumentManager
+import com.intellij.openapi.fileEditor.FileEditorManager
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.ui.DialogPanel
+import com.intellij.openapi.vfs.VirtualFile
+import com.intellij.openapi.vfs.VirtualFileManager
 import com.intellij.ui.JBSplitter
 import com.intellij.ui.components.JBList
 import com.intellij.ui.components.JBScrollPane
 import com.intellij.ui.components.JBTextArea
+import com.intellij.ui.layout.LCFlags
+import com.intellij.ui.layout.migLayout.createLayoutConstraints
 import com.intellij.ui.layout.panel
 import java.awt.Color
 import java.io.File
 import javax.swing.JButton
 
-class ApplyWindow(project: Project) : ToolWindowTab {
+class ApplyWindow(private val project: Project) : ToolWindowTab {
 
     private val applyOperator: ApplyOperator by lazy { project.service() }
-    private val projectOperator: ProjectOperator by lazy { project.service() }
+    private val onboardingOperator: OnboardingOperator by lazy { project.service() }
 
     private val resultList = JBList<ApplyOutput>()
     private val scrollableResult = JBScrollPane(resultList)
     private val details = JBTextArea()
     private val scrollableDetails = JBScrollPane(details)
-    private val button = JButton("Apply")
+    private val applyButton = JButton("Apply")
+    private val openScriptButton = JButton("Open script")
     private val split = JBSplitter().apply {
         firstComponent = scrollableResult
         secondComponent = scrollableDetails
@@ -33,7 +40,10 @@ class ApplyWindow(project: Project) : ToolWindowTab {
 
     override val content: DialogPanel = panel {
         row {
-            component(button)
+            cell {
+                component(applyButton)
+                component(openScriptButton)
+            }
         }
         row {
             component(split)
@@ -41,6 +51,7 @@ class ApplyWindow(project: Project) : ToolWindowTab {
     }
 
     init {
+
         details.isEditable = false
         resultList.addCellRenderer({
             if (it.exitCode != 0) {
@@ -49,8 +60,9 @@ class ApplyWindow(project: Project) : ToolWindowTab {
                 null
             }
         }) { it.dir }
-        button.addActionListener {
-            button.isEnabled = false
+
+        applyButton.addActionListener {
+            applyButton.isEnabled = false
             resultList.clearSelection()
             resultList.setListData(emptyArray())
             details.text = ""
@@ -64,9 +76,18 @@ class ApplyWindow(project: Project) : ToolWindowTab {
             if (result.isNotEmpty()) {
                 resultList.setSelectedValue(result.first(), true)
             }
-            button.isEnabled = true
+            applyButton.isEnabled = true
             content.validate()
             content.repaint()
+        }
+
+        openScriptButton.addActionListener {
+            VirtualFileManager.getInstance().let {
+                it.findFileByNioPath(File("${project.basePath}/config/mega-manipulator.bash").toPath())
+                    ?.let { file: VirtualFile ->
+                        FileEditorManager.getInstance(project).openFile(file, true)
+                    }
+            }
         }
         resultList.addListSelectionListener {
             val selected = resultList.selectedValuesList
@@ -79,8 +100,11 @@ class ApplyWindow(project: Project) : ToolWindowTab {
     }
 
     override fun refresh() {
-        button.isEnabled = projectOperator.project.basePath?.let { File(it) }?.list()?.isNotEmpty() == true
-    }
+        applyButton.isEnabled = project.basePath?.let { File(it) }?.list()?.isNotEmpty() == true
 
-    override val index: Int = 2
+        onboardingOperator.registerTarget(OnboardingId.APPLY_TAB, content)
+        onboardingOperator.registerTarget(OnboardingId.APPLY_BUTTON, applyButton)
+        onboardingOperator.registerTarget(OnboardingId.APPLY_SCRIPT_OPEN_BUTTON, openScriptButton)
+        onboardingOperator.display(OnboardingId.APPLY_TAB)
+    }
 }

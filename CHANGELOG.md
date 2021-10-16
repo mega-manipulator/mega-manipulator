@@ -5,6 +5,7 @@
 ## [Unreleased]
 
 ### Added
+- Onboarding flow is now able to select tabs moving forward
 
 ### Changed
 - Use plugin manifest for wiring

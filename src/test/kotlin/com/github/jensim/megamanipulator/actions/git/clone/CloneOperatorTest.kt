@@ -11,7 +11,7 @@ import com.github.jensim.megamanipulator.actions.vcs.PullRequestWrapper
 import com.github.jensim.megamanipulator.files.FilesOperator
 import com.github.jensim.megamanipulator.settings.SettingsFileOperator
 import com.github.jensim.megamanipulator.settings.passwords.PasswordsOperator
-import com.github.jensim.megamanipulator.settings.passwords.ProjectOperator
+import com.github.jensim.megamanipulator.project.ProjectOperator
 import com.github.jensim.megamanipulator.settings.types.CloneType.HTTPS
 import com.github.jensim.megamanipulator.settings.types.MegaManipulatorSettings
 import com.github.jensim.megamanipulator.settings.types.SearchHostSettings
@@ -77,7 +77,6 @@ class CloneOperatorTest {
     private val cloneOperator = CloneOperator(
         project = project,
         filesOperator = filesOperator,
-        projectOperator = projectOperator,
         prRouter = prRouter,
         localRepoOperator = localRepoOperator,
         processOperator = processOperator,

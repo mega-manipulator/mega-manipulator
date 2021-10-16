@@ -49,6 +49,7 @@ object DialogGenerator {
             }
             val location = popupFactory.guessBestPopupLocation(focusComponent)
             popup.show(location, position)
+            yesBtn.requestFocus(true)
         } catch (e: Exception) {
             e.printStackTrace()
         }
@@ -101,6 +102,7 @@ object DialogGenerator {
             val location: RelativePoint = popupFactory.guessBestPopupLocation(focusComponent)
 
             popup.show(location, position)
+            field.requestFocus(true)
         } catch (e: Exception) {
             e.printStackTrace()
         }

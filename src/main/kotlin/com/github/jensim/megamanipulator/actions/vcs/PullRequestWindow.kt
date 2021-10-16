@@ -33,8 +33,6 @@ class PullRequestWindow(project: Project) : ToolWindowTab {
 
     private val log = LoggerFactory.getLogger(javaClass)
 
-    override val index: Int = 4
-
     private val search = JBTextField(50)
     private val pullRequests: MutableList<PullRequestWrapper> = mutableListOf()
     private val codeHostSelect = CodeHostSelector(settingsFileOperator)
@@ -50,14 +48,17 @@ class PullRequestWindow(project: Project) : ToolWindowTab {
     }
     override val content: JComponent = panel {
         row {
-            component(codeHostSelect)
-            button("Fetch author PRs") {
-                fetchAuthoredPRs()
+            cell {
+                component(codeHostSelect)
+                button("Fetch author PRs") {
+                    fetchAuthoredPRs()
+                }
+                button("Fetch assigned PRs") {
+                    fetchAssignedPRs()
+                }
+                label("Filter:")
+                component(search)
             }
-            button("Fetch assigned PRs") {
-                fetchAssignedPRs()
-            }
-            component(search)
             right {
                 component(menuOpenButton)
             }

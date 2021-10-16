@@ -9,7 +9,6 @@ import com.github.jensim.megamanipulator.files.FilesOperator
 import com.github.jensim.megamanipulator.project.PrefillString
 import com.github.jensim.megamanipulator.project.PrefillStringSuggestionOperator
 import com.github.jensim.megamanipulator.settings.SettingsFileOperator
-import com.github.jensim.megamanipulator.settings.passwords.ProjectOperator
 import com.github.jensim.megamanipulator.settings.types.MegaManipulatorSettings
 import com.github.jensim.megamanipulator.toolswindow.ToolWindowTab
 import com.github.jensim.megamanipulator.ui.CommitDialog
@@ -38,14 +37,13 @@ private typealias StepResult = Pair<String, ApplyOutput>
 private typealias DirResult = Pair<String, List<StepResult>>
 
 @SuppressWarnings("LongParameterList")
-class GitWindow(project: Project) : ToolWindowTab {
+class GitWindow(private val project: Project) : ToolWindowTab {
 
     private val localRepoOperator: LocalRepoOperator by lazy { project.service() }
     private val settingsFileOperator: SettingsFileOperator by lazy { project.service() }
     private val processOperator: ProcessOperator by lazy { project.service() }
     private val commitOperator: CommitOperator by lazy { project.service() }
     private val filesOperator: FilesOperator by lazy { project.service() }
-    private val projectOperator: ProjectOperator by lazy { project.service() }
     private val prRouter: PrRouter by lazy { project.service() }
     private val uiProtector: UiProtector by lazy { project.service() }
 
@@ -195,7 +193,7 @@ class GitWindow(project: Project) : ToolWindowTab {
                             """.trimIndent(),
                             focusComponent = this,
                         ) {
-                            val output: ApplyOutput = projectOperator.project.basePath?.let { dir ->
+                            val output: ApplyOutput = project.basePath?.let { dir ->
                                 uiProtector.uiProtectedOperation(title = "Remove all local clones") {
                                     processOperator.runCommandAsync(File(dir), listOf("rm", "-rf", "clones")).await()
                                 }
@@ -237,7 +235,6 @@ class GitWindow(project: Project) : ToolWindowTab {
     }
 
     override fun refresh() {
-        val project = projectOperator.project
         val localRepoFiles = localRepoOperator.getLocalRepoFiles()
         val result: List<DirResult> = uiProtector.mapConcurrentWithProgress(
             title = "Listing branches",
@@ -261,6 +258,4 @@ class GitWindow(project: Project) : ToolWindowTab {
         content.validate()
         content.repaint()
     }
-
-    override val index: Int = 3
 }

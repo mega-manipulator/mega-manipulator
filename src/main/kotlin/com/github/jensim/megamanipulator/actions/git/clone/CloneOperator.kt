@@ -12,7 +12,6 @@ import com.github.jensim.megamanipulator.actions.vcs.RepoWrapper
 import com.github.jensim.megamanipulator.files.FilesOperator
 import com.github.jensim.megamanipulator.project.lazyService
 import com.github.jensim.megamanipulator.settings.SettingsFileOperator
-import com.github.jensim.megamanipulator.settings.passwords.ProjectOperator
 import com.github.jensim.megamanipulator.settings.types.CodeHostSettings
 import com.github.jensim.megamanipulator.settings.types.MegaManipulatorSettings
 import com.github.jensim.megamanipulator.ui.UiProtector
@@ -26,9 +25,8 @@ private typealias Action = Pair<String, ApplyOutput>
 
 @SuppressWarnings("LongParameterList")
 class CloneOperator @NonInjectable constructor(
-    project: Project,
+    private val project: Project,
     filesOperator: FilesOperator?,
-    projectOperator: ProjectOperator?,
     prRouter: PrRouter?,
     localRepoOperator: LocalRepoOperator?,
     processOperator: ProcessOperator?,
@@ -40,7 +38,6 @@ class CloneOperator @NonInjectable constructor(
     constructor(project: Project) : this(
         project = project,
         filesOperator = null,
-        projectOperator = null,
         prRouter = null,
         localRepoOperator = null,
         processOperator = null,
@@ -51,7 +48,6 @@ class CloneOperator @NonInjectable constructor(
     )
 
     private val filesOperator: FilesOperator by lazyService(project, filesOperator)
-    private val projectOperator: ProjectOperator by lazyService(project, projectOperator)
     private val prRouter: PrRouter by lazyService(project, prRouter)
     private val localRepoOperator: LocalRepoOperator by lazyService(project, localRepoOperator)
     private val processOperator: ProcessOperator by lazyService(project, processOperator)
@@ -61,7 +57,7 @@ class CloneOperator @NonInjectable constructor(
     private val gitUrlHelper: GitUrlHelper by lazyService(project, gitUrlHelper)
 
     fun clone(repos: Set<SearchResult>, branchName: String) {
-        val basePath = projectOperator.project.basePath!!
+        val basePath = project.basePath!!
         filesOperator.refreshConf()
         val settings = settingsFileOperator.readSettings()!!
         val state: List<Pair<SearchResult, List<Action>?>> = uiProtector.mapConcurrentWithProgress(
@@ -119,7 +115,7 @@ class CloneOperator @NonInjectable constructor(
     }
 
     suspend fun cloneRepos(pullRequest: PullRequestWrapper, settings: MegaManipulatorSettings): List<Action> {
-        val basePath = projectOperator.project.basePath!!
+        val basePath = project.basePath!!
         val fullPath = "$basePath/clones/${pullRequest.asPathString()}"
         val dir = File(fullPath)
         val prSettings: CodeHostSettings =

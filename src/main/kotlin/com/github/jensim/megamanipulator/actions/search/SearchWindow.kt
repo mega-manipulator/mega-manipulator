@@ -1,9 +1,12 @@
 package com.github.jensim.megamanipulator.actions.search
 
 import com.github.jensim.megamanipulator.actions.git.clone.CloneOperator
+import com.github.jensim.megamanipulator.onboarding.OnboardingId
+import com.github.jensim.megamanipulator.onboarding.OnboardingOperator
 import com.github.jensim.megamanipulator.project.MegaManipulatorSettingsState
 import com.github.jensim.megamanipulator.project.PrefillString
 import com.github.jensim.megamanipulator.project.PrefillStringSuggestionOperator
+import com.github.jensim.megamanipulator.project.lazyService
 import com.github.jensim.megamanipulator.settings.SettingsFileOperator
 import com.github.jensim.megamanipulator.settings.types.SearchHostSettings
 import com.github.jensim.megamanipulator.toolswindow.ToolWindowTab
@@ -14,6 +17,7 @@ import com.intellij.icons.AllIcons
 import com.intellij.openapi.components.service
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.ui.ComboBox
+import com.intellij.openapi.wm.WindowManager
 import com.intellij.ui.components.JBList
 import com.intellij.ui.components.JBScrollPane
 import com.intellij.ui.components.JBTextField
@@ -24,15 +28,18 @@ import java.awt.event.KeyEvent
 import java.awt.event.KeyListener
 import javax.swing.JButton
 
-class SearchWindow(project: Project) : ToolWindowTab {
+class SearchWindow(
+    private val project: Project
+) : ToolWindowTab {
 
     private val searchOperator: SearchOperator by lazy { project.service() }
     private val settingsFileOperator: SettingsFileOperator by lazy { project.service() }
     private val cloneOperator: CloneOperator by lazy { project.service() }
     private val uiProtector: UiProtector by lazy { project.service() }
+    private val onboardingOperator: OnboardingOperator by lazy { project.service() }
 
     private val searchHostSelect = ComboBox<Pair<String, SearchHostSettings>>()
-    private val searchHostLink = JButton("Docs", AllIcons.Toolwindows.Documentation)
+    private val searchHostLink = JButton("SearchDocs", AllIcons.Toolwindows.Documentation)
     private val searchButton = JButton("Search", AllIcons.Actions.Search)
     private val cloneButton = JButton("Clone selected", AllIcons.Vcs.Clone)
     private val searchField = JBTextField(50)
@@ -41,11 +48,13 @@ class SearchWindow(project: Project) : ToolWindowTab {
 
     override val content = panel {
         row {
-            component(searchHostSelect)
-            component(searchHostLink)
-            component(searchField)
-            component(searchButton)
-            component(cloneButton)
+            cell {
+                component(searchHostLink)
+                component(searchHostSelect)
+                component(searchField)
+                component(searchButton)
+                component(cloneButton)
+            }
         }
         row {
             component(scroll)
@@ -93,7 +102,7 @@ class SearchWindow(project: Project) : ToolWindowTab {
             selector.setListData(result)
             searchButton.isEnabled = true
             MegaManipulatorSettingsState.getInstance()?.let {
-                it.lastSearch = searchText
+                it.state.lastSearch = searchText
             }
         }
         cloneButton.addActionListener {
@@ -114,16 +123,23 @@ class SearchWindow(project: Project) : ToolWindowTab {
         }
     }
 
-    override val index: Int = 1
     override fun refresh() {
+        onboardingOperator.registerTarget(OnboardingId.SEARCH_TAB, content)
+        onboardingOperator.registerTarget(OnboardingId.SEARCH_DOC_BUTTON, searchHostLink)
+        onboardingOperator.registerTarget(OnboardingId.SEARCH_HOST_SELECT,searchHostSelect)
+        onboardingOperator.registerTarget(OnboardingId.SEARCH_INPUT, searchField)
+        onboardingOperator.registerTarget(OnboardingId.SEARCH_BUTTON,searchButton)
+        onboardingOperator.registerTarget(OnboardingId.SEARCH_CLONE_BUTTON, cloneButton)
+
         searchHostSelect.removeAllItems()
         settingsFileOperator.readSettings()?.searchHostSettings?.forEach {
             searchHostSelect.addItem(it.toPair())
         }
+
         searchButton.isEnabled = searchHostSelect.itemCount > 0
         if (searchField.text.isNullOrBlank()) {
             MegaManipulatorSettingsState.getInstance()?.let {
-                searchField.text = it.lastSearch
+                searchField.text = it.state.lastSearch
             }
         }
     }

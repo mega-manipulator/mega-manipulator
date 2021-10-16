@@ -4,7 +4,6 @@ import com.github.jensim.megamanipulator.actions.ProcessOperator
 import com.github.jensim.megamanipulator.actions.apply.ApplyOutput
 import com.github.jensim.megamanipulator.actions.search.SearchResult
 import com.github.jensim.megamanipulator.project.lazyService
-import com.github.jensim.megamanipulator.settings.passwords.ProjectOperator
 import com.github.jensim.megamanipulator.ui.UiProtector
 import com.intellij.openapi.project.Project
 import com.intellij.serviceContainer.NonInjectable
@@ -17,8 +16,7 @@ import java.util.stream.Collectors
 
 @SuppressWarnings("TooManyFunctions")
 class LocalRepoOperator @NonInjectable constructor(
-    project: Project,
-    projectOperator: ProjectOperator?,
+    private val project: Project,
     processOperator: ProcessOperator?,
     uiProtector: UiProtector?,
 ) {
@@ -27,13 +25,12 @@ class LocalRepoOperator @NonInjectable constructor(
 
         private const val depth = 4
     }
-    constructor(project: Project) : this(project, null, null, null)
-    private val projectOperator: ProjectOperator by lazyService(project, projectOperator)
+    constructor(project: Project) : this(project,  null, null)
     private val processOperator: ProcessOperator by lazyService(project, processOperator)
     private val uiProtector: UiProtector by lazyService(project, uiProtector)
 
     fun getLocalRepoFiles(): List<File> {
-        val clonesDir = File(projectOperator.project.basePath!!, "clones")
+        val clonesDir = File(project.basePath!!, "clones")
         if (!clonesDir.exists()) {
             return emptyList()
         }
@@ -65,7 +62,7 @@ class LocalRepoOperator @NonInjectable constructor(
     }
 
     fun getBranch(searchResult: SearchResult): String? {
-        val dir = File("${projectOperator.project.basePath!!}/clones/${searchResult.asPathString()}")
+        val dir = File("${project.basePath!!}/clones/${searchResult.asPathString()}")
         return getBranch(dir)
     }
 
@@ -94,7 +91,7 @@ class LocalRepoOperator @NonInjectable constructor(
     }
 
     private suspend fun getGitUrl(repo: SearchResult, remote: String): String? {
-        val dir = File("${projectOperator.project.basePath!!}/clones/${repo.asPathString()}")
+        val dir = File("${project.basePath!!}/clones/${repo.asPathString()}")
         return try {
             processOperator.runCommandAsync(dir, listOf("git", "remote", "-v")).await().std.lines()
                 .filter { it.startsWith(remote) && it.endsWith("(push)") }

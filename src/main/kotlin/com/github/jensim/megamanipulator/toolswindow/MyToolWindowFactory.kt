@@ -21,25 +21,29 @@ import com.intellij.ui.content.ContentManagerEvent
 import com.intellij.ui.content.ContentManagerListener
 import java.io.File
 
-class MyToolWindowFactory : ToolWindowFactory {
+class MyToolWindowFactory : ToolWindowFactory,TabServiceListener {
+
+    private val refreshMap = mutableMapOf<String, ToolWindowTab>()
+    private val selectMap = mutableMapOf<TabKey, Content>()
+    private lateinit var toolWindow: ToolWindow
 
     override fun createToolWindowContent(project: Project, toolWindow: ToolWindow) {
         val contentFactory: ContentFactory = ContentFactory.SERVICE.getInstance()
-
-        val tabs = listOf<Pair<String, ToolWindowTab>>(
-            "tabTitleSettings" to SettingsWindow(project),
-            "tabTitleSearch" to SearchWindow(project),
-            "tabTitleApply" to ApplyWindow(project),
-            "tabTitleClones" to GitWindow(project),
-            "tabTitlePRsManage" to PullRequestWindow(project),
-            "tabTitleForks" to ForksWindow(project),
+        this.toolWindow = toolWindow
+        val tabs = listOf<Pair<TabKey, ToolWindowTab>>(
+            TabKey.tabTitleSettings to SettingsWindow(project),
+            TabKey.tabTitleSearch to SearchWindow(project),
+            TabKey.tabTitleApply to ApplyWindow(project),
+            TabKey.tabTitleClones to GitWindow(project),
+            TabKey.tabTitlePRsManage to PullRequestWindow(project),
+            TabKey.tabTitleForks to ForksWindow(project),
         )
-        tabs.sortedBy { it.second.index }.forEachIndexed { index, (headerKey, tab) ->
-            if (index == 0) {
-                tab.refresh()
-            }
-            val content1: Content = contentFactory.createContent(tab.content, MyBundle.message(headerKey), false)
-            toolWindow.contentManager.addContent(content1)
+        tabs.forEach { (headerKey, tab) ->
+            val header = MyBundle.message(headerKey.name)
+            val content: Content = contentFactory.createContent(tab.content, header, false)
+            refreshMap[header] = tab
+            selectMap[headerKey] = content
+            toolWindow.contentManager.addContent(content)
         }
         val filesOperator = project.getService(FilesOperator::class.java)
         toolWindow.addContentManagerListener(object : ContentManagerListener {
@@ -47,7 +51,11 @@ class MyToolWindowFactory : ToolWindowFactory {
                 super.selectionChanged(event)
                 filesOperator.makeUpBaseFiles()
                 filesOperator.refreshConf()
-                tabs.find { it.second.index == event.index }?.second?.refresh()
+                toolWindow.contentManager.selectedContent?.displayName?.let { selectedTabName ->
+                    refreshMap[selectedTabName]?.let {
+                        it.refresh()
+                    }
+                }
             }
         })
         filesOperator.makeUpBaseFiles()
@@ -61,6 +69,12 @@ class MyToolWindowFactory : ToolWindowFactory {
         } catch (e: NullPointerException) {
             e.printStackTrace()
         }
+        try {
+            project.getService(TabSelectorService::class.java)
+                ?.connectTabListener(this)
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
     }
 
     override fun isApplicable(project: Project): Boolean {
@@ -69,5 +83,11 @@ class MyToolWindowFactory : ToolWindowFactory {
 
     override fun shouldBeAvailable(project: Project): Boolean {
         return super.shouldBeAvailable(project) && isMM(project)
+    }
+
+    override fun tabSelectionRequested(tabKey: TabKey) {
+        selectMap[tabKey]?.let {
+            toolWindow.contentManager.setSelectedContent(it)
+        }
     }
 }

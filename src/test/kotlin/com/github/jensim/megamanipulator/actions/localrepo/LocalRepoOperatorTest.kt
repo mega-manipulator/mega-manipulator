@@ -2,7 +2,7 @@ package com.github.jensim.megamanipulator.actions.localrepo
 
 import com.github.jensim.megamanipulator.actions.ProcessOperator
 import com.github.jensim.megamanipulator.actions.apply.ApplyOutput
-import com.github.jensim.megamanipulator.settings.passwords.ProjectOperator
+import com.github.jensim.megamanipulator.project.ProjectOperator
 import com.github.jensim.megamanipulator.ui.TestUiProtector
 import com.intellij.openapi.project.Project
 import io.mockk.every
@@ -38,7 +38,6 @@ class LocalRepoOperatorTest {
     private val tempDir: File = File(tempDirPath.toUri())
 
     private val project: Project = mockk()
-    private val projectOperator: ProjectOperator = mockk()
 
     private lateinit var processOperator: ProcessOperator
     private lateinit var localRepoOperator: LocalRepoOperator
@@ -48,10 +47,9 @@ class LocalRepoOperatorTest {
     @BeforeEach
     internal fun setUp() {
         every { project.basePath } returns tempDir.absolutePath
-        every { projectOperator.project } returns project
 
-        processOperator = ProcessOperator(project, projectOperator)
-        localRepoOperator = LocalRepoOperator(project, projectOperator, processOperator, uiProtector)
+        processOperator = ProcessOperator(project)
+        localRepoOperator = LocalRepoOperator(project, processOperator, uiProtector)
     }
 
     @AfterEach
@@ -121,7 +119,7 @@ class LocalRepoOperatorTest {
     fun `push origin`() = runBlocking {
         val processOperatorMock: ProcessOperator = mockk(relaxed = true)
         val listSlot = slot<List<String>>()
-        localRepoOperator = LocalRepoOperator(project, projectOperator, processOperatorMock, uiProtector)
+        localRepoOperator = LocalRepoOperator(project, processOperatorMock, uiProtector)
         processOperator.runCommandAsync(tempDir, listOf("git", "init")).await()
         processOperator.runCommandAsync(tempDir, listOf("git", "checkout", "-b", "foo")).await()
 
@@ -137,7 +135,7 @@ class LocalRepoOperatorTest {
     fun `push fork`() = runBlocking {
         val processOperatorMock: ProcessOperator = mockk(relaxed = true)
         val listSlot = slot<List<String>>()
-        localRepoOperator = LocalRepoOperator(project, projectOperator, processOperatorMock, uiProtector)
+        localRepoOperator = LocalRepoOperator(project, processOperatorMock, uiProtector)
         processOperator.runCommandAsync(tempDir, listOf("git", "init")).await()
         processOperator.runCommandAsync(tempDir, listOf("git", "checkout", "-b", "foo")).await()
         processOperator.runCommandAsync(
