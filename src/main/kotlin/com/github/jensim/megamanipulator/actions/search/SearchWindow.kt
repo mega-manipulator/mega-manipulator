@@ -77,8 +77,8 @@ class SearchWindow(
         }
         searchField.addKeyListener(object : KeyListener {
             override fun keyTyped(e: KeyEvent?) {
-                if (e?.keyCode == KeyEvent.VK_ENTER) {
-                    searchButton.doClick()
+                if (e?.extendedKeyCode == KeyEvent.VK_ENTER) {
+                    search()
                 }
             }
 
@@ -86,22 +86,7 @@ class SearchWindow(
             override fun keyReleased(e: KeyEvent?) = Unit
         })
         searchButton.addActionListener {
-            searchButton.isEnabled = false
-            cloneButton.isEnabled = false
-            selector.setListData(emptyArray())
-            val searchText = searchField.text
-            val result: Array<SearchResult> = searchHostSelect.selectedItem?.let { searchHost: Any ->
-                searchHost.castSafelyTo<Pair<String, SearchHostSettings>>()?.first?.let { searchHostName ->
-                    uiProtector.uiProtectedOperation("Seraching") {
-                        searchOperator.search(searchHostName, searchText)
-                    }
-                }
-            }.orEmpty().toTypedArray()
-            selector.setListData(result)
-            searchButton.isEnabled = true
-            MegaManipulatorSettingsState.getInstance()?.let {
-                it.state.lastSearch = searchText
-            }
+            search()
         }
         cloneButton.addActionListener {
             val selected = selector.selectedValuesList.toSet()
@@ -118,6 +103,25 @@ class SearchWindow(
                     PrefillStringSuggestionOperator.setPrefill(PrefillString.BRANCH, branch)
                 }
             }
+        }
+    }
+
+    private fun search() {
+        searchButton.isEnabled = false
+        cloneButton.isEnabled = false
+        selector.setListData(emptyArray())
+        val searchText = searchField.text
+        val result: Array<SearchResult> = searchHostSelect.selectedItem?.let { searchHost: Any ->
+            searchHost.castSafelyTo<Pair<String, SearchHostSettings>>()?.first?.let { searchHostName ->
+                uiProtector.uiProtectedOperation("Seraching") {
+                    searchOperator.search(searchHostName, searchText)
+                }
+            }
+        }.orEmpty().toTypedArray()
+        selector.setListData(result)
+        searchButton.isEnabled = true
+        MegaManipulatorSettingsState.getInstance()?.let {
+            it.state.lastSearch = searchText
         }
     }
 
