@@ -21,6 +21,7 @@ import com.github.jensim.megamanipulator.ui.DialogGenerator
 import com.github.jensim.megamanipulator.ui.GeneralListCellRenderer.addCellRenderer
 import com.github.jensim.megamanipulator.ui.UiProtector
 import com.github.jensim.megamanipulator.ui.trimProjectPath
+import com.intellij.icons.AllIcons
 import com.intellij.openapi.components.service
 import com.intellij.openapi.project.Project
 import com.intellij.ui.JBSplitter
@@ -79,7 +80,7 @@ class GitWindow(private val project: Project) : ToolWindowTab {
     private val btnCommitAndPush = JButton("Commit & Push")
     private val btnJustPush = JButton("Push")
     private val btnCreatePRs = JButton("Create PRs")
-    private val btnCleanLocalClones = JButton("Clean away local repos")
+    private val btnCleanLocalClones = JButton("Clean away local repos", AllIcons.Toolwindows.Problems)
 
     override val content: JComponent = panel {
         row {

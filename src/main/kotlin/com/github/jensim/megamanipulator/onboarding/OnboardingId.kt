@@ -11,28 +11,43 @@ enum class OnboardingId(
 ) {
 
     FORK_LIST_AREA(
-        text = "FORK_LIST_AREA", // TODO
+        text = "Here you are able to select only the fork repos that you want to affect.",
         next = null,
         tab = TabKey.tabTitleForks,
     ),
     FORK_DELETE_STALE_FORK_BUTTON(
-        text = "FORK_DELETE_STALE_FORK_BUTTON", // TODO
+        text = """
+            Delete selected stale repos.
+            LOOK CAREFULLY BEFORE YOU DO SOMETHING YOU'LL REGRET HERE.
+        """.trimIndent(),
         next = FORK_LIST_AREA,
         tab = TabKey.tabTitleForks,
     ),
     FORK_LOAD_STALE_FORK_BUTTON(
-        text = "FORK_LOAD_STALE_FORK_BUTTON", // TODO
+        text = """
+            Load fork repos that look stale.
+            Have no active pull requests.
+        """.trimIndent(),
         next = FORK_DELETE_STALE_FORK_BUTTON,
         tab = TabKey.tabTitleForks,
     ),
     FORK_TAB(
-        text = "FORK_TAB", // TODO
+        title = "Forks",
+        text = """
+            Manage your private forks.
+            That often become quite many when you are not granted rights
+            to create branches directly on the origin repo.
+        """.trimIndent(),
         next = FORK_LOAD_STALE_FORK_BUTTON,
         tab = TabKey.tabTitleForks,
     ),
 
     PR_ACTIONS_RESULT_AREA(
-        text = "PR_ACTIONS_RESULT_AREA", // TODO
+        text = """
+            Pull request list and raw-format area.
+            Select to limit the actions scope to these.
+            Be ware that filtering does not implicitly deselect for you.
+        """.trimIndent(), // TODO
         next = FORK_TAB,
         tab = TabKey.tabTitlePRsManage,
     ),
@@ -40,14 +55,15 @@ enum class OnboardingId(
         text = """<html>
             <h3>Apply actions to selected Pull Requests</h3>
             <ul>
-            
-            <li>Action 1<br>
-            second line</li>
-            
-            <li>Action 2<br>
-            second line<br>
-            foo</li>
-            
+                <li>Decline PRs</li>
+                <li>Reword PRs</li>
+                <li>Add default reviewers</li>
+                <li>Clone PRs</li>
+                <li>Open in browser</li>
+                <li>Add comment</li>
+                <li>Mark Approved</li>
+                <li>Mark Needs work</li>
+                <li>Merge</li>
             </ul>
             </html>
         """.trimIndent(),
@@ -56,79 +72,105 @@ enum class OnboardingId(
         tab = TabKey.tabTitlePRsManage,
     ),
     PR_LIST_FILTER_FIELD(
-        text = "PR_LIST_FILTER_FIELD", // TODO
+        text = "Filter the fetched PRs",
         next = PR_ACTIONS_BUTTON,
         tab = TabKey.tabTitlePRsManage,
     ),
     PR_FETCH_ASSIGNEE_PR_BUTTON(
-        text = "PR_FETCH_ASSIGNEE_PR_BUTTON", // TODO
+        text = "Fetch PRs you're assigned to",
         next = PR_LIST_FILTER_FIELD,
         tab = TabKey.tabTitlePRsManage,
     ),
     PR_FETCH_AUTHOR_PR_BUTTON(
-        text = "PR_FETCH_AUTHOR_PR_BUTTON", // TODO
+        text = "Fetch PRs you've authored",
         next = PR_FETCH_ASSIGNEE_PR_BUTTON,
         tab = TabKey.tabTitlePRsManage,
     ),
     PR_CODE_HOST_SELECT(
-        text = "PR_CODE_HOST_SELECT", // TODO
+        text = "Select which code host config to fetch PRs from",
         next = PR_FETCH_AUTHOR_PR_BUTTON,
         tab = TabKey.tabTitlePRsManage,
     ),
     PR_TAB(
-        text = "PR_TAB", // TODO
+        title = "Pull requests",
+        text = """
+            Manage your pull requests
+            Assigned, or authored.
+        """.trimIndent(),
         next = PR_CODE_HOST_SELECT,
         tab = TabKey.tabTitlePRsManage,
     ),
 
     CLONES_STEP_OUTPUT(
-        text = "", // TODO
+        text = "Outcome/output of selected step",
         next = PR_TAB,
         tab = TabKey.tabTitleClones,
     ),
     CLONES_LIST_STEPS(
-        text = "", // TODO
+        text = "List of steps taken in last action for the selected repo",
         next = CLONES_STEP_OUTPUT,
         tab = TabKey.tabTitleClones,
     ),
     CLONES_LIST_REPOS(
-        text = "", // TODO
+        text = "List of local clones",
         next = CLONES_LIST_STEPS,
         tab = TabKey.tabTitleClones,
     ),
     CLONES_CLEAN_REPOS(
-        text = "CLONES_CLEAN_REPOS", // TODO
+        text = """
+            Delete local clones.
+            If you have PRs, you are able to clone from PRs in the PR-tab
+        """.trimIndent(),
         next = CLONES_LIST_REPOS,
         tab = TabKey.tabTitleClones,
     ),
     CLONES_PR_BUTTON(
-        text = "CLONES_PR_BUTTON", // TODO
+        text = "Draft new PRs for clones",
         next = CLONES_CLEAN_REPOS,
         tab = TabKey.tabTitleClones,
     ),
     CLONES_PUSH_BUTTON(
-        text = "CLONES_PUSH_BUTTON", // TODO
+        text = "Just push",
         next = CLONES_PR_BUTTON,
         tab = TabKey.tabTitleClones,
     ),
     CLONES_COMMIT_PUSH_BUTTON(
-        text = "CLONES_COMMIT_PUSH_BUTTON", // TODO
+        text = "Commit and push (optional)",
         next = CLONES_PUSH_BUTTON,
         tab = TabKey.tabTitleClones,
     ),
     CLONES_LIST_BRANCH(
-        text = "CLONES_LIST_BRANCH", // TODO
+        text = """
+            Refresh the list of local clones.
+            List the git log, branches and remotes.
+        """.trimIndent(),
         next = CLONES_COMMIT_PUSH_BUTTON,
         tab = TabKey.tabTitleClones,
     ),
     CLONES_TAB(
-        text = "CLONES_TAB", // TODO
+        title = "The Clones tab",
+        autoMultiLineConvertion = false,
+        text = """<html>
+            Manage the clones you currently have
+            <ul>
+            <li>Switch branches</li>
+            <li>Commit</li>
+            <li>Push</li>
+            <li>Create PRs</li>
+            <li>Clean away clones</li>
+            </ul>
+            </html>
+        """.trimIndent(),
         next = CLONES_LIST_BRANCH,
         tab = TabKey.tabTitleClones,
     ),
 
     APPLY_RESULT_AREA(
-        text = "", // TODO
+        text = """
+            See how the scripted changes went.
+            In case your script terminated in a non-zero status code,
+            the repository line will be highlighted.
+        """.trimIndent(),
         next = CLONES_TAB,
         tab = TabKey.tabTitleApply,
     ),

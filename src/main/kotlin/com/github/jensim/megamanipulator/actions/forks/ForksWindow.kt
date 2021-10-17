@@ -13,6 +13,7 @@ import com.github.jensim.megamanipulator.ui.CodeHostSelector
 import com.github.jensim.megamanipulator.ui.DialogGenerator
 import com.github.jensim.megamanipulator.ui.GeneralListCellRenderer.addCellRenderer
 import com.github.jensim.megamanipulator.ui.UiProtector
+import com.intellij.icons.AllIcons
 import com.intellij.notification.NotificationType
 import com.intellij.openapi.components.service
 import com.intellij.openapi.project.Project
@@ -30,7 +31,7 @@ class ForksWindow(project: Project) : ToolWindowTab {
     private val settingsFileOperator: SettingsFileOperator by lazy { project.service() }
     private val onboardingOperator: OnboardingOperator by lazy { project.service() }
 
-    private val deleteButton = JButton("Delete selected forks")
+    private val deleteButton = JButton("Delete selected forks", AllIcons.Toolwindows.Problems)
     private val codeHostSelect = CodeHostSelector(settingsFileOperator)
     private val staleForkList = JBList<RepoWrapper>()
     private val scroll = JBScrollPane(staleForkList)
