@@ -1,7 +1,11 @@
 package com.github.jensim.megamanipulator.actions.vcs
 
+import com.github.jensim.megamanipulator.onboarding.OnboardingButton
+import com.github.jensim.megamanipulator.onboarding.OnboardingId
+import com.github.jensim.megamanipulator.onboarding.OnboardingOperator
 import com.github.jensim.megamanipulator.settings.SerializationHolder
 import com.github.jensim.megamanipulator.settings.SettingsFileOperator
+import com.github.jensim.megamanipulator.toolswindow.TabKey
 import com.github.jensim.megamanipulator.toolswindow.ToolWindowTab
 import com.github.jensim.megamanipulator.ui.CodeHostSelector
 import com.github.jensim.megamanipulator.ui.GeneralListCellRenderer.addCellRenderer
@@ -30,10 +34,11 @@ class PullRequestWindow(project: Project) : ToolWindowTab {
     private val prRouter: PrRouter by lazy { project.service() }
     private val uiProtector: UiProtector by lazy { project.service() }
     private val settingsFileOperator: SettingsFileOperator by lazy { project.service() }
+    private val onboardingOperator: OnboardingOperator by lazy { project.service() }
 
     private val log = LoggerFactory.getLogger(javaClass)
 
-    private val search = JBTextField(50)
+    private val filterField = JBTextField(50)
     private val pullRequests: MutableList<PullRequestWrapper> = mutableListOf()
     private val codeHostSelect = CodeHostSelector(settingsFileOperator)
     private val prList = JBList<PullRequestWrapper>()
@@ -41,26 +46,31 @@ class PullRequestWindow(project: Project) : ToolWindowTab {
     private val peekArea = JBTextArea()
     private val peekScroll = JBScrollPane(peekArea)
     private val menuOpenButton = JButton("Actions")
+    private val fetchAuthorButton = JButton("Fetch author PRs")
+    private val fetchAssigneeButton = JButton("Fetch assigned PRs")
+
     private val split = JBSplitter(false, 0.5f).apply {
         firstComponent = prScroll
         secondComponent = peekScroll
         preferredSize = Dimension(4000, 1000)
     }
+
     override val content: JComponent = panel {
         row {
             cell {
                 component(codeHostSelect)
-                button("Fetch author PRs") {
-                    fetchAuthoredPRs()
-                }
-                button("Fetch assigned PRs") {
-                    fetchAssignedPRs()
-                }
+                component(fetchAuthorButton)
+                component(fetchAssigneeButton)
                 label("Filter:")
-                component(search)
+                component(filterField)
             }
             right {
-                component(menuOpenButton)
+                cell {
+                    buttonGroup {
+                        component(OnboardingButton(project, TabKey.tabTitlePRsManage, OnboardingId.PR_TAB))
+                        component(menuOpenButton)
+                    }
+                }
             }
         }
         row {
@@ -86,8 +96,8 @@ class PullRequestWindow(project: Project) : ToolWindowTab {
             override fun mouseExited(e: MouseEvent?) = Unit
         })
 
-        search.minimumSize = Dimension(200, 30)
-        search.document.addDocumentListener(object : DocumentListener {
+        filterField.minimumSize = Dimension(200, 30)
+        filterField.document.addDocumentListener(object : DocumentListener {
             override fun insertUpdate(e: DocumentEvent?) {
                 updateFilteredPrs()
             }
@@ -114,18 +124,32 @@ class PullRequestWindow(project: Project) : ToolWindowTab {
                 peekArea.text = ""
             }
         }
+        fetchAuthorButton.addActionListener {
+            fetchAuthoredPRs()
+        }
+        fetchAssigneeButton.addActionListener {
+            fetchAssignedPRs()
+        }
     }
 
     override fun refresh() {
         peekArea.text = ""
         prList.setListData(emptyArray())
         codeHostSelect.load()
+
+        onboardingOperator.registerTarget(OnboardingId.PR_TAB, content)
+        onboardingOperator.registerTarget(OnboardingId.PR_LIST_FILTER_FIELD, filterField)
+        onboardingOperator.registerTarget(OnboardingId.PR_FETCH_ASSIGNEE_PR_BUTTON, fetchAssigneeButton)
+        onboardingOperator.registerTarget(OnboardingId.PR_FETCH_AUTHOR_PR_BUTTON, fetchAuthorButton)
+        onboardingOperator.registerTarget(OnboardingId.PR_CODE_HOST_SELECT, codeHostSelect)
+        onboardingOperator.registerTarget(OnboardingId.PR_ACTIONS_BUTTON, menuOpenButton)
+        onboardingOperator.registerTarget(OnboardingId.PR_ACTIONS_RESULT_AREA, split)
     }
 
     private fun fetchAssignedPRs() {
         prList.setListData(emptyArray())
         (codeHostSelect.selectedItem)?.let { selected ->
-            search.text = ""
+            filterField.text = ""
             val prs: List<PullRequestWrapper>? = uiProtector.uiProtectedOperation("Fetching PRs") {
                 prRouter.getAllReviewPrs(selected.searchHostName, selected.codeHostName)
             }
@@ -136,7 +160,7 @@ class PullRequestWindow(project: Project) : ToolWindowTab {
     private fun fetchAuthoredPRs() {
         prList.setListData(emptyArray())
         (codeHostSelect.selectedItem)?.let { selected ->
-            search.text = ""
+            filterField.text = ""
             val prs: List<PullRequestWrapper>? = uiProtector.uiProtectedOperation("Fetching PRs") {
                 prRouter.getAllAuthorPrs(selected.searchHostName, selected.codeHostName)
             }
@@ -158,7 +182,7 @@ class PullRequestWindow(project: Project) : ToolWindowTab {
 
     private fun updateFilteredPrs(): List<PullRequestWrapper> {
         val filtered = pullRequests.filter {
-            search.text.isBlank() || FuzzySearch.tokenSetRatio(it.raw, search.text) == 100
+            filterField.text.isBlank() || FuzzySearch.tokenSetRatio(it.raw, filterField.text) == 100
         }.sortedBy { "${it.project()}/${it.baseRepo()} ${it.title()}" }
         prList.setListData(filtered.toTypedArray())
         return filtered

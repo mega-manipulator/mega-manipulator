@@ -1,6 +1,7 @@
 package com.github.jensim.megamanipulator.actions.search
 
 import com.github.jensim.megamanipulator.actions.git.clone.CloneOperator
+import com.github.jensim.megamanipulator.onboarding.OnboardingButton
 import com.github.jensim.megamanipulator.onboarding.OnboardingId
 import com.github.jensim.megamanipulator.onboarding.OnboardingOperator
 import com.github.jensim.megamanipulator.project.MegaManipulatorSettingsState
@@ -8,6 +9,7 @@ import com.github.jensim.megamanipulator.project.PrefillString
 import com.github.jensim.megamanipulator.project.PrefillStringSuggestionOperator
 import com.github.jensim.megamanipulator.settings.SettingsFileOperator
 import com.github.jensim.megamanipulator.settings.types.SearchHostSettings
+import com.github.jensim.megamanipulator.toolswindow.TabKey
 import com.github.jensim.megamanipulator.toolswindow.ToolWindowTab
 import com.github.jensim.megamanipulator.ui.DialogGenerator
 import com.github.jensim.megamanipulator.ui.GeneralListCellRenderer.addCellRenderer
@@ -52,6 +54,9 @@ class SearchWindow(
                 component(searchField)
                 component(searchButton)
                 component(cloneButton)
+            }
+            right {
+                component(OnboardingButton(project, TabKey.tabTitleSearch, OnboardingId.SEARCH_TAB))
             }
         }
         row {

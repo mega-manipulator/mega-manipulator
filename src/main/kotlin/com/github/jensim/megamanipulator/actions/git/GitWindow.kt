@@ -6,10 +6,14 @@ import com.github.jensim.megamanipulator.actions.git.commit.CommitOperator
 import com.github.jensim.megamanipulator.actions.localrepo.LocalRepoOperator
 import com.github.jensim.megamanipulator.actions.vcs.PrRouter
 import com.github.jensim.megamanipulator.files.FilesOperator
+import com.github.jensim.megamanipulator.onboarding.OnboardingButton
+import com.github.jensim.megamanipulator.onboarding.OnboardingId
+import com.github.jensim.megamanipulator.onboarding.OnboardingOperator
 import com.github.jensim.megamanipulator.project.PrefillString
 import com.github.jensim.megamanipulator.project.PrefillStringSuggestionOperator
 import com.github.jensim.megamanipulator.settings.SettingsFileOperator
 import com.github.jensim.megamanipulator.settings.types.MegaManipulatorSettings
+import com.github.jensim.megamanipulator.toolswindow.TabKey
 import com.github.jensim.megamanipulator.toolswindow.ToolWindowTab
 import com.github.jensim.megamanipulator.ui.CommitDialog
 import com.github.jensim.megamanipulator.ui.CreatePullRequestDialog
@@ -46,169 +50,50 @@ class GitWindow(private val project: Project) : ToolWindowTab {
     private val filesOperator: FilesOperator by lazy { project.service() }
     private val prRouter: PrRouter by lazy { project.service() }
     private val uiProtector: UiProtector by lazy { project.service() }
+    private val onboardingOperator: OnboardingOperator by lazy { project.service() }
 
     private val repoList = JBList<DirResult>().apply {
         minimumSize = Dimension(250, 50)
     }
-    private val scrollLeft = JBScrollPane(repoList)
+    private val scrollRepos = JBScrollPane(repoList)
     private val stepList = JBList<StepResult>().apply {
         minimumSize = Dimension(150, 50)
     }
-    private val scrollMid = JBScrollPane(stepList)
+    private val scrollSteps = JBScrollPane(stepList)
     private val outComeInfo = JBTextArea().apply {
         minimumSize = Dimension(250, 50)
     }
-    private val scrollRight = JBScrollPane(outComeInfo)
+    private val scrollOutcome = JBScrollPane(outComeInfo)
 
     private val splitRight = JBSplitter().apply {
-        firstComponent = scrollMid
-        secondComponent = scrollRight
+        firstComponent = scrollSteps
+        secondComponent = scrollOutcome
     }
     private val splitLeft = JBSplitter().apply {
-        firstComponent = scrollLeft
+        firstComponent = scrollRepos
         secondComponent = splitRight
     }
+
+    private val btnListBranch = JButton("List branches")
+    private val btnSetBranch = JButton("Set branch")
+    private val btnCommitAndPush = JButton("Commit & Push")
+    private val btnJustPush = JButton("Push")
+    private val btnCreatePRs = JButton("Create PRs")
+    private val btnCleanLocalClones = JButton("Clean away local repos")
 
     override val content: JComponent = panel {
         row {
             buttonGroup {
-                button("List branches") {
-                    refresh()
-                }
-                component(
-                    JButton("Set branch").apply {
-                        addActionListener {
-                            val prefill: String? = PrefillStringSuggestionOperator.getPrefill(PrefillString.BRANCH)
-                            DialogGenerator.askForInput(
-                                title = "Select branch name",
-                                message = "This will NOT reset the repos to origin/default-branch first!!",
-                                prefill = prefill,
-                                focusComponent = this,
-                            ) { branch: String ->
-                                val pattern = "[^a-z0-9/_ -]"
-                                if (branch.isBlank() || branch.isEmpty() || branch.contains(Regex(pattern))) {
-                                    DialogGenerator.showConfirm(
-                                        title = "Bad branch name.",
-                                        message = "$branch didnt match pattern $pattern",
-                                        yesText = "Ok",
-                                        noText = "Cancel",
-                                        focusComponent = this
-                                    ) {}
-                                } else {
-                                    localRepoOperator.switchBranch(branch)
-                                    refresh()
-                                }
-                            }
-                        }
-                    }
-                )
-                component(
-                    JButton("Commit & Push").apply {
-                        addActionListener { _: ActionEvent ->
-                            CommitDialog.openCommitDialog(this) { commitMessage: String, push: Boolean ->
-                                val result = ConcurrentHashMap<String, MutableList<Pair<String, ApplyOutput>>>()
-                                val settings: MegaManipulatorSettings = settingsFileOperator.readSettings()!!
-                                var workTitle = "Commiting"
-                                if (push) workTitle += " & pushing"
-                                val dirs = localRepoOperator.getLocalRepoFiles()
-                                uiProtector.mapConcurrentWithProgress(
-                                    title = workTitle,
-                                    data = dirs,
-                                ) { commitOperator.commitProcess(it, result, commitMessage, push, settings) }
-                                if (result.isEmpty()) {
-                                    result["no result"] =
-                                        mutableListOf("nothing" to ApplyOutput(".", std = "", err = "", exitCode = 1))
-                                }
-                                repoList.setListData(result.toList().toTypedArray())
-                            }
-                        }
-                    }
-                )
-                component(
-                    JButton("Push").apply {
-                        addActionListener {
-                            DialogGenerator.showConfirm(
-                                title = "Push",
-                                message = "Push local commits to remote?",
-                                focusComponent = this,
-                            ) {
-                                val result = ConcurrentHashMap<String, MutableList<Pair<String, ApplyOutput>>>()
-
-                                val dirs = localRepoOperator.getLocalRepoFiles()
-                                val settings: MegaManipulatorSettings = settingsFileOperator.readSettings()!!
-                                uiProtector.mapConcurrentWithProgress(
-                                    title = "Pushing",
-                                    data = dirs
-                                ) { dir ->
-                                    commitOperator.push(settings, dir, result.computeIfAbsent(dir.path) { ArrayList() })
-                                }
-
-                                if (result.isEmpty()) {
-                                    result["no result"] = mutableListOf("nothing" to ApplyOutput(".", std = "", err = "", exitCode = 1))
-                                }
-                                repoList.setListData(result.toList().toTypedArray())
-                            }
-                        }
-                    }
-                )
-                component(
-                    JButton("Create PRs").apply {
-                        addActionListener { _ ->
-                            CreatePullRequestDialog().show(
-                                focusComponent = this,
-                            ) { title, description ->
-                                if (title.isNotBlank() && description.isNotBlank()) {
-                                    val repos = localRepoOperator.getLocalRepos()
-                                    uiProtector.mapConcurrentWithProgress(
-                                        title = "Creating PRs",
-                                        extraText1 = title,
-                                        extraText2 = { it.asPathString() },
-                                        data = repos
-                                    ) {
-                                        prRouter.createPr(title, description, it)
-                                    }
-                                } else {
-                                    DialogGenerator.showConfirm(
-                                        title = "Failed",
-                                        message = "Title and description must not be blank",
-                                        focusComponent = this,
-                                        yesText = "Ok",
-                                        noText = "Cancel",
-                                    ) {}
-                                }
-                            }
-                        }
-                    }
-                )
+                component(btnListBranch)
+                component(btnSetBranch)
+                component(btnCommitAndPush)
+                component(btnJustPush)
+                component(btnCreatePRs)
             }
-            component(
-                JButton("Clean away local repos").apply {
-                    addActionListener { _ ->
-                        DialogGenerator.showConfirm(
-                            title = "Clean local repos",
-                            message = """
-                            Are you sure?!
-                            This will remove the entire clones dir from disk.
-                            No recovery available!
-                            """.trimIndent(),
-                            focusComponent = this,
-                        ) {
-                            val output: ApplyOutput = project.basePath?.let { dir ->
-                                uiProtector.uiProtectedOperation(title = "Remove all local clones") {
-                                    processOperator.runCommandAsync(File(dir), listOf("rm", "-rf", "clones")).await()
-                                }
-                            } ?: ApplyOutput(
-                                dir = ".",
-                                std = "Unable to perform clean operation",
-                                err = "Unable to perform clean operation",
-                                exitCode = 1
-                            )
-                            repoList.setListData(arrayOf(Pair("Clean", listOf("rm" to output))))
-                            filesOperator.refreshClones()
-                        }
-                    }
-                }
-            )
+            component(btnCleanLocalClones)
+            right {
+                component(OnboardingButton(project, TabKey.tabTitleClones, OnboardingId.CLONES_TAB))
+            }
         }
         row {
             component(splitLeft)
@@ -230,6 +115,124 @@ class GitWindow(private val project: Project) : ToolWindowTab {
             outComeInfo.text = ""
             stepList.selectedValuesList?.firstOrNull()?.let {
                 outComeInfo.text = it.second.getFullDescription()
+            }
+        }
+
+        btnListBranch.addActionListener {
+            refresh()
+        }
+        btnSetBranch.addActionListener {
+            val prefill: String? = PrefillStringSuggestionOperator.getPrefill(PrefillString.BRANCH)
+            DialogGenerator.askForInput(
+                title = "Select branch name",
+                message = "This will NOT reset the repos to origin/default-branch first!!",
+                prefill = prefill,
+                focusComponent = btnSetBranch,
+            ) { branch: String ->
+                val pattern = "[^a-z0-9/_ -]"
+                if (branch.isBlank() || branch.isEmpty() || branch.contains(Regex(pattern))) {
+                    DialogGenerator.showConfirm(
+                        title = "Bad branch name.",
+                        message = "$branch didnt match pattern $pattern",
+                        yesText = "Ok",
+                        noText = "Cancel",
+                        focusComponent = btnSetBranch
+                    ) {}
+                } else {
+                    localRepoOperator.switchBranch(branch)
+                    refresh()
+                }
+            }
+        }
+        btnCommitAndPush.addActionListener { _: ActionEvent ->
+            CommitDialog.openCommitDialog(btnCommitAndPush) { commitMessage: String, push: Boolean ->
+                val result = ConcurrentHashMap<String, MutableList<Pair<String, ApplyOutput>>>()
+                val settings: MegaManipulatorSettings = settingsFileOperator.readSettings()!!
+                var workTitle = "Commiting"
+                if (push) workTitle += " & pushing"
+                val dirs = localRepoOperator.getLocalRepoFiles()
+                uiProtector.mapConcurrentWithProgress(
+                    title = workTitle,
+                    data = dirs,
+                ) { commitOperator.commitProcess(it, result, commitMessage, push, settings) }
+                if (result.isEmpty()) {
+                    result["no result"] =
+                        mutableListOf("nothing" to ApplyOutput(".", std = "", err = "", exitCode = 1))
+                }
+                repoList.setListData(result.toList().toTypedArray())
+            }
+        }
+        btnJustPush.addActionListener {
+            DialogGenerator.showConfirm(
+                title = "Push",
+                message = "Push local commits to remote?",
+                focusComponent = btnJustPush,
+            ) {
+                val result = ConcurrentHashMap<String, MutableList<Pair<String, ApplyOutput>>>()
+
+                val dirs = localRepoOperator.getLocalRepoFiles()
+                val settings: MegaManipulatorSettings = settingsFileOperator.readSettings()!!
+                uiProtector.mapConcurrentWithProgress(
+                    title = "Pushing",
+                    data = dirs
+                ) { dir ->
+                    commitOperator.push(settings, dir, result.computeIfAbsent(dir.path) { ArrayList() })
+                }
+
+                if (result.isEmpty()) {
+                    result["no result"] =
+                        mutableListOf("nothing" to ApplyOutput(".", std = "", err = "", exitCode = 1))
+                }
+                repoList.setListData(result.toList().toTypedArray())
+            }
+        }
+        btnCreatePRs.addActionListener { _ ->
+            CreatePullRequestDialog().show(
+                focusComponent = btnCreatePRs,
+            ) { title, description ->
+                if (title.isNotBlank() && description.isNotBlank()) {
+                    val repos = localRepoOperator.getLocalRepos()
+                    uiProtector.mapConcurrentWithProgress(
+                        title = "Creating PRs",
+                        extraText1 = title,
+                        extraText2 = { it.asPathString() },
+                        data = repos
+                    ) {
+                        prRouter.createPr(title, description, it)
+                    }
+                } else {
+                    DialogGenerator.showConfirm(
+                        title = "Failed",
+                        message = "Title and description must not be blank",
+                        focusComponent = btnCreatePRs,
+                        yesText = "Ok",
+                        noText = "Cancel",
+                    ) {}
+                }
+            }
+        }
+        btnCleanLocalClones.addActionListener { _ ->
+            DialogGenerator.showConfirm(
+                title = "Clean local repos",
+                message = """
+                            Are you sure?!
+                            This will remove the entire clones dir from disk.
+                            No recovery available!
+                """.trimIndent(),
+                focusComponent = btnCleanLocalClones,
+            ) {
+                val output: ApplyOutput = project.basePath?.let { dir ->
+                    uiProtector.uiProtectedOperation(title = "Remove all local clones") {
+                        processOperator.runCommandAsync(File(dir), listOf("rm", "-rf", "clones")).await()
+                    }
+                } ?: ApplyOutput(
+                    dir = ".",
+                    std = "Unable to perform clean operation",
+                    err = "Unable to perform clean operation",
+                    exitCode = 1
+                )
+                repoList.setListData(arrayOf(Pair("Clean", listOf("rm" to output))))
+                filesOperator.refreshClones()
             }
         }
     }
@@ -257,5 +260,17 @@ class GitWindow(private val project: Project) : ToolWindowTab {
         }
         content.validate()
         content.repaint()
+
+        onboardingOperator.registerTarget(OnboardingId.CLONES_STEP_OUTPUT, scrollOutcome)
+        onboardingOperator.registerTarget(OnboardingId.CLONES_LIST_STEPS, scrollSteps)
+        onboardingOperator.registerTarget(OnboardingId.CLONES_LIST_REPOS, scrollRepos)
+        onboardingOperator.registerTarget(OnboardingId.CLONES_CLEAN_REPOS, btnCleanLocalClones)
+        onboardingOperator.registerTarget(OnboardingId.CLONES_PR_BUTTON, btnCreatePRs)
+        onboardingOperator.registerTarget(OnboardingId.CLONES_PUSH_BUTTON, btnJustPush)
+        onboardingOperator.registerTarget(OnboardingId.CLONES_COMMIT_PUSH_BUTTON, btnCommitAndPush)
+        onboardingOperator.registerTarget(OnboardingId.CLONES_LIST_BRANCH, btnListBranch)
+        onboardingOperator.registerTarget(OnboardingId.CLONES_TAB, content)
+
+        onboardingOperator.display(OnboardingId.CLONES_TAB)
     }
 }

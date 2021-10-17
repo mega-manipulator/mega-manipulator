@@ -3,7 +3,11 @@ package com.github.jensim.megamanipulator.actions.forks
 import com.github.jensim.megamanipulator.actions.NotificationsOperator
 import com.github.jensim.megamanipulator.actions.vcs.PrRouter
 import com.github.jensim.megamanipulator.actions.vcs.RepoWrapper
+import com.github.jensim.megamanipulator.onboarding.OnboardingButton
+import com.github.jensim.megamanipulator.onboarding.OnboardingId
+import com.github.jensim.megamanipulator.onboarding.OnboardingOperator
 import com.github.jensim.megamanipulator.settings.SettingsFileOperator
+import com.github.jensim.megamanipulator.toolswindow.TabKey
 import com.github.jensim.megamanipulator.toolswindow.ToolWindowTab
 import com.github.jensim.megamanipulator.ui.CodeHostSelector
 import com.github.jensim.megamanipulator.ui.DialogGenerator
@@ -24,11 +28,29 @@ class ForksWindow(project: Project) : ToolWindowTab {
     private val notificationsOperator: NotificationsOperator by lazy { project.service() }
     private val uiProtector: UiProtector by lazy { project.service() }
     private val settingsFileOperator: SettingsFileOperator by lazy { project.service() }
+    private val onboardingOperator: OnboardingOperator by lazy { project.service() }
 
     private val deleteButton = JButton("Delete selected forks")
     private val codeHostSelect = CodeHostSelector(settingsFileOperator)
     private val staleForkList = JBList<RepoWrapper>()
     private val scroll = JBScrollPane(staleForkList)
+    private val loadStaleForksButton = JButton("Load forks without OPEN PRs")
+
+    override val content: JComponent = panel {
+        row {
+            cell {
+                component(codeHostSelect)
+                component(loadStaleForksButton)
+                component(deleteButton)
+            }
+            right {
+                component(OnboardingButton(project, TabKey.tabTitleForks, OnboardingId.FORK_TAB))
+            }
+        }
+        row {
+            component(scroll)
+        }
+    }
 
     init {
         staleForkList.setListData(emptyArray())
@@ -54,39 +76,34 @@ class ForksWindow(project: Project) : ToolWindowTab {
                 }
             }
         }
+        loadStaleForksButton.addActionListener {
+            staleForkList.setListData(emptyArray())
+            codeHostSelect.selectedItem?.let { item ->
+                uiProtector.uiProtectedOperation("Load forks without OPEN PRs") {
+                    prRouter.getPrivateForkReposWithoutPRs(item.searchHostName, item.codeHostName)
+                }?.let { result: List<RepoWrapper> ->
+                    staleForkList.setListData(result.toTypedArray())
+                    deleteButton.isEnabled = result.isNotEmpty()
+                    if (result.isEmpty()) {
+                        notificationsOperator.show(
+                            title = "No result",
+                            body = "Maybe you have zero forks without PRs?",
+                            type = NotificationType.INFORMATION
+                        )
+                    }
+                }
+            }
+        }
     }
 
     override fun refresh() {
         codeHostSelect.load()
-    }
 
-    override val content: JComponent = panel {
-        row {
-            cell {
-                component(codeHostSelect)
-                button("Load forks without OPEN PRs") {
-                    staleForkList.setListData(emptyArray())
-                    codeHostSelect.selectedItem?.let { item ->
-                        uiProtector.uiProtectedOperation("Load forks without OPEN PRs") {
-                            prRouter.getPrivateForkReposWithoutPRs(item.searchHostName, item.codeHostName)
-                        }?.let { result: List<RepoWrapper> ->
-                            staleForkList.setListData(result.toTypedArray())
-                            deleteButton.isEnabled = result.isNotEmpty()
-                            if (result.isEmpty()) {
-                                notificationsOperator.show(
-                                    title = "No result",
-                                    body = "Maybe you have zero forks without PRs?",
-                                    type = NotificationType.INFORMATION
-                                )
-                            }
-                        }
-                    }
-                }
-                component(deleteButton)
-            }
-        }
-        row {
-            component(scroll)
-        }
+        onboardingOperator.registerTarget(OnboardingId.FORK_LIST_AREA, scroll)
+        onboardingOperator.registerTarget(OnboardingId.FORK_DELETE_STALE_FORK_BUTTON, deleteButton)
+        onboardingOperator.registerTarget(OnboardingId.FORK_LOAD_STALE_FORK_BUTTON, loadStaleForksButton)
+        onboardingOperator.registerTarget(OnboardingId.FORK_TAB, content)
+
+        onboardingOperator.display(OnboardingId.FORK_TAB)
     }
 }

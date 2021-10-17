@@ -1,9 +1,10 @@
 package com.github.jensim.megamanipulator.onboarding
 
-import com.github.jensim.megamanipulator.project.MegaManipulatorSettingsState.Companion.seenOnBoarding
-import com.github.jensim.megamanipulator.project.MegaManipulatorSettingsState.Companion.setOnBoardingSeen
+import com.github.jensim.megamanipulator.project.MegaManipulatorSettingsState
 import com.github.jensim.megamanipulator.project.lazyService
+import com.github.jensim.megamanipulator.toolswindow.TabKey
 import com.github.jensim.megamanipulator.toolswindow.TabSelectorService
+import com.intellij.openapi.components.service
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.ui.popup.Balloon
 import com.intellij.openapi.ui.popup.JBPopupFactory
@@ -20,11 +21,13 @@ import javax.swing.JLayeredPane
 class OnboardingOperator @NonInjectable constructor(
     private val project: Project,
     tabSelectorService: TabSelectorService?,
+    state: MegaManipulatorSettingsState?,
 ) {
 
-    constructor(project: Project) : this(project, null)
+    constructor(project: Project) : this(project, null, null)
 
     private val tabSelectorService: TabSelectorService by lazyService(project, tabSelectorService)
+    private val state: MegaManipulatorSettingsState by lazy { state ?: service() }
 
     private val reg: MutableMap<OnboardingId, JComponent> = EnumMap(OnboardingId::class.java)
 
@@ -32,8 +35,14 @@ class OnboardingOperator @NonInjectable constructor(
         reg[id] = contentTarget
     }
 
+    fun resetTab(tabKey: TabKey) {
+        OnboardingId.values()
+            .filter { it.tab == tabKey }
+            .forEach { state.resetOnBoarding(it) }
+    }
+
     fun display(id: OnboardingId) {
-        if (seenOnBoarding(id)) {
+        if (state.seenOnBoarding(id)) {
             id.next?.let { next ->
                 display(next)
             }
@@ -48,12 +57,16 @@ class OnboardingOperator @NonInjectable constructor(
         }
 
         val closeButton = JButton("Ok")
+        val stopButton = JButton("Stop")
+
+        val text = if (id.autoMultiLineConvertion) id.text.convertMultiLineToHtml() else id.text
         val panel = panel {
             row {
-                component(JBLabel(id.text.convertMultiLineToHtml()))
+                component(JBLabel(text))
             }
             row {
                 component(closeButton)
+                component(stopButton)
             }
         }
         val balloon = popupFactory.createDialogBalloonBuilder(panel, id.title)
@@ -65,10 +78,13 @@ class OnboardingOperator @NonInjectable constructor(
             pane?.let {
                 it.rootPane.defaultButton = null
             }
-            setOnBoardingSeen(id)
+            state.setOnBoardingSeen(id)
             id.next?.let { next ->
                 display(next)
             }
+        }
+        stopButton.addActionListener {
+            balloon.hide()
         }
         balloon.setAnimationEnabled(true)
         id.tab?.let { tab ->

@@ -27,10 +27,17 @@ class MegaManipulatorSettingsState : PersistentStateComponent<MegaManipulatorSet
             e.printStackTrace()
             null
         }
-        fun seenOnBoarding(id: OnboardingId): Boolean = getInstance()?.state?.seenOnboarding?.get(id) ?: false
-        fun setOnBoardingSeen(id: OnboardingId) { getInstance()?.state?.seenOnboarding?.set(id, true) }
-        fun resetOnBoarding() = getInstance()?.state?.seenOnboarding?.clear()
+        fun seenOnBoarding(id: OnboardingId): Boolean = getInstance()?.seenOnBoarding(id) ?: false
+        fun setOnBoardingSeen(id: OnboardingId) { getInstance()?.setOnBoardingSeen(id) }
+        fun resetOnBoarding() = getInstance()?.resetOnBoarding()
     }
+
+    fun seenOnBoarding(id: OnboardingId): Boolean = state.seenOnboarding[id] ?: false
+    fun setOnBoardingSeen(id: OnboardingId) {
+        state.seenOnboarding[id] = true
+    }
+    fun resetOnBoarding() = state.seenOnboarding.clear()
+    fun resetOnBoarding(id: OnboardingId) = state.seenOnboarding.remove(id)
 
     override fun getState(): State {
         return settingsState

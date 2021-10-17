@@ -1,7 +1,9 @@
 package com.github.jensim.megamanipulator.actions.apply
 
+import com.github.jensim.megamanipulator.onboarding.OnboardingButton
 import com.github.jensim.megamanipulator.onboarding.OnboardingId
 import com.github.jensim.megamanipulator.onboarding.OnboardingOperator
+import com.github.jensim.megamanipulator.toolswindow.TabKey
 import com.github.jensim.megamanipulator.toolswindow.ToolWindowTab
 import com.github.jensim.megamanipulator.ui.GeneralListCellRenderer.addCellRenderer
 import com.intellij.openapi.components.service
@@ -41,6 +43,9 @@ class ApplyWindow(private val project: Project) : ToolWindowTab {
             cell {
                 component(applyButton)
                 component(openScriptButton)
+            }
+            right {
+                component(OnboardingButton(project, TabKey.tabTitleApply, OnboardingId.APPLY_TAB))
             }
         }
         row {
@@ -103,6 +108,7 @@ class ApplyWindow(private val project: Project) : ToolWindowTab {
         onboardingOperator.registerTarget(OnboardingId.APPLY_TAB, content)
         onboardingOperator.registerTarget(OnboardingId.APPLY_BUTTON, applyButton)
         onboardingOperator.registerTarget(OnboardingId.APPLY_SCRIPT_OPEN_BUTTON, openScriptButton)
+        onboardingOperator.registerTarget(OnboardingId.APPLY_RESULT_AREA, split)
         onboardingOperator.display(OnboardingId.APPLY_TAB)
     }
 }
