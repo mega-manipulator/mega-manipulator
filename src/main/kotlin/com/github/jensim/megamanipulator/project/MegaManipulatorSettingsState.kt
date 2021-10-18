@@ -1,14 +1,14 @@
 package com.github.jensim.megamanipulator.project
 
 import com.github.jensim.megamanipulator.onboarding.OnboardingId
-import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.components.PersistentStateComponent
+import com.intellij.openapi.components.RoamingType
 import com.intellij.openapi.components.State
 import com.intellij.openapi.components.Storage
 
 @State(
     name = "com.github.jensim.megamanipulator.project.MegaManipulatorSettingsState",
-    storages = [Storage("MegaManipulator.xml")]
+    storages = [Storage("MegaManipulator.xml", roamingType = RoamingType.DISABLED)]
 )
 class MegaManipulatorSettingsState : PersistentStateComponent<MegaManipulatorSettingsState.State> {
 
@@ -19,18 +19,6 @@ class MegaManipulatorSettingsState : PersistentStateComponent<MegaManipulatorSet
         var lastSearch: String = "repo:github.com/mega-manipulator/mega-manipulator",
         val prefillString: MutableMap<PrefillString, String> = mutableMapOf(),
     )
-
-    companion object {
-        fun getInstance(): MegaManipulatorSettingsState? = try {
-            ApplicationManager.getApplication().getService(MegaManipulatorSettingsState::class.java)
-        } catch (e: Exception) {
-            e.printStackTrace()
-            null
-        }
-        fun seenOnBoarding(id: OnboardingId): Boolean = getInstance()?.seenOnBoarding(id) ?: false
-        fun setOnBoardingSeen(id: OnboardingId) { getInstance()?.setOnBoardingSeen(id) }
-        fun resetOnBoarding() = getInstance()?.resetOnBoarding()
-    }
 
     fun seenOnBoarding(id: OnboardingId): Boolean = state.seenOnboarding[id] ?: false
     fun setOnBoardingSeen(id: OnboardingId) {

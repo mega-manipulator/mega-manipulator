@@ -52,6 +52,7 @@ class GitWindow(private val project: Project) : ToolWindowTab {
     private val prRouter: PrRouter by lazy { project.service() }
     private val uiProtector: UiProtector by lazy { project.service() }
     private val onboardingOperator: OnboardingOperator by lazy { project.service() }
+    private val prefillStringSuggestionOperator: PrefillStringSuggestionOperator by lazy { project.service() }
 
     private val repoList = JBList<DirResult>().apply {
         minimumSize = Dimension(250, 50)
@@ -123,7 +124,7 @@ class GitWindow(private val project: Project) : ToolWindowTab {
             refresh()
         }
         btnSetBranch.addActionListener {
-            val prefill: String? = PrefillStringSuggestionOperator.getPrefill(PrefillString.BRANCH)
+            val prefill: String? = prefillStringSuggestionOperator.getPrefill(PrefillString.BRANCH)
             DialogGenerator.askForInput(
                 title = "Select branch name",
                 message = "This will NOT reset the repos to origin/default-branch first!!",
@@ -141,12 +142,16 @@ class GitWindow(private val project: Project) : ToolWindowTab {
                     ) {}
                 } else {
                     localRepoOperator.switchBranch(branch)
+                    prefillStringSuggestionOperator.setPrefill(PrefillString.BRANCH, branch)
                     refresh()
                 }
             }
         }
         btnCommitAndPush.addActionListener { _: ActionEvent ->
-            CommitDialog.openCommitDialog(btnCommitAndPush) { commitMessage: String, push: Boolean ->
+            CommitDialog.openCommitDialog(
+                relativeComponent = btnCommitAndPush,
+                prefillOperator = prefillStringSuggestionOperator
+            ) { commitMessage: String, push: Boolean ->
                 val result = ConcurrentHashMap<String, MutableList<Pair<String, ApplyOutput>>>()
                 val settings: MegaManipulatorSettings = settingsFileOperator.readSettings()!!
                 var workTitle = "Commiting"
@@ -188,7 +193,7 @@ class GitWindow(private val project: Project) : ToolWindowTab {
             }
         }
         btnCreatePRs.addActionListener { _ ->
-            CreatePullRequestDialog().show(
+            CreatePullRequestDialog(prefillOperator = prefillStringSuggestionOperator).show(
                 focusComponent = btnCreatePRs,
             ) { title, description ->
                 if (title.isNotBlank() && description.isNotBlank()) {

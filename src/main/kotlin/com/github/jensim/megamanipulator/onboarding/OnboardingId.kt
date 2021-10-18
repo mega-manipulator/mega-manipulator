@@ -292,23 +292,35 @@ enum class OnboardingId(
 
     WELCOME(
         title = "Thanks for downloading mega-manipulator!",
+        autoMultiLineConvertion = false,
         text = """
-            This is a powerful tool.
-            And I take zero responsibility for what you do with it.
+            <html>
+            <a href="https://mega-manipulator.github.io/docs/intro"><h1>Mega Manipulator</h1></a>
+            <p>
+            This is a powerful tool.<br>
+            And I take zero responsibility for what you do with it.<br>
             Be it by mistake or intentional.
-            ----
-            With that out of the way. ;-)
+            </p>
+            <hr>
+            <p>
+            With that out of the way. ;-)<br>
             I hope you'll come to love mm and all work it removes from your "desk".
+            </p>
+            </html>
         """.trimIndent(),
         next = SETTINGS_TAB,
     ),
 
     MM_PROJECT_INSTRUCTION(
         title = "Thanks for downloading mega-manipulator!",
+        autoMultiLineConvertion = false,
         text = """
-            To use the mega-manipulator plugin, 
-            you must create a intelliJ project of type 
+            <html>
+            <a href="https://mega-manipulator.github.io/docs/intro"><h1>Mega Manipulator</h1></a>
+            To use the mega-manipulator plugin,<br> 
+            you must create a intelliJ project of type<br> 
             "Mega Manipulator"
+            </html>
         """.trimIndent()
     )
 }

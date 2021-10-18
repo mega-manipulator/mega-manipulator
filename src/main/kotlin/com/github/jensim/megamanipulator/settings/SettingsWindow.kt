@@ -5,6 +5,8 @@ import com.github.jensim.megamanipulator.actions.vcs.PrRouter
 import com.github.jensim.megamanipulator.files.FilesOperator
 import com.github.jensim.megamanipulator.onboarding.OnboardingId
 import com.github.jensim.megamanipulator.onboarding.OnboardingOperator
+import com.github.jensim.megamanipulator.project.ApplicationLevelPropertiesOperator
+import com.github.jensim.megamanipulator.project.ApplicationLevelPropertiesOperator.ApplicationLevelFlag.GLOBAL_ONBOARDING
 import com.github.jensim.megamanipulator.project.MegaManipulatorSettingsState
 import com.github.jensim.megamanipulator.project.ProjectOperator
 import com.github.jensim.megamanipulator.settings.passwords.PasswordsOperator
@@ -20,12 +22,12 @@ import com.intellij.ui.components.JBLabel
 import com.intellij.ui.components.JBList
 import com.intellij.ui.layout.LCFlags
 import com.intellij.ui.layout.panel
-import kotlinx.coroutines.Deferred
 import java.awt.Color
 import java.awt.Component
 import javax.swing.JButton
 import javax.swing.JComponent
 import javax.swing.ListSelectionModel
+import kotlinx.coroutines.Deferred
 
 @SuppressWarnings("LongParameterList")
 class SettingsWindow(project: Project) : ToolWindowTab {
@@ -38,6 +40,7 @@ class SettingsWindow(project: Project) : ToolWindowTab {
     private val prRouter: PrRouter by lazy { project.service() }
     private val searchOperator: SearchOperator by lazy { project.service() }
     private val onboardingOperator: OnboardingOperator by lazy { project.service() }
+    private val megaManipulatorSettingsState: MegaManipulatorSettingsState by lazy { project.service() }
 
     private enum class HostType {
         SEARCH,
@@ -51,7 +54,7 @@ class SettingsWindow(project: Project) : ToolWindowTab {
         val username: String,
         val hostNaming: String,
 
-    ) {
+        ) {
         override fun toString(): String = "$hostType: $hostNaming"
     }
 
@@ -141,7 +144,8 @@ class SettingsWindow(project: Project) : ToolWindowTab {
             }
         }
         resetOnboardingButton.addActionListener {
-            MegaManipulatorSettingsState.resetOnBoarding()
+            megaManipulatorSettingsState.resetOnBoarding()
+            ApplicationLevelPropertiesOperator.unset(GLOBAL_ONBOARDING)
             refresh()
         }
         toggleClonesButton.addActionListener {
@@ -180,27 +184,27 @@ class SettingsWindow(project: Project) : ToolWindowTab {
         if (settings != null) {
             val arrayOf: Array<ConfigHostHolder> =
                 (
-                    settings.searchHostSettings.map {
-                        ConfigHostHolder(
-                            hostType = HostType.SEARCH,
-                            authMethod = it.value.authMethod,
-                            baseUri = it.value.baseUrl,
-                            username = it.value.username,
-                            hostNaming = it.key
-                        )
-                    } + settings.searchHostSettings.values.flatMap {
-                        it.codeHostSettings.map {
-
+                        settings.searchHostSettings.map {
                             ConfigHostHolder(
-                                hostType = HostType.CODE,
+                                hostType = HostType.SEARCH,
                                 authMethod = it.value.authMethod,
                                 baseUri = it.value.baseUrl,
-                                username = it.value.username ?: "token",
+                                username = it.value.username,
                                 hostNaming = it.key
                             )
+                        } + settings.searchHostSettings.values.flatMap {
+                            it.codeHostSettings.map {
+
+                                ConfigHostHolder(
+                                    hostType = HostType.CODE,
+                                    authMethod = it.value.authMethod,
+                                    baseUri = it.value.baseUrl,
+                                    username = it.value.username ?: "token",
+                                    hostNaming = it.key
+                                )
+                            }
                         }
-                    }
-                    ).toTypedArray()
+                        ).toTypedArray()
             hostConfigSelect.setListData(arrayOf)
         }
         onboardingOperator.display(OnboardingId.WELCOME)

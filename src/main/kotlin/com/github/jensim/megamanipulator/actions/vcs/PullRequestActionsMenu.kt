@@ -12,7 +12,6 @@ import com.intellij.notification.NotificationType
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.ui.popup.Balloon
 import com.intellij.ui.components.JBTextArea
-import org.slf4j.LoggerFactory
 import java.awt.Desktop
 import javax.swing.JComponent
 import javax.swing.JMenuItem
@@ -22,6 +21,7 @@ import javax.swing.JOptionPane.OK_CANCEL_OPTION
 import javax.swing.JOptionPane.OK_OPTION
 import javax.swing.JOptionPane.QUESTION_MESSAGE
 import javax.swing.JPopupMenu
+import org.slf4j.LoggerFactory
 
 @SuppressWarnings("LongParameterList", "ConstructorParameterNaming")
 class PullRequestActionsMenu(
@@ -30,6 +30,7 @@ class PullRequestActionsMenu(
     _notificationsOperator: NotificationsOperator?,
     _cloneOperator: CloneOperator?,
     _uiProtector: UiProtector?,
+    _prefillOperator: PrefillStringSuggestionOperator?,
 
     private val focusComponent: JComponent,
     private val prProvider: () -> List<PullRequestWrapper>,
@@ -45,6 +46,7 @@ class PullRequestActionsMenu(
         _notificationsOperator = null,
         _cloneOperator = null,
         _uiProtector = null,
+        _prefillOperator = null,
         focusComponent = focusComponent,
         prProvider = prProvider,
     )
@@ -53,6 +55,7 @@ class PullRequestActionsMenu(
     private val notificationsOperator: NotificationsOperator by lazyService(project, _notificationsOperator)
     private val cloneOperator: CloneOperator by lazyService(project, _cloneOperator)
     private val uiProtector: UiProtector by lazyService(project, _uiProtector)
+    private val prefillOperator: PrefillStringSuggestionOperator by lazyService(project, _prefillOperator)
 
     private val log = LoggerFactory.getLogger(javaClass)
 
@@ -109,7 +112,10 @@ class PullRequestActionsMenu(
                         NotificationType.WARNING
                     )
                 } else {
-                    EditPullRequestDialog(prs).show(focusComponent) { title, description ->
+                    EditPullRequestDialog(
+                        pullRequests = prs,
+                        prefillOperator = prefillOperator
+                    ).show(focusComponent) { title, description ->
 
                         prFeedback(
                             "rewordPRs",
@@ -190,7 +196,7 @@ class PullRequestActionsMenu(
             addActionListener {
                 val prs = prProvider()
                 if (prs.isNotEmpty()) {
-                    val prefill: String? = PrefillStringSuggestionOperator.getPrefill(PrefillString.COMMENT)
+                    val prefill: String? = prefillOperator.getPrefill(PrefillString.COMMENT)
                     DialogGenerator.askForInput(
                         title = "Comment selected pull requests",
                         message = "Comment",
@@ -205,7 +211,7 @@ class PullRequestActionsMenu(
                         ) {
                             prRouter.commentPR(comment, it)
                         }
-                        PrefillStringSuggestionOperator.setPrefill(PrefillString.COMMENT, comment)
+                        prefillOperator.setPrefill(PrefillString.COMMENT, comment)
                     }
                 }
             }

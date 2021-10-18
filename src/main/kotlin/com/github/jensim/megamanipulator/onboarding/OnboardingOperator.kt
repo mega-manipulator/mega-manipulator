@@ -4,7 +4,6 @@ import com.github.jensim.megamanipulator.project.MegaManipulatorSettingsState
 import com.github.jensim.megamanipulator.project.lazyService
 import com.github.jensim.megamanipulator.toolswindow.TabKey
 import com.github.jensim.megamanipulator.toolswindow.TabSelectorService
-import com.intellij.openapi.components.service
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.ui.popup.Balloon
 import com.intellij.openapi.ui.popup.JBPopupFactory
@@ -27,7 +26,7 @@ class OnboardingOperator @NonInjectable constructor(
     constructor(project: Project) : this(project, null, null)
 
     private val tabSelectorService: TabSelectorService by lazyService(project, tabSelectorService)
-    private val state: MegaManipulatorSettingsState by lazy { state ?: service() }
+    private val state: MegaManipulatorSettingsState by lazyService(project, state)
 
     private val reg: MutableMap<OnboardingId, JComponent> = EnumMap(OnboardingId::class.java)
 
@@ -41,7 +40,7 @@ class OnboardingOperator @NonInjectable constructor(
             .forEach { state.resetOnBoarding(it) }
     }
 
-    fun display(id: OnboardingId) {
+    fun display(id: OnboardingId, extraOkAction: () -> Unit = {}) {
         if (state.seenOnBoarding(id)) {
             id.next?.let { next ->
                 display(next)
@@ -78,6 +77,7 @@ class OnboardingOperator @NonInjectable constructor(
             pane?.let {
                 it.rootPane.defaultButton = null
             }
+            extraOkAction()
             state.setOnBoardingSeen(id)
             id.next?.let { next ->
                 display(next)

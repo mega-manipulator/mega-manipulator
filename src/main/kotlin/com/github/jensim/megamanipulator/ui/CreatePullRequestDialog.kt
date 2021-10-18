@@ -15,6 +15,7 @@ import javax.swing.JComponent
 open class CreatePullRequestDialog(
     private val yesText: String = "Create PRs",
     private val title: String = "Create pull request",
+    private val prefillOperator: PrefillStringSuggestionOperator,
 ) {
     private val titleField = JBTextField(30)
     protected val titlePane = JBScrollPane(titleField)
@@ -51,17 +52,17 @@ open class CreatePullRequestDialog(
     ) {
         try {
             okButton.text = yesText
-            PrefillStringSuggestionOperator.getPrefill(PrefillString.PR_TITLE)?.let { title ->
+            prefillOperator.getPrefill(PrefillString.PR_TITLE)?.let { title ->
                 titleField.text = title
             }
-            PrefillStringSuggestionOperator.getPrefill(PrefillString.PR_BODY)?.let { body ->
+            prefillOperator.getPrefill(PrefillString.PR_BODY)?.let { body ->
                 descriptionField.text = body
             }
             val popupFactory: JBPopupFactory = JBPopupFactory.getInstance()
             val popup = popupFactory.createDialogBalloonBuilder(panel, title).createBalloon()
             okButton.addActionListener {
-                PrefillStringSuggestionOperator.setPrefill(PrefillString.PR_TITLE, titleField.text)
-                PrefillStringSuggestionOperator.setPrefill(PrefillString.PR_BODY, descriptionField.text)
+                prefillOperator.setPrefill(PrefillString.PR_TITLE, titleField.text)
+                prefillOperator.setPrefill(PrefillString.PR_BODY, descriptionField.text)
                 popup.hide()
                 onYes(titleField.text, descriptionField.text)
             }

@@ -7,6 +7,7 @@ import com.github.jensim.megamanipulator.onboarding.OnboardingOperator
 import com.github.jensim.megamanipulator.project.MegaManipulatorSettingsState
 import com.github.jensim.megamanipulator.project.PrefillString
 import com.github.jensim.megamanipulator.project.PrefillStringSuggestionOperator
+import com.github.jensim.megamanipulator.project.lazyService
 import com.github.jensim.megamanipulator.settings.SettingsFileOperator
 import com.github.jensim.megamanipulator.settings.types.SearchHostSettings
 import com.github.jensim.megamanipulator.toolswindow.TabKey
@@ -37,6 +38,7 @@ class SearchWindow(
     private val cloneOperator: CloneOperator by lazy { project.service() }
     private val uiProtector: UiProtector by lazy { project.service() }
     private val onboardingOperator: OnboardingOperator by lazy { project.service() }
+    private val prefillStringSuggestionOperator:PrefillStringSuggestionOperator by lazy { project.service() }
 
     private val searchHostSelect = ComboBox<Pair<String, SearchHostSettings>>()
     private val searchHostLink = JButton("SearchDocs", AllIcons.Toolwindows.Documentation)
@@ -96,7 +98,7 @@ class SearchWindow(
         cloneButton.addActionListener {
             val selected = selector.selectedValuesList.toSet()
             if (selected.isNotEmpty()) {
-                val prefill: String? = PrefillStringSuggestionOperator.getPrefill(PrefillString.BRANCH)
+                val prefill: String? = prefillStringSuggestionOperator.getPrefill(PrefillString.BRANCH)
                 DialogGenerator.askForInput(
                     title = "Branch",
                     message = "branch name",
@@ -105,7 +107,7 @@ class SearchWindow(
                 ) { branch ->
                     cloneOperator.clone(selected, branch)
                     selector.clearSelection()
-                    PrefillStringSuggestionOperator.setPrefill(PrefillString.BRANCH, branch)
+                    prefillStringSuggestionOperator.setPrefill(PrefillString.BRANCH, branch)
                 }
             }
         }
@@ -125,9 +127,7 @@ class SearchWindow(
         }.orEmpty().toTypedArray()
         selector.setListData(result)
         searchButton.isEnabled = true
-        MegaManipulatorSettingsState.getInstance()?.let {
-            it.state.lastSearch = searchText
-        }
+        prefillStringSuggestionOperator.setPrefill(PrefillString.SEARCH, searchText)
     }
 
     override fun refresh() {
@@ -145,8 +145,8 @@ class SearchWindow(
 
         searchButton.isEnabled = searchHostSelect.itemCount > 0
         if (searchField.text.isNullOrBlank()) {
-            MegaManipulatorSettingsState.getInstance()?.let {
-                searchField.text = it.state.lastSearch
+            prefillStringSuggestionOperator.getPrefill(PrefillString.SEARCH)?.let {
+                searchField.text = it
             }
         }
     }

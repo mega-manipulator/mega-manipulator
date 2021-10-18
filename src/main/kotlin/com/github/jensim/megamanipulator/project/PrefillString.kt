@@ -7,4 +7,5 @@ enum class PrefillString(val fallback: PrefillString? = null, val default: Strin
     COMMIT_MESSAGE(default = "Bulk changes"),
     PR_TITLE(fallback = COMMIT_MESSAGE, default = "Bulk changes"),
     PR_BODY(fallback = COMMIT_MESSAGE, default = "Bulk changes"),
+    SEARCH,
 }

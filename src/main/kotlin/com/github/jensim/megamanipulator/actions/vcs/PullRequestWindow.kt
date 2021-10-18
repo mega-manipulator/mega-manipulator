@@ -79,6 +79,9 @@ class PullRequestWindow(project: Project) : ToolWindowTab {
     }
 
     init {
+        peekArea.text = ""
+        prList.setListData(emptyArray())
+
         menuOpenButton.isEnabled = false
         menuOpenButton.addMouseListener(object : MouseListener {
             override fun mouseClicked(e: MouseEvent) {
@@ -133,8 +136,6 @@ class PullRequestWindow(project: Project) : ToolWindowTab {
     }
 
     override fun refresh() {
-        peekArea.text = ""
-        prList.setListData(emptyArray())
         codeHostSelect.load()
 
         onboardingOperator.registerTarget(OnboardingId.PR_TAB, content)

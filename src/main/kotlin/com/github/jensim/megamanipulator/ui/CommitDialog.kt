@@ -14,10 +14,11 @@ object CommitDialog {
 
     fun openCommitDialog(
         relativeComponent: JComponent,
+        prefillOperator:PrefillStringSuggestionOperator,
         onOk: (commitMessage: String, push: Boolean) -> Unit
     ) {
         val commitMessage = JBTextField()
-        PrefillStringSuggestionOperator.getPrefill(PrefillString.COMMIT_MESSAGE)?.let {
+        prefillOperator.getPrefill(PrefillString.COMMIT_MESSAGE)?.let {
             commitMessage.text = it
         }
         val pushBox = JBCheckBox("Push?")
