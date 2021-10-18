@@ -38,7 +38,9 @@ object DialogGenerator {
                     component(noBtn)
                 }
             }
-            val popup = popupFactory.createDialogBalloonBuilder(panel, title).createBalloon()
+            val popup = popupFactory.createDialogBalloonBuilder(panel, title)
+                .setHideOnClickOutside(true)
+                .createBalloon()
             yesBtn.addActionListener {
                 popup.hide()
                 onYes()

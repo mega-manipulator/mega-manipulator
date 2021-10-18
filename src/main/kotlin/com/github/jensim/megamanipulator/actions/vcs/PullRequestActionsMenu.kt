@@ -12,6 +12,7 @@ import com.intellij.notification.NotificationType
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.ui.popup.Balloon
 import com.intellij.ui.components.JBTextArea
+import org.slf4j.LoggerFactory
 import java.awt.Desktop
 import javax.swing.JComponent
 import javax.swing.JMenuItem
@@ -21,7 +22,6 @@ import javax.swing.JOptionPane.OK_CANCEL_OPTION
 import javax.swing.JOptionPane.OK_OPTION
 import javax.swing.JOptionPane.QUESTION_MESSAGE
 import javax.swing.JPopupMenu
-import org.slf4j.LoggerFactory
 
 @SuppressWarnings("LongParameterList", "ConstructorParameterNaming")
 class PullRequestActionsMenu(

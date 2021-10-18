@@ -4,15 +4,13 @@ import com.github.jensim.megamanipulator.actions.git.clone.CloneOperator
 import com.github.jensim.megamanipulator.onboarding.OnboardingButton
 import com.github.jensim.megamanipulator.onboarding.OnboardingId
 import com.github.jensim.megamanipulator.onboarding.OnboardingOperator
-import com.github.jensim.megamanipulator.project.MegaManipulatorSettingsState
 import com.github.jensim.megamanipulator.project.PrefillString
 import com.github.jensim.megamanipulator.project.PrefillStringSuggestionOperator
-import com.github.jensim.megamanipulator.project.lazyService
 import com.github.jensim.megamanipulator.settings.SettingsFileOperator
 import com.github.jensim.megamanipulator.settings.types.SearchHostSettings
 import com.github.jensim.megamanipulator.toolswindow.TabKey
 import com.github.jensim.megamanipulator.toolswindow.ToolWindowTab
-import com.github.jensim.megamanipulator.ui.DialogGenerator
+import com.github.jensim.megamanipulator.ui.CloneDialogFactory
 import com.github.jensim.megamanipulator.ui.GeneralListCellRenderer.addCellRenderer
 import com.github.jensim.megamanipulator.ui.UiProtector
 import com.intellij.icons.AllIcons
@@ -38,7 +36,8 @@ class SearchWindow(
     private val cloneOperator: CloneOperator by lazy { project.service() }
     private val uiProtector: UiProtector by lazy { project.service() }
     private val onboardingOperator: OnboardingOperator by lazy { project.service() }
-    private val prefillStringSuggestionOperator:PrefillStringSuggestionOperator by lazy { project.service() }
+    private val prefillOperator: PrefillStringSuggestionOperator by lazy { project.service() }
+    private val cloneDialogFactory: CloneDialogFactory by lazy { project.service() }
 
     private val searchHostSelect = ComboBox<Pair<String, SearchHostSettings>>()
     private val searchHostLink = JButton("SearchDocs", AllIcons.Toolwindows.Documentation)
@@ -98,16 +97,10 @@ class SearchWindow(
         cloneButton.addActionListener {
             val selected = selector.selectedValuesList.toSet()
             if (selected.isNotEmpty()) {
-                val prefill: String? = prefillStringSuggestionOperator.getPrefill(PrefillString.BRANCH)
-                DialogGenerator.askForInput(
-                    title = "Branch",
-                    message = "branch name",
-                    prefill = prefill,
-                    focusComponent = cloneButton
-                ) { branch ->
-                    cloneOperator.clone(selected, branch)
+                cloneDialogFactory.show(cloneButton) { branch: String, shallow: Boolean ->
+                    cloneOperator.clone(repos = selected, branchName = branch, shallow = shallow)
                     selector.clearSelection()
-                    prefillStringSuggestionOperator.setPrefill(PrefillString.BRANCH, branch)
+                    prefillOperator.setPrefill(PrefillString.BRANCH, branch)
                 }
             }
         }
@@ -127,7 +120,7 @@ class SearchWindow(
         }.orEmpty().toTypedArray()
         selector.setListData(result)
         searchButton.isEnabled = true
-        prefillStringSuggestionOperator.setPrefill(PrefillString.SEARCH, searchText)
+        prefillOperator.setPrefill(PrefillString.SEARCH, searchText)
     }
 
     override fun refresh() {
@@ -144,10 +137,14 @@ class SearchWindow(
         }
 
         searchButton.isEnabled = searchHostSelect.itemCount > 0
-        if (searchField.text.isNullOrBlank()) {
-            prefillStringSuggestionOperator.getPrefill(PrefillString.SEARCH)?.let {
-                searchField.text = it
+        try {
+            if (searchField.text.isNullOrBlank()) {
+                prefillOperator.getPrefill(PrefillString.SEARCH)?.let {
+                    searchField.text = it
+                }
             }
+        } catch (e: Exception) {
+            e.printStackTrace()
         }
     }
 }

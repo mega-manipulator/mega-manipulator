@@ -113,6 +113,7 @@ data class BitBucketRepo(
     val slug: String,
     val scmId: String? = null,
     val project: BitBucketProject? = null,
+    val origin: BitBucketRepo? = null,
     val links: BitBucketRepoLinks? = null,
 )
 

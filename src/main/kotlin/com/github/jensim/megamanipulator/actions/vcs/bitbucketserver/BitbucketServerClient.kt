@@ -371,9 +371,6 @@ class BitbucketServerClient @NonInjectable constructor(
         }
     }
 
-    /**
-     * Get all the repos prefixed with the fork-repo-prefix, that do not have open outgoing PRs connected to them
-     */
     suspend fun getPrivateForkReposWithoutPRs(
         searchHostName: String,
         codeHostName: String,
@@ -383,17 +380,19 @@ class BitbucketServerClient @NonInjectable constructor(
         var start = 0
         val collector = HashSet<BitBucketRepo>()
         while (true) {
-            val page: BitBucketPage =
-                client.get("${settings.baseUrl}/rest/api/1.0/users/~${settings.username}/repos?start=$start") {
-                    accept(ContentType.Application.Json)
-                }
+            val urlString = "${settings.baseUrl}/rest/api/1.0/users/${settings.username}/repos?start=$start"
+            val page: BitBucketPage = client.get(urlString) {
+                accept(ContentType.Application.Json)
+            }
             page.values.orEmpty()
                 .map { json.decodeFromJsonElement<BitBucketRepo>(it) }
+                .filter { it.origin != null }
                 .forEach { collector.add(it) }
             if (page.isLastPage != false) break
             start += page.size ?: 0
         }
         return collector.filter {
+            // TODO FILTER if repo head or branch commits is ahead of origin
             val page: BitBucketPage =
                 client.get("${settings.baseUrl}/rest/api/1.0/projects/${it.project?.key}/repos/${it.slug}/pull-requests?direction=OUTGOING&state=OPEN") {
                     accept(ContentType.Application.Json)
@@ -416,7 +415,7 @@ class BitbucketServerClient @NonInjectable constructor(
     suspend fun deletePrivateRepo(repo: BitBucketRepoWrapping, settings: BitBucketSettings): PrActionStatus {
         val client: HttpClient = httpClientProvider.getClient(repo.getSearchHost(), repo.getCodeHost(), settings)
         val response =
-            client.delete<HttpResponse>("${settings.baseUrl}/rest/api/1.0/users/~${settings.username}/repos/${repo.getRepo()}") {
+            client.delete<HttpResponse>("${settings.baseUrl}/rest/api/1.0/users/${settings.username}/repos/${repo.getRepo()}") {
                 contentType(ContentType.Application.Json)
                 accept(ContentType.Application.Json)
                 body = emptyMap<String, String>()

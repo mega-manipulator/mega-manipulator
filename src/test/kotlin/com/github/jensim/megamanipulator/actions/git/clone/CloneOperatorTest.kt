@@ -117,7 +117,7 @@ class CloneOperatorTest {
         coEvery { processOperator.runCommandAsync(any(), any()) } returns GlobalScope.async { ApplyOutput.dummy(exitCode = 0) }
 
         // When
-        cloneOperator.clone(setOf(input), "main")
+        cloneOperator.clone(setOf(input), "main", false)
 
         // Then
         verify { filesOperator.refreshClones() }
@@ -250,7 +250,7 @@ class CloneOperatorTest {
         } returns CompletableDeferred(applyOutputCloneSuccess)
 
         // When
-        cloneOperator.clone(setOf(input), "prBranch")
+        cloneOperator.clone(setOf(input), "prBranch", false)
 
         // Then
         verify {

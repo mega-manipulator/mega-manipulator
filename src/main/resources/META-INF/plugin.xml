@@ -41,5 +41,6 @@
         <projectService serviceImplementation="com.github.jensim.megamanipulator.actions.search.SearchOperator"/>
         <projectService serviceImplementation="com.github.jensim.megamanipulator.toolswindow.TabSelectorService"/>
         <projectService serviceImplementation="com.github.jensim.megamanipulator.onboarding.OnboardingOperator"/>
+        <projectService serviceImplementation="com.github.jensim.megamanipulator.ui.CloneDialogFactory"/>
     </extensions>
 </idea-plugin>

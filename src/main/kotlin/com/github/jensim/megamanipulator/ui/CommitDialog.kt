@@ -14,7 +14,7 @@ object CommitDialog {
 
     fun openCommitDialog(
         relativeComponent: JComponent,
-        prefillOperator:PrefillStringSuggestionOperator,
+        prefillOperator: PrefillStringSuggestionOperator,
         onOk: (commitMessage: String, push: Boolean) -> Unit
     ) {
         val commitMessage = JBTextField()

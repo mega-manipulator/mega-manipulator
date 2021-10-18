@@ -1,14 +1,13 @@
 package com.github.jensim.megamanipulator.onboarding
 
 import com.github.jensim.megamanipulator.project.MegaManipulatorSettingsState
-import com.github.jensim.megamanipulator.project.lazyService
 import com.github.jensim.megamanipulator.toolswindow.TabKey
 import com.github.jensim.megamanipulator.toolswindow.TabSelectorService
+import com.intellij.openapi.components.service
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.ui.popup.Balloon
 import com.intellij.openapi.ui.popup.JBPopupFactory
 import com.intellij.openapi.wm.WindowManager
-import com.intellij.serviceContainer.NonInjectable
 import com.intellij.ui.awt.RelativePoint
 import com.intellij.ui.components.JBLabel
 import com.intellij.ui.layout.panel
@@ -17,16 +16,10 @@ import javax.swing.JButton
 import javax.swing.JComponent
 import javax.swing.JLayeredPane
 
-class OnboardingOperator @NonInjectable constructor(
-    private val project: Project,
-    tabSelectorService: TabSelectorService?,
-    state: MegaManipulatorSettingsState?,
-) {
+class OnboardingOperator(private val project: Project) {
 
-    constructor(project: Project) : this(project, null, null)
-
-    private val tabSelectorService: TabSelectorService by lazyService(project, tabSelectorService)
-    private val state: MegaManipulatorSettingsState by lazyService(project, state)
+    private val tabSelectorService: TabSelectorService by lazy { project.service() }
+    private val state: MegaManipulatorSettingsState by lazy { project.service() }
 
     private val reg: MutableMap<OnboardingId, JComponent> = EnumMap(OnboardingId::class.java)
 

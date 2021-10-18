@@ -56,7 +56,7 @@ class CloneOperator @NonInjectable constructor(
     private val settingsFileOperator: SettingsFileOperator by lazyService(project, settingsFileOperator)
     private val gitUrlHelper: GitUrlHelper by lazyService(project, gitUrlHelper)
 
-    fun clone(repos: Set<SearchResult>, branchName: String) {
+    fun clone(repos: Set<SearchResult>, branchName: String, shallow: Boolean) {
         val basePath = project.basePath!!
         filesOperator.refreshConf()
         val settings = settingsFileOperator.readSettings()!!
@@ -72,7 +72,7 @@ class CloneOperator @NonInjectable constructor(
                 val cloneUrl = gitUrlHelper.buildCloneUrl(codeSettings, vcsRepo)
                 val defaultBranch = prRouter.getRepo(repo)?.getDefaultBranch()!!
                 val dir = File(basePath, "clones/${repo.asPathString()}")
-                clone(dir, cloneUrl, defaultBranch, branchName)
+                clone(dir = dir, cloneUrl = cloneUrl, defaultBranch = defaultBranch, branch = branchName, shallow = shallow)
             }
         }
         filesOperator.refreshClones()
@@ -127,7 +127,11 @@ class CloneOperator @NonInjectable constructor(
                     )
                 )
         val badState: List<Action> =
-            clone(dir, pullRequest.cloneUrlFrom(prSettings.cloneType)!!, pullRequest.fromBranch())
+            clone(
+                dir = dir,
+                cloneUrl = pullRequest.cloneUrlFrom(prSettings.cloneType)!!,
+                defaultBranch = pullRequest.fromBranch()
+            )
         if (badState.isEmpty() && pullRequest.isFork()) {
             localRepoOperator.promoteOriginToForkRemote(dir, pullRequest.cloneUrlTo(prSettings.cloneType)!!)
         }
@@ -139,7 +143,8 @@ class CloneOperator @NonInjectable constructor(
         dir: File,
         cloneUrl: String,
         defaultBranch: String,
-        branch: String = defaultBranch
+        branch: String = defaultBranch,
+        shallow: Boolean = false,
     ): List<Action> {
         val badState: MutableList<Action> = mutableListOf()
         dir.mkdirs()
@@ -147,13 +152,26 @@ class CloneOperator @NonInjectable constructor(
             badState.add("Repo already cloned" to ApplyOutput.dummy(dir = dir.path, std = "Repo already cloned"))
             return badState
         }
-        val p1 = processOperator.runCommandAsync(
-            dir.parentFile,
-            listOf("git", "clone", "--branch", defaultBranch, cloneUrl, dir.absolutePath)
-        ).await()
-        if (p1.exitCode != 0) {
-            badState.add("Failed clone" to p1)
-            return badState
+        var regularClone = !shallow
+        if (shallow) {
+            val p0 = processOperator.runCommandAsync(
+                dir.parentFile,
+                listOf("git", "clone", cloneUrl, "--depth", "1", "--branch", defaultBranch, dir.absolutePath)
+            ).await()
+            if (p0.exitCode != 0) {
+                badState.add("Failed shallow clone clone" to p0)
+                regularClone = true
+            }
+        }
+        if (regularClone) {
+            val p1 = processOperator.runCommandAsync(
+                dir.parentFile,
+                listOf("git", "clone", "--branch", defaultBranch, cloneUrl, dir.absolutePath)
+            ).await()
+            if (p1.exitCode != 0) {
+                badState.add("Failed clone" to p1)
+                return badState
+            }
         }
         if (defaultBranch != branch) {
             val p2 = processOperator.runCommandAsync(dir, listOf("git", "checkout", branch)).await()
