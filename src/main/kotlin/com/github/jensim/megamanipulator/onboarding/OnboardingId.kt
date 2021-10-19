@@ -318,7 +318,7 @@ enum class OnboardingId(
             <html>
             <a href="https://mega-manipulator.github.io/docs/intro"><h1>Mega Manipulator</h1></a>
             To use the mega-manipulator plugin,<br> 
-            you must create a intelliJ project of type<br> 
+            you must create a intelliJ project of type <br> 
             "Mega Manipulator"
             </html>
         """.trimIndent()

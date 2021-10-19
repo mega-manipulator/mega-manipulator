@@ -7,6 +7,7 @@
 ### Added
 
 ### Changed
+- Created a general purpose table component for the Search, PR & Fork tabs
 
 ### Deprecated
 

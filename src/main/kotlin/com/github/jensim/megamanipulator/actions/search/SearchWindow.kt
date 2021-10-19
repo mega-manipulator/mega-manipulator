@@ -11,13 +11,13 @@ import com.github.jensim.megamanipulator.settings.types.SearchHostSettings
 import com.github.jensim.megamanipulator.toolswindow.TabKey
 import com.github.jensim.megamanipulator.toolswindow.ToolWindowTab
 import com.github.jensim.megamanipulator.ui.CloneDialogFactory
+import com.github.jensim.megamanipulator.ui.GeneralKtDataTable
 import com.github.jensim.megamanipulator.ui.GeneralListCellRenderer.addCellRenderer
 import com.github.jensim.megamanipulator.ui.UiProtector
 import com.intellij.icons.AllIcons
 import com.intellij.openapi.components.service
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.ui.ComboBox
-import com.intellij.ui.components.JBList
 import com.intellij.ui.components.JBScrollPane
 import com.intellij.ui.components.JBTextField
 import com.intellij.ui.layout.panel
@@ -44,8 +44,15 @@ class SearchWindow(
     private val searchButton = JButton("Search", AllIcons.Actions.Search)
     private val cloneButton = JButton("Clone selected", AllIcons.Vcs.Clone)
     private val searchField = JBTextField(50)
-    private val selector = JBList<SearchResult>()
-    private val scroll = JBScrollPane(selector)
+    private val table = GeneralKtDataTable(
+        SearchResult::class,
+        listOf(
+            "Code host" to { it.codeHostName },
+            "Project" to { it.project },
+            "Repo" to { it.repo },
+        )
+    )
+    private val scroll = JBScrollPane(table)
 
     override val content = panel {
         row {
@@ -77,10 +84,6 @@ class SearchWindow(
             }
         }
         searchHostLink.preferredSize = Dimension(30, 30)
-        cloneButton.isEnabled = false
-        selector.addListSelectionListener {
-            cloneButton.isEnabled = selector.selectedValuesList.isNotEmpty()
-        }
         searchField.addKeyListener(object : KeyListener {
             override fun keyTyped(e: KeyEvent?) {
                 if (e?.extendedKeyCode == KeyEvent.VK_ENTER) {
@@ -95,11 +98,11 @@ class SearchWindow(
             search()
         }
         cloneButton.addActionListener {
-            val selected = selector.selectedValuesList.toSet()
+            val selected = table.selectedValuesList.toSet()
             if (selected.isNotEmpty()) {
                 cloneDialogFactory.show(cloneButton) { branch: String, shallow: Boolean ->
                     cloneOperator.clone(repos = selected, branchName = branch, shallow = shallow)
-                    selector.clearSelection()
+                    table.clearSelection()
                     prefillOperator.setPrefill(PrefillString.BRANCH, branch)
                 }
             }
@@ -108,17 +111,16 @@ class SearchWindow(
 
     private fun search() {
         searchButton.isEnabled = false
-        cloneButton.isEnabled = false
-        selector.setListData(emptyArray())
+        table.setListData(emptyList())
         val searchText = searchField.text
-        val result: Array<SearchResult> = searchHostSelect.selectedItem?.let { searchHost: Any ->
+        val result: List<SearchResult> = searchHostSelect.selectedItem?.let { searchHost: Any ->
             searchHost.castSafelyTo<Pair<String, SearchHostSettings>>()?.first?.let { searchHostName ->
                 uiProtector.uiProtectedOperation("Seraching") {
                     searchOperator.search(searchHostName, searchText)
                 }
             }
-        }.orEmpty().toTypedArray()
-        selector.setListData(result)
+        }.orEmpty().toList()
+        table.setListData(result)
         searchButton.isEnabled = true
         prefillOperator.setPrefill(PrefillString.SEARCH, searchText)
     }

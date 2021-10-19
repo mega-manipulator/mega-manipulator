@@ -8,12 +8,11 @@ import com.github.jensim.megamanipulator.settings.SettingsFileOperator
 import com.github.jensim.megamanipulator.toolswindow.TabKey
 import com.github.jensim.megamanipulator.toolswindow.ToolWindowTab
 import com.github.jensim.megamanipulator.ui.CodeHostSelector
-import com.github.jensim.megamanipulator.ui.GeneralListCellRenderer.addCellRenderer
+import com.github.jensim.megamanipulator.ui.GeneralKtDataTable
 import com.github.jensim.megamanipulator.ui.UiProtector
 import com.intellij.openapi.components.service
 import com.intellij.openapi.project.Project
 import com.intellij.ui.JBSplitter
-import com.intellij.ui.components.JBList
 import com.intellij.ui.components.JBScrollPane
 import com.intellij.ui.components.JBTextArea
 import com.intellij.ui.components.JBTextField
@@ -41,8 +40,16 @@ class PullRequestWindow(project: Project) : ToolWindowTab {
     private val filterField = JBTextField(50)
     private val pullRequests: MutableList<PullRequestWrapper> = mutableListOf()
     private val codeHostSelect = CodeHostSelector(settingsFileOperator)
-    private val prList = JBList<PullRequestWrapper>()
-    private val prScroll = JBScrollPane(prList)
+    private val prTable = GeneralKtDataTable(
+        PullRequestWrapper::class,
+        listOf(
+            "Project" to { it.project() },
+            "Base repo" to { it.baseRepo() },
+            "Title" to { it.title() },
+            "Description" to { it.body() },
+        )
+    )
+    private val prScroll = JBScrollPane(prTable)
     private val peekArea = JBTextArea()
     private val peekScroll = JBScrollPane(peekArea)
     private val menuOpenButton = JButton("Actions")
@@ -80,7 +87,6 @@ class PullRequestWindow(project: Project) : ToolWindowTab {
 
     init {
         peekArea.text = ""
-        prList.setListData(emptyArray())
 
         menuOpenButton.isEnabled = false
         menuOpenButton.addMouseListener(object : MouseListener {
@@ -88,7 +94,7 @@ class PullRequestWindow(project: Project) : ToolWindowTab {
                 val pullRequestActionsMenu = PullRequestActionsMenu(
                     project = project,
                     focusComponent = menuOpenButton,
-                    prProvider = { prList.selectedValuesList }
+                    prProvider = { prTable.selectedValuesList }
                 )
                 pullRequestActionsMenu.show(menuOpenButton, e.x, e.y)
             }
@@ -114,10 +120,10 @@ class PullRequestWindow(project: Project) : ToolWindowTab {
             }
         })
 
-        prList.addCellRenderer { "${it.project()}/${it.baseRepo()} ${it.title()}" }
-        prList.addListSelectionListener {
+        // prList.addCellRenderer { "${it.project()}/${it.baseRepo()} ${it.title()}" }
+        prTable.addListSelectionListener {
             menuOpenButton.isEnabled = false
-            val selected: List<PullRequestWrapper> = prList.selectedValuesList
+            val selected: List<PullRequestWrapper> = prTable.selectedValuesList
             if (selected.isNotEmpty()) {
                 if (selected.size == 1) {
                     peekArea.text = SerializationHolder.readableJson.encodeToString(selected.first())
@@ -148,7 +154,7 @@ class PullRequestWindow(project: Project) : ToolWindowTab {
     }
 
     private fun fetchAssignedPRs() {
-        prList.setListData(emptyArray())
+        prTable.setListData(emptyList())
         (codeHostSelect.selectedItem)?.let { selected ->
             filterField.text = ""
             val prs: List<PullRequestWrapper>? = uiProtector.uiProtectedOperation("Fetching PRs") {
@@ -159,7 +165,7 @@ class PullRequestWindow(project: Project) : ToolWindowTab {
     }
 
     private fun fetchAuthoredPRs() {
-        prList.setListData(emptyArray())
+        prTable.setListData(emptyList())
         (codeHostSelect.selectedItem)?.let { selected ->
             filterField.text = ""
             val prs: List<PullRequestWrapper>? = uiProtector.uiProtectedOperation("Fetching PRs") {
@@ -175,7 +181,7 @@ class PullRequestWindow(project: Project) : ToolWindowTab {
         prs?.let { pullRequests.addAll(it) }
         val filtered = updateFilteredPrs()
         if (filtered.isNotEmpty()) {
-            prList.setSelectedValue(filtered.first(), true)
+            prTable.selectFirst()
         }
         content.validate()
         content.repaint()
@@ -185,7 +191,7 @@ class PullRequestWindow(project: Project) : ToolWindowTab {
         val filtered = pullRequests.filter {
             filterField.text.isBlank() || FuzzySearch.tokenSetRatio(it.raw, filterField.text) == 100
         }.sortedBy { "${it.project()}/${it.baseRepo()} ${it.title()}" }
-        prList.setListData(filtered.toTypedArray())
+        prTable.setListData(filtered)
         return filtered
     }
 }

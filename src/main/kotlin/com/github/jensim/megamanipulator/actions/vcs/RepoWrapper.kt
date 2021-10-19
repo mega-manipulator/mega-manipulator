@@ -14,6 +14,7 @@ sealed class RepoWrapper {
     abstract fun getSearchHost(): String
     abstract fun getCodeHost(): String
     abstract fun getProject(): String
+    abstract fun getForkOriginProject(): String?
     abstract fun getRepo(): String
     abstract fun getCloneUrl(cloneType: CloneType): String?
     abstract fun getDefaultBranch(): String?
@@ -31,6 +32,7 @@ data class BitBucketRepoWrapping(
     override fun getCodeHost(): String = codeHost
     override fun getProject(): String = repo.project!!.key
     override fun getRepo(): String = repo.slug
+    override fun getForkOriginProject(): String? = repo.origin?.project?.key
     override fun getCloneUrl(cloneType: CloneType): String? = when (cloneType) {
         SSH -> repo.links?.clone?.first { it.name == "ssh" }?.href
         HTTPS -> repo.links?.clone?.first { it.name == "http" }?.href
@@ -48,6 +50,7 @@ data class GithubComRepoWrapping(
     override fun getSearchHost(): String = searchHost
     override fun getCodeHost(): String = codeHost
     override fun getProject(): String = repo.owner.login
+    override fun getForkOriginProject(): String? = null
     override fun getRepo(): String = repo.name
     override fun getCloneUrl(cloneType: CloneType): String = when (cloneType) {
         SSH -> repo.ssh_url
@@ -71,6 +74,7 @@ data class GitLabRepoGraphQlWrapping(
     override val projectId: Long = gitLabProject.id.removePrefix("gid://gitlab/Project/").toLong()
     override fun getSearchHost(): String = searchHost
     override fun getCodeHost(): String = codeHost
+    override fun getForkOriginProject(): String? = null
     override fun getProject(): String = gitLabProject.namespace?.path!!
     override fun getRepo(): String = gitLabProject.path
     override fun getCloneUrl(cloneType: CloneType): String? = when (cloneType) {
@@ -90,6 +94,7 @@ data class GitLabApiRepoWrapping(
 
     override fun getSearchHost(): String = searchHost
     override fun getCodeHost(): String = codeHost
+    override fun getForkOriginProject(): String? = null
     override fun getProject(): String = gitLabProject.namespace.path
     override fun getRepo(): String = gitLabProject.path
     override fun getCloneUrl(cloneType: CloneType): String = when (cloneType) {

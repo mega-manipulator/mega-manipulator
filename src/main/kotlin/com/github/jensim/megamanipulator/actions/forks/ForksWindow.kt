@@ -11,13 +11,12 @@ import com.github.jensim.megamanipulator.toolswindow.TabKey
 import com.github.jensim.megamanipulator.toolswindow.ToolWindowTab
 import com.github.jensim.megamanipulator.ui.CodeHostSelector
 import com.github.jensim.megamanipulator.ui.DialogGenerator
-import com.github.jensim.megamanipulator.ui.GeneralListCellRenderer.addCellRenderer
+import com.github.jensim.megamanipulator.ui.GeneralKtDataTable
 import com.github.jensim.megamanipulator.ui.UiProtector
 import com.intellij.icons.AllIcons
 import com.intellij.notification.NotificationType
 import com.intellij.openapi.components.service
 import com.intellij.openapi.project.Project
-import com.intellij.ui.components.JBList
 import com.intellij.ui.components.JBScrollPane
 import com.intellij.ui.layout.panel
 import javax.swing.JButton
@@ -33,8 +32,15 @@ class ForksWindow(project: Project) : ToolWindowTab {
 
     private val deleteButton = JButton("Delete selected forks", AllIcons.Toolwindows.Problems)
     private val codeHostSelect = CodeHostSelector(settingsFileOperator)
-    private val staleForkList = JBList<RepoWrapper>()
-    private val scroll = JBScrollPane(staleForkList)
+    private val staleForkTable = GeneralKtDataTable(
+        RepoWrapper::class,
+        listOf(
+            "BaseProject" to { it.getForkOriginProject() ?: "?" },
+            "Project" to { it.getProject() },
+            "Repo" to { it.getRepo() },
+        )
+    )
+    private val scroll = JBScrollPane(staleForkTable)
     private val loadStaleForksButton = JButton("Load forks without OPEN PRs")
 
     override val content: JComponent = panel {
@@ -54,8 +60,6 @@ class ForksWindow(project: Project) : ToolWindowTab {
     }
 
     init {
-        staleForkList.setListData(emptyArray())
-        staleForkList.addCellRenderer { it.asPathString() }
         deleteButton.isEnabled = false
         deleteButton.apply {
             addActionListener {
@@ -70,7 +74,7 @@ class ForksWindow(project: Project) : ToolWindowTab {
                     uiProtector.mapConcurrentWithProgress(
                         title = "Delete forks",
                         extraText2 = { it.asPathString() },
-                        data = staleForkList.selectedValuesList,
+                        data = staleForkTable.selectedValuesList,
                     ) { fork ->
                         prRouter.deletePrivateRepo(fork)
                     }
@@ -78,12 +82,12 @@ class ForksWindow(project: Project) : ToolWindowTab {
             }
         }
         loadStaleForksButton.addActionListener {
-            staleForkList.setListData(emptyArray())
+            staleForkTable.setListData(emptyList())
             codeHostSelect.selectedItem?.let { item ->
                 uiProtector.uiProtectedOperation("Load forks without OPEN PRs") {
                     prRouter.getPrivateForkReposWithoutPRs(item.searchHostName, item.codeHostName)
                 }?.let { result: List<RepoWrapper> ->
-                    staleForkList.setListData(result.toTypedArray())
+                    staleForkTable.setListData(result)
                     deleteButton.isEnabled = result.isNotEmpty()
                     if (result.isEmpty()) {
                         notificationsOperator.show(
