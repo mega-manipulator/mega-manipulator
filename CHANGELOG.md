@@ -5,6 +5,20 @@
 ## [Unreleased]
 
 ### Added
+
+### Changed
+
+### Deprecated
+
+### Removed
+
+### Fixed
+
+### Security
+
+## [0.0.31]
+
+### Added
 - Onboarding flow is now able to select tabs moving forward
 - Added onboarding to all tabs
 - Optional shallow clone
@@ -12,17 +26,11 @@
 ### Changed
 - Use plugin manifest for wiring
 
-### Deprecated
-
-### Removed
-
 ### Fixed
 - Persistence component now actually persists data between sessions
 - Fix BitbucketClient
   - Fetch stale forks
   - Delete fork
-
-### Security
 
 ## [0.0.30]
 
