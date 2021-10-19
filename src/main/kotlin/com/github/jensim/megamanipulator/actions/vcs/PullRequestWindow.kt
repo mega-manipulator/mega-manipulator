@@ -120,7 +120,6 @@ class PullRequestWindow(project: Project) : ToolWindowTab {
             }
         })
 
-        // prList.addCellRenderer { "${it.project()}/${it.baseRepo()} ${it.title()}" }
         prTable.addListSelectionListener {
             menuOpenButton.isEnabled = false
             val selected: List<PullRequestWrapper> = prTable.selectedValuesList

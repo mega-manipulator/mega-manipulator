@@ -84,6 +84,10 @@ class SearchWindow(
             }
         }
         searchHostLink.preferredSize = Dimension(30, 30)
+        cloneButton.isEnabled = false
+        table.addListSelectionListener {
+            cloneButton.isEnabled = table.selectedValuesList.isNotEmpty()
+        }
         searchField.addKeyListener(object : KeyListener {
             override fun keyTyped(e: KeyEvent?) {
                 if (e?.extendedKeyCode == KeyEvent.VK_ENTER) {
@@ -111,6 +115,7 @@ class SearchWindow(
 
     private fun search() {
         searchButton.isEnabled = false
+        cloneButton.isEnabled = false
         table.setListData(emptyList())
         val searchText = searchField.text
         val result: List<SearchResult> = searchHostSelect.selectedItem?.let { searchHost: Any ->
