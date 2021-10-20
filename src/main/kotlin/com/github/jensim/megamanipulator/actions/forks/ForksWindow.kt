@@ -78,24 +78,30 @@ class ForksWindow(project: Project) : ToolWindowTab {
                     ) { fork ->
                         prRouter.deletePrivateRepo(fork)
                     }
+                    load()
                 }
             }
         }
         loadStaleForksButton.addActionListener {
-            staleForkTable.setListData(emptyList())
-            codeHostSelect.selectedItem?.let { item ->
-                uiProtector.uiProtectedOperation("Load forks without OPEN PRs") {
-                    prRouter.getPrivateForkReposWithoutPRs(item.searchHostName, item.codeHostName)
-                }?.let { result: List<RepoWrapper> ->
-                    staleForkTable.setListData(result)
-                    deleteButton.isEnabled = result.isNotEmpty()
-                    if (result.isEmpty()) {
-                        notificationsOperator.show(
-                            title = "No result",
-                            body = "Maybe you have zero forks without PRs?",
-                            type = NotificationType.INFORMATION
-                        )
-                    }
+            load()
+        }
+    }
+
+    private fun load() {
+        staleForkTable.setListData(emptyList())
+        codeHostSelect.selectedItem?.let { item ->
+            uiProtector.uiProtectedOperation("Load forks without OPEN PRs") {
+                prRouter.getPrivateForkReposWithoutPRs(item.searchHostName, item.codeHostName)
+            }?.let { result: List<RepoWrapper> ->
+                staleForkTable.setListData(result)
+                staleForkTable.selectFirst()
+                deleteButton.isEnabled = result.isNotEmpty()
+                if (result.isEmpty()) {
+                    notificationsOperator.show(
+                        title = "No result",
+                        body = "Maybe you have zero forks without PRs?",
+                        type = NotificationType.INFORMATION
+                    )
                 }
             }
         }

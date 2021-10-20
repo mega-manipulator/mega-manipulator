@@ -24,17 +24,24 @@ import io.ktor.client.statement.HttpStatement
 import io.ktor.client.statement.readText
 import io.ktor.http.ContentType
 import io.ktor.http.contentType
+import kotlinx.coroutines.Deferred
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.toList
+import kotlinx.coroutines.withContext
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.decodeFromJsonElement
 import java.util.concurrent.atomic.AtomicInteger
 import java.util.regex.Pattern
+import kotlin.coroutines.CoroutineContext
 
 @SuppressWarnings("TooManyFunctions", "ReturnCount")
 class GithubComClient @NonInjectable constructor(
@@ -44,8 +51,10 @@ class GithubComClient @NonInjectable constructor(
 ) {
 
     constructor(project: Project) : this(project, null, null)
+
     private val httpClientProvider: HttpClientProvider by lazyService(project, httpClientProvider)
     private val localRepoOperator: LocalRepoOperator by lazyService(project, localRepoOperator)
+    private val coroutineCntx: CoroutineContext = Dispatchers.IO + SupervisorJob()
 
     private val json: Json = SerializationHolder.readableJson
 
@@ -228,18 +237,25 @@ class GithubComClient @NonInjectable constructor(
         searchHost: String,
         codeHost: String,
         settings: GitHubSettings
-    ): List<GithubComRepoWrapping> {
+    ): List<GithubComRepoWrapping> = withContext(context = coroutineCntx) {
         val client: HttpClient = httpClientProvider.getClient(searchHost, codeHost, settings)
         val repoFlow: Flow<GithubComRepo> = flow {
+
             val pageCount = AtomicInteger(1)
             while (true) {
                 val page: List<GithubComRepo> =
                     client.get("${settings.baseUrl}/users/${settings.username}/repos?page=${pageCount.getAndIncrement()}")
-                page.forEach { emit(it) }
+                val asyncList: List<Deferred<GithubComRepo>> = page.filter { it.fork }
+                    .map {
+                        async {
+                            client.get("${settings.baseUrl}/repos/${settings.username}/${it.name}")
+                        }
+                    }
+                asyncList.awaitAll().forEach { emit(it) }
                 if (page.isEmpty()) break
             }
         }
-        return repoFlow.map { GithubComRepoWrapping(searchHost, codeHost, it) }
+        repoFlow.map { GithubComRepoWrapping(searchHost, codeHost, it) }
             .filter { it.repo.fork && it.repo.open_issues_count == 0L }
             .toList()
     }

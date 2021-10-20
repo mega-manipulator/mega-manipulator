@@ -94,7 +94,7 @@ tasks {
         queryFiles.from(
             *fileTree("${project.projectDir.absolutePath}/src/test/resources/graphql/gitlab/queries").files.toTypedArray()
         )
-        schemaFileName.set(file("${project.projectDir.absolutePath}/src/test/resources/graphql/gitlab/gitlab.graphql.schema").absolutePath)
+        schemaFile.set(file("${project.projectDir.absolutePath}/src/test/resources/graphql/gitlab/gitlab.graphql.schema"))
         serializer.set(GraphQLSerializer.KOTLINX)
     }
     val graphqlGenerateSourcegraphClient by register("graphqlGenerateSourcegraphClient", GraphQLGenerateClientTask::class) {
@@ -102,7 +102,7 @@ tasks {
         queryFiles.from(
             *fileTree("${project.projectDir.absolutePath}/src/test/resources/graphql/sourcegraph/queries").files.toTypedArray()
         )
-        schemaFileName.set(file("${project.projectDir.absolutePath}/src/test/resources/graphql/sourcegraph/sourcegraph.graphql.schema").absolutePath)
+        schemaFile.set(file("${project.projectDir.absolutePath}/src/test/resources/graphql/sourcegraph/sourcegraph.graphql.schema"))
         serializer.set(GraphQLSerializer.KOTLINX)
     }
     val graphqlGenerateGithubClient by register("graphqlGenerateGithubClient", GraphQLGenerateClientTask::class) {
@@ -110,7 +110,7 @@ tasks {
         queryFiles.from(
             *fileTree("${project.projectDir.absolutePath}/src/test/resources/graphql/github/queries").files.toTypedArray()
         )
-        schemaFileName.set(file("${project.projectDir.absolutePath}/src/test/resources/graphql/github/github.graphql.schema").absolutePath)
+        schemaFile.set(file("${project.projectDir.absolutePath}/src/test/resources/graphql/github/github.graphql.schema"))
         serializer.set(GraphQLSerializer.KOTLINX)
     }
 

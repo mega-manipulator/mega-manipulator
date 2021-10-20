@@ -15,9 +15,12 @@ import com.intellij.notification.NotificationType.WARNING
 import com.intellij.openapi.project.Project
 import com.intellij.serviceContainer.NonInjectable
 import kotlinx.coroutines.Deferred
-import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.async
+import kotlinx.coroutines.withContext
 import java.util.concurrent.atomic.AtomicLong
+import kotlin.coroutines.CoroutineContext
 
 @SuppressWarnings("TooManyFunctions")
 class PrRouter @NonInjectable constructor(
@@ -43,6 +46,7 @@ class PrRouter @NonInjectable constructor(
     private val githubComClient: GithubComClient by lazyService(project, githubComClient)
     private val gitLabClient: GitLabClient by lazyService(project, gitLabClient)
     private val notificationsOperator: NotificationsOperator by lazyService(project, notificationsOperator)
+    private val coroutineCntx: CoroutineContext = Dispatchers.IO + SupervisorJob()
 
     private val lastSettingsWarning = AtomicLong()
 
@@ -176,10 +180,10 @@ class PrRouter @NonInjectable constructor(
         }
     }
 
-    suspend fun validateAccess(): Map<String, Deferred<String>> {
-        return settingsFileOperator.readSettings()?.searchHostSettings.orEmpty().flatMap { search ->
+    suspend fun validateAccess(): Map<String, Deferred<String>> = withContext(coroutineCntx) {
+        settingsFileOperator.readSettings()?.searchHostSettings.orEmpty().flatMap { search ->
             search.value.codeHostSettings.map { code ->
-                "${search.key}/${code.key}" to GlobalScope.async {
+                "${search.key}/${code.key}" to async {
                     when (val settings = code.value) {
                         is BitBucketSettings -> bitbucketServerClient.validateAccess(search.key, code.key, settings)
                         is GitHubSettings -> githubComClient.validateAccess(search.key, code.key, settings)

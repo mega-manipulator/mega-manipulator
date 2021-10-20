@@ -50,7 +50,7 @@ data class GithubComRepoWrapping(
     override fun getSearchHost(): String = searchHost
     override fun getCodeHost(): String = codeHost
     override fun getProject(): String = repo.owner.login
-    override fun getForkOriginProject(): String? = null
+    override fun getForkOriginProject(): String? = repo.parent?.owner?.login
     override fun getRepo(): String = repo.name
     override fun getCloneUrl(cloneType: CloneType): String = when (cloneType) {
         SSH -> repo.ssh_url

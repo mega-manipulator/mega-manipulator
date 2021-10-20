@@ -5,6 +5,7 @@
 ## [Unreleased]
 
 ### Added
+- In the forks tab, show parent/origin-repo of forks (Github & Bitbucket)
 
 ### Changed
 - Created a general purpose table component for the Search, PR & Fork tabs
@@ -16,6 +17,7 @@
 ### Fixed
 
 ### Security
+- Upgrade dependency versions
 
 ## [0.0.31]
 

@@ -8,19 +8,22 @@ import com.intellij.openapi.progress.ProgressManager
 import com.intellij.openapi.progress.Task
 import com.intellij.openapi.project.Project
 import kotlinx.coroutines.Deferred
-import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.TimeoutCancellationException
 import kotlinx.coroutines.async
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.sync.Semaphore
 import kotlinx.coroutines.withTimeout
 import java.util.concurrent.CancellationException
+import kotlin.coroutines.CoroutineContext
 
 class UiProtectorImpl(
     private val project: Project,
 ) : UiProtector {
 
     private val notificationsOperator: NotificationsOperator by lazy { project.service() }
+    private val coroutineCntx: CoroutineContext = Dispatchers.Default + SupervisorJob()
 
     override fun <T> uiProtectedOperation(
         title: String,
@@ -30,7 +33,7 @@ class UiProtectorImpl(
             override fun compute(indicator: ProgressIndicator): T? = runBlocking {
                 indicator.isIndeterminate = true
                 try {
-                    val deferred = GlobalScope.async {
+                    val deferred = async(context = coroutineCntx) {
                         try {
                             action()
                         } catch (e: Exception) {
@@ -109,7 +112,7 @@ class UiProtectorImpl(
                 return runBlocking {
                     val semaphore = Semaphore(permits = concurrent)
                     val futures: List<Pair<T, Deferred<U?>?>> = data.mapIndexed { index, t ->
-                        t to GlobalScope.async {
+                        t to async(context = coroutineCntx) {
                             try {
                                 if (!indicator.isCanceled) {
                                     semaphore.acquire()

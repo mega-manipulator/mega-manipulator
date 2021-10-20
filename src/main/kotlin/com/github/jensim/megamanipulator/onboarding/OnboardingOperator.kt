@@ -33,6 +33,7 @@ class OnboardingOperator(private val project: Project) {
             .forEach { state.resetOnBoarding(it) }
     }
 
+    @SuppressWarnings("LongMethod")
     fun display(id: OnboardingId, extraOkAction: () -> Unit = {}) {
         if (state.seenOnBoarding(id)) {
             id.next?.let { next ->

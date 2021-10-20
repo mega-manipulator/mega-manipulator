@@ -73,9 +73,7 @@ class GeneralKtDataTable<T : Any>(
 
     fun selectFirst() {
         try {
-            if (myModel.items.isNotEmpty()) {
-                selectionModel.setSelectionInterval(0, 0)
-            }
+            selectionModel.setSelectionInterval(0, 0)
         } catch (e: Exception) {
             e.printStackTrace()
         }
