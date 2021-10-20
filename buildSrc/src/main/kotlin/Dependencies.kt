@@ -12,11 +12,10 @@ object Versions {
     const val ktor = "1.5.4"
     const val kotlin = "1.5.31"
     const val hamcrest = "2.2"
-    const val changelog = "1.1.2"
-    const val intellij = "0.7.3"
-    const val detekt = "1.18.1"
-    const val ktlintPlugin = "10.2.0"
-    const val ktlint = "0.42.1"
+
+    const val changelog = "1.3.1"
+    const val intellij = "1.1.6"
+    const val qodana = "0.1.12"
     const val benManesVersions = "0.39.0"
 
     const val kotlinxSerialization = "1.1.0"
@@ -50,9 +49,6 @@ object Dependencies {
             "com.expediagroup:graphql-kotlin-ktor-client:${Versions.graphql}",
             "com.expediagroup:graphql-kotlin-client-serialization:${Versions.graphql}",
     )
-    val classPath = setOf(
-            "org.jetbrains.kotlinx:kotlinx-coroutines-core:${Versions.kotlinxCoroutines}",
-    )
     val testImplementation = setOf(
             "org.awaitility:awaitility:4.1.0",
             "io.mockk:mockk:${Versions.mockk}",
@@ -69,19 +65,16 @@ object Dependencies {
 fun PluginDependenciesSpec.addPlugins() {
     id("java")
     // Kotlin support
-    jacoco
     kotlin("jvm") version Versions.kotlin
     kotlin("plugin.serialization") version Versions.kotlin
     // gradle-intellij-plugin - read more: https://github.com/JetBrains/gradle-intellij-plugin
     id("org.jetbrains.intellij") version Versions.intellij
     // gradle-changelog-plugin - read more: https://github.com/JetBrains/gradle-changelog-plugin
     id("org.jetbrains.changelog") version Versions.changelog
-    // detekt linter - read more: https://detekt.github.io/detekt/gradle.html
-    id("io.gitlab.arturbosch.detekt") version Versions.detekt
-    // ktlint linter - read more: https://github.com/JLLeitschuh/ktlint-gradle
-    id("org.jlleitschuh.gradle.ktlint") version Versions.ktlintPlugin
+
     id("com.github.ben-manes.versions") version Versions.benManesVersions
     id("com.expediagroup.graphql") version Versions.graphql
+    id("org.jetbrains.qodana") version Versions.qodana
 }
 
 fun DependencyHandler.addDependencies() {

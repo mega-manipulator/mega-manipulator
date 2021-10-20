@@ -3,12 +3,6 @@
 [![Build](https://github.com/mega-manipulator/mega-manipulator/workflows/Build/badge.svg)](https://github.com/mega-manipulator/mega-manipulator/actions/workflows/build.yml)
 [![Version](https://img.shields.io/jetbrains/plugin/v/16396.svg)](https://plugins.jetbrains.com/plugin/16396)
 [![Downloads](https://img.shields.io/jetbrains/plugin/d/16396.svg)](https://plugins.jetbrains.com/plugin/16396)
- 
-[![Coverage](https://sonarcloud.io/api/project_badges/measure?project=mega-manipulator&metric=coverage)](https://sonarcloud.io/dashboard?id=mega-manipulator)
-[![Lines of Code](https://sonarcloud.io/api/project_badges/measure?project=mega-manipulator&metric=ncloc)](https://sonarcloud.io/dashboard?id=mega-manipulator)
-[![Maintainability Rating](https://sonarcloud.io/api/project_badges/measure?project=mega-manipulator&metric=sqale_rating)](https://sonarcloud.io/dashboard?id=mega-manipulator)
-[![Code Smells](https://sonarcloud.io/api/project_badges/measure?project=mega-manipulator&metric=code_smells)](https://sonarcloud.io/dashboard?id=mega-manipulator)
-
 
 <!-- Plugin description -->
 
