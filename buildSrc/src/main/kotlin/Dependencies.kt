@@ -7,27 +7,34 @@ import org.gradle.plugin.use.PluginDependenciesSpec
 object Versions {
 
     const val jvm = "11"
-    const val junit = "5.8.1"
+
+    // Kotlin
+    const val kotlin = "1.5.31"
     const val kotlinxCoroutines = "1.5.2"
     const val ktor = "1.5.4"
-    const val kotlin = "1.5.31"
-    const val hamcrest = "2.2"
 
-    const val changelog = "1.3.1"
-    const val intellij = "1.1.6"
-    const val qodana = "0.1.12"
-    const val benManesVersions = "0.39.0"
-
+    // Dependencies
     const val kotlinxSerialization = "1.1.0"
     const val jsonSchemaSerialization = "0.6.6"
     const val jGit = "5.11.1.202105131744-r"
     const val log4j = "2.14.1"
     const val fuzzyWuzzy = "1.3.1"
-    const val mockk = "1.12.0"
     const val graphql = "4.1.1"
+
+    // Plugins
+    const val changelog = "1.3.1"
+    const val intellij = "1.1.6"
+    const val qodana = "0.1.12"
+    const val benManesVersions = "0.39.0"
+
+    // Test
+    const val hamcrest = "2.2"
+    const val junit = "5.8.1"
+    const val mockk = "1.12.0"
+    const val awaitility = "4.1.0"
 }
 
-object Dependencies {
+object MmDependencies {
 
     val implementation = setOf(
             "org.jetbrains.kotlin:kotlin-bom:${Versions.kotlin}",//:pom",
@@ -50,7 +57,7 @@ object Dependencies {
             "com.expediagroup:graphql-kotlin-client-serialization:${Versions.graphql}",
     )
     val testImplementation = setOf(
-            "org.awaitility:awaitility:4.1.0",
+            "org.awaitility:awaitility:${Versions.awaitility}",
             "io.mockk:mockk:${Versions.mockk}",
             "org.hamcrest:hamcrest:${Versions.hamcrest}",
             "org.hamcrest:hamcrest-library:${Versions.hamcrest}",
@@ -79,7 +86,7 @@ fun PluginDependenciesSpec.addPlugins() {
 
 fun DependencyHandler.addDependencies() {
     //detektPlugins("io.gitlab.arturbosch.detekt:detekt-formatting:${Versions.detekt}")
-    Dependencies.implementation.forEach { this.add("implementation", it) }
-    Dependencies.testImplementation.forEach { this.add("testImplementation", it) }
-    Dependencies.testRuntime.forEach { this.add("testRuntimeOnly", it) }
+    MmDependencies.implementation.forEach { this.add("implementation", it) }
+    MmDependencies.testImplementation.forEach { this.add("testImplementation", it) }
+    MmDependencies.testRuntime.forEach { this.add("testRuntimeOnly", it) }
 }
