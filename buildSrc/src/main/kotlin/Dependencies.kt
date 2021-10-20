@@ -7,10 +7,10 @@ import org.gradle.plugin.use.PluginDependenciesSpec
 object Versions {
 
     const val jvm = "11"
-    const val junit = "5.7.2"
-    const val kotlinxCoroutines = "1.4.3"
+    const val junit = "5.8.1"
+    const val kotlinxCoroutines = "1.5.2"
     const val ktor = "1.5.4"
-    const val kotlin = "1.4.32"
+    const val kotlin = "1.5.31"
     const val hamcrest = "2.2"
     const val changelog = "1.1.2"
     const val intellij = "0.7.3"
@@ -49,6 +49,9 @@ object Dependencies {
             "me.xdrop:fuzzywuzzy:${Versions.fuzzyWuzzy}",
             "com.expediagroup:graphql-kotlin-ktor-client:${Versions.graphql}",
             "com.expediagroup:graphql-kotlin-client-serialization:${Versions.graphql}",
+    )
+    val classPath = setOf(
+            "org.jetbrains.kotlinx:kotlinx-coroutines-core:${Versions.kotlinxCoroutines}",
     )
     val testImplementation = setOf(
             "org.awaitility:awaitility:4.1.0",
