@@ -11,7 +11,6 @@ import com.github.jensim.megamanipulator.settings.types.SearchHostSettings
 import com.github.jensim.megamanipulator.test.EnvHelper
 import com.github.jensim.megamanipulator.test.EnvHelper.EnvProperty.SRC_COM_USERNAME
 import com.intellij.openapi.project.Project
-import io.mockk.Called
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
@@ -87,6 +86,6 @@ class SearchOperatorTest {
         // Then
         assertThat(nullPointerException.localizedMessage, equalTo("No settings for search host named any-hostname"))
         verify { settingsFileOperatorMock.readSettings() }
-        coVerify { sourcegraphSearchClientMock.search(any(), any(), any()) wasNot Called }
+        coVerify(exactly = 0) { sourcegraphSearchClientMock.search(any(), any(), any()) }
     }
 }

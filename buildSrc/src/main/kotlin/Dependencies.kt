@@ -23,7 +23,7 @@ object Versions {
     const val jGit = "5.11.1.202105131744-r"
     const val log4j = "2.14.1"
     const val fuzzyWuzzy = "1.3.1"
-    const val mockk = "1.11.0"
+    const val mockk = "1.12.0"
     const val graphql = "4.1.1"
 }
 
