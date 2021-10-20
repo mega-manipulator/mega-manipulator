@@ -1,5 +1,4 @@
 import org.gradle.api.artifacts.dsl.DependencyHandler
-import org.gradle.kotlin.dsl.jacoco
 import org.gradle.kotlin.dsl.kotlin
 import org.gradle.kotlin.dsl.version
 import org.gradle.plugin.use.PluginDependenciesSpec
@@ -16,7 +15,7 @@ object Versions {
     // Dependencies
     const val kotlinxSerialization = "1.1.0"
     const val jsonSchemaSerialization = "0.6.6"
-    const val jGit = "5.11.1.202105131744-r"
+    const val jGit = "5.13.0.202109080827-r"
     const val log4j = "2.14.1"
     const val fuzzyWuzzy = "1.3.1"
     const val graphql = "4.1.1"
@@ -85,7 +84,6 @@ fun PluginDependenciesSpec.addPlugins() {
 }
 
 fun DependencyHandler.addDependencies() {
-    //detektPlugins("io.gitlab.arturbosch.detekt:detekt-formatting:${Versions.detekt}")
     MmDependencies.implementation.forEach { this.add("implementation", it) }
     MmDependencies.testImplementation.forEach { this.add("testImplementation", it) }
     MmDependencies.testRuntime.forEach { this.add("testRuntimeOnly", it) }
