@@ -57,15 +57,21 @@ class GitWindow(private val project: Project) : ToolWindowTab {
     private val repoList = JBList<DirResult>().apply {
         minimumSize = Dimension(250, 50)
     }
-    private val scrollRepos = JBScrollPane(repoList)
+    private val scrollRepos = JBScrollPane(repoList).apply {
+        preferredSize = Dimension(4000, 1000)
+    }
     private val stepList = JBList<StepResult>().apply {
         minimumSize = Dimension(150, 50)
     }
-    private val scrollSteps = JBScrollPane(stepList)
+    private val scrollSteps = JBScrollPane(stepList).apply {
+        preferredSize = Dimension(4000, 1000)
+    }
     private val outComeInfo = JBTextArea().apply {
         minimumSize = Dimension(250, 50)
     }
-    private val scrollOutcome = JBScrollPane(outComeInfo)
+    private val scrollOutcome = JBScrollPane(outComeInfo).apply {
+        preferredSize = Dimension(4000, 1000)
+    }
 
     private val splitRight = JBSplitter().apply {
         firstComponent = scrollSteps
@@ -238,6 +244,7 @@ class GitWindow(private val project: Project) : ToolWindowTab {
                     exitCode = 1
                 )
                 repoList.setListData(arrayOf(Pair("Clean", listOf("rm" to output))))
+                repoList.selectedIndex = 0
                 filesOperator.refreshClones()
             }
         }
@@ -260,8 +267,8 @@ class GitWindow(private val project: Project) : ToolWindowTab {
                     ?: listOf("Operation failed" to ApplyOutput.dummy(dir = it.first.path, err = "Failed git operation"))
                 )
         }
-        repoList.setListData(result.toTypedArray())
         if (result.isNotEmpty()) {
+            repoList.setListData(result.toTypedArray())
             repoList.setSelectedValue(result.first(), true)
         }
         content.validate()
@@ -276,7 +283,5 @@ class GitWindow(private val project: Project) : ToolWindowTab {
         onboardingOperator.registerTarget(OnboardingId.CLONES_COMMIT_PUSH_BUTTON, btnCommitAndPush)
         onboardingOperator.registerTarget(OnboardingId.CLONES_LIST_BRANCH, btnListBranch)
         onboardingOperator.registerTarget(OnboardingId.CLONES_TAB, content)
-
-        onboardingOperator.display(OnboardingId.CLONES_TAB)
     }
 }

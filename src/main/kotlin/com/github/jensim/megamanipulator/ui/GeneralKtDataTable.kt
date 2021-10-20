@@ -1,14 +1,22 @@
 package com.github.jensim.megamanipulator.ui
 
 import com.intellij.ui.table.JBTable
+import java.awt.Color
+import java.awt.Component
+import java.awt.Dimension
+import java.util.function.Predicate
+import javax.swing.JTable
 import javax.swing.table.AbstractTableModel
+import javax.swing.table.DefaultTableCellRenderer
 import kotlin.reflect.KClass
 
 typealias ColumnHeader = String
 
 class GeneralKtDataTable<T : Any>(
     type: KClass<T>,
-    columns: List<Pair<ColumnHeader, (T) -> String>>
+    columns: List<Pair<ColumnHeader, (T) -> String>>,
+    minSize: Dimension = Dimension(300, 100),
+    colorizer: Predicate<T>? = null,
 ) : JBTable() {
 
     private val myModel = GeneralTableModel(type, columns)
@@ -16,10 +24,12 @@ class GeneralKtDataTable<T : Any>(
 
     init {
         model = myModel
+        minimumSize = minSize
         with(columnModel) {
             columnSelectionAllowed = false
             columns.forEachIndexed { idx, (header, _) ->
                 with(getColumn(idx)) {
+                    minWidth = 25
                     headerValue = header
                 }
             }
@@ -32,6 +42,27 @@ class GeneralKtDataTable<T : Any>(
                     e.printStackTrace()
                 }
             }
+        }
+        colorizer?.let { colorizer ->
+            val selectedProblemColor = Color.RED
+            val notSelectedProblemColor = selectedProblemColor.darker()
+            setDefaultRenderer(
+                Any::class.java,
+                object : DefaultTableCellRenderer() {
+                    override fun getTableCellRendererComponent(table: JTable, value: Any?, isSelected: Boolean, hasFocus: Boolean, row: Int, column: Int): Component {
+                        super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column)
+                        try {
+                            val rowItem = myModel.items[row]
+                            if (colorizer.test(rowItem)) {
+                                background = if (isSelected) selectedProblemColor else notSelectedProblemColor
+                            }
+                        } catch (e: Exception) {
+                            e.printStackTrace()
+                        }
+                        return this
+                    }
+                }
+            )
         }
     }
 

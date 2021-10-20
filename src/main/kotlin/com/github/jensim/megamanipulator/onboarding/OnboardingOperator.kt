@@ -78,6 +78,9 @@ class OnboardingOperator(private val project: Project) {
         }
         stopButton.addActionListener {
             balloon.hide()
+            generateSequence(id) { it.next }.forEach {
+                state.setOnBoardingSeen(it)
+            }
         }
         balloon.setAnimationEnabled(true)
         id.tab?.let { tab ->

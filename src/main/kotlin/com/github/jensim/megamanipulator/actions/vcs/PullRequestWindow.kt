@@ -56,7 +56,7 @@ class PullRequestWindow(project: Project) : ToolWindowTab {
     private val fetchAuthorButton = JButton("Fetch author PRs")
     private val fetchAssigneeButton = JButton("Fetch assigned PRs")
 
-    private val split = JBSplitter(false, 0.5f).apply {
+    private val split = JBSplitter(false, 0.7f).apply {
         firstComponent = prScroll
         secondComponent = peekScroll
         preferredSize = Dimension(4000, 1000)
@@ -87,6 +87,8 @@ class PullRequestWindow(project: Project) : ToolWindowTab {
 
     init {
         peekArea.text = ""
+        prScroll.preferredSize = Dimension(4000, 1000)
+        peekScroll.preferredSize = Dimension(4000, 1000)
 
         menuOpenButton.isEnabled = false
         menuOpenButton.addMouseListener(object : MouseListener {

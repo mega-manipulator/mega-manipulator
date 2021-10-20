@@ -108,7 +108,5 @@ class ForksWindow(project: Project) : ToolWindowTab {
         onboardingOperator.registerTarget(OnboardingId.FORK_DELETE_STALE_FORK_BUTTON, deleteButton)
         onboardingOperator.registerTarget(OnboardingId.FORK_LOAD_STALE_FORK_BUTTON, loadStaleForksButton)
         onboardingOperator.registerTarget(OnboardingId.FORK_TAB, content)
-
-        onboardingOperator.display(OnboardingId.FORK_TAB)
     }
 }

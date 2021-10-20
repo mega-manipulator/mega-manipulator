@@ -5,7 +5,7 @@ import com.github.jensim.megamanipulator.onboarding.OnboardingId
 import com.github.jensim.megamanipulator.onboarding.OnboardingOperator
 import com.github.jensim.megamanipulator.toolswindow.TabKey
 import com.github.jensim.megamanipulator.toolswindow.ToolWindowTab
-import com.github.jensim.megamanipulator.ui.GeneralListCellRenderer.addCellRenderer
+import com.github.jensim.megamanipulator.ui.GeneralKtDataTable
 import com.intellij.openapi.components.service
 import com.intellij.openapi.fileEditor.FileDocumentManager
 import com.intellij.openapi.fileEditor.FileEditorManager
@@ -14,11 +14,12 @@ import com.intellij.openapi.ui.DialogPanel
 import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.openapi.vfs.VirtualFileManager
 import com.intellij.ui.JBSplitter
-import com.intellij.ui.components.JBList
 import com.intellij.ui.components.JBScrollPane
 import com.intellij.ui.components.JBTextArea
 import com.intellij.ui.layout.panel
-import java.awt.Color
+import com.intellij.util.ui.components.BorderLayoutPanel
+import java.awt.BorderLayout
+import java.awt.Dimension
 import java.io.File
 import javax.swing.JButton
 
@@ -27,17 +28,29 @@ class ApplyWindow(private val project: Project) : ToolWindowTab {
     private val applyOperator: ApplyOperator by lazy { project.service() }
     private val onboardingOperator: OnboardingOperator by lazy { project.service() }
 
-    private val resultList = JBList<ApplyOutput>()
+    private val resultList = GeneralKtDataTable(
+        ApplyOutput::class,
+        listOf(
+            "Directory" to { it.dir },
+            "Exit code" to { "${it.exitCode}" },
+            "StdOut" to { it.std },
+            "StdErr" to { it.err },
+        )
+    ) { it.exitCode != 0 }
     private val scrollableResult = JBScrollPane(resultList)
     private val details = JBTextArea()
     private val scrollableDetails = JBScrollPane(details)
     private val applyButton = JButton("Apply")
     private val openScriptButton = JButton("Open script")
-    private val split = JBSplitter().apply {
+    private val split = JBSplitter(0.7f).apply {
+        isLightweight
         firstComponent = scrollableResult
         secondComponent = scrollableDetails
     }
 
+    private val bigAreaPanel = BorderLayoutPanel().apply {
+        add(split, BorderLayout.CENTER)
+    }
     override val content: DialogPanel = panel {
         row {
             cell {
@@ -49,25 +62,19 @@ class ApplyWindow(private val project: Project) : ToolWindowTab {
             }
         }
         row {
-            component(split)
+            component(bigAreaPanel)
         }
     }
 
     init {
 
         details.isEditable = false
-        resultList.addCellRenderer({
-            if (it.exitCode != 0) {
-                Color.ORANGE
-            } else {
-                null
-            }
-        }) { it.dir }
+        scrollableResult.preferredSize = Dimension(4000, 1000)
+        scrollableDetails.preferredSize = Dimension(4000, 1000)
 
         applyButton.addActionListener {
             applyButton.isEnabled = false
             resultList.clearSelection()
-            resultList.setListData(emptyArray())
             details.text = ""
             try {
                 FileDocumentManager.getInstance().saveAllDocuments()
@@ -75,9 +82,9 @@ class ApplyWindow(private val project: Project) : ToolWindowTab {
                 e.printStackTrace().toString()
             }
             val result = applyOperator.apply()
-            resultList.setListData(result.toTypedArray())
+            resultList.setListData(result)
             if (result.isNotEmpty()) {
-                resultList.setSelectedValue(result.first(), true)
+                resultList.selectFirst()
             }
             applyButton.isEnabled = true
             content.validate()
@@ -109,6 +116,5 @@ class ApplyWindow(private val project: Project) : ToolWindowTab {
         onboardingOperator.registerTarget(OnboardingId.APPLY_BUTTON, applyButton)
         onboardingOperator.registerTarget(OnboardingId.APPLY_SCRIPT_OPEN_BUTTON, openScriptButton)
         onboardingOperator.registerTarget(OnboardingId.APPLY_RESULT_AREA, split)
-        onboardingOperator.display(OnboardingId.APPLY_TAB)
     }
 }
