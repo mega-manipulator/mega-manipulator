@@ -4,23 +4,17 @@
 
 ## [Unreleased]
 
+## [0.0.32]
 ### Added
 - In the forks tab, show parent/origin-repo of forks (Github & Bitbucket)
 
 ### Changed
 - Created a general purpose table component for the Search, PR & Fork tabs
 
-### Deprecated
-
-### Removed
-
-### Fixed
-
 ### Security
 - Upgrade dependency versions
 
 ## [0.0.31]
-
 ### Added
 - Onboarding flow is now able to select tabs moving forward
 - Added onboarding to all tabs
@@ -36,7 +30,6 @@
   - Delete fork
 
 ## [0.0.30]
-
 ### Added
 - Force recreate base files
 - Force open tabs when opening an MM project
@@ -47,7 +40,6 @@
 - New look and feel of dialogs
 
 ## [0.0.29]
-
 ### Added
 - approve, unapprove & merge for GitHub
 
@@ -55,7 +47,6 @@
 - shallow clone feature, as it messes up the forked repo remotes integration
 
 ## [0.0.28]
-
 ### Added
 - Fetch review PRs
 - Added PR actions
@@ -64,18 +55,15 @@
   - merging
 
 ## [0.0.27]
-
 ### Fixed
 - Fixed error for accessing classPath-resources with leading slash
 - Fix warning for using internal APIs
 
 ## [0.0.26]
-
 ### Removed
 - Removed support for older versions of IntelliJ
 
 ## [0.0.24]
-
 ### Added
 - GitLab code host
 - HttpClient logging
@@ -189,12 +177,13 @@ This will eliminate repos being listed twice
 ## [0.0.9]
 ### Added
 - Stabilize how PRs from forks are cloned. It's important that they are set up in the same manner as when one clones the base repo and then set up the fork in the initial flow.
+
 ### Changed
 - Version bumps
 - `USERNAME_PASSWORD` login method was renamed `USERNAME_TOKEN`, to better imply recommended usage
 
 ### Removed
-- Removed the `TOKEN` login method  
+- Removed the `TOKEN` login method
 
 ## [0.0.6]
 ### Added
