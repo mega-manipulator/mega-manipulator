@@ -67,6 +67,7 @@ jobs:
   gradleValidation:
     name: Gradle Wrapper
     runs-on: ubuntu-latest
+    needs: validateEnvs
     steps:
 
       # Check out current repository
