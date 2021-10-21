@@ -7,9 +7,21 @@ import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 fun properties(key: String) = project.findProperty(key).toString()
 
 plugins {
-    addPlugins()
+    id("java")
+    // Kotlin support
+    kotlin("jvm") version "1.5.31"
+    kotlin("plugin.serialization") version "1.5.31"
+    // gradle-intellij-plugin - read more: https://github.com/JetBrains/gradle-intellij-plugin
+    id("org.jetbrains.intellij") version "1.1.6"
+    // gradle-changelog-plugin - read more: https://github.com/JetBrains/gradle-changelog-plugin
+    id("org.jetbrains.changelog") version "1.3.1"
+
+    id("com.github.ben-manes.versions") version "0.39.0"
+    id("com.expediagroup.graphql") version "4.2.0"
+    id("org.jetbrains.qodana") version "0.1.12"
 }
 
+val javaVersion = properties("javaVersion")
 group = properties("pluginGroup")
 version = properties("pluginVersion")
 
@@ -20,7 +32,33 @@ repositories {
 }
 
 dependencies {
-    this.dependencies.addDependencies()
+    implementation("org.jetbrains.kotlin:kotlin-bom:1.5.31")
+    implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.5.31")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-bom:1.5.2")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-jdk8:1.5.1")
+    implementation("org.jetbrains.kotlin:kotlin-reflect:1.5.31")
+
+    implementation("io.ktor:ktor-client:1.5.4")
+    implementation("io.ktor:ktor-client-apache:1.5.4")
+    implementation("io.ktor:ktor-client-serialization:1.5.4")
+    implementation("io.ktor:ktor-client-logging:1.5.4")
+    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.1.0")
+    implementation("com.github.Ricky12Awesome:json-schema-serialization:0.6.6")
+
+    implementation("org.eclipse.jgit:org.eclipse.jgit:5.13.0.202109080827-r")
+    implementation("org.apache.logging.log4j:log4j-slf4j-impl:2.14.1")
+    implementation("me.xdrop:fuzzywuzzy:1.3.1")
+    implementation("com.expediagroup:graphql-kotlin-ktor-client:4.2.0")
+    implementation("com.expediagroup:graphql-kotlin-client-serialization:4.2.0")
+
+    testImplementation("org.awaitility:awaitility:4.1.0")
+    testImplementation("io.mockk:mockk:1.12.0")
+    testImplementation("org.hamcrest:hamcrest:2.2")
+    testImplementation("org.hamcrest:hamcrest-library:2.2")
+    testImplementation("org.junit.jupiter:junit-jupiter-api:5.8.1")
+    testImplementation("org.junit.jupiter:junit-jupiter-params:5.8.1")
+
+    testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:5.8.1")
 }
 
 // Configure Gradle IntelliJ Plugin - read more: https://github.com/JetBrains/gradle-intellij-plugin
@@ -85,14 +123,14 @@ tasks {
 
     // Set the compatibility jvm versions
     withType<JavaCompile> {
-        sourceCompatibility = Versions.jvm
-        targetCompatibility = Versions.jvm
+        sourceCompatibility = javaVersion
+        targetCompatibility = javaVersion
     }
     withType<KotlinCompile> {
         dependsOn(graphqlGenerateGithubClient)
         dependsOn(graphqlGenerateSourcegraphClient)
         dependsOn(graphqlGenerateClient)
-        kotlinOptions.jvmTarget = Versions.jvm
+        kotlinOptions.jvmTarget = javaVersion
     }
 
     withType<Test>().configureEach {
