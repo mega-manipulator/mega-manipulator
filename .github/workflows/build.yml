@@ -76,10 +76,6 @@ jobs:
       # Run tests
       - name: Run Tests
         run: ./gradlew test
-
-      # Run verifyPlugin Gradle task
-      - name: Verify Plugin
-        run: ./gradlew verifyPlugin
         env:
           GITHUB_USERNAME: ${{ secrets.GIT_HUB_CI_USER_NAME }}
           GITHUB_TOKEN: ${{ secrets.GIT_HUB_CI_TOKEN }}
@@ -88,6 +84,10 @@ jobs:
           GITLAB_TOKEN: ${{ secrets.GITLAB_TOKEN }}
           GITLAB_GROUP: ${{ secrets.GITLAB_GROUP }}
           GITLAB_PROJECT: ${{ secrets.GITLAB_PROJECT }}
+
+      # Run verifyPlugin Gradle task
+      - name: Verify Plugin
+        run: ./gradlew verifyPlugin
 
       # Run IntelliJ Plugin Verifier action using GitHub Action
       - name: Run Plugin Verifier
