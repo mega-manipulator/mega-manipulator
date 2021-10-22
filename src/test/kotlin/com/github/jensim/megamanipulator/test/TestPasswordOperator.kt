@@ -1,6 +1,7 @@
 package com.github.jensim.megamanipulator.test
 
 import com.github.jensim.megamanipulator.settings.passwords.PasswordsOperator
+import javax.swing.JComponent
 
 typealias Password = String
 typealias Username = String
@@ -19,5 +20,5 @@ class TestPasswordOperator(private val passwordsMap: Map<Login, Password>) : Pas
 
     override fun isPasswordSet(username: String, baseUrl: String): Boolean = passwordsMap.containsKey(username to baseUrl)
     override fun getPassword(username: String, baseUrl: String): String? = passwordsMap[username to baseUrl]
-    override fun promptForPassword(username: String?, baseUrl: String): String = TODO("not implemented")
+    override fun promptForPassword(focusComponent: JComponent, username: String, baseUrl: String): Unit = TODO("not implemented")
 }

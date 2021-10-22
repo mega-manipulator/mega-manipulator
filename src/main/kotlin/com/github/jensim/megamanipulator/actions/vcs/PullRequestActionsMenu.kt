@@ -5,6 +5,7 @@ import com.github.jensim.megamanipulator.actions.git.clone.CloneOperator
 import com.github.jensim.megamanipulator.project.PrefillString
 import com.github.jensim.megamanipulator.project.PrefillStringSuggestionOperator
 import com.github.jensim.megamanipulator.project.lazyService
+import com.github.jensim.megamanipulator.ui.ClosePRDialogFactory
 import com.github.jensim.megamanipulator.ui.DialogGenerator
 import com.github.jensim.megamanipulator.ui.EditPullRequestDialog
 import com.github.jensim.megamanipulator.ui.UiProtector
@@ -12,16 +13,11 @@ import com.intellij.notification.NotificationType
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.ui.popup.Balloon
 import com.intellij.ui.components.JBTextArea
-import org.slf4j.LoggerFactory
 import java.awt.Desktop
 import javax.swing.JComponent
 import javax.swing.JMenuItem
-import javax.swing.JOptionPane
-import javax.swing.JOptionPane.CANCEL_OPTION
-import javax.swing.JOptionPane.OK_CANCEL_OPTION
-import javax.swing.JOptionPane.OK_OPTION
-import javax.swing.JOptionPane.QUESTION_MESSAGE
 import javax.swing.JPopupMenu
+import org.slf4j.LoggerFactory
 
 @SuppressWarnings("LongParameterList", "ConstructorParameterNaming")
 class PullRequestActionsMenu(
@@ -62,41 +58,16 @@ class PullRequestActionsMenu(
     init {
         val declineMenuItem = JMenuItem("Decline PRs").apply {
             addActionListener { _ ->
-                DialogGenerator.showConfirm(
-                    title = "Decline PRs",
-                    message = """
-                        No undo path available I'm afraid..
-                        Decline selected PRs?
-                    """.trimIndent(),
-                    focusComponent = focusComponent,
-                ) {
-                    val dropBranchesAns = JOptionPane.showConfirmDialog(
-                        null,
-                        "Drop source branches?",
-                        "Drop branches?",
-                        OK_CANCEL_OPTION,
-                        QUESTION_MESSAGE,
-                        null
-                    )
-                    if (!listOf(OK_OPTION, CANCEL_OPTION).contains(dropBranchesAns)) return@showConfirm
-                    val dropForksAns = JOptionPane.showConfirmDialog(
-                        null,
-                        "Also drop source forks?",
-                        "Drop forks?",
-                        OK_CANCEL_OPTION,
-                        QUESTION_MESSAGE,
-                        null
-                    )
-                    if (!listOf(OK_OPTION, CANCEL_OPTION).contains(dropForksAns)) return@showConfirm
+                ClosePRDialogFactory.openCommitDialog(relativeComponent = focusComponent) { removeBranches, removeStaleForks ->
                     uiProtector.mapConcurrentWithProgress(
                         title = "Declining prs",
                         extraText2 = { "${it.codeHostName()}/${it.project()}/${it.baseRepo()} ${it.fromBranch()}" },
                         data = prProvider(),
                     ) { pullRequest: PullRequestWrapper ->
                         prRouter.closePr(
-                            dropFork = dropForksAns == OK_OPTION,
-                            dropBranch = dropBranchesAns == OK_OPTION,
-                            pullRequest
+                            dropFork = removeStaleForks,
+                            dropBranch = removeBranches,
+                            pullRequest,
                         )
                     }
                 }

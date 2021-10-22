@@ -3,6 +3,7 @@ package com.github.jensim.megamanipulator.settings.passwords
 import com.github.jensim.megamanipulator.actions.NotificationsOperator
 import com.github.jensim.megamanipulator.project.lazyService
 import com.github.jensim.megamanipulator.settings.SerializationHolder
+import com.github.jensim.megamanipulator.ui.PasswordDialogFactory
 import com.intellij.credentialStore.CredentialAttributes
 import com.intellij.credentialStore.Credentials
 import com.intellij.ide.passwordSafe.PasswordSafe
@@ -10,17 +11,11 @@ import com.intellij.notification.NotificationType
 import com.intellij.openapi.project.Project
 import com.intellij.remoteServer.util.CloudConfigurationUtil.createCredentialAttributes
 import com.intellij.serviceContainer.NonInjectable
-import com.intellij.ui.components.JBPasswordField
-import com.intellij.ui.components.JBTextField
-import com.intellij.ui.layout.panel
-import kotlinx.serialization.decodeFromString
-import kotlinx.serialization.encodeToString
 import java.util.concurrent.ConcurrentHashMap
 import javax.annotation.concurrent.NotThreadSafe
-import javax.swing.JOptionPane
-import javax.swing.JOptionPane.OK_CANCEL_OPTION
-import javax.swing.JOptionPane.OK_OPTION
-import javax.swing.JOptionPane.QUESTION_MESSAGE
+import javax.swing.JComponent
+import kotlinx.serialization.decodeFromString
+import kotlinx.serialization.encodeToString
 
 @NotThreadSafe
 class IntelliJPasswordsOperator @NonInjectable constructor(
@@ -42,52 +37,12 @@ class IntelliJPasswordsOperator @NonInjectable constructor(
     private fun usernameToKey(username: String, baseUrl: String) = "${username}___$baseUrl"
 
     @SuppressWarnings(value = ["ComplexCondition"])
-    override fun promptForPassword(username: String?, baseUrl: String): String {
-        val usernameField = JBTextField(30)
-        val passwordField = JBPasswordField().apply { columns = 30 }
-        val content = panel {
-            row {
-                label("Please provide credentials for $baseUrl")
-            }
-            row {
-                when (username) {
-                    null -> {
-                        label("Username:")
-                        component(usernameField)
-                    }
-                    "token" -> label("TOKEN login method")
-                    else -> label("Username: $username")
-                }
-            }
-            row {
-                label("Password:")
-                component(passwordField)
-            }
-        }
-        val ans =
-            JOptionPane.showConfirmDialog(null, content, "Password please", OK_CANCEL_OPTION, QUESTION_MESSAGE, null)
-        return if (ans != OK_OPTION) {
-            ""
-        } else if (username == null && usernameField.text.isNullOrEmpty()) {
-            notificationsOperator.show(
-                title = "Username not set",
-                body = "Username was not entered",
-                type = NotificationType.WARNING
-            )
-            ""
-        } else if (passwordField.password.concatToString().isNullOrEmpty()) {
-            notificationsOperator.show(
-                title = "Password not set",
-                body = "Password was not entered",
-                type = NotificationType.WARNING
-            )
-            ""
-        } else {
-            val resolvedUsername = username ?: usernameField.text
-            val password = passwordField.password.concatToString().trim()
+    override fun promptForPassword(focusComponent: JComponent, username: String, baseUrl: String) {
 
-            setPassword(resolvedUsername, password, baseUrl)
-            password
+        PasswordDialogFactory.askForPassword(focusComponent, username, baseUrl) { password ->
+            if (password.isNotBlank()) {
+                setPassword(username, password, baseUrl)
+            }
         }
     }
 

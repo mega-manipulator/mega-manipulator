@@ -22,12 +22,12 @@ import com.intellij.ui.components.JBLabel
 import com.intellij.ui.components.JBList
 import com.intellij.ui.layout.LCFlags
 import com.intellij.ui.layout.panel
-import kotlinx.coroutines.Deferred
 import java.awt.Color
 import java.awt.Component
 import javax.swing.JButton
 import javax.swing.JComponent
 import javax.swing.ListSelectionModel
+import kotlinx.coroutines.Deferred
 
 @SuppressWarnings("LongParameterList")
 class SettingsWindow(project: Project) : ToolWindowTab {
@@ -164,7 +164,7 @@ class SettingsWindow(project: Project) : ToolWindowTab {
         passwordsOperator.isPasswordSet(conf.username, conf.baseUri)
 
     private fun setPassword(conf: ConfigHostHolder) =
-        passwordsOperator.promptForPassword(username = conf.username, baseUrl = conf.baseUri)
+        passwordsOperator.promptForPassword(focusComponent = hostConfigSelect, username = conf.username, baseUrl = conf.baseUri)
 
     override fun refresh() {
         onboardingOperator.registerTarget(OnboardingId.SETTINGS_TAB, content)

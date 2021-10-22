@@ -38,12 +38,12 @@ import io.ktor.client.statement.readText
 import io.ktor.http.ContentType
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.contentType
+import java.net.URL
+import java.util.concurrent.atomic.AtomicInteger
 import kotlinx.coroutines.delay
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import org.slf4j.LoggerFactory
-import java.net.URL
-import java.util.concurrent.atomic.AtomicInteger
 
 @Suppress("debtUnusedPrivateMember", "TooManyFunctions", "LoopWithTooManyJumpStatements", "UnusedPrivateMember")
 class GitLabClient @NonInjectable constructor(
@@ -239,7 +239,8 @@ class GitLabClient @NonInjectable constructor(
             PrActionStatus(success = false, msg = msg)
         } else {
             log.info("Closed MergeRequest for ${pullRequest.asPathString()} with title '${pullRequest.title()}'")
-            if (dropFork && pullRequest.isFork()) {
+            if (dropFork && pullRequest.isFork() && (pullRequest.sourceProjectId != pullRequest.targetProjectId)) {
+                // TODO - verify that there are no other active PRs
                 val repo = getRepo(pullRequest, pullRequest.sourceProjectId, client, settings)
                 deletePrivateRepo(repo, settings)
             } else if (dropBranch && !pullRequest.isFork()) {

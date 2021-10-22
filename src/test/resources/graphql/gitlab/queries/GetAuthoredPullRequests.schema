@@ -12,6 +12,10 @@ query ($cursor: String) {
         iid
         webUrl
         title
+        author {
+          username
+          name
+        }
         description
         sourceBranch
         targetBranch

@@ -10,7 +10,7 @@ import com.intellij.ui.layout.panel
 import javax.swing.JButton
 import javax.swing.JComponent
 
-object CommitDialog {
+object CommitDialogFactory {
 
     fun openCommitDialog(
         relativeComponent: JComponent,

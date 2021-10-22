@@ -17,9 +17,6 @@ import com.intellij.ui.components.JBScrollPane
 import com.intellij.ui.components.JBTextArea
 import com.intellij.ui.components.JBTextField
 import com.intellij.ui.layout.panel
-import kotlinx.serialization.encodeToString
-import me.xdrop.fuzzywuzzy.FuzzySearch
-import org.slf4j.LoggerFactory
 import java.awt.Dimension
 import java.awt.event.MouseEvent
 import java.awt.event.MouseListener
@@ -27,6 +24,9 @@ import javax.swing.JButton
 import javax.swing.JComponent
 import javax.swing.event.DocumentEvent
 import javax.swing.event.DocumentListener
+import kotlinx.serialization.encodeToString
+import me.xdrop.fuzzywuzzy.FuzzySearch
+import org.slf4j.LoggerFactory
 
 class PullRequestWindow(project: Project) : ToolWindowTab {
 
@@ -47,6 +47,7 @@ class PullRequestWindow(project: Project) : ToolWindowTab {
             "Base repo" to { it.baseRepo() },
             "Title" to { it.title() },
             "Description" to { it.body() },
+            "Author" to { it.author() ?: "?" },
         )
     )
     private val prScroll = JBScrollPane(prTable)

@@ -14,6 +14,7 @@ sealed class PullRequestWrapper : GitCloneable {
     abstract fun searchHostName(): String
     abstract fun title(): String
     abstract fun body(): String
+    abstract fun author(): String?
     abstract fun fromBranch(): String
     abstract fun toBranch(): String
     abstract fun browseUrl(): String?
@@ -34,6 +35,7 @@ data class BitBucketPullRequestWrapper(
     override fun baseRepo(): String = bitbucketPR.toRef.repository.slug
     override fun title(): String = bitbucketPR.title
     override fun body(): String = bitbucketPR.description ?: ""
+    override fun author(): String? = bitbucketPR.author?.user?.name
     override fun fromBranch(): String = bitbucketPR.fromRef.id.removePrefix("refs/heads/")
     override fun toBranch(): String = bitbucketPR.toRef.id.removePrefix("refs/heads/")
     fun alterCopy(
@@ -73,6 +75,7 @@ data class GithubComPullRequestWrapper(
     override fun baseRepo(): String = pullRequest.base?.repo?.name ?: "<?>"
     override fun title(): String = pullRequest.title
     override fun body(): String = pullRequest.body
+    override fun author(): String = pullRequest.user.login
     override fun fromBranch(): String = pullRequest.head?.ref ?: "<?>"
     override fun toBranch(): String = pullRequest.base?.ref ?: "<?>"
     override fun isFork(): Boolean = pullRequest.head?.repo?.fork ?: false && (pullRequest.base?.repo?.id != pullRequest.head?.repo?.id)
@@ -114,6 +117,7 @@ data class GitLabMergeRequestListItemWrapper(
     override fun baseRepo(): String = mergeRequest.targetProject.group?.path ?: "<?>"
     override fun title(): String = mergeRequest.title
     override fun body(): String = mergeRequest.description ?: ""
+    override fun author(): String? = mergeRequest.author?.username
     override fun fromBranch(): String = mergeRequest.sourceBranch
     override fun toBranch(): String = mergeRequest.targetBranch
     override fun isFork(): Boolean = mergeRequest.sourceProject?.path != mergeRequest.targetProject.path
@@ -148,6 +152,7 @@ data class GitLabAssignedMergeRequestListItemWrapper(
     override fun baseRepo(): String = mergeRequest.targetProject.group?.path ?: "<?>"
     override fun title(): String = mergeRequest.title
     override fun body(): String = mergeRequest.description ?: ""
+    override fun author(): String? = mergeRequest.author?.username
     override fun fromBranch(): String = mergeRequest.sourceBranch
     override fun toBranch(): String = mergeRequest.targetBranch
     override fun isFork(): Boolean = mergeRequest.sourceProject?.path != mergeRequest.targetProject.path
@@ -183,6 +188,7 @@ data class GitLabMergeRequestApiWrapper(
     override fun baseRepo(): String = cloneable.baseRepo()
     override fun title(): String = mergeRequest.title
     override fun body(): String = mergeRequest.description
+    override fun author(): String? = null
     override fun fromBranch(): String = mergeRequest.source_branch
     override fun toBranch(): String = mergeRequest.target_branch
     override fun isFork(): Boolean = mergeRequest.source_project_id != mergeRequest.target_project_id

@@ -15,7 +15,7 @@ import com.github.jensim.megamanipulator.settings.SettingsFileOperator
 import com.github.jensim.megamanipulator.settings.types.MegaManipulatorSettings
 import com.github.jensim.megamanipulator.toolswindow.TabKey
 import com.github.jensim.megamanipulator.toolswindow.ToolWindowTab
-import com.github.jensim.megamanipulator.ui.CommitDialog
+import com.github.jensim.megamanipulator.ui.CommitDialogFactory
 import com.github.jensim.megamanipulator.ui.CreatePullRequestDialog
 import com.github.jensim.megamanipulator.ui.DialogGenerator
 import com.github.jensim.megamanipulator.ui.GeneralListCellRenderer.addCellRenderer
@@ -154,7 +154,7 @@ class GitWindow(private val project: Project) : ToolWindowTab {
             }
         }
         btnCommitAndPush.addActionListener { _: ActionEvent ->
-            CommitDialog.openCommitDialog(
+            CommitDialogFactory.openCommitDialog(
                 relativeComponent = btnCommitAndPush,
                 prefillOperator = prefillStringSuggestionOperator
             ) { commitMessage: String, push: Boolean ->

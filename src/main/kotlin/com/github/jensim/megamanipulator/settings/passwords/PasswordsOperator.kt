@@ -1,10 +1,12 @@
 package com.github.jensim.megamanipulator.settings.passwords
 
+import javax.swing.JComponent
+
 interface PasswordsOperator {
 
     fun isPasswordSet(username: String, baseUrl: String): Boolean
     fun getPassword(username: String, baseUrl: String): String?
-    fun promptForPassword(username: String?, baseUrl: String): String
+    fun promptForPassword(focusComponent: JComponent, username: String, baseUrl: String)
 
     @Suppress("ComplexMethod")
     fun aggressivePercentEncoding(word: String): String = word.map {
