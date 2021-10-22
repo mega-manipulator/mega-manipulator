@@ -3,6 +3,11 @@
 # mega-manipulator Changelog
 
 ## [Unreleased]
+### Changed
+- Improved the UI components
+  - Declining PRs
+  - Password input
+  - Show PR authors
 
 ## [0.0.32]
 ### Added
