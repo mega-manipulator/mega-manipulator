@@ -32,16 +32,19 @@ repositories {
 }
 
 dependencies {
-    implementation("org.jetbrains.kotlin:kotlin-bom:1.5.31")
-    implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.5.31")
-    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-bom:1.5.2")
-    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-jdk8:1.5.1")
-    implementation("org.jetbrains.kotlin:kotlin-reflect:1.5.31")
+    implementation(enforcedPlatform("io.ktor:ktor-bom:1.5.4"))
+    implementation(enforcedPlatform("org.jetbrains.kotlin:kotlin-bom:1.5.31"))
+    implementation(enforcedPlatform("org.jetbrains.kotlinx:kotlinx-coroutines-bom:1.5.2"))
+    //implementation(enforcedPlatform("org.jetbrains.kotlinx:kotlinx-serialization-bom:1.1.0"))
 
-    implementation("io.ktor:ktor-client:1.5.4")
-    implementation("io.ktor:ktor-client-apache:1.5.4")
-    implementation("io.ktor:ktor-client-serialization:1.5.4")
-    implementation("io.ktor:ktor-client-logging:1.5.4")
+    implementation(kotlin("stdlib-jdk8"))
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-jdk8")
+    implementation(kotlin("reflect"))
+
+    implementation("io.ktor:ktor-client")
+    implementation("io.ktor:ktor-client-apache")
+    implementation("io.ktor:ktor-client-serialization")
+    implementation("io.ktor:ktor-client-logging")
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.1.0")
     implementation("com.github.Ricky12Awesome:json-schema-serialization:0.6.6")
 
