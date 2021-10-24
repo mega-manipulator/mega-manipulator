@@ -3,6 +3,8 @@
 # mega-manipulator Changelog
 
 ## [Unreleased]
+
+## [0.0.33]
 ### Changed
 - Improved the UI components
   - Declining PRs
