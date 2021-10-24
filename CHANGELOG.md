@@ -3,14 +3,25 @@
 # mega-manipulator Changelog
 
 ## [Unreleased]
+
+### Added
+
+- Sparse checkout from search and PR  
+  And unison UI between the two
+
+## [0.0.33]
+
 ### Changed
+
 - Improved the UI components
   - Declining PRs
   - Password input
   - Show PR authors
 
 ## [0.0.32]
+
 ### Added
+
 - In the forks tab, show parent/origin-repo of forks (Github & Bitbucket)
 
 ### Changed

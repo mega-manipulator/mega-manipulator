@@ -10,6 +10,11 @@ import com.intellij.notification.NotificationType
 import com.intellij.util.io.delete
 import io.mockk.every
 import io.mockk.verify
+import java.io.File
+import java.util.UUID
+import java.util.concurrent.ConcurrentHashMap
+import java.util.concurrent.TimeUnit
+import kotlin.io.path.ExperimentalPathApi
 import kotlinx.coroutines.runBlocking
 import org.hamcrest.MatcherAssert.assertThat
 import org.hamcrest.Matchers.equalTo
@@ -23,11 +28,6 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.fail
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.MethodSource
-import java.io.File
-import java.util.UUID
-import java.util.concurrent.ConcurrentHashMap
-import java.util.concurrent.TimeUnit
-import kotlin.io.path.ExperimentalPathApi
 
 @ExperimentalPathApi
 class IntegrationTest {
@@ -57,7 +57,7 @@ class IntegrationTest {
     fun `run naive scenarios`(result: SearchResult) {
         // clone
         val results: Set<SearchResult> = setOf(result)
-        wiring.cloneOperator.clone(results, "main", false)
+        wiring.cloneOperator.clone(repos = results, branchName = "main", shallow = false, sparseDef = null)
         verify { wiring.notificationsOperator.show(any(), any(), eq(NotificationType.INFORMATION)) }
         val dotGitDit = File(wiring.tempDir, "clones/${result.asPathString()}/.git")
         assertTrue(dotGitDit.exists())
@@ -88,7 +88,13 @@ class IntegrationTest {
         val commitMessage = "Integration test of branch $branch"
         val commitResults = ConcurrentHashMap<String, MutableList<Pair<String, ApplyOutput>>>()
         runBlocking {
-            wiring.commitOperator.commitProcess(repoDir, commitResults, commitMessage, true, wiring.settings)
+            wiring.commitOperator.commitProcess(
+                it = repoDir,
+                result = commitResults,
+                commitMessage = commitMessage,
+                push = true,
+                settings = wiring.settings
+            )
         }
         assertThat(commitResults.keys, hasSize(1))
         val commitResult: List<Pair<String, ApplyOutput>> = commitResults.values.first()
@@ -102,9 +108,9 @@ class IntegrationTest {
         // pr
         val newPr = runBlocking {
             wiring.prRouter.createPr(
-                branch,
-                "Don't mind me, im an integration test",
-                result
+                title = branch,
+                description = "Don't mind me, im an integration test",
+                repo = result
             )
         }
         assertNotNull(newPr)
@@ -126,7 +132,7 @@ class IntegrationTest {
             .atMost(10, TimeUnit.SECONDS).until({
                 // Must fetch the updated PR in order to decline it
                 runBlocking {
-                    wiring.prRouter.getAllAuthorPrs(newPr!!.searchHostName(), newPr.codeHostName())
+                    wiring.prRouter.getAllAuthorPrs(searchHost = newPr!!.searchHostName(), codeHost = newPr.codeHostName())
                 }?.firstOrNull { it.title() == newTitle }
             }) { it != null }!!
 

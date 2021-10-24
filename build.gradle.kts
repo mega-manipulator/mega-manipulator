@@ -38,8 +38,8 @@ dependencies {
     //implementation(enforcedPlatform("org.jetbrains.kotlinx:kotlinx-serialization-bom:1.1.0"))
 
     implementation(kotlin("stdlib-jdk8"))
-    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-jdk8")
     implementation(kotlin("reflect"))
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-jdk8")
 
     implementation("io.ktor:ktor-client")
     implementation("io.ktor:ktor-client-apache")

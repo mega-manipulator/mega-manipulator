@@ -27,6 +27,10 @@ import io.mockk.every
 import io.mockk.junit5.MockKExtension
 import io.mockk.mockk
 import io.mockk.verify
+import java.io.File
+import java.nio.file.Path
+import kotlin.io.path.ExperimentalPathApi
+import kotlin.io.path.createTempDirectory
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.async
@@ -37,10 +41,6 @@ import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
-import java.io.File
-import java.nio.file.Path
-import kotlin.io.path.ExperimentalPathApi
-import kotlin.io.path.createTempDirectory
 
 @ExperimentalPathApi
 @ExtendWith(MockKExtension::class)
@@ -117,7 +117,7 @@ class CloneOperatorTest {
         coEvery { processOperator.runCommandAsync(any(), any()) } returns GlobalScope.async { ApplyOutput.dummy(exitCode = 0) }
 
         // When
-        cloneOperator.clone(setOf(input), "main", false)
+        cloneOperator.clone(repos = setOf(input), branchName = "main", shallow = false, sparseDef = null)
 
         // Then
         verify { filesOperator.refreshClones() }
@@ -135,7 +135,7 @@ class CloneOperatorTest {
         // Given
 
         // When
-        cloneOperator.clone(emptyList())
+        cloneOperator.clone(pullRequests = emptyList(), sparseDef = null)
 
         // Then
         verify { filesOperator.refreshClones() }
@@ -165,7 +165,7 @@ class CloneOperatorTest {
         }
 
         // When
-        cloneOperator.clone(listOf(pullRequest, pullRequest))
+        cloneOperator.clone(pullRequests = listOf(pullRequest, pullRequest), sparseDef = null)
 
         // Then
         verify { filesOperator.refreshClones() }
@@ -195,7 +195,7 @@ class CloneOperatorTest {
         coEvery { processOperator.runCommandAsync(any(), any()) } returns CompletableDeferred(applyOutput)
 
         // When
-        cloneOperator.cloneRepos(pullRequest, settings)
+        cloneOperator.cloneRepos(pullRequest = pullRequest, settings = settings, sparseDef = null)
 
         // Then
         verify { processOperator.runCommandAsync(any(), any()) }
@@ -214,13 +214,13 @@ class CloneOperatorTest {
             every { cloneUrlTo(HTTPS) } returns "clone-url-to"
             every { isFork() } returns true
         }
-        val applyOutput = ApplyOutput("anydir", "anystd", "", 0)
+        val success = CompletableDeferred(ApplyOutput("anydir", "anystd", "", 0))
 
-        every { processOperator.runCommandAsync(any(), any()) } returns CompletableDeferred(applyOutput)
+        every { processOperator.runCommandAsync(any(), any()) } returns success
         coEvery { localRepoOperator.promoteOriginToForkRemote(any(), any()) } returns emptyList()
 
         // When
-        cloneOperator.cloneRepos(pullRequest, settings)
+        cloneOperator.cloneRepos(pullRequest = pullRequest, settings = settings, sparseDef = null)
 
         // Then
         verify { processOperator.runCommandAsync(any(), any()) }
@@ -239,36 +239,20 @@ class CloneOperatorTest {
         val applyOutputCloneSuccess = ApplyOutput("anydir", "anystd", "", 0)
         val fullPath = "${project.basePath}/clones/${input.asPathString()}"
         val dir = File(fullPath)
-        every { processOperator.runCommandAsync(eq(dir), any<List<String>>()) } returns CompletableDeferred(
-            ApplyOutput.dummy()
-        )
-        every {
-            processOperator.runCommandAsync(
-                eq(dir.parentFile),
-                listOf("git", "clone", "--branch", "main", "https://username:password@example.com", dir.absolutePath)
-            )
-        } returns CompletableDeferred(applyOutputCloneSuccess)
+        every { processOperator.runCommandAsync(eq(dir), any<List<String>>()) } returns CompletableDeferred(ApplyOutput.dummy())
+        every { processOperator.runCommandAsync(workingDir = eq(dir.parentFile), command = listOf("git", "clone", "https://username:password@example.com", "--no-checkout", "--branch", "main", dir.absolutePath)) } returns CompletableDeferred(applyOutputCloneSuccess)
+        every { processOperator.runCommandAsync(workingDir = eq(dir), command = listOf("git", "fetch", "origin", "main")) } returns CompletableDeferred(applyOutputCloneSuccess)
+        every { processOperator.runCommandAsync(workingDir = eq(dir), command = listOf("git", "checkout", "main")) } returns CompletableDeferred(applyOutputCloneSuccess)
 
         // When
-        cloneOperator.clone(setOf(input), "prBranch", false)
+        cloneOperator.clone(repos = setOf(input), branchName = "prBranch", shallow = false, sparseDef = null)
 
         // Then
-        verify {
-            processOperator.runCommandAsync(
-                eq(dir.parentFile),
-                eq(listOf("git", "clone", "--branch", "main", "https://username:password@example.com", dir.absolutePath))
-            )
-        }
         verify { processOperator.runCommandAsync(eq(dir), eq(listOf("git", "checkout", "prBranch"))) }
         verify { processOperator.runCommandAsync(eq(dir), eq(listOf("git", "checkout", "-b", "prBranch"))) }
         verify { filesOperator.refreshClones() }
-        verify {
-            notificationsOperator.show(
-                "Cloning done with failures",
-                "Failed cloning 1/1 repos, details in ide logs",
-                NotificationType.WARNING
-            )
-        }
+        verify { notificationsOperator.show(title = "Cloning done with failures", body = "Failed cloning 1/1 repos, details in ide logs", type = NotificationType.WARNING) }
+        confirmVerified(processOperator, prRouter)
     }
 
     @Test
@@ -281,7 +265,7 @@ class CloneOperatorTest {
         File(fullPath, ".git").createNewFile()
 
         // When
-        val states = cloneOperator.cloneRepos(pullRequest, settings)
+        val states = cloneOperator.cloneRepos(pullRequest, settings, null)
 
         // Then
         assertThat(states.size, equalTo(1))

@@ -104,8 +104,8 @@ class SearchWindow(
         cloneButton.addActionListener {
             val selected = table.selectedValuesList.toSet()
             if (selected.isNotEmpty()) {
-                cloneDialogFactory.show(cloneButton) { branch: String, shallow: Boolean ->
-                    cloneOperator.clone(repos = selected, branchName = branch, shallow = shallow)
+                cloneDialogFactory.showCloneDialog(cloneButton) { branch: String, shallow: Boolean, sparseDef: String? ->
+                    cloneOperator.clone(repos = selected, branchName = branch, shallow = shallow, sparseDef = sparseDef)
                     table.clearSelection()
                     prefillOperator.setPrefill(PrefillString.BRANCH, branch)
                 }

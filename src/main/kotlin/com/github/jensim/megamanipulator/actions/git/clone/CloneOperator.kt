@@ -11,6 +11,7 @@ import com.github.jensim.megamanipulator.actions.vcs.PullRequestWrapper
 import com.github.jensim.megamanipulator.actions.vcs.RepoWrapper
 import com.github.jensim.megamanipulator.files.FilesOperator
 import com.github.jensim.megamanipulator.project.lazyService
+import com.github.jensim.megamanipulator.settings.SerializationHolder
 import com.github.jensim.megamanipulator.settings.SettingsFileOperator
 import com.github.jensim.megamanipulator.settings.types.CodeHostSettings
 import com.github.jensim.megamanipulator.settings.types.MegaManipulatorSettings
@@ -20,6 +21,7 @@ import com.intellij.notification.NotificationType.WARNING
 import com.intellij.openapi.project.Project
 import com.intellij.serviceContainer.NonInjectable
 import java.io.File
+import kotlinx.serialization.encodeToString
 
 private typealias Action = Pair<String, ApplyOutput>
 
@@ -56,7 +58,7 @@ class CloneOperator @NonInjectable constructor(
     private val settingsFileOperator: SettingsFileOperator by lazyService(project, settingsFileOperator)
     private val gitUrlHelper: GitUrlHelper by lazyService(project, gitUrlHelper)
 
-    fun clone(repos: Set<SearchResult>, branchName: String, shallow: Boolean) {
+    fun clone(repos: Set<SearchResult>, branchName: String, shallow: Boolean, sparseDef: String?) {
         val basePath = project.basePath!!
         filesOperator.refreshConf()
         val settings = settingsFileOperator.readSettings()!!
@@ -72,7 +74,14 @@ class CloneOperator @NonInjectable constructor(
                 val cloneUrl = gitUrlHelper.buildCloneUrl(codeSettings, vcsRepo)
                 val defaultBranch = prRouter.getRepo(repo)?.getDefaultBranch()!!
                 val dir = File(basePath, "clones/${repo.asPathString()}")
-                clone(dir = dir, cloneUrl = cloneUrl, defaultBranch = defaultBranch, branch = branchName, shallow = shallow)
+                clone(
+                    dir = dir,
+                    cloneUrl = cloneUrl,
+                    defaultBranch = defaultBranch,
+                    branch = branchName,
+                    shallow = shallow,
+                    sparseDef = sparseDef
+                )
             }
         }
         filesOperator.refreshClones()
@@ -80,24 +89,29 @@ class CloneOperator @NonInjectable constructor(
     }
 
     private fun reportState(state: List<Pair<Any, List<Action>?>>) {
-        val badState = state.filter { it.second == null || it.second!!.isNotEmpty() }
+        val badState: List<Pair<Any, List<Action>?>> = state.filter { it.second.orEmpty().lastOrNull()?.second?.exitCode != 0 }
         if (badState.isEmpty()) {
             notificationsOperator.show(
                 title = "Cloning done",
                 body = "All ${state.size} cloned successfully",
                 type = INFORMATION,
             )
+            // val serializaleBadState: List<Pair<String, List<Action>?>> = state.map { it.first.toString() to it.second }
+            // val badStateString = SerializationHolder.readableJson.encodeToString(serializaleBadState)
+            // System.err.println("Successfully cloned ${state.size} repos:\n$badStateString")
         } else {
             notificationsOperator.show(
                 title = "Cloning done with failures",
                 body = "Failed cloning ${badState.size}/${state.size} repos, details in ide logs",
                 type = WARNING,
             )
-            System.err.println("Failed cloning ${badState.size}/${state.size} repos, these are the causes:\n$badState")
+            val serializaleBadState: List<Pair<String, List<Action>?>> = badState.map { it.first.toString() to it.second }
+            val badStateString = SerializationHolder.readableJson.encodeToString(serializaleBadState)
+            System.err.println("Failed cloning ${badState.size}/${state.size} repos, these are the causes:\n$badStateString")
         }
     }
 
-    fun clone(pullRequests: List<PullRequestWrapper>) {
+    fun clone(pullRequests: List<PullRequestWrapper>, sparseDef: String?) {
         val settings = uiProtector.uiProtectedOperation("Load settings") { settingsFileOperator.readSettings() }
         if (settings == null) {
             reportState(listOf("Settings" to listOf("Load Settings" to ApplyOutput.dummy(err = "No settings found for project."))))
@@ -108,13 +122,19 @@ class CloneOperator @NonInjectable constructor(
                     extraText1 = "Cloning repos",
                     extraText2 = { it.asPathString() },
                     data = pullRequests,
-                ) { cloneRepos(it, settings) }
+                ) {
+                    cloneRepos(
+                        pullRequest = it,
+                        settings = settings,
+                        sparseDef = sparseDef
+                    )
+                }
             filesOperator.refreshClones()
             reportState(state)
         }
     }
 
-    suspend fun cloneRepos(pullRequest: PullRequestWrapper, settings: MegaManipulatorSettings): List<Action> {
+    suspend fun cloneRepos(pullRequest: PullRequestWrapper, settings: MegaManipulatorSettings, sparseDef: String?): List<Action> {
         val basePath = project.basePath!!
         val fullPath = "$basePath/clones/${pullRequest.asPathString()}"
         val dir = File(fullPath)
@@ -130,9 +150,11 @@ class CloneOperator @NonInjectable constructor(
             clone(
                 dir = dir,
                 cloneUrl = pullRequest.cloneUrlFrom(prSettings.cloneType)!!,
-                defaultBranch = pullRequest.fromBranch()
+                defaultBranch = pullRequest.fromBranch(),
+                shallow = false,
+                sparseDef = sparseDef
             )
-        if (badState.isEmpty() && pullRequest.isFork()) {
+        if (badState.isOkay() && pullRequest.isFork()) {
             localRepoOperator.promoteOriginToForkRemote(dir, pullRequest.cloneUrlTo(prSettings.cloneType)!!)
         }
         return badState
@@ -144,45 +166,77 @@ class CloneOperator @NonInjectable constructor(
         cloneUrl: String,
         defaultBranch: String,
         branch: String = defaultBranch,
-        shallow: Boolean = false,
+        shallow: Boolean,
+        sparseDef: String?,
     ): List<Action> {
-        val badState: MutableList<Action> = mutableListOf()
+        val actionTrace: MutableList<Action> = mutableListOf()
         dir.mkdirs()
         if (File(dir, ".git").exists()) {
-            badState.add("Repo already cloned" to ApplyOutput.dummy(dir = dir.path, std = "Repo already cloned"))
-            return badState
+            actionTrace.add("Repo already cloned" to ApplyOutput.dummy(dir = dir.path, std = "Repo already cloned"))
+            return actionTrace
         }
-        var regularClone = !shallow
-        if (shallow) {
-            val p0 = processOperator.runCommandAsync(
-                dir.parentFile,
-                listOf("git", "clone", cloneUrl, "--depth", "1", "--branch", defaultBranch, dir.absolutePath)
-            ).await()
-            if (p0.exitCode != 0) {
-                badState.add("Failed shallow clone clone" to p0)
-                regularClone = true
-            }
+        val cloneCommandsResult = cloneCommands(shallow, cloneUrl, defaultBranch, dir)
+        actionTrace.addAll(cloneCommandsResult)
+
+        if (actionTrace.isOkay()) {
+            actionTrace.addAll(pullCommands(dir, sparseDef, defaultBranch, shallow))
         }
-        if (regularClone) {
-            val p1 = processOperator.runCommandAsync(
-                dir.parentFile,
-                listOf("git", "clone", "--branch", defaultBranch, cloneUrl, dir.absolutePath)
-            ).await()
-            if (p1.exitCode != 0) {
-                badState.add("Failed clone" to p1)
-                return badState
-            }
-        }
-        if (defaultBranch != branch) {
-            val p2 = processOperator.runCommandAsync(dir, listOf("git", "checkout", branch)).await()
-            if (p2.exitCode == 0) {
-                return badState
-            }
-            val p3 = processOperator.runCommandAsync(dir, listOf("git", "checkout", "-b", branch)).await()
+
+        if (defaultBranch != branch && actionTrace.isOkay()) {
+            val p3 = processOperator.runCommandAsync(dir, listOf("git", "checkout", branch)).await()
+            actionTrace.add("Switch branch" to p3)
             if (p3.exitCode != 0) {
-                badState.add("Branch switch failed" to p3)
+                val p4 = processOperator.runCommandAsync(dir, listOf("git", "checkout", "-b", branch)).await()
+                actionTrace.add("Create branch" to p4)
             }
         }
-        return badState
+        return actionTrace
+    }
+
+    private fun List<Action>.isOkay(): Boolean = isEmpty() || lastOrNull()?.second?.exitCode == 0
+
+    private suspend fun cloneCommands(shallow: Boolean, cloneUrl: String, defaultBranch: String, dir: File): List<Action> {
+        val actionTrace = mutableListOf<Action>()
+        val cloneActionName = if (shallow) "Shallow clone" else "Clone"
+
+        val cloneArgs = if (shallow) {
+            listOf("git", "clone", cloneUrl, "--depth", "1", "--no-checkout", "--branch", defaultBranch, dir.absolutePath)
+        } else {
+            listOf("git", "clone", cloneUrl, "--no-checkout", "--branch", defaultBranch, dir.absolutePath)
+        }
+        val p0 = processOperator.runCommandAsync(dir.parentFile, cloneArgs).await()
+        actionTrace.add(cloneActionName to p0)
+        return actionTrace
+    }
+
+    private suspend fun pullCommands(dir: File, sparseDef: String?, defaultBranch: String, shallow: Boolean): List<Action> {
+        val actionTrace = mutableListOf<Action>()
+        if (sparseDef != null) {
+            val p0 = processOperator.runCommandAsync(dir, listOf("git", "config", "core.sparseCheckout", "true")).await()
+            actionTrace.add("Config sparse checkout" to p0)
+            if (p0.exitCode == 0) {
+                try {
+                    val sparseFile = File(dir, ".git/info/sparse-checkout")
+                    sparseFile.writeText(sparseDef)
+                    actionTrace.add("Setup sparse checkout config" to ApplyOutput(dir = dir.absolutePath, std = "Setup successful", err = "", exitCode = 0))
+                } catch (e: Exception) {
+                    e.printStackTrace()
+                    actionTrace.add("Setup sparse checkout config" to ApplyOutput(dir = dir.absolutePath, std = "Failed writing sparse config file", err = e.stackTraceToString(), 1))
+                }
+            }
+        }
+        if (actionTrace.isOkay()) {
+            val p1 = if (shallow) {
+                processOperator.runCommandAsync(dir, listOf("git", "fetch", "--depth", "1", "origin", defaultBranch)).await()
+            } else {
+                processOperator.runCommandAsync(dir, listOf("git", "fetch", "origin", defaultBranch)).await()
+            }
+            actionTrace.add("Fetch" to p1)
+            if (p1.exitCode == 0) {
+                val p2 = processOperator.runCommandAsync(dir, listOf("git", "checkout", defaultBranch)).await()
+                actionTrace.add("Checkout" to p2)
+            }
+        }
+        return actionTrace
     }
 }

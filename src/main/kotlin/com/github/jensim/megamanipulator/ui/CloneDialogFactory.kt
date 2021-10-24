@@ -8,8 +8,12 @@ import com.intellij.openapi.ui.DialogPanel
 import com.intellij.openapi.ui.popup.Balloon
 import com.intellij.openapi.ui.popup.JBPopupFactory
 import com.intellij.ui.components.JBCheckBox
+import com.intellij.ui.components.JBLabel
+import com.intellij.ui.components.JBTextArea
 import com.intellij.ui.components.JBTextField
 import com.intellij.ui.layout.panel
+import java.awt.event.MouseEvent
+import java.awt.event.MouseListener
 import javax.swing.JButton
 import javax.swing.JComponent
 
@@ -19,51 +23,115 @@ class CloneDialogFactory(
 
     private val prefillOperator: PrefillStringSuggestionOperator by lazy { project.service() }
 
-    fun show(focusComponent: JComponent, onOk: (branch: String, shallow: Boolean) -> Unit) {
+    fun showCloneDialog(focusComponent: JComponent, onOk: (branch: String, shallow: Boolean, sparseDef: String?) -> Unit) {
         try {
-            val cloneButton = JButton("Clone")
-            val cancelButton = JButton("Cancel")
-            val shallowBox = JBCheckBox(null, true)
-            val branchTextArea = JBTextField(65)
-            val panel: DialogPanel by lazy {
-                panel {
-                    row {
-                        label("Branch")
-                        scrollPane(branchTextArea)
-                    }
-                    row {
-                        label("Shallow clone?")
-                        component(shallowBox)
-                    }
-                    row {
-                        buttonGroup {
-                            component(cloneButton)
-                            component(cancelButton)
-                        }
-                    }
-                }
-            }
-            branchTextArea.toolTipText = "Branch"
+            val ui = CloneUi(false)
             prefillOperator.getPrefill(PrefillString.BRANCH)?.let {
-                branchTextArea.text = it
+                ui.branchTextArea.text = it
             }
+            openDialog(focusComponent, ui)
+            ui.cloneButton.addActionListener {
+                onOk(ui.branchTextArea.text, ui.shallowBox.isSelected, if (ui.sparseDefBox.isSelected) ui.sparseDefField.text else null)
+                prefillOperator.setPrefill(PrefillString.BRANCH, ui.branchTextArea.text)
+            }
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+    }
+
+    fun showCloneFromPrDialog(focusComponent: JComponent, onOk: (sparseDef: String?) -> Unit) {
+        try {
+            val ui = CloneUi(true)
+
+            openDialog(focusComponent, ui)
+            ui.cloneButton.addActionListener {
+                onOk(if (ui.sparseDefBox.isSelected) ui.sparseDefField.text else null)
+                prefillOperator.setPrefill(PrefillString.BRANCH, ui.branchTextArea.text)
+            }
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+    }
+
+    private fun openDialog(focusComponent: JComponent, ui: CloneUi) {
+        try {
             val popupFactory: JBPopupFactory = JBPopupFactory.getInstance()
             val location = popupFactory.guessBestPopupLocation(focusComponent)
-            val popup = popupFactory.createDialogBalloonBuilder(panel, "Clone repos?")
+            val popup = popupFactory.createDialogBalloonBuilder(ui.panel, "Clone repos?")
                 .setHideOnClickOutside(true)
                 .createBalloon()
 
-            cloneButton.addActionListener {
+            ui.cloneButton.addActionListener {
                 popup.hide()
-                onOk(branchTextArea.text, shallowBox.isSelected)
-                prefillOperator.setPrefill(PrefillString.BRANCH, branchTextArea.text)
             }
-            cancelButton.addActionListener {
+            ui.cancelButton.addActionListener {
                 popup.hide()
             }
             popup.show(location, Balloon.Position.above)
         } catch (e: Exception) {
             e.printStackTrace()
+        }
+    }
+
+    private class CloneUi(fromPR: Boolean) {
+        val cloneButton = JButton("Clone")
+        val cancelButton = JButton("Cancel")
+        val shallowBox = JBCheckBox(null, true)
+        val branchTextArea = JBTextField(45).apply {
+            toolTipText = "Branch"
+        }
+        val sparseDefField = JBTextArea(3, 45).apply {
+            isEnabled = false
+            text = "README.md"
+            toolTipText = "Sparse checkout config"
+        }
+        val sparseDefBox = JBCheckBox(null, false).apply {
+            addActionListener {
+                sparseDefField.isEnabled = isSelected
+            }
+        }
+        val panel: DialogPanel
+
+        init {
+            panel = panel {
+                if (!fromPR) {
+                    row(label = "Branch") {
+                        scrollPane(branchTextArea)
+                    }
+                    row(label = "Shallow clone?") {
+                        component(shallowBox)
+                    }
+                }
+                row(label = "Sparse clone?") {
+                    component(sparseDefBox)
+                    right {
+                        component(JBLabel("https://git-scm.com/docs/git-sparse-checkout").apply {
+                            toolTipText = "Click to open in browser"
+                            addMouseListener(object : MouseListener {
+                                override fun mouseClicked(e: MouseEvent?) = try {
+                                    com.intellij.ide.BrowserUtil.browse("https://git-scm.com/docs/git-sparse-checkout")
+                                } catch (e: Exception) {
+                                    e.printStackTrace()
+                                }
+
+                                override fun mousePressed(e: MouseEvent?) = Unit
+                                override fun mouseReleased(e: MouseEvent?) = Unit
+                                override fun mouseEntered(e: MouseEvent?) = Unit
+                                override fun mouseExited(e: MouseEvent?) = Unit
+                            })
+                        })
+                    }
+                }
+                row(label = "Sparse checkout config") {
+                    scrollPane(sparseDefField)
+                }
+                row {
+                    buttonGroup {
+                        component(cloneButton)
+                        component(cancelButton)
+                    }
+                }
+            }
         }
     }
 }

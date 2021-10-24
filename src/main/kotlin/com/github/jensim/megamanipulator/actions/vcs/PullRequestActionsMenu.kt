@@ -4,12 +4,13 @@ import com.github.jensim.megamanipulator.actions.NotificationsOperator
 import com.github.jensim.megamanipulator.actions.git.clone.CloneOperator
 import com.github.jensim.megamanipulator.project.PrefillString
 import com.github.jensim.megamanipulator.project.PrefillStringSuggestionOperator
-import com.github.jensim.megamanipulator.project.lazyService
+import com.github.jensim.megamanipulator.ui.CloneDialogFactory
 import com.github.jensim.megamanipulator.ui.ClosePRDialogFactory
 import com.github.jensim.megamanipulator.ui.DialogGenerator
 import com.github.jensim.megamanipulator.ui.EditPullRequestDialog
 import com.github.jensim.megamanipulator.ui.UiProtector
 import com.intellij.notification.NotificationType
+import com.intellij.openapi.components.service
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.ui.popup.Balloon
 import com.intellij.ui.components.JBTextArea
@@ -22,36 +23,16 @@ import org.slf4j.LoggerFactory
 @SuppressWarnings("LongParameterList", "ConstructorParameterNaming")
 class PullRequestActionsMenu(
     project: Project,
-    _prRouter: PrRouter?,
-    _notificationsOperator: NotificationsOperator?,
-    _cloneOperator: CloneOperator?,
-    _uiProtector: UiProtector?,
-    _prefillOperator: PrefillStringSuggestionOperator?,
-
     private val focusComponent: JComponent,
     private val prProvider: () -> List<PullRequestWrapper>,
 ) : JPopupMenu() {
 
-    constructor(
-        project: Project,
-        focusComponent: JComponent,
-        prProvider: () -> List<PullRequestWrapper>
-    ) : this(
-        project = project,
-        _prRouter = null,
-        _notificationsOperator = null,
-        _cloneOperator = null,
-        _uiProtector = null,
-        _prefillOperator = null,
-        focusComponent = focusComponent,
-        prProvider = prProvider,
-    )
-
-    private val prRouter: PrRouter by lazyService(project, _prRouter)
-    private val notificationsOperator: NotificationsOperator by lazyService(project, _notificationsOperator)
-    private val cloneOperator: CloneOperator by lazyService(project, _cloneOperator)
-    private val uiProtector: UiProtector by lazyService(project, _uiProtector)
-    private val prefillOperator: PrefillStringSuggestionOperator by lazyService(project, _prefillOperator)
+    private val prRouter: PrRouter by lazy { project.service() }
+    private val notificationsOperator: NotificationsOperator by lazy { project.service() }
+    private val cloneOperator: CloneOperator by lazy { project.service() }
+    private val uiProtector: UiProtector by lazy { project.service() }
+    private val prefillOperator: PrefillStringSuggestionOperator by lazy { project.service() }
+    private val cloneDialogFactory: CloneDialogFactory by lazy { project.service() }
 
     private val log = LoggerFactory.getLogger(javaClass)
 
@@ -126,12 +107,8 @@ class PullRequestActionsMenu(
         val cloneMenuItem = JMenuItem("Clone PRs").apply {
             addActionListener {
                 val prs = prProvider()
-                DialogGenerator.showConfirm(
-                    title = "Clone",
-                    message = "Clone ${prs.size} selected PR branches",
-                    focusComponent = focusComponent,
-                ) {
-                    cloneOperator.clone(prs)
+                cloneDialogFactory.showCloneFromPrDialog(focusComponent) { sparseDef ->
+                    cloneOperator.clone(prs, sparseDef = sparseDef)
                 }
             }
         }
