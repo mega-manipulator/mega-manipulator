@@ -17,13 +17,18 @@ import com.github.jensim.megamanipulator.ui.GeneralListCellRenderer.addCellRende
 import com.github.jensim.megamanipulator.ui.UiProtector
 import com.intellij.icons.AllIcons
 import com.intellij.openapi.components.service
+import com.intellij.openapi.fileEditor.FileEditorManager
 import com.intellij.openapi.project.Project
+import com.intellij.openapi.vfs.VirtualFile
+import com.intellij.openapi.vfs.VirtualFileManager
+import com.intellij.ui.JBSplitter
 import com.intellij.ui.components.JBLabel
 import com.intellij.ui.components.JBList
 import com.intellij.ui.layout.LCFlags
 import com.intellij.ui.layout.panel
 import java.awt.Color
 import java.awt.Component
+import java.io.File
 import javax.swing.JButton
 import javax.swing.JComponent
 import javax.swing.ListSelectionModel
@@ -54,7 +59,7 @@ class SettingsWindow(project: Project) : ToolWindowTab {
         val username: String,
         val hostNaming: String,
 
-    ) {
+        ) {
         override fun toString(): String = "$hostType: $hostNaming"
     }
 
@@ -63,42 +68,53 @@ class SettingsWindow(project: Project) : ToolWindowTab {
     private val validateTokensButton = JButton("Validate tokens")
     private val toggleClonesButton = JButton("Toggle clones index")
     private val validationOutputLabel = JBLabel()
-    private val configButton = JButton("Validate config")
+    private val openConfigButton = JButton("Open config")
+    private val validateConfigButton = JButton("Validate config")
     private val hostConfigSelect = JBList<ConfigHostHolder>()
+    private val confButtonsPanel = panel(title = "Config", constraints = arrayOf(LCFlags.flowY)) {
+        row {
+            scrollPane(panel {
+                row {
+                    component(openConfigButton)
+                }
+                row {
+                    component(validateConfigButton)
+                }
+                row {
+                    component(toggleClonesButton)
+                }
+                row {
+                    component(docsButton)
+                }
+                row {
+                    component(resetOnboardingButton)
+                }
+            })
+        }
+    }
+    private val tokensPanel = panel(title = "Tokens", constraints = arrayOf(LCFlags.flowY)) {
+        row {
+            component(validateTokensButton)
+            scrollPane(hostConfigSelect)
+        }
+    }
+    private val validationOutputPanel = panel(title = "Validation output", constraints = arrayOf(LCFlags.flowY)) {
+        row {
+            scrollPane(validationOutputLabel)
+        }
+    }
+    private val split2 = JBSplitter(0.5f).apply {
+        firstComponent = tokensPanel
+        secondComponent = validationOutputPanel
+    }
+    private val split = JBSplitter(0.33f).apply {
+        firstComponent = confButtonsPanel
+        secondComponent = split2
+    }
 
     override val content: JComponent = panel(constraints = arrayOf(LCFlags.noGrid)) {
         row {
-            component(
-                panel(title = "Config", constraints = arrayOf(LCFlags.flowY)) {
-                    row {
-                        component(configButton)
-                    }
-                    row {
-                        component(toggleClonesButton)
-                    }
-                    row {
-                        component(docsButton)
-                    }
-                    row {
-                        component(resetOnboardingButton)
-                    }
-                }
-            )
-            component(
-                panel(title = "Tokens", constraints = arrayOf(LCFlags.flowY)) {
-                    row {
-                        component(validateTokensButton)
-                        component(hostConfigSelect)
-                    }
-                }
-            )
-            component(
-                panel(title = "Validation output", constraints = arrayOf(LCFlags.flowY)) {
-                    row {
-                        component(validationOutputLabel)
-                    }
-                }
-            )
+            component(split)
         }
     }
 
@@ -111,18 +127,38 @@ class SettingsWindow(project: Project) : ToolWindowTab {
                 refresh()
             }
         }
-        configButton.addActionListener {
+        validateConfigButton.addActionListener {
             refresh()
+        }
+        openConfigButton.addActionListener {
+            try {
+                VirtualFileManager.getInstance().let {
+                    it.findFileByNioPath(File("${project.basePath}/config/mega-manipulator.json").toPath())
+                        ?.let { file: VirtualFile ->
+                            FileEditorManager.getInstance(project).openFile(file, true)
+                        }
+                }
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
         }
         docsButton.addActionListener {
             com.intellij.ide.BrowserUtil.browse("https://mega-manipulator.github.io")
         }
         validateTokensButton.addActionListener {
             uiProtector.uiProtectedOperation("Validating tokens") {
-                val tokens: Map<String, Deferred<String>> =
-                    searchOperator.validateTokens() + prRouter.validateAccess()
-                validationOutputLabel.text = tokens
-                    .map { "<tr><td>${it.key}</td><td>${it.value.await()}</td></tr>" }
+                val deferredTokens: Map<String, Deferred<String>> = searchOperator.validateTokens() + prRouter.validateAccess()
+                val tokens: MutableMap<String, String> = deferredTokens.mapValues {
+                    try {
+                        it.value.await()
+                    } catch (e: Exception) {
+                        e.stackTraceToString()
+                    }
+                }.toMutableMap()
+                if (tokens.isEmpty()) {
+                    tokens["-"] = "-"
+                }
+                validationOutputLabel.text = tokens.map { (k, v) -> "<tr><td>${k}</td><td>${v}</td></tr>" }
                     .joinToString(
                         separator = "\n",
                         prefix = """
@@ -171,40 +207,37 @@ class SettingsWindow(project: Project) : ToolWindowTab {
         onboardingOperator.registerTarget(OnboardingId.SETTINGS_TAB_BUTTON_TOGGLE_CLONES, toggleClonesButton)
         onboardingOperator.registerTarget(OnboardingId.SETTINGS_TAB_BUTTON_VALIDATE_TOKENS, validateTokensButton)
         onboardingOperator.registerTarget(OnboardingId.SETTINGS_TAB_BUTTON_RESET_ONBOARDING, resetOnboardingButton)
-        onboardingOperator.registerTarget(OnboardingId.SETTINGS_TAB_BTN_VALIDATE_CONF, configButton)
+        onboardingOperator.registerTarget(OnboardingId.SETTINGS_TAB_BTN_VALIDATE_CONF, validateConfigButton)
         onboardingOperator.registerTarget(OnboardingId.SETTINGS_TAB_BUTTON_DOCS, docsButton)
 
-        configButton.isEnabled = false
+        validateConfigButton.isEnabled = false
         filesOperator.makeUpBaseFiles()
         filesOperator.refreshConf()
         hostConfigSelect.setListData(emptyArray())
         val settings: MegaManipulatorSettings? = settingsFileOperator.readSettings()
         validationOutputLabel.text = settingsFileOperator.validationText
-        configButton.isEnabled = true
+        validateConfigButton.isEnabled = true
         if (settings != null) {
-            val arrayOf: Array<ConfigHostHolder> =
-                (
-                    settings.searchHostSettings.map {
-                        ConfigHostHolder(
-                            hostType = HostType.SEARCH,
-                            authMethod = it.value.authMethod,
-                            baseUri = it.value.baseUrl,
-                            username = it.value.username,
-                            hostNaming = it.key
-                        )
-                    } + settings.searchHostSettings.values.flatMap {
-                        it.codeHostSettings.map {
+            val arrayOf: Array<ConfigHostHolder> = (settings.searchHostSettings.map {
+                ConfigHostHolder(
+                    hostType = HostType.SEARCH,
+                    authMethod = it.value.authMethod,
+                    baseUri = it.value.baseUrl,
+                    username = it.value.username,
+                    hostNaming = it.key
+                )
+            } + settings.searchHostSettings.values.flatMap {
+                it.codeHostSettings.map {
 
-                            ConfigHostHolder(
-                                hostType = HostType.CODE,
-                                authMethod = it.value.authMethod,
-                                baseUri = it.value.baseUrl,
-                                username = it.value.username ?: "token",
-                                hostNaming = it.key
-                            )
-                        }
-                    }
-                    ).toTypedArray()
+                    ConfigHostHolder(
+                        hostType = HostType.CODE,
+                        authMethod = it.value.authMethod,
+                        baseUri = it.value.baseUrl,
+                        username = it.value.username ?: "token",
+                        hostNaming = it.key
+                    )
+                }
+            }).toTypedArray()
             hostConfigSelect.setListData(arrayOf)
         }
         onboardingOperator.display(OnboardingId.WELCOME)

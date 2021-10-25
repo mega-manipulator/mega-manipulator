@@ -9,6 +9,14 @@
 - Sparse checkout from search and PR  
   And unison UI between the two
 
+### Changed
+
+- Improving some look and feel
+
+### Fixed
+
+- Able to navigate tabs with broken config
+
 ## [0.0.33]
 
 ### Changed

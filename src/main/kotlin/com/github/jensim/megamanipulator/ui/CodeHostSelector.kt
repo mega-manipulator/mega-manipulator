@@ -3,6 +3,7 @@ package com.github.jensim.megamanipulator.ui
 import com.github.jensim.megamanipulator.settings.SettingsFileOperator
 import com.github.jensim.megamanipulator.ui.CodeHostSelector.CodeHostSelect
 import com.intellij.openapi.ui.ComboBox
+import java.awt.Dimension
 
 class CodeHostSelector(
     private val settingsFileOperator: SettingsFileOperator,
@@ -14,6 +15,10 @@ class CodeHostSelector(
         }.orEmpty()
     },
 ) : ComboBox<CodeHostSelect>() {
+
+    init {
+        minimumSize = Dimension(200, 10)
+    }
 
     data class CodeHostSelect(
         val searchHostName: String,

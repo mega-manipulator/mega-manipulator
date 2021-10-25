@@ -85,6 +85,12 @@ class ForksWindow(project: Project) : ToolWindowTab {
         loadStaleForksButton.addActionListener {
             load()
         }
+        codeHostSelect.addActionListener {
+            val hasSelection = codeHostSelect.selectedItem != null
+            loadStaleForksButton.isEnabled = hasSelection
+        }
+        val hasSelection = codeHostSelect.selectedItem != null
+        loadStaleForksButton.isEnabled = hasSelection
     }
 
     private fun load() {

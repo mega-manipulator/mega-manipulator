@@ -39,6 +39,7 @@ class SearchWindow(
     private val prefillOperator: PrefillStringSuggestionOperator by lazy { project.service() }
     private val cloneDialogFactory: CloneDialogFactory by lazy { project.service() }
 
+    private val EMPTY = "-" to SearchHostSettings.HoundSettings("http://0.0.0.0", null, emptyMap())
     private val searchHostSelect = ComboBox<Pair<String, SearchHostSettings>>()
     private val searchHostLink = JButton("SearchDocs", AllIcons.Toolwindows.Documentation)
     private val searchButton = JButton("Search", AllIcons.Actions.Search)
@@ -73,6 +74,7 @@ class SearchWindow(
     }
 
     init {
+        searchHostSelect.addItem(EMPTY)
         searchHostSelect.addCellRenderer { it.first }
         searchHostSelect.addActionListener {
             searchHostLink.isEnabled = searchHostSelect.selectedItem != null
@@ -142,8 +144,13 @@ class SearchWindow(
         settingsFileOperator.readSettings()?.searchHostSettings?.forEach {
             searchHostSelect.addItem(it.toPair())
         }
+        if (searchHostSelect.itemCount == 0) {
+            searchButton.isEnabled = false
+            searchHostSelect.addItem(EMPTY)
+        } else {
+            searchButton.isEnabled = true
+        }
 
-        searchButton.isEnabled = searchHostSelect.itemCount > 0
         try {
             if (searchField.text.isNullOrBlank()) {
                 prefillOperator.getPrefill(PrefillString.SEARCH)?.let {

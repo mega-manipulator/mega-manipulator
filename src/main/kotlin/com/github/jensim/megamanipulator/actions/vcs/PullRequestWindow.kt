@@ -65,13 +65,11 @@ class PullRequestWindow(project: Project) : ToolWindowTab {
 
     override val content: JComponent = panel {
         row {
-            cell {
-                component(codeHostSelect)
-                component(fetchAuthorButton)
-                component(fetchAssigneeButton)
-                label("Filter:")
-                component(filterField)
-            }
+            component(codeHostSelect)
+            component(fetchAuthorButton)
+            component(fetchAssigneeButton)
+            label("Filter:")
+            component(filterField)
             right {
                 cell {
                     buttonGroup {
@@ -141,6 +139,14 @@ class PullRequestWindow(project: Project) : ToolWindowTab {
         fetchAssigneeButton.addActionListener {
             fetchAssignedPRs()
         }
+        codeHostSelect.addActionListener {
+            val hasSelection = codeHostSelect.selectedItem != null
+            fetchAssigneeButton.isEnabled = hasSelection
+            fetchAuthorButton.isEnabled = hasSelection
+        }
+        val hasSelection = codeHostSelect.selectedItem != null
+        fetchAssigneeButton.isEnabled = hasSelection
+        fetchAuthorButton.isEnabled = hasSelection
     }
 
     override fun refresh() {
