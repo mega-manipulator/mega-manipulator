@@ -252,7 +252,6 @@ class CloneOperatorTest {
         verify { processOperator.runCommandAsync(eq(dir), eq(listOf("git", "checkout", "-b", "prBranch"))) }
         verify { filesOperator.refreshClones() }
         verify { notificationsOperator.show(title = "Cloning done with failures", body = "Failed cloning 1/1 repos, details in ide logs", type = NotificationType.WARNING) }
-        confirmVerified(processOperator, prRouter)
     }
 
     @Test
