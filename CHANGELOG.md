@@ -4,32 +4,26 @@
 
 ## [Unreleased]
 
+## [0.0.34]
 ### Added
-
 - Sparse checkout from search and PR  
   And unison UI between the two
 
 ### Changed
-
 - Improving some look and feel
 
 ### Fixed
-
 - Able to navigate tabs with broken config
 
 ## [0.0.33]
-
 ### Changed
-
 - Improved the UI components
   - Declining PRs
   - Password input
   - Show PR authors
 
 ## [0.0.32]
-
 ### Added
-
 - In the forks tab, show parent/origin-repo of forks (Github & Bitbucket)
 
 ### Changed
