@@ -1,7 +1,7 @@
 package com.github.jensim.megamanipulator.ui
 
 import com.github.jensim.megamanipulator.project.PrefillString
-import com.github.jensim.megamanipulator.project.PrefillStringSuggestionOperator
+import com.intellij.openapi.project.Project
 import com.intellij.openapi.ui.popup.Balloon
 import com.intellij.openapi.ui.popup.JBPopupFactory
 import com.intellij.ui.components.JBCheckBox
@@ -13,24 +13,26 @@ import javax.swing.JComponent
 object CommitDialogFactory {
 
     fun openCommitDialog(
-        relativeComponent: JComponent,
-        prefillOperator: PrefillStringSuggestionOperator,
+        focusComponent: JComponent,
+        project: Project,
         onOk: (commitMessage: String, push: Boolean) -> Unit
     ) {
-        val commitMessage = JBTextField()
-        prefillOperator.getPrefill(PrefillString.COMMIT_MESSAGE)?.let {
-            commitMessage.text = it
-        }
+        val commitMessage = JBTextField(40)
         val pushBox = JBCheckBox("Push?")
         pushBox.isSelected = true
         val okBtn = JButton("Commit")
         val cancelBtn = JButton("Cancel")
         val panel = panel {
             row {
-                textArea({ "Create commits for all changes in all checked out repositories" }, {})
+                label("Create commits for all changes in all checked out repositories")
             }
             row {
-                component(commitMessage)
+                cell {
+                    scrollPane(commitMessage)
+                    component(PrefillHistoryButton(project, PrefillString.COMMIT_MESSAGE, commitMessage) {
+                        commitMessage.text = it
+                    })
+                }
             }
             row { component(pushBox) }
             row {
@@ -52,7 +54,7 @@ object CommitDialogFactory {
         cancelBtn.addActionListener {
             balloon.hide()
         }
-        val location = popupFactory.guessBestPopupLocation(relativeComponent)
+        val location = popupFactory.guessBestPopupLocation(focusComponent)
         balloon.show(location, Balloon.Position.above)
     }
 }

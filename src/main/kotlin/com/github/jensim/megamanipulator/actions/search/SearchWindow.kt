@@ -13,6 +13,7 @@ import com.github.jensim.megamanipulator.toolswindow.ToolWindowTab
 import com.github.jensim.megamanipulator.ui.CloneDialogFactory
 import com.github.jensim.megamanipulator.ui.GeneralKtDataTable
 import com.github.jensim.megamanipulator.ui.GeneralListCellRenderer.addCellRenderer
+import com.github.jensim.megamanipulator.ui.PrefillHistoryButton
 import com.github.jensim.megamanipulator.ui.UiProtector
 import com.intellij.icons.AllIcons
 import com.intellij.openapi.components.service
@@ -45,6 +46,10 @@ class SearchWindow(
     private val searchButton = JButton("Search", AllIcons.Actions.Search)
     private val cloneButton = JButton("Clone selected", AllIcons.Vcs.Clone)
     private val searchField = JBTextField(50)
+    private val historyButton = PrefillHistoryButton(project, PrefillString.SEARCH, searchField) {
+        searchField.text = it
+        search()
+    }
     private val table = GeneralKtDataTable(
         SearchResult::class,
         listOf(
@@ -60,6 +65,7 @@ class SearchWindow(
             cell {
                 component(searchHostLink)
                 component(searchHostSelect)
+                component(historyButton)
                 component(searchField)
                 component(searchButton)
                 component(cloneButton)
@@ -109,7 +115,7 @@ class SearchWindow(
                 cloneDialogFactory.showCloneDialog(cloneButton) { branch: String, shallow: Boolean, sparseDef: String? ->
                     cloneOperator.clone(repos = selected, branchName = branch, shallow = shallow, sparseDef = sparseDef)
                     table.clearSelection()
-                    prefillOperator.setPrefill(PrefillString.BRANCH, branch)
+                    prefillOperator.addPrefill(PrefillString.BRANCH, branch)
                 }
             }
         }
@@ -129,7 +135,7 @@ class SearchWindow(
         }.orEmpty().toList()
         table.setListData(result)
         searchButton.isEnabled = true
-        prefillOperator.setPrefill(PrefillString.SEARCH, searchText)
+        prefillOperator.addPrefill(PrefillString.SEARCH, searchText)
     }
 
     override fun refresh() {

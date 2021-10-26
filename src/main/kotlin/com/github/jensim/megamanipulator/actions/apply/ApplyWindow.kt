@@ -5,7 +5,9 @@ import com.github.jensim.megamanipulator.onboarding.OnboardingId
 import com.github.jensim.megamanipulator.onboarding.OnboardingOperator
 import com.github.jensim.megamanipulator.toolswindow.TabKey
 import com.github.jensim.megamanipulator.toolswindow.ToolWindowTab
+import com.github.jensim.megamanipulator.ui.DialogGenerator
 import com.github.jensim.megamanipulator.ui.GeneralKtDataTable
+import com.intellij.icons.AllIcons
 import com.intellij.openapi.components.service
 import com.intellij.openapi.fileEditor.FileDocumentManager
 import com.intellij.openapi.fileEditor.FileEditorManager
@@ -27,6 +29,7 @@ class ApplyWindow(private val project: Project) : ToolWindowTab {
 
     private val applyOperator: ApplyOperator by lazy { project.service() }
     private val onboardingOperator: OnboardingOperator by lazy { project.service() }
+    private val dialogGenerator: DialogGenerator by lazy { project.service() }
 
     private val resultList = GeneralKtDataTable(
         ApplyOutput::class,
@@ -40,7 +43,7 @@ class ApplyWindow(private val project: Project) : ToolWindowTab {
     private val scrollableResult = JBScrollPane(resultList)
     private val details = JBTextArea()
     private val scrollableDetails = JBScrollPane(details)
-    private val applyButton = JButton("Apply")
+    private val applyButton = JButton("Apply", AllIcons.Toolwindows.ToolWindowProblems)
     private val openScriptButton = JButton("Open script")
     private val split = JBSplitter(0.7f).apply {
         isLightweight
@@ -73,22 +76,32 @@ class ApplyWindow(private val project: Project) : ToolWindowTab {
         scrollableDetails.preferredSize = Dimension(4000, 1000)
 
         applyButton.addActionListener {
-            applyButton.isEnabled = false
-            resultList.clearSelection()
-            details.text = ""
-            try {
-                FileDocumentManager.getInstance().saveAllDocuments()
-            } catch (e: Exception) {
-                e.printStackTrace().toString()
+            dialogGenerator.showConfirm(
+                title = "Apply change script?",
+                message = """
+                    <h1>Are you sure?</h1>
+                    <b>I wont be able to stop scripts that have started.</b>
+                    Take a second peek at your concurrency level before you run something intensive.
+                    """.trimIndent(),
+                focusComponent = applyButton
+            ) {
+                applyButton.isEnabled = false
+                resultList.clearSelection()
+                details.text = ""
+                try {
+                    FileDocumentManager.getInstance().saveAllDocuments()
+                } catch (e: Exception) {
+                    e.printStackTrace().toString()
+                }
+                val result = applyOperator.apply()
+                resultList.setListData(result)
+                if (result.isNotEmpty()) {
+                    resultList.selectFirst()
+                }
+                applyButton.isEnabled = true
+                content.validate()
+                content.repaint()
             }
-            val result = applyOperator.apply()
-            resultList.setListData(result)
-            if (result.isNotEmpty()) {
-                resultList.selectFirst()
-            }
-            applyButton.isEnabled = true
-            content.validate()
-            content.repaint()
         }
 
         openScriptButton.addActionListener {

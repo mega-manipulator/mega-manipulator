@@ -1,19 +1,19 @@
 package com.github.jensim.megamanipulator.ui
 
 import com.github.jensim.megamanipulator.actions.vcs.PullRequestWrapper
-import com.github.jensim.megamanipulator.project.PrefillStringSuggestionOperator
 import com.github.jensim.megamanipulator.ui.GeneralListCellRenderer.addCellRenderer
+import com.intellij.openapi.project.Project
 import com.intellij.openapi.ui.ComboBox
 import com.intellij.openapi.ui.DialogPanel
 import com.intellij.ui.layout.panel
 
 class EditPullRequestDialog(
     pullRequests: List<PullRequestWrapper>,
-    prefillOperator: PrefillStringSuggestionOperator
+    project: Project,
 ) : CreatePullRequestDialog(
     yesText = "Edit PRs",
     title = "Edit pull request",
-    prefillOperator = prefillOperator,
+    project = project,
 ) {
     private val preExistingSelect: ComboBox<PullRequestWrapper?> = ComboBox(pullRequests.toTypedArray()).also { select ->
         select.addActionListener {
@@ -26,13 +26,17 @@ class EditPullRequestDialog(
         }
     }
     override val panel: DialogPanel = panel {
-        row(label = "Template from") { component(preExistingSelect) }
-        row(label = "PR Title") { component(titlePane) }
-        row(label = "PR Description") { component(descriptionPane) }
         row {
-            component(okButton)
-            component(cancelButton)
+            component(panel(title = "Template from") {
+                row {
+                    component(preExistingSelect)
+
+                }
+            })
         }
+        row { component(titlePanel) }
+        row { component(descriptionPanel) }
+        row { component(buttonPanel) }
     }
 
     private fun String.fixedLength(len: Int) = take(len).padEnd(len, ' ')

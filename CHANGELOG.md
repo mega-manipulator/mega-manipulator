@@ -4,12 +4,19 @@
 
 ## [Unreleased]
 
-## [0.0.34]
 ### Added
+
+- UI-component for popping up prefill from history
+
+## [0.0.34]
+
+### Added
+
 - Sparse checkout from search and PR  
   And unison UI between the two
 
 ### Changed
+
 - Improving some look and feel
 
 ### Fixed

@@ -3,7 +3,6 @@ package com.github.jensim.megamanipulator.actions.vcs
 import com.github.jensim.megamanipulator.actions.NotificationsOperator
 import com.github.jensim.megamanipulator.actions.git.clone.CloneOperator
 import com.github.jensim.megamanipulator.project.PrefillString
-import com.github.jensim.megamanipulator.project.PrefillStringSuggestionOperator
 import com.github.jensim.megamanipulator.ui.CloneDialogFactory
 import com.github.jensim.megamanipulator.ui.ClosePRDialogFactory
 import com.github.jensim.megamanipulator.ui.DialogGenerator
@@ -31,8 +30,8 @@ class PullRequestActionsMenu(
     private val notificationsOperator: NotificationsOperator by lazy { project.service() }
     private val cloneOperator: CloneOperator by lazy { project.service() }
     private val uiProtector: UiProtector by lazy { project.service() }
-    private val prefillOperator: PrefillStringSuggestionOperator by lazy { project.service() }
     private val cloneDialogFactory: CloneDialogFactory by lazy { project.service() }
+    private val dialogGenerator: DialogGenerator by lazy { project.service() }
 
     private val log = LoggerFactory.getLogger(javaClass)
 
@@ -66,7 +65,7 @@ class PullRequestActionsMenu(
                 } else {
                     EditPullRequestDialog(
                         pullRequests = prs,
-                        prefillOperator = prefillOperator
+                        project = project,
                     ).show(focusComponent) { title, description ->
 
                         prFeedback(
@@ -86,7 +85,7 @@ class PullRequestActionsMenu(
         }
         val defaultReviewersMenuItem = JMenuItem("Add default reviewers").apply {
             addActionListener { _ ->
-                DialogGenerator.showConfirm(
+                dialogGenerator.showConfirm(
                     title = "Add default reviewers",
                     message = "Add default reviewers",
                     focusComponent = focusComponent,
@@ -144,14 +143,13 @@ class PullRequestActionsMenu(
             addActionListener {
                 val prs = prProvider()
                 if (prs.isNotEmpty()) {
-                    val prefill: String? = prefillOperator.getPrefill(PrefillString.COMMENT)
-                    DialogGenerator.askForInput(
+                    dialogGenerator.askForInput(
                         title = "Comment selected pull requests",
                         message = "Comment",
                         field = JBTextArea(8, 80),
                         focusComponent = focusComponent,
                         position = Balloon.Position.atLeft,
-                        prefill = prefill
+                        prefill = PrefillString.COMMENT
                     ) { comment ->
                         uiProtector.mapConcurrentWithProgress(
                             title = "Add comments",
@@ -159,14 +157,13 @@ class PullRequestActionsMenu(
                         ) {
                             prRouter.commentPR(comment, it)
                         }
-                        prefillOperator.setPrefill(PrefillString.COMMENT, comment)
                     }
                 }
             }
         }
         val approveMenuItem = JMenuItem("Mark Approved").apply {
             addActionListener { _ ->
-                DialogGenerator.showConfirm(
+                dialogGenerator.showConfirm(
                     title = "Mark Approved",
                     message = "Mark the selected pull requests as Approved",
                     focusComponent = focusComponent,
@@ -182,7 +179,7 @@ class PullRequestActionsMenu(
         }
         val needsWorkMenuItem = JMenuItem("Mark Needs work").apply {
             addActionListener {
-                DialogGenerator.showConfirm(
+                dialogGenerator.showConfirm(
                     title = "Mark Needs work",
                     message = "Mark the selected pull requests as Needs work",
                     focusComponent = focusComponent,
@@ -198,7 +195,7 @@ class PullRequestActionsMenu(
         }
         val mergeMenuItem = JMenuItem("Merge").apply {
             addActionListener {
-                DialogGenerator.showConfirm(
+                dialogGenerator.showConfirm(
                     title = "Merge",
                     message = "Merge the selected pull requests",
                     focusComponent = focusComponent,

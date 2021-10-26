@@ -1,8 +1,8 @@
 package com.github.jensim.megamanipulator.onboarding
 
-import com.github.jensim.megamanipulator.project.lazyService
 import com.github.jensim.megamanipulator.toolswindow.TabKey
 import com.intellij.icons.AllIcons
+import com.intellij.openapi.components.service
 import com.intellij.openapi.project.Project
 import com.intellij.ui.components.JBLabel
 import java.awt.event.MouseEvent
@@ -14,7 +14,7 @@ class OnboardingButton(
     private val onboardingId: OnboardingId,
 ) : JBLabel(AllIcons.General.QuestionDialog), MouseListener {
 
-    private val onboardingOperator by lazyService<OnboardingOperator>(project, null)
+    private val onboardingOperator: OnboardingOperator by lazy { project.service() }
 
     init {
         addMouseListener(this)

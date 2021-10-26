@@ -13,6 +13,7 @@ import com.github.jensim.megamanipulator.settings.passwords.PasswordsOperator
 import com.github.jensim.megamanipulator.settings.types.AuthMethod
 import com.github.jensim.megamanipulator.settings.types.MegaManipulatorSettings
 import com.github.jensim.megamanipulator.toolswindow.ToolWindowTab
+import com.github.jensim.megamanipulator.ui.DialogGenerator
 import com.github.jensim.megamanipulator.ui.GeneralListCellRenderer.addCellRenderer
 import com.github.jensim.megamanipulator.ui.UiProtector
 import com.intellij.icons.AllIcons
@@ -27,7 +28,6 @@ import com.intellij.ui.components.JBList
 import com.intellij.ui.layout.LCFlags
 import com.intellij.ui.layout.panel
 import java.awt.Color
-import java.awt.Component
 import java.io.File
 import javax.swing.JButton
 import javax.swing.JComponent
@@ -46,6 +46,7 @@ class SettingsWindow(project: Project) : ToolWindowTab {
     private val searchOperator: SearchOperator by lazy { project.service() }
     private val onboardingOperator: OnboardingOperator by lazy { project.service() }
     private val megaManipulatorSettingsState: MegaManipulatorSettingsState by lazy { project.service() }
+    private val dialogGenerator: DialogGenerator by lazy { project.service() }
 
     private enum class HostType {
         SEARCH,
@@ -65,6 +66,7 @@ class SettingsWindow(project: Project) : ToolWindowTab {
 
     private val docsButton = JButton("Docs", AllIcons.Toolwindows.Documentation)
     private val resetOnboardingButton = JButton("Reset onboarding", AllIcons.Toolwindows.Problems)
+    private val resetPrefillButton = JButton("Reset history", AllIcons.Toolwindows.Problems)
     private val validateTokensButton = JButton("Validate tokens")
     private val toggleClonesButton = JButton("Toggle clones index")
     private val validationOutputLabel = JBLabel()
@@ -88,6 +90,9 @@ class SettingsWindow(project: Project) : ToolWindowTab {
                 }
                 row {
                     component(resetOnboardingButton)
+                }
+                row {
+                    component(resetPrefillButton)
                 }
             })
         }
@@ -127,6 +132,16 @@ class SettingsWindow(project: Project) : ToolWindowTab {
                 refresh()
             }
         }
+        validateConfigButton.toolTipText = """
+            <html>
+            <h1>Validate config</h1>
+            <p>
+            Run validation of the config file, and visualize any errors.<br>
+            The config file has a schema-file to assist you on your way<br>
+            to fix most problems interactively.
+            </p>
+            <html>
+        """.trimIndent()
         validateConfigButton.addActionListener {
             refresh()
         }
@@ -142,6 +157,11 @@ class SettingsWindow(project: Project) : ToolWindowTab {
                 e.printStackTrace()
             }
         }
+        docsButton.toolTipText = """
+            <html>
+            <h1>Open docs in browser</h1>
+            </html>
+        """.trimIndent()
         docsButton.addActionListener {
             com.intellij.ide.BrowserUtil.browse("https://mega-manipulator.github.io")
         }
@@ -179,19 +199,71 @@ class SettingsWindow(project: Project) : ToolWindowTab {
                     )
             }
         }
+        resetOnboardingButton.toolTipText = """
+            <html>
+            <h1>Reset onboarding</h1>
+            <p>
+            Complete reset of the onboarding flow,<br>
+            to allow you to revisit all seen info.
+            </p> 
+            </html>
+        """.trimIndent()
         resetOnboardingButton.addActionListener {
-            megaManipulatorSettingsState.resetOnBoarding()
-            ApplicationLevelPropertiesOperator.unset(GLOBAL_ONBOARDING)
-            refresh()
+            dialogGenerator.showConfirm(
+                title = "Reset onboarding",
+                message = """
+                    Complete reset of the onboarding flow,
+                    to allow you to revisit all seen info.
+                """.trimIndent(),
+                focusComponent = resetOnboardingButton
+            ) {
+                megaManipulatorSettingsState.resetOnBoarding()
+                ApplicationLevelPropertiesOperator.unset(GLOBAL_ONBOARDING)
+                refresh()
+            }
         }
+        toggleClonesButton.toolTipText = """
+            <html>
+            <h1>Toggle clones index</h1>
+            <p>
+            Set project settings to toggle index for the local clones, or to ignore.
+            </p>
+            </html>
+        """.trimIndent()
         toggleClonesButton.addActionListener {
-            val b: Component = it.source as Component
-            b.isEnabled = false
-            try {
-                projectOperator.toggleExcludeClones()
-                filesOperator.refreshClones()
-            } finally {
-                b.isEnabled = true
+            dialogGenerator.showConfirm(
+                title = "Toggle clones index",
+                message = "Set project settings to toggle index for the local clones, or to ignore.",
+                focusComponent = toggleClonesButton
+            ) {
+                toggleClonesButton.isEnabled = false
+                try {
+                    projectOperator.toggleExcludeClones()
+                    filesOperator.refreshClones()
+                } finally {
+                    toggleClonesButton.isEnabled = true
+                }
+            }
+        }
+        resetPrefillButton.toolTipText = """
+            <html>
+            <h1>Reset history</h1>
+            <p>
+            Reset the previously used values, <br>
+            that are made available in the GUI for reuse
+            </p>
+            </html>
+        """.trimIndent()
+        resetPrefillButton.addActionListener {
+            dialogGenerator.showConfirm(
+                title = "Reset history",
+                message = """
+                Reset the previously used values,
+                that are made available in the GUI for reuse
+            """.trimIndent(),
+                focusComponent = resetPrefillButton
+            ) {
+                megaManipulatorSettingsState.resetPrefill()
             }
         }
     }

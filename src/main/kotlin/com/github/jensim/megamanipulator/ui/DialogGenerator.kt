@@ -1,5 +1,9 @@
 package com.github.jensim.megamanipulator.ui
 
+import com.github.jensim.megamanipulator.project.PrefillString
+import com.github.jensim.megamanipulator.project.PrefillStringSuggestionOperator
+import com.intellij.openapi.components.service
+import com.intellij.openapi.project.Project
 import com.intellij.openapi.ui.popup.Balloon
 import com.intellij.openapi.ui.popup.JBPopupFactory
 import com.intellij.ui.awt.RelativePoint
@@ -11,7 +15,9 @@ import javax.swing.JButton
 import javax.swing.JComponent
 import javax.swing.text.JTextComponent
 
-object DialogGenerator {
+class DialogGenerator(private val project: Project) {
+
+    private val prefillOperator: PrefillStringSuggestionOperator by lazy { project.service() }
 
     fun showConfirm(
         title: String,
@@ -62,7 +68,7 @@ object DialogGenerator {
     fun askForInput(
         title: String,
         message: String,
-        prefill: String? = null,
+        prefill: PrefillString?,
         field: JTextComponent = JBTextField(),
         focusComponent: JComponent,
         position: Balloon.Position = Balloon.Position.above,
@@ -75,26 +81,37 @@ object DialogGenerator {
             val popupFactory: JBPopupFactory = JBPopupFactory.getInstance()
             val btnYes = JButton(yesText)
             val btnNo = JButton(noText)
-            val scrollPane = JBScrollPane(field)
-            if (prefill != null) {
-                field.text = prefill
+            val prefillButton = prefill?.let { pre ->
+                PrefillHistoryButton(project, pre, field) {
+                    field.text = it
+                }
             }
             val panel = panel {
                 row {
                     label(message)
                 }
                 row {
-                    component(scrollPane)
+                    cell {
+                        scrollPane(field)
+                        prefillButton?.let {
+                            component(it)
+                        }
+                    }
                 }
                 row {
-                    component(btnYes)
-                    component(btnNo)
+                    cell {
+                        component(btnYes)
+                        component(btnNo)
+                    }
                 }
             }
             val popup = popupFactory.createDialogBalloonBuilder(panel, title)
                 .createBalloon()
             btnYes.addActionListener {
                 popup.hide()
+                prefill?.let {
+                    prefillOperator.addPrefill(it, field.text)
+                }
                 onYes(field.text)
             }
             btnNo.addActionListener {

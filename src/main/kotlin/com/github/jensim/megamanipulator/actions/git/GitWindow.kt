@@ -53,6 +53,7 @@ class GitWindow(private val project: Project) : ToolWindowTab {
     private val uiProtector: UiProtector by lazy { project.service() }
     private val onboardingOperator: OnboardingOperator by lazy { project.service() }
     private val prefillStringSuggestionOperator: PrefillStringSuggestionOperator by lazy { project.service() }
+    private val dialogGenerator: DialogGenerator by lazy { project.service() }
 
     private val repoList = JBList<DirResult>().apply {
         minimumSize = Dimension(250, 50)
@@ -130,16 +131,15 @@ class GitWindow(private val project: Project) : ToolWindowTab {
             refresh()
         }
         btnSetBranch.addActionListener {
-            val prefill: String? = prefillStringSuggestionOperator.getPrefill(PrefillString.BRANCH)
-            DialogGenerator.askForInput(
+            dialogGenerator.askForInput(
                 title = "Select branch name",
                 message = "This will NOT reset the repos to origin/default-branch first!!",
-                prefill = prefill,
+                prefill = PrefillString.BRANCH,
                 focusComponent = btnSetBranch,
             ) { branch: String ->
                 val pattern = "[^a-z0-9/_ -]"
                 if (branch.isBlank() || branch.isEmpty() || branch.contains(Regex(pattern))) {
-                    DialogGenerator.showConfirm(
+                    dialogGenerator.showConfirm(
                         title = "Bad branch name.",
                         message = "$branch didnt match pattern $pattern",
                         yesText = "Ok",
@@ -148,15 +148,15 @@ class GitWindow(private val project: Project) : ToolWindowTab {
                     ) {}
                 } else {
                     localRepoOperator.switchBranch(branch)
-                    prefillStringSuggestionOperator.setPrefill(PrefillString.BRANCH, branch)
+                    prefillStringSuggestionOperator.addPrefill(PrefillString.BRANCH, branch)
                     refresh()
                 }
             }
         }
         btnCommitAndPush.addActionListener { _: ActionEvent ->
             CommitDialogFactory.openCommitDialog(
-                relativeComponent = btnCommitAndPush,
-                prefillOperator = prefillStringSuggestionOperator
+                project = project,
+                focusComponent = btnCommitAndPush,
             ) { commitMessage: String, push: Boolean ->
                 val result = ConcurrentHashMap<String, MutableList<Pair<String, ApplyOutput>>>()
                 val settings: MegaManipulatorSettings = settingsFileOperator.readSettings()!!
@@ -175,7 +175,7 @@ class GitWindow(private val project: Project) : ToolWindowTab {
             }
         }
         btnJustPush.addActionListener {
-            DialogGenerator.showConfirm(
+            dialogGenerator.showConfirm(
                 title = "Push",
                 message = "Push local commits to remote?",
                 focusComponent = btnJustPush,
@@ -199,7 +199,9 @@ class GitWindow(private val project: Project) : ToolWindowTab {
             }
         }
         btnCreatePRs.addActionListener { _ ->
-            CreatePullRequestDialog(prefillOperator = prefillStringSuggestionOperator).show(
+            CreatePullRequestDialog(
+                project = project
+            ).show(
                 focusComponent = btnCreatePRs,
             ) { title, description ->
                 if (title.isNotBlank() && description.isNotBlank()) {
@@ -213,7 +215,7 @@ class GitWindow(private val project: Project) : ToolWindowTab {
                         prRouter.createPr(title, description, it)
                     }
                 } else {
-                    DialogGenerator.showConfirm(
+                    dialogGenerator.showConfirm(
                         title = "Failed",
                         message = "Title and description must not be blank",
                         focusComponent = btnCreatePRs,
@@ -224,7 +226,7 @@ class GitWindow(private val project: Project) : ToolWindowTab {
             }
         }
         btnCleanLocalClones.addActionListener { _ ->
-            DialogGenerator.showConfirm(
+            dialogGenerator.showConfirm(
                 title = "Clean local repos",
                 message = """
                             Are you sure?!

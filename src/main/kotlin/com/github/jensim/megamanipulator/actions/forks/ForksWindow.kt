@@ -29,6 +29,7 @@ class ForksWindow(project: Project) : ToolWindowTab {
     private val uiProtector: UiProtector by lazy { project.service() }
     private val settingsFileOperator: SettingsFileOperator by lazy { project.service() }
     private val onboardingOperator: OnboardingOperator by lazy { project.service() }
+    private val dialogGenerator: DialogGenerator by lazy { project.service() }
 
     private val deleteButton = JButton("Delete selected forks", AllIcons.Toolwindows.Problems)
     private val codeHostSelect = CodeHostSelector(settingsFileOperator)
@@ -63,7 +64,7 @@ class ForksWindow(project: Project) : ToolWindowTab {
         deleteButton.isEnabled = false
         deleteButton.apply {
             addActionListener {
-                DialogGenerator.showConfirm(
+                dialogGenerator.showConfirm(
                     title = "Delete selected forks?",
                     message = """
                                 Are you sure?

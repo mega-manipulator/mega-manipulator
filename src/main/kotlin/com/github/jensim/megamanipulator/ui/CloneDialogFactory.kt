@@ -18,21 +18,21 @@ import javax.swing.JButton
 import javax.swing.JComponent
 
 class CloneDialogFactory(
-    project: Project
+    private val project: Project
 ) {
 
     private val prefillOperator: PrefillStringSuggestionOperator by lazy { project.service() }
 
     fun showCloneDialog(focusComponent: JComponent, onOk: (branch: String, shallow: Boolean, sparseDef: String?) -> Unit) {
         try {
-            val ui = CloneUi(false)
+            val ui = CloneUi(false, project)
             prefillOperator.getPrefill(PrefillString.BRANCH)?.let {
                 ui.branchTextArea.text = it
             }
             openDialog(focusComponent, ui)
             ui.cloneButton.addActionListener {
                 onOk(ui.branchTextArea.text, ui.shallowBox.isSelected, if (ui.sparseDefBox.isSelected) ui.sparseDefField.text else null)
-                prefillOperator.setPrefill(PrefillString.BRANCH, ui.branchTextArea.text)
+                prefillOperator.addPrefill(PrefillString.BRANCH, ui.branchTextArea.text)
             }
         } catch (e: Exception) {
             e.printStackTrace()
@@ -41,12 +41,12 @@ class CloneDialogFactory(
 
     fun showCloneFromPrDialog(focusComponent: JComponent, onOk: (sparseDef: String?) -> Unit) {
         try {
-            val ui = CloneUi(true)
+            val ui = CloneUi(true, project)
 
             openDialog(focusComponent, ui)
             ui.cloneButton.addActionListener {
                 onOk(if (ui.sparseDefBox.isSelected) ui.sparseDefField.text else null)
-                prefillOperator.setPrefill(PrefillString.BRANCH, ui.branchTextArea.text)
+                prefillOperator.addPrefill(PrefillString.BRANCH, ui.branchTextArea.text)
             }
         } catch (e: Exception) {
             e.printStackTrace()
@@ -73,12 +73,15 @@ class CloneDialogFactory(
         }
     }
 
-    private class CloneUi(fromPR: Boolean) {
+    private class CloneUi(fromPR: Boolean, project: Project) {
         val cloneButton = JButton("Clone")
         val cancelButton = JButton("Cancel")
         val shallowBox = JBCheckBox(null, true)
         val branchTextArea = JBTextField(45).apply {
             toolTipText = "Branch"
+        }
+        val branchHistoryButton = PrefillHistoryButton(project, PrefillString.BRANCH, branchTextArea) {
+            branchTextArea.text = it
         }
         val sparseDefField = JBTextArea(3, 45).apply {
             isEnabled = false
@@ -96,15 +99,18 @@ class CloneDialogFactory(
             panel = panel {
                 if (!fromPR) {
                     row(label = "Branch") {
-                        scrollPane(branchTextArea)
+                        cell {
+                            scrollPane(branchTextArea)
+                            component(branchHistoryButton)
+                        }
                     }
                     row(label = "Shallow clone?") {
                         component(shallowBox)
                     }
                 }
                 row(label = "Sparse clone?") {
-                    component(sparseDefBox)
-                    right {
+                    cell {
+                        component(sparseDefBox)
                         component(JBLabel("https://git-scm.com/docs/git-sparse-checkout").apply {
                             toolTipText = "Click to open in browser"
                             addMouseListener(object : MouseListener {
@@ -120,13 +126,15 @@ class CloneDialogFactory(
                                 override fun mouseExited(e: MouseEvent?) = Unit
                             })
                         })
+
                     }
+
                 }
                 row(label = "Sparse checkout config") {
                     scrollPane(sparseDefField)
                 }
                 row {
-                    buttonGroup {
+                    cell {
                         component(cloneButton)
                         component(cancelButton)
                     }

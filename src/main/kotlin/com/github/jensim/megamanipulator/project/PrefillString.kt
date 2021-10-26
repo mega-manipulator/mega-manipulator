@@ -1,11 +1,29 @@
 package com.github.jensim.megamanipulator.project
 
-enum class PrefillString(val fallback: PrefillString? = null, val default: String? = null) {
+enum class PrefillString(val fallback: PrefillString? = null, val default: String? = null, val maxHistory: Int) {
 
-    COMMENT,
-    BRANCH(default = "feature/bulk_change"),
-    COMMIT_MESSAGE(default = "Bulk changes"),
-    PR_TITLE(fallback = COMMIT_MESSAGE, default = "Bulk changes"),
-    PR_BODY(fallback = COMMIT_MESSAGE, default = "Bulk changes"),
-    SEARCH,
+    COMMENT(
+        maxHistory = 10,
+    ),
+    BRANCH(
+        default = "feature/bulk_change",
+        maxHistory = 10,
+    ),
+    COMMIT_MESSAGE(
+        default = "Bulk changes",
+        maxHistory = 10,
+    ),
+    PR_TITLE(
+        fallback = COMMIT_MESSAGE,
+        default = "Bulk changes",
+        maxHistory = 5,
+    ),
+    PR_BODY(
+        fallback = COMMIT_MESSAGE,
+        default = "Bulk changes",
+        maxHistory = 5,
+    ),
+    SEARCH(
+        maxHistory = 25,
+    ),
 }
