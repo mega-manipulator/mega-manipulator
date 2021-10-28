@@ -19,6 +19,7 @@ import com.github.jensim.megamanipulator.graphql.generated.gitlab.GetAuthoredPul
 import com.github.jensim.megamanipulator.graphql.generated.gitlab.GetCurrentUser
 import com.github.jensim.megamanipulator.graphql.generated.gitlab.GetForkRepos
 import com.github.jensim.megamanipulator.graphql.generated.gitlab.SingleRepoQuery
+import com.github.jensim.megamanipulator.graphql.generated.gitlab.enums.MergeRequestState
 import com.github.jensim.megamanipulator.http.HttpClientProvider
 import com.github.jensim.megamanipulator.project.lazyService
 import com.github.jensim.megamanipulator.settings.SerializationHolder
@@ -239,14 +240,14 @@ class GitLabClient @NonInjectable constructor(
             PrActionStatus(success = false, msg = msg)
         } else {
             log.info("Closed MergeRequest for ${pullRequest.asPathString()} with title '${pullRequest.title()}'")
-            if (dropFork && pullRequest.isFork() && (pullRequest.sourceProjectId != pullRequest.targetProjectId)) {
+            val sourceProjectId: Long? = pullRequest.sourceProjectId
+            if (dropFork && pullRequest.isFork() && sourceProjectId != null && (sourceProjectId != pullRequest.targetProjectId)) {
                 // TODO - verify that there are no other active PRs
-                val repo = getRepo(pullRequest, pullRequest.sourceProjectId, client, settings)
+                val repo = getRepo(pullRequest, sourceProjectId, client, settings)
                 deletePrivateRepo(repo, settings)
-            } else if (dropBranch && !pullRequest.isFork()) {
+            } else if (dropBranch && !pullRequest.isFork() && sourceProjectId != null) {
                 // https://docs.gitlab.com/ee/api/branches.html#delete-repository-branch
                 // DELETE /api/v4/projects/:id/repository/branches/:branch
-                val sourceProjectId = pullRequest.sourceProjectId
                 val sourceBranch = pullRequest.fromBranch()
                 val branchResponse: HttpResponse =
                     client.delete("${settings.baseUrl}/api/v4/projects/$sourceProjectId/repository/branches/${sourceBranch.encodeUrlQueryParameter()}")
@@ -264,16 +265,31 @@ class GitLabClient @NonInjectable constructor(
         }
     }
 
-    suspend fun getAllReviewPrs(
+    suspend fun getAllPrs(
         searchHost: String,
         codeHost: String,
-        settings: GitLabSettings
+        settings: GitLabSettings,
+        limit: Int,
+        role: String,
+        state: String,
+    ): List<GitLabMergeRequestWrapper> = when (role) {
+        "assignee" -> getAllReviewPrs(searchHost = searchHost, codeHost = codeHost, settings = settings, state = state, limit = limit)
+        "author" -> getAllAuthorPrs(searchHost = searchHost, codeHost = codeHost, settings = settings, state = state, limit = limit)
+        else -> throw IllegalArgumentException("Role '$role' is not recognized")
+    }
+
+    private suspend fun getAllReviewPrs(
+        searchHost: String,
+        codeHost: String,
+        settings: GitLabSettings,
+        state: String,
+        limit: Int,
     ): List<GitLabAssignedMergeRequestListItemWrapper> {
         val client: GraphQLKtorClient = getClient(searchHost, codeHost, settings)
         val accumulator: MutableList<GitLabAssignedMergeRequestListItemWrapper> = ArrayList()
         var lastCursor: String? = null
-        while (true) {
-            val vars = GetAssignedPullRequests.Variables(cursor = lastCursor)
+        while (accumulator.size < limit) {
+            val vars = GetAssignedPullRequests.Variables(cursor = lastCursor, state = MergeRequestState.valueOf(state))
             val resp: GraphQLClientResponse<GetAssignedPullRequests.Result> =
                 client.execute(GetAssignedPullRequests(vars))
             when {
@@ -311,16 +327,19 @@ class GitLabClient @NonInjectable constructor(
         return accumulator
     }
 
-    suspend fun getAllAuthorPrs(
+    private suspend fun getAllAuthorPrs(
         searchHost: String,
         codeHost: String,
-        settings: GitLabSettings
+        settings: GitLabSettings,
+        state: String,
+        limit: Int,
     ): List<GitLabMergeRequestListItemWrapper> {
         val client: GraphQLKtorClient = getClient(searchHost, codeHost, settings)
         val accumulator: MutableList<GitLabMergeRequestListItemWrapper> = ArrayList()
         var lastCursor: String? = null
-        while (true) {
-            val vars = GetAuthoredPullRequests.Variables(cursor = lastCursor)
+        while (accumulator.size < limit) {
+
+            val vars = GetAuthoredPullRequests.Variables(cursor = lastCursor, state = MergeRequestState.valueOf(state))
             val resp: GraphQLClientResponse<Result> = client.execute(GetAuthoredPullRequests(vars))
             when {
                 !resp.errors.isNullOrEmpty() -> {

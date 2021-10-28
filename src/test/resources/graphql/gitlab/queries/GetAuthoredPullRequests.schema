@@ -1,6 +1,6 @@
-query ($cursor: String) {
+query ($cursor: String, $state: MergeRequestState) {
   currentUser {
-    authoredMergeRequests(after: $cursor, state:opened) {
+    authoredMergeRequests(after: $cursor, state: $state) {
       count
       pageInfo {
         hasNextPage
@@ -10,6 +10,7 @@ query ($cursor: String) {
       nodes {
         id
         iid
+        state
         webUrl
         title
         author {

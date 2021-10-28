@@ -172,7 +172,7 @@ class CloneOperatorTest {
         verify {
             notificationsOperator.show(
                 "Cloning done with failures",
-                "Failed cloning 1/2 repos, details in ide logs",
+                "Failed cloning 1/2 repos. More info in IDE logs...<br><ul><li>${pullRequest}<br>output:''<br>err:''</li></ul>",
                 NotificationType.WARNING
             )
         }
@@ -251,7 +251,7 @@ class CloneOperatorTest {
         verify { processOperator.runCommandAsync(eq(dir), eq(listOf("git", "checkout", "prBranch"))) }
         verify { processOperator.runCommandAsync(eq(dir), eq(listOf("git", "checkout", "-b", "prBranch"))) }
         verify { filesOperator.refreshClones() }
-        verify { notificationsOperator.show(title = "Cloning done with failures", body = "Failed cloning 1/1 repos, details in ide logs", type = NotificationType.WARNING) }
+        verify { notificationsOperator.show(title = "Cloning done with failures", body = "Failed cloning 1/1 repos. More info in IDE logs...<br><ul><li>SearchResult(project=project, repo=repo, codeHostName=code, searchHostName=search)<br>output:''<br>err:''</li></ul>", type = NotificationType.WARNING) }
     }
 
     @Test

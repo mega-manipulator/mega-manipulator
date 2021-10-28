@@ -200,41 +200,24 @@ class BitbucketServerClient @NonInjectable constructor(
         }
     }
 
-    suspend fun getAllAuthorPrs(
-        searchHostName: String,
-        codeHostName: String,
-        settings: BitBucketSettings
-    ): List<PullRequestWrapper> = getAllPrs(
-        searchHostName = searchHostName,
-        codeHostName = codeHostName,
-        settings = settings,
-        type = "AUTHOR"
-    )
-
-    suspend fun getAllReviewerPrs(
-        searchHostName: String,
-        codeHostName: String,
-        settings: BitBucketSettings
-    ): List<PullRequestWrapper> = getAllPrs(
-        searchHostName = searchHostName,
-        codeHostName = codeHostName,
-        settings = settings,
-        type = "REVIEWER"
-    )
-
     @Suppress("style.LoopWithTooManyJumpStatements")
-    private suspend fun getAllPrs(
+    suspend fun getAllPrs(
         searchHostName: String,
         codeHostName: String,
         settings: BitBucketSettings,
-        type: String
+        limit: Int,
+        state: String?,
+        role: String?,
     ): List<PullRequestWrapper> {
+        // https://docs.atlassian.com/bitbucket-server/rest/5.7.0/bitbucket-rest.html#idm45568367094208
+        val state: String = state?.let { "&state=$state" } ?: ""
+        val role: String = role?.let { "&role=$role" } ?: ""
         val client: HttpClient = httpClientProvider.getClient(searchHostName, codeHostName, settings)
         val collector = ArrayList<PullRequestWrapper>()
         var start = 0L
-        while (true) {
+        while (collector.size < limit) {
             val response: BitBucketPage = try {
-                client.get("${settings.baseUrl}/rest/api/1.0/dashboard/pull-requests?state=OPEN&role=$type&start=$start&limit=100") {
+                client.get("${settings.baseUrl}/rest/api/1.0/dashboard/pull-requests?start=$start&limit=100$state$role") {
                     accept(ContentType.Application.Json)
                 }
             } catch (e: Exception) {

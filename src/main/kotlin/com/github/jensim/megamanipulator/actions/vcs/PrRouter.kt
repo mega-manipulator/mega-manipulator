@@ -14,13 +14,13 @@ import com.github.jensim.megamanipulator.settings.types.CodeHostSettings.GitLabS
 import com.intellij.notification.NotificationType.WARNING
 import com.intellij.openapi.project.Project
 import com.intellij.serviceContainer.NonInjectable
+import java.util.concurrent.atomic.AtomicLong
+import kotlin.coroutines.CoroutineContext
 import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.async
 import kotlinx.coroutines.withContext
-import java.util.concurrent.atomic.AtomicLong
-import kotlin.coroutines.CoroutineContext
 
 @SuppressWarnings("TooManyFunctions")
 class PrRouter @NonInjectable constructor(
@@ -108,21 +108,12 @@ class PrRouter @NonInjectable constructor(
         }
     }
 
-    suspend fun getAllReviewPrs(searchHost: String, codeHost: String): List<PullRequestWrapper>? {
+    suspend fun getAllPrs(searchHost: String, codeHost: String, limit: Int, role: String?, state: String?): List<PullRequestWrapper>? {
         return resolve(searchHost, codeHost)?.let {
             when (it) {
-                is BitBucketSettings -> bitbucketServerClient.getAllReviewerPrs(searchHost, codeHost, it)
-                is GitHubSettings -> githubComClient.getAllReviewerPrs(searchHost, codeHost, it)
-                is GitLabSettings -> gitLabClient.getAllReviewPrs(searchHost, codeHost, it)
-            }
-        }
-    }
-    suspend fun getAllAuthorPrs(searchHost: String, codeHost: String): List<PullRequestWrapper>? {
-        return resolve(searchHost, codeHost)?.let {
-            when (it) {
-                is BitBucketSettings -> bitbucketServerClient.getAllAuthorPrs(searchHost, codeHost, it)
-                is GitHubSettings -> githubComClient.getAllAuthorPrs(searchHost, codeHost, it)
-                is GitLabSettings -> gitLabClient.getAllAuthorPrs(searchHost, codeHost, it)
+                is BitBucketSettings -> bitbucketServerClient.getAllPrs(searchHostName = searchHost, codeHostName = codeHost, settings = it, state = state, role = role, limit = limit)
+                is GitHubSettings -> githubComClient.getAllPrs(searchHost = searchHost, codeHost = codeHost, settings = it, state = state, role = role, limit = limit)
+                is GitLabSettings -> gitLabClient.getAllPrs(searchHost = searchHost, codeHost = codeHost, settings = it, role = role!!, state = state!!, limit = limit)
             }
         }
     }

@@ -111,7 +111,7 @@ object EnvUserSettingsSetup {
             "gitlab.com" to CodeHostSettings.GitLabSettings(
                 username = helper.resolve(EnvHelper.EnvProperty.GITLAB_USERNAME)!!,
                 forkSetting = ForkSetting.LAZY_FORK,
-                cloneType = CloneType.HTTPS
+                cloneType = CloneType.HTTPS,
             )
         } catch (e: MissingPropertyException) {
             log.warn(e.message)

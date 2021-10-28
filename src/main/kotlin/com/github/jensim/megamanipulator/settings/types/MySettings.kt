@@ -1,10 +1,11 @@
 package com.github.jensim.megamanipulator.settings.types
 
+import com.github.jensim.megamanipulator.graphql.generated.gitlab.enums.MergeRequestState
 import com.github.ricky12awesome.jss.JsonSchema
-import kotlinx.serialization.SerialName
-import kotlinx.serialization.Serializable
 import java.io.File
 import java.util.Base64
+import kotlinx.serialization.SerialName
+import kotlinx.serialization.Serializable
 
 private val base64encoder = Base64.getEncoder()
 
@@ -155,6 +156,8 @@ sealed class SearchHostSettings : HostWithAuth {
 @Serializable
 sealed class CodeHostSettings
 @SuppressWarnings("LongParameterList") constructor() : HostWithAuth {
+
+    abstract val codeHostType: CodeHostSettingsType
     abstract val baseUrl: String
     abstract val httpsOverride: HttpsOverride?
     abstract val authMethod: AuthMethod
@@ -170,6 +173,36 @@ sealed class CodeHostSettings
         if (forkSetting != ForkSetting.PLAIN_BRANCH) {
             require(username != null) { "username is required if forkSetting is not ${ForkSetting.PLAIN_BRANCH.name}" }
         }
+    }
+
+    enum class CodeHostSettingsType(
+        val prRoleAuthor: String,
+        val prRoleAssignee: String,
+        val prRoles: Set<String?>,
+        val prStateOpen: String,
+        val prStates: Set<String?>,
+    ) {
+        BITBUCKET_SERVER(
+            prRoleAuthor = "AUTHOR",
+            prRoleAssignee = "REVIEWER",
+            prRoles = setOf("AUTHOR", "REVIEWER", "PARTICIPANT", null),
+            prStateOpen = "OPEN",
+            prStates = setOf("OPEN", "DECLINED", "MERGED", null),
+        ),
+        GITHUB(
+            prRoleAuthor = "author",
+            prRoleAssignee = "assignee",
+            prRoles = setOf("assignee", "author", "commenter", null),
+            prStateOpen = "open",
+            prStates = setOf("open", "closed", null),
+        ),
+        GITLAB(
+            prRoleAuthor = "author",
+            prRoleAssignee = "assignee",
+            prRoles = setOf("assignee", "author"),
+            prStateOpen = MergeRequestState.OPENED.name,
+            prStates = (MergeRequestState.values().toSet() - MergeRequestState.__UNKNOWN_VALUE).map { it.name }.toSet(),
+        );
     }
 
     @Serializable
@@ -194,6 +227,7 @@ sealed class CodeHostSettings
         override val cloneType: CloneType = CloneType.SSH,
     ) : CodeHostSettings() {
 
+        override val codeHostType: CodeHostSettingsType = CodeHostSettingsType.BITBUCKET_SERVER
         override val authMethod: AuthMethod = AuthMethod.USERNAME_TOKEN
 
         init {
@@ -228,6 +262,7 @@ sealed class CodeHostSettings
         override val cloneType: CloneType = CloneType.SSH,
     ) : CodeHostSettings() {
 
+        override val codeHostType: CodeHostSettingsType = CodeHostSettingsType.GITHUB
         override val authMethod: AuthMethod = AuthMethod.USERNAME_TOKEN
         override val baseUrl: String = "https://api.github.com"
         val graphQLUrl: String = "https://graphql.github.com/graphql/proxy"
@@ -263,6 +298,8 @@ sealed class CodeHostSettings
         override val cloneType: CloneType = CloneType.SSH,
         override val baseUrl: String = "https://gitlab.com",
     ) : CodeHostSettings() {
+
+        override val codeHostType: CodeHostSettingsType = CodeHostSettingsType.GITLAB
         override val authMethod: AuthMethod = AuthMethod.JUST_TOKEN
 
         override fun getAuthHeaderValue(password: String?): String? = when {

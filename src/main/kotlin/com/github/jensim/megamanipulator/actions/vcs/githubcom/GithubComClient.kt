@@ -24,6 +24,9 @@ import io.ktor.client.statement.HttpStatement
 import io.ktor.client.statement.readText
 import io.ktor.http.ContentType
 import io.ktor.http.contentType
+import java.util.concurrent.atomic.AtomicInteger
+import java.util.regex.Pattern
+import kotlin.coroutines.CoroutineContext
 import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -39,9 +42,6 @@ import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.decodeFromJsonElement
-import java.util.concurrent.atomic.AtomicInteger
-import java.util.regex.Pattern
-import kotlin.coroutines.CoroutineContext
 
 @SuppressWarnings("TooManyFunctions", "ReturnCount")
 class GithubComClient @NonInjectable constructor(
@@ -144,42 +144,26 @@ class GithubComClient @NonInjectable constructor(
         }
     }
 
-    suspend fun getAllAuthorPrs(
-        searchHost: String,
-        codeHost: String,
-        settings: GitHubSettings
-    ): List<GithubComPullRequestWrapper> = getAllPrs(
-        searchHost = searchHost,
-        codeHost = codeHost,
-        settings = settings,
-        type = "author"
-    )
-
-    suspend fun getAllReviewerPrs(
-        searchHost: String,
-        codeHost: String,
-        settings: GitHubSettings
-    ): List<GithubComPullRequestWrapper> = getAllPrs(
-        searchHost = searchHost,
-        codeHost = codeHost,
-        settings = settings,
-        type = "assignee"
-    )
-
-    private suspend fun getAllPrs(
+    suspend fun getAllPrs(
         searchHost: String,
         codeHost: String,
         settings: GitHubSettings,
-        type: String
+        limit: Int,
+        state: String?,
+        role: String?,
     ): List<GithubComPullRequestWrapper> {
+        val role: String = role?.let { "+$role%3A${settings.username}" } ?: ""
+        val state: String = state?.let { "+state%3A$state" } ?: ""
         val client: HttpClient = httpClientProvider.getClient(searchHost, codeHost, settings)
         val seq: Flow<GithubComIssue> = flow {
-            val page = AtomicInteger(1)
+            var page = 1
+            var found = 0L
             while (true) {
-                val result: GithubComSearchResult<GithubComIssue> =
-                    client.get("${settings.baseUrl}/search/issues?per_page=100&page=${page.getAndIncrement()}&q=state%3Aopen+$type%3A${settings.username}+type%3Apr")
+                val result: GithubComSearchResult<GithubComIssue> = client.get("${settings.baseUrl}/search/issues?per_page=100&page=${page++}&q=type%3Apr${state}${role}")
                 result.items.forEach { emit(it) }
                 if (result.items.isEmpty()) break
+                found += result.total_count
+                if (found > limit) break
             }
         }
         return seq.toList().toList()

@@ -9,6 +9,7 @@ import com.github.jensim.megamanipulator.toolswindow.TabKey
 import com.github.jensim.megamanipulator.toolswindow.ToolWindowTab
 import com.github.jensim.megamanipulator.ui.CodeHostSelector
 import com.github.jensim.megamanipulator.ui.GeneralKtDataTable
+import com.github.jensim.megamanipulator.ui.PullRequestLoaderDialogGenerator
 import com.github.jensim.megamanipulator.ui.UiProtector
 import com.intellij.openapi.components.service
 import com.intellij.openapi.project.Project
@@ -54,8 +55,7 @@ class PullRequestWindow(project: Project) : ToolWindowTab {
     private val peekArea = JBTextArea()
     private val peekScroll = JBScrollPane(peekArea)
     private val menuOpenButton = JButton("Actions")
-    private val fetchAuthorButton = JButton("Fetch author PRs")
-    private val fetchAssigneeButton = JButton("Fetch assigned PRs")
+    private val fetchPRsButton = JButton("Fetch PRs")
 
     private val split = JBSplitter(false, 0.7f).apply {
         firstComponent = prScroll
@@ -66,8 +66,7 @@ class PullRequestWindow(project: Project) : ToolWindowTab {
     override val content: JComponent = panel {
         row {
             component(codeHostSelect)
-            component(fetchAuthorButton)
-            component(fetchAssigneeButton)
+            component(fetchPRsButton)
             label("Filter:")
             component(filterField)
             right {
@@ -133,20 +132,15 @@ class PullRequestWindow(project: Project) : ToolWindowTab {
                 peekArea.text = ""
             }
         }
-        fetchAuthorButton.addActionListener {
-            fetchAuthoredPRs()
-        }
-        fetchAssigneeButton.addActionListener {
-            fetchAssignedPRs()
+        fetchPRsButton.addActionListener {
+            fetchPRs()
         }
         codeHostSelect.addActionListener {
             val hasSelection = codeHostSelect.selectedItem != null
-            fetchAssigneeButton.isEnabled = hasSelection
-            fetchAuthorButton.isEnabled = hasSelection
+            fetchPRsButton.isEnabled = hasSelection
         }
         val hasSelection = codeHostSelect.selectedItem != null
-        fetchAssigneeButton.isEnabled = hasSelection
-        fetchAuthorButton.isEnabled = hasSelection
+        fetchPRsButton.isEnabled = hasSelection
     }
 
     override fun refresh() {
@@ -154,33 +148,30 @@ class PullRequestWindow(project: Project) : ToolWindowTab {
 
         onboardingOperator.registerTarget(OnboardingId.PR_TAB, content)
         onboardingOperator.registerTarget(OnboardingId.PR_LIST_FILTER_FIELD, filterField)
-        onboardingOperator.registerTarget(OnboardingId.PR_FETCH_ASSIGNEE_PR_BUTTON, fetchAssigneeButton)
-        onboardingOperator.registerTarget(OnboardingId.PR_FETCH_AUTHOR_PR_BUTTON, fetchAuthorButton)
+        onboardingOperator.registerTarget(OnboardingId.PR_FETCH_AUTHOR_PR_BUTTON, fetchPRsButton)
         onboardingOperator.registerTarget(OnboardingId.PR_CODE_HOST_SELECT, codeHostSelect)
         onboardingOperator.registerTarget(OnboardingId.PR_ACTIONS_BUTTON, menuOpenButton)
         onboardingOperator.registerTarget(OnboardingId.PR_ACTIONS_RESULT_AREA, split)
     }
 
-    private fun fetchAssignedPRs() {
-        prTable.setListData(emptyList())
-        (codeHostSelect.selectedItem)?.let { selected ->
-            filterField.text = ""
-            val prs: List<PullRequestWrapper>? = uiProtector.uiProtectedOperation("Fetching PRs") {
-                prRouter.getAllReviewPrs(selected.searchHostName, selected.codeHostName)
+    private fun fetchPRs() {
+        (codeHostSelect.selectedItem)?.let { selected: CodeHostSelector.CodeHostSelect ->
+            settingsFileOperator.readSettings()?.let {
+                it.resolveSettings(selected.searchHostName, selected.codeHostName)?.let { (_, settings) ->
+                    PullRequestLoaderDialogGenerator.generateDialog(
+                        focus = fetchPRsButton,
+                        type = settings.codeHostType,
+                    ) { state: String?, role: String?, limit: Int ->
+                        prTable.setListData(emptyList())
+                        filterField.text = ""
+                        val prs: List<PullRequestWrapper>? = uiProtector.uiProtectedOperation("Fetching PRs") {
+                            prRouter.getAllPrs(searchHost = selected.searchHostName, codeHost = selected.codeHostName, role = role, state = state, limit = limit)
+                        }
+                        setPrs(prs)
+                    }
+                }
             }
-            setPrs(prs)
-        } ?: log.warn("No codeHost selected")
-    }
-
-    private fun fetchAuthoredPRs() {
-        prTable.setListData(emptyList())
-        (codeHostSelect.selectedItem)?.let { selected ->
-            filterField.text = ""
-            val prs: List<PullRequestWrapper>? = uiProtector.uiProtectedOperation("Fetching PRs") {
-                prRouter.getAllAuthorPrs(selected.searchHostName, selected.codeHostName)
-            }
-            setPrs(prs)
-        } ?: log.warn("No codeHost selected")
+        }
     }
 
     private fun setPrs(prs: List<PullRequestWrapper>?) {

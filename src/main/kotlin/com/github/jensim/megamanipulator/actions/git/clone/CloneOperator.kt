@@ -67,9 +67,9 @@ class CloneOperator @NonInjectable constructor(
             extraText1 = "Cloning repos",
             extraText2 = { it.asPathString() },
             data = repos,
-        ) { repo ->
-            val codeSettings: CodeHostSettings =
-                settings.resolveSettings(repo.searchHostName, repo.codeHostName)!!.second
+        ) { repo: SearchResult ->
+            val codeSettings: CodeHostSettings = settings.resolveSettings(repo.searchHostName, repo.codeHostName)?.second
+                ?: return@mapConcurrentWithProgress listOf("Settings" to ApplyOutput.dummy(err = "Settings were not resolvable for ${repo.searchHostName}/${repo.codeHostName}, most likely the key of the code host does not match the one returned by your search host!"))
             prRouter.getRepo(repo)?.let { vcsRepo: RepoWrapper ->
                 val cloneUrl = gitUrlHelper.buildCloneUrl(codeSettings, vcsRepo)
                 val defaultBranch = prRouter.getRepo(repo)?.getDefaultBranch()!!
@@ -89,20 +89,22 @@ class CloneOperator @NonInjectable constructor(
     }
 
     private fun reportState(state: List<Pair<Any, List<Action>?>>) {
-        val badState: List<Pair<Any, List<Action>?>> = state.filter { it.second.orEmpty().lastOrNull()?.second?.exitCode != 0 }
+        val (badState: List<Pair<Any, List<Action>?>>, goodState: List<Pair<Any, List<Action>?>>) = state.partition { it.second.orEmpty().lastOrNull()?.second?.exitCode != 0 }
         if (badState.isEmpty()) {
             notificationsOperator.show(
                 title = "Cloning done",
                 body = "All ${state.size} cloned successfully",
                 type = INFORMATION,
             )
-            // val serializaleBadState: List<Pair<String, List<Action>?>> = state.map { it.first.toString() to it.second }
-            // val badStateString = SerializationHolder.readableJson.encodeToString(serializaleBadState)
-            // System.err.println("Successfully cloned ${state.size} repos:\n$badStateString")
         } else {
+            val stateAsString = badState.joinToString(
+                prefix = "<ul>",
+                separator = "<br>",
+                postfix = "</ul>"
+            ) { "<li>${it.first}${it.second?.lastOrNull()?.second?.let { "<br>output:'${it.std}'<br>err:'${it.err}'" } ?: "..."}</li>" }
             notificationsOperator.show(
                 title = "Cloning done with failures",
-                body = "Failed cloning ${badState.size}/${state.size} repos, details in ide logs",
+                body = "Failed cloning ${badState.size}/${state.size} repos. More info in IDE logs...<br>$stateAsString",
                 type = WARNING,
             )
             val serializaleBadState: List<Pair<String, List<Action>?>> = badState.map { it.first.toString() to it.second }
@@ -143,7 +145,7 @@ class CloneOperator @NonInjectable constructor(
                 ?: return listOf(
                     "Settings" to ApplyOutput.dummy(
                         dir = pullRequest.asPathString(),
-                        err = "No settings found for ${pullRequest.searchHostName()}/${pullRequest.codeHostName()}"
+                        err = "No settings found for ${pullRequest.searchHostName()}/${pullRequest.codeHostName()}, most likely the key of the code host does not match the one returned by your search host!"
                     )
                 )
         val badState: List<Action> =

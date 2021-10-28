@@ -76,14 +76,9 @@ enum class OnboardingId(
         next = PR_ACTIONS_BUTTON,
         tab = TabKey.tabTitlePRsManage,
     ),
-    PR_FETCH_ASSIGNEE_PR_BUTTON(
-        text = "Fetch PRs you're assigned to",
-        next = PR_LIST_FILTER_FIELD,
-        tab = TabKey.tabTitlePRsManage,
-    ),
     PR_FETCH_AUTHOR_PR_BUTTON(
-        text = "Fetch PRs you've authored",
-        next = PR_FETCH_ASSIGNEE_PR_BUTTON,
+        text = "Fetch PullRequests",
+        next = PR_LIST_FILTER_FIELD,
         tab = TabKey.tabTitlePRsManage,
     ),
     PR_CODE_HOST_SELECT(

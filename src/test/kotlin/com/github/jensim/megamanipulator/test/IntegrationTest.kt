@@ -4,6 +4,7 @@ import com.github.jensim.megamanipulator.actions.apply.ApplyOutput
 import com.github.jensim.megamanipulator.actions.search.SearchResult
 import com.github.jensim.megamanipulator.actions.vcs.PrActionStatus
 import com.github.jensim.megamanipulator.actions.vcs.PullRequestWrapper
+import com.github.jensim.megamanipulator.settings.types.CodeHostSettings
 import com.github.jensim.megamanipulator.test.wiring.EnvUserSettingsSetup
 import com.github.jensim.megamanipulator.test.wiring.TestApplicationWiring
 import com.intellij.notification.NotificationType
@@ -128,11 +129,22 @@ class IntegrationTest {
         }
         assertTrue(status.success)
 
+        val settings: CodeHostSettings = wiring.settings.resolveSettings(
+            searchHostName = result.searchHostName,
+            codeHostName = result.codeHostName
+        )?.second!!
+
         val updatedPR: PullRequestWrapper = org.awaitility.Awaitility.await("Finding PR")
             .atMost(10, TimeUnit.SECONDS).until({
                 // Must fetch the updated PR in order to decline it
                 runBlocking {
-                    wiring.prRouter.getAllAuthorPrs(searchHost = newPr!!.searchHostName(), codeHost = newPr.codeHostName())
+                    wiring.prRouter.getAllPrs(
+                        searchHost = newPr!!.searchHostName(),
+                        codeHost = newPr.codeHostName(),
+                        limit = 1000,
+                        role = settings.codeHostType.prRoleAuthor,
+                        state = settings.codeHostType.prStateOpen
+                    )
                 }?.firstOrNull { it.title() == newTitle }
             }) { it != null }!!
 

@@ -15,6 +15,7 @@ sealed class PullRequestWrapper : GitCloneable {
     abstract fun title(): String
     abstract fun body(): String
     abstract fun author(): String?
+    abstract fun state(): String?
     abstract fun fromBranch(): String
     abstract fun toBranch(): String
     abstract fun browseUrl(): String?
@@ -36,6 +37,7 @@ data class BitBucketPullRequestWrapper(
     override fun title(): String = bitbucketPR.title
     override fun body(): String = bitbucketPR.description ?: ""
     override fun author(): String? = bitbucketPR.author?.user?.name
+    override fun state(): String? = bitbucketPR.state
     override fun fromBranch(): String = bitbucketPR.fromRef.id.removePrefix("refs/heads/")
     override fun toBranch(): String = bitbucketPR.toRef.id.removePrefix("refs/heads/")
     fun alterCopy(
@@ -76,6 +78,7 @@ data class GithubComPullRequestWrapper(
     override fun title(): String = pullRequest.title
     override fun body(): String = pullRequest.body
     override fun author(): String = pullRequest.user.login
+    override fun state(): String = pullRequest.state
     override fun fromBranch(): String = pullRequest.head?.ref ?: "<?>"
     override fun toBranch(): String = pullRequest.base?.ref ?: "<?>"
     override fun isFork(): Boolean = pullRequest.head?.repo?.fork ?: false && (pullRequest.base?.repo?.id != pullRequest.head?.repo?.id)
@@ -94,7 +97,7 @@ data class GithubComPullRequestWrapper(
 
 sealed class GitLabMergeRequestWrapper : PullRequestWrapper() {
     abstract val targetProjectId: Long
-    abstract val sourceProjectId: Long
+    abstract val sourceProjectId: Long?
     abstract val mergeRequestId: Long
     abstract val mergeRequestIid: Long
 }
@@ -107,7 +110,7 @@ data class GitLabMergeRequestListItemWrapper(
     override val raw: String,
 ) : GitLabMergeRequestWrapper() {
     override val targetProjectId = mergeRequest.targetProject.id.removePrefix("gid://gitlab/Project/").toLong()
-    override val sourceProjectId = mergeRequest.sourceProject?.id?.removePrefix("gid://gitlab/Project/")?.toLong()!!
+    override val sourceProjectId: Long? = mergeRequest.sourceProject?.id?.removePrefix("gid://gitlab/Project/")?.toLong()
     override val mergeRequestId = mergeRequest.id.removePrefix("gid://gitlab/MergeRequest/").toLong()
     override val mergeRequestIid = mergeRequest.iid.toLong()
 
@@ -118,6 +121,7 @@ data class GitLabMergeRequestListItemWrapper(
     override fun title(): String = mergeRequest.title
     override fun body(): String = mergeRequest.description ?: ""
     override fun author(): String? = mergeRequest.author?.username
+    override fun state(): String? = mergeRequest.state.name
     override fun fromBranch(): String = mergeRequest.sourceBranch
     override fun toBranch(): String = mergeRequest.targetBranch
     override fun isFork(): Boolean = mergeRequest.sourceProject?.path != mergeRequest.targetProject.path
@@ -142,7 +146,7 @@ data class GitLabAssignedMergeRequestListItemWrapper(
     override val raw: String,
 ) : GitLabMergeRequestWrapper() {
     override val targetProjectId = mergeRequest.targetProject.id.removePrefix("gid://gitlab/Project/").toLong()
-    override val sourceProjectId = mergeRequest.sourceProject?.id?.removePrefix("gid://gitlab/Project/")?.toLong()!!
+    override val sourceProjectId: Long? = mergeRequest.sourceProject?.id?.removePrefix("gid://gitlab/Project/")?.toLong()
     override val mergeRequestId = mergeRequest.id.removePrefix("gid://gitlab/MergeRequest/").toLong()
     override val mergeRequestIid = mergeRequest.iid.toLong()
 
@@ -153,6 +157,7 @@ data class GitLabAssignedMergeRequestListItemWrapper(
     override fun title(): String = mergeRequest.title
     override fun body(): String = mergeRequest.description ?: ""
     override fun author(): String? = mergeRequest.author?.username
+    override fun state(): String = mergeRequest.state.name
     override fun fromBranch(): String = mergeRequest.sourceBranch
     override fun toBranch(): String = mergeRequest.targetBranch
     override fun isFork(): Boolean = mergeRequest.sourceProject?.path != mergeRequest.targetProject.path
@@ -189,6 +194,7 @@ data class GitLabMergeRequestApiWrapper(
     override fun title(): String = mergeRequest.title
     override fun body(): String = mergeRequest.description
     override fun author(): String? = null
+    override fun state(): String = mergeRequest.state.uppercase()
     override fun fromBranch(): String = mergeRequest.source_branch
     override fun toBranch(): String = mergeRequest.target_branch
     override fun isFork(): Boolean = mergeRequest.source_project_id != mergeRequest.target_project_id

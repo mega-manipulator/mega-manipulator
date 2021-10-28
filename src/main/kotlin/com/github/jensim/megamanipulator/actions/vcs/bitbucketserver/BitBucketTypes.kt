@@ -132,8 +132,8 @@ data class BitBucketProjectRequest(
 
 @Serializable
 data class BitBucketRepoLinks(
-    val clone: List<BitBucketCloneLink>,
-    val self: List<BitBucketPlainLink>,
+    val clone: List<BitBucketCloneLink>? = null,
+    val self: List<BitBucketPlainLink>? = null,
 )
 
 @Serializable
