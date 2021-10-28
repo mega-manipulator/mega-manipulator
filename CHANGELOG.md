@@ -4,20 +4,16 @@
 
 ## [Unreleased]
 
+## [0.0.36]
 ### Added
-
 - Load closed Pull requests
 
 ## [0.0.35]
-
 ### Added
-
 - UI-component for popping up prefill from history
 
 ## [0.0.34]
-
 ### Added
-
 - Sparse checkout from search and PR  
   And unison UI between the two
 
