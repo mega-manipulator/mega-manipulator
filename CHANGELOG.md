@@ -4,9 +4,10 @@
 
 ## [Unreleased]
 
-### Removed 
+## [0.0.38]
+### Removed
 - The unused 'err'-block apply outputs  
-stdErr is joined with the stdOut since last `0.0.37` 
+stdErr is joined with the stdOut since last
 
 ## [0.0.37]
 ### Fixed
