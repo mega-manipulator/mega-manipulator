@@ -11,11 +11,11 @@ import com.intellij.notification.NotificationType
 import com.intellij.openapi.project.Project
 import com.intellij.remoteServer.util.CloudConfigurationUtil.createCredentialAttributes
 import com.intellij.serviceContainer.NonInjectable
+import kotlinx.serialization.decodeFromString
+import kotlinx.serialization.encodeToString
 import java.util.concurrent.ConcurrentHashMap
 import javax.annotation.concurrent.NotThreadSafe
 import javax.swing.JComponent
-import kotlinx.serialization.decodeFromString
-import kotlinx.serialization.encodeToString
 
 @NotThreadSafe
 class IntelliJPasswordsOperator @NonInjectable constructor(

@@ -4,13 +4,13 @@ import com.github.jensim.megamanipulator.actions.apply.ApplyOutput
 import com.intellij.openapi.project.Project
 import io.mockk.every
 import io.mockk.mockk
-import java.io.File
-import java.nio.file.Path
-import kotlin.io.path.createTempDirectory
 import kotlinx.coroutines.runBlocking
 import org.hamcrest.MatcherAssert.assertThat
 import org.hamcrest.Matchers.equalTo
 import org.junit.jupiter.api.Test
+import java.io.File
+import java.nio.file.Path
+import kotlin.io.path.createTempDirectory
 
 class ProcessOperatorTest {
 

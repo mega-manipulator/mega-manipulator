@@ -29,9 +29,11 @@ object CommitDialogFactory {
             row {
                 cell {
                     scrollPane(commitMessage)
-                    component(PrefillHistoryButton(project, PrefillString.COMMIT_MESSAGE, commitMessage) {
-                        commitMessage.text = it
-                    })
+                    component(
+                        PrefillHistoryButton(project, PrefillString.COMMIT_MESSAGE, commitMessage) {
+                            commitMessage.text = it
+                        }
+                    )
                 }
             }
             row { component(pushBox) }

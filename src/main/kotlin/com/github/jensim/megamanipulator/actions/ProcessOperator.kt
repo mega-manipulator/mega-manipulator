@@ -3,9 +3,9 @@ package com.github.jensim.megamanipulator.actions
 import com.github.jensim.megamanipulator.actions.apply.ApplyOutput
 import com.github.jensim.megamanipulator.ui.trimProjectPath
 import com.intellij.openapi.project.Project
-import java.io.File
 import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.future.asDeferred
+import java.io.File
 
 class ProcessOperator(private val project: Project) {
 

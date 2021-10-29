@@ -81,7 +81,7 @@ class ApplyWindow(private val project: Project) : ToolWindowTab {
                     <h1>Are you sure?</h1>
                     <b>I wont be able to stop scripts that have started.</b>
                     Take a second peek at your concurrency level before you run something intensive.
-                    """.trimIndent(),
+                """.trimIndent(),
                 focusComponent = applyButton
             ) {
                 applyButton.isEnabled = false

@@ -26,9 +26,11 @@ open class CreatePullRequestDialog(
         row {
             cell {
                 component(titlePane)
-                component(PrefillHistoryButton(project, PrefillString.PR_TITLE, titlePane) {
-                    titleField.text = it
-                })
+                component(
+                    PrefillHistoryButton(project, PrefillString.PR_TITLE, titlePane) {
+                        titleField.text = it
+                    }
+                )
             }
         }
     }
@@ -38,9 +40,11 @@ open class CreatePullRequestDialog(
         row {
             cell {
                 component(descriptionPane)
-                component(PrefillHistoryButton(project, PrefillString.PR_BODY, descriptionPane) {
-                    descriptionField.text = it
-                })
+                component(
+                    PrefillHistoryButton(project, PrefillString.PR_BODY, descriptionPane) {
+                        descriptionField.text = it
+                    }
+                )
             }
         }
     }

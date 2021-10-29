@@ -14,13 +14,13 @@ import com.github.jensim.megamanipulator.settings.types.CodeHostSettings.GitLabS
 import com.intellij.notification.NotificationType.WARNING
 import com.intellij.openapi.project.Project
 import com.intellij.serviceContainer.NonInjectable
-import java.util.concurrent.atomic.AtomicLong
-import kotlin.coroutines.CoroutineContext
 import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.async
 import kotlinx.coroutines.withContext
+import java.util.concurrent.atomic.AtomicLong
+import kotlin.coroutines.CoroutineContext
 
 @SuppressWarnings("TooManyFunctions")
 class PrRouter @NonInjectable constructor(

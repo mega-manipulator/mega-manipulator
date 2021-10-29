@@ -13,7 +13,6 @@ import com.github.jensim.megamanipulator.test.EnvHelper.EnvProperty.GITLAB_TOKEN
 import com.github.jensim.megamanipulator.test.EnvHelper.EnvProperty.GITLAB_USERNAME
 import com.github.jensim.megamanipulator.test.wiring.EnvUserSettingsSetup
 import com.github.jensim.megamanipulator.test.wiring.TestApplicationWiring
-import kotlin.io.path.ExperimentalPathApi
 import kotlinx.coroutines.runBlocking
 import org.hamcrest.MatcherAssert.assertThat
 import org.hamcrest.Matchers.equalTo
@@ -22,6 +21,7 @@ import org.hamcrest.Matchers.nullValue
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.condition.EnabledIf
 import org.junit.jupiter.api.fail
+import kotlin.io.path.ExperimentalPathApi
 
 @ExperimentalPathApi
 @EnabledIf("com.github.jensim.megamanipulator.actions.vcs.gitlab.GitLabClientTest#enabled", disabledReason = "We don't have a CI installation of bitbucket server")

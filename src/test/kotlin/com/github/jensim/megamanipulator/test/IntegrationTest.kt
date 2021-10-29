@@ -11,11 +11,6 @@ import com.intellij.notification.NotificationType
 import com.intellij.util.io.delete
 import io.mockk.every
 import io.mockk.verify
-import java.io.File
-import java.util.UUID
-import java.util.concurrent.ConcurrentHashMap
-import java.util.concurrent.TimeUnit
-import kotlin.io.path.ExperimentalPathApi
 import kotlinx.coroutines.runBlocking
 import org.hamcrest.MatcherAssert.assertThat
 import org.hamcrest.Matchers.equalTo
@@ -29,6 +24,11 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.fail
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.MethodSource
+import java.io.File
+import java.util.UUID
+import java.util.concurrent.ConcurrentHashMap
+import java.util.concurrent.TimeUnit
+import kotlin.io.path.ExperimentalPathApi
 
 @ExperimentalPathApi
 class IntegrationTest {

@@ -35,6 +35,18 @@ repositories {
 
 detekt {
     config = files("detekt-config.yml")
+    source = files(
+        "src/main/kotlin",
+    )
+}
+
+configure<org.jlleitschuh.gradle.ktlint.KtlintExtension> {
+    verbose.set(true)
+    outputToConsole.set(true)
+    filter {
+        exclude("**/generated/**")
+        include("src/main/kotlin/**", "src/test/kotlin/**")
+    }
 }
 
 dependencies {

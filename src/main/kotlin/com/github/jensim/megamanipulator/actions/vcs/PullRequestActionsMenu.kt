@@ -13,11 +13,11 @@ import com.intellij.openapi.components.service
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.ui.popup.Balloon
 import com.intellij.ui.components.JBTextArea
+import org.slf4j.LoggerFactory
 import java.awt.Desktop
 import javax.swing.JComponent
 import javax.swing.JMenuItem
 import javax.swing.JPopupMenu
-import org.slf4j.LoggerFactory
 
 @SuppressWarnings("LongParameterList", "ConstructorParameterNaming")
 class PullRequestActionsMenu(

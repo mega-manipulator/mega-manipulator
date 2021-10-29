@@ -20,8 +20,8 @@ import com.intellij.notification.NotificationType.INFORMATION
 import com.intellij.notification.NotificationType.WARNING
 import com.intellij.openapi.project.Project
 import com.intellij.serviceContainer.NonInjectable
-import java.io.File
 import kotlinx.serialization.encodeToString
+import java.io.File
 
 private typealias Action = Pair<String, ApplyOutput>
 
@@ -222,7 +222,7 @@ class CloneOperator @NonInjectable constructor(
                     sparseFile.writeText(sparseDef)
                     actionTrace.add("Setup sparse checkout config" to ApplyOutput(dir = dir.absolutePath, std = "Setup successful", exitCode = 0))
                 } catch (e: Exception) {
-                    //e.printStackTrace()
+                    // e.printStackTrace()
                     actionTrace.add("Setup sparse checkout config" to ApplyOutput(dir = dir.absolutePath, std = "Failed writing sparse config file\n${e.stackTraceToString()}", exitCode = 1))
                 }
             }

@@ -8,12 +8,12 @@ class PrefillStringSuggestionOperator(project: Project) {
     private val megaManipulatorSettingsState: MegaManipulatorSettingsState by lazy { project.service() }
 
     fun getPrefills(prefillString: PrefillString): List<String> = (
-            megaManipulatorSettingsState.let { state ->
-                state.prefillStrings[prefillString] ?: prefillString.fallback?.let {
-                    state.prefillStrings[it]
-                }
-            } ?: listOf(prefillString.default)
-            ).filterNotNull()
+        megaManipulatorSettingsState.let { state ->
+            state.prefillStrings[prefillString] ?: prefillString.fallback?.let {
+                state.prefillStrings[it]
+            }
+        } ?: listOf(prefillString.default)
+        ).filterNotNull()
 
     fun getPrefill(prefillString: PrefillString): String? {
         val prefill = megaManipulatorSettingsState.let { state ->

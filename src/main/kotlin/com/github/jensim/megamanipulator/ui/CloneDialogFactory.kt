@@ -111,24 +111,24 @@ class CloneDialogFactory(
                 row(label = "Sparse clone?") {
                     cell {
                         component(sparseDefBox)
-                        component(JBLabel("https://git-scm.com/docs/git-sparse-checkout").apply {
-                            toolTipText = "Click to open in browser"
-                            addMouseListener(object : MouseListener {
-                                override fun mouseClicked(e: MouseEvent?) = try {
-                                    com.intellij.ide.BrowserUtil.browse("https://git-scm.com/docs/git-sparse-checkout")
-                                } catch (e: Exception) {
-                                    e.printStackTrace()
-                                }
+                        component(
+                            JBLabel("https://git-scm.com/docs/git-sparse-checkout").apply {
+                                toolTipText = "Click to open in browser"
+                                addMouseListener(object : MouseListener {
+                                    override fun mouseClicked(e: MouseEvent?) = try {
+                                        com.intellij.ide.BrowserUtil.browse("https://git-scm.com/docs/git-sparse-checkout")
+                                    } catch (e: Exception) {
+                                        e.printStackTrace()
+                                    }
 
-                                override fun mousePressed(e: MouseEvent?) = Unit
-                                override fun mouseReleased(e: MouseEvent?) = Unit
-                                override fun mouseEntered(e: MouseEvent?) = Unit
-                                override fun mouseExited(e: MouseEvent?) = Unit
-                            })
-                        })
-
+                                    override fun mousePressed(e: MouseEvent?) = Unit
+                                    override fun mouseReleased(e: MouseEvent?) = Unit
+                                    override fun mouseEntered(e: MouseEvent?) = Unit
+                                    override fun mouseExited(e: MouseEvent?) = Unit
+                                })
+                            }
+                        )
                     }
-
                 }
                 row(label = "Sparse checkout config") {
                     scrollPane(sparseDefField)

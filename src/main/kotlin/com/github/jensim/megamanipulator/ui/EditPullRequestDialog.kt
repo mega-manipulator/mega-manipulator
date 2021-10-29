@@ -27,12 +27,13 @@ class EditPullRequestDialog(
     }
     override val panel: DialogPanel = panel {
         row {
-            component(panel(title = "Template from") {
-                row {
-                    component(preExistingSelect)
-
+            component(
+                panel(title = "Template from") {
+                    row {
+                        component(preExistingSelect)
+                    }
                 }
-            })
+            )
         }
         row { component(titlePanel) }
         row { component(descriptionPanel) }

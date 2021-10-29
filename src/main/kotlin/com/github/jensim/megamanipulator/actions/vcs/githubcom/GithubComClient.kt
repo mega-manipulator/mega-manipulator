@@ -24,9 +24,6 @@ import io.ktor.client.statement.HttpStatement
 import io.ktor.client.statement.readText
 import io.ktor.http.ContentType
 import io.ktor.http.contentType
-import java.util.concurrent.atomic.AtomicInteger
-import java.util.regex.Pattern
-import kotlin.coroutines.CoroutineContext
 import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -42,6 +39,9 @@ import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.decodeFromJsonElement
+import java.util.concurrent.atomic.AtomicInteger
+import java.util.regex.Pattern
+import kotlin.coroutines.CoroutineContext
 
 @SuppressWarnings("TooManyFunctions", "ReturnCount")
 class GithubComClient @NonInjectable constructor(
@@ -161,7 +161,7 @@ class GithubComClient @NonInjectable constructor(
             var page = 1
             var found = 0L
             while (true) {
-                val result: GithubComSearchResult<GithubComIssue> = client.get("${settings.baseUrl}/search/issues?per_page=100&page=${page++}&q=type%3Apr${state}${role}")
+                val result: GithubComSearchResult<GithubComIssue> = client.get("${settings.baseUrl}/search/issues?per_page=100&page=${page++}&q=type%3Apr${state}$role")
                 result.items.forEach { emit(it) }
                 if (result.items.isEmpty()) break
                 found += result.total_count

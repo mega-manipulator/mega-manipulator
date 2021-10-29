@@ -30,7 +30,6 @@ import io.ktor.client.features.logging.Logger
 import io.ktor.client.features.logging.Logging
 import io.ktor.client.request.header
 import io.ktor.client.request.headers
-import kotlinx.serialization.json.Json
 import org.apache.http.conn.ssl.NoopHostnameVerifier
 import org.apache.http.conn.ssl.TrustSelfSignedStrategy
 import org.apache.http.conn.ssl.TrustStrategy

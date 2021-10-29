@@ -2,10 +2,10 @@ package com.github.jensim.megamanipulator.settings.types
 
 import com.github.jensim.megamanipulator.graphql.generated.gitlab.enums.MergeRequestState
 import com.github.ricky12awesome.jss.JsonSchema
-import java.io.File
-import java.util.Base64
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
+import java.io.File
+import java.util.Base64
 
 private val base64encoder = Base64.getEncoder()
 

@@ -27,10 +27,6 @@ import io.mockk.every
 import io.mockk.junit5.MockKExtension
 import io.mockk.mockk
 import io.mockk.verify
-import java.io.File
-import java.nio.file.Path
-import kotlin.io.path.ExperimentalPathApi
-import kotlin.io.path.createTempDirectory
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.async
@@ -41,6 +37,10 @@ import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
+import java.io.File
+import java.nio.file.Path
+import kotlin.io.path.ExperimentalPathApi
+import kotlin.io.path.createTempDirectory
 
 @ExperimentalPathApi
 @ExtendWith(MockKExtension::class)
@@ -172,7 +172,7 @@ class CloneOperatorTest {
         verify {
             notificationsOperator.show(
                 "Cloning done with failures",
-                "Failed cloning 1/2 repos. More info in IDE logs...<br><ul><li>${pullRequest}<br>output:''</li></ul>",
+                "Failed cloning 1/2 repos. More info in IDE logs...<br><ul><li>$pullRequest<br>output:''</li></ul>",
                 NotificationType.WARNING
             )
         }
