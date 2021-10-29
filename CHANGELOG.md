@@ -3,6 +3,8 @@
 # mega-manipulator Changelog
 
 ## [Unreleased]
+
+## [0.0.37]
 ### Fixed
 - Multiline output, and err redirect from Apply
 - Found workaround for mangled PATH
