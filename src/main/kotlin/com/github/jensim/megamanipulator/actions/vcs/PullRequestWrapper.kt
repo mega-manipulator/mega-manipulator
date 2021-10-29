@@ -37,6 +37,8 @@ data class BitBucketPullRequestWrapper(
     override fun title(): String = bitbucketPR.title
     override fun body(): String = bitbucketPR.description ?: ""
     override fun author(): String? = bitbucketPR.author?.user?.name
+        ?: bitbucketPR.author?.user?.displayName
+        ?: bitbucketPR.author?.user?.emailAddress
     override fun state(): String? = bitbucketPR.state
     override fun fromBranch(): String = bitbucketPR.fromRef.id.removePrefix("refs/heads/")
     override fun toBranch(): String = bitbucketPR.toRef.id.removePrefix("refs/heads/")

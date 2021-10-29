@@ -76,7 +76,7 @@ class CommitOperator @NonInjectable constructor(
             log += "fork" to ApplyOutput.dummy(dir = dir.path, std = "Created or found fork", exitCode = 0)
             val settings = settingsFileOperator.readSettings()?.resolveSettings(dir)?.second
             if (settings == null) {
-                log += "settings" to ApplyOutput.dummy(err = "No settings for ${repo.asPathString()}")
+                log += "settings" to ApplyOutput.dummy(std = "No settings for ${repo.asPathString()}")
             } else {
                 val actualGitUrl = gitUrlHelper.buildCloneUrl(settings, cloneUrl)
                 val fork = localRepoOperator.addForkRemote(dir, actualGitUrl).also { output -> log += "fork" to output }

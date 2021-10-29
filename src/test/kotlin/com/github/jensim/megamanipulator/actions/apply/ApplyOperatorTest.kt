@@ -36,7 +36,7 @@ class ApplyOperatorTest {
     private val localRepoOperator: LocalRepoOperator = mockk()
     private val processOperator: ProcessOperator = mockk()
     private val uiProtector: UiProtector = TestUiProtector()
-    private val successOutput = ApplyOutput("any", "any", "any", 0)
+    private val successOutput = ApplyOutput(dir = "any", std = "any", exitCode = 0)
 
     private val project: Project = mockk()
     private val settingsFileOperator: SettingsFileOperator = mockk {

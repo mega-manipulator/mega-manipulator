@@ -28,8 +28,8 @@ data class GithubComRepo(
 data class GithubPullRequestRequest(
     val title: String,
     val body: String,
-    val draft: Boolean = false,
-    val maintainer_can_modify: Boolean = true,
+    val draft: Boolean,
+    val maintainer_can_modify: Boolean,
     val head: String, // " to "$headProject/$headRepo:$localBranch",
     val base: String, // " to ghrepo.default_branch,
 )

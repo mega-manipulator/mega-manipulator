@@ -41,7 +41,7 @@ class LocalRepoOperatorTest {
     private lateinit var processOperator: ProcessOperator
     private lateinit var localRepoOperator: LocalRepoOperator
     private val uiProtector = TestUiProtector()
-    private val successOutput = ApplyOutput("any", "any", "any", 0)
+    private val successOutput = ApplyOutput(dir = "any", std = "any", exitCode = 0)
 
     @BeforeEach
     internal fun setUp() {

@@ -65,7 +65,7 @@ class BitbucketServerClient @NonInjectable constructor(
             httpClientProvider.getClient(pullRequest.searchHostName(), pullRequest.codeHostName(), settings)
         val defaultReviewers =
             getDefaultReviewers(client, settings, pullRequest).map { BitBucketParticipant(BitBucketUser(it.name)) }
-        val all = (pullRequest.bitbucketPR.reviewers + defaultReviewers).distinct()
+        val all = (pullRequest.bitbucketPR.reviewers.orEmpty() + defaultReviewers).distinct()
         val bbPR2 = pullRequest.copy(bitbucketPR = pullRequest.bitbucketPR.copy(reviewers = all))
         return updatePr(client, settings, bbPR2)
     }
@@ -178,8 +178,7 @@ class BitbucketServerClient @NonInjectable constructor(
         pullRequest: BitBucketPullRequestWrapper
     ): PrActionStatus {
         val moddedPullRequest = pullRequest.alterCopy(title = newTitle, body = newDescription)
-        val client: HttpClient =
-            httpClientProvider.getClient(pullRequest.searchHostName(), pullRequest.codeHostName(), settings)
+        val client: HttpClient = httpClientProvider.getClient(pullRequest.searchHostName(), pullRequest.codeHostName(), settings)
         return updatePr(client, settings, moddedPullRequest)
     }
 
@@ -191,7 +190,7 @@ class BitbucketServerClient @NonInjectable constructor(
         val response: HttpResponse = client.put("${settings.baseUrl}/rest/api/1.0/projects/${pullRequest.project()}/repos/${pullRequest.baseRepo()}/pull-requests/${pullRequest.bitbucketPR.id}") {
             contentType(ContentType.Application.Json)
             accept(ContentType.Application.Json)
-            body = pullRequest.bitbucketPR
+            body = pullRequest.bitbucketPR.copy(author = null)
         }
         return if (response.status.value >= 300) {
             PrActionStatus(success = false, msg = "Failed updating PR due to: '${response.readText()}'")

@@ -16,6 +16,8 @@ plugins {
     // gradle-changelog-plugin - read more: https://github.com/JetBrains/gradle-changelog-plugin
     id("org.jetbrains.changelog") version "1.3.1"
 
+    id("org.jlleitschuh.gradle.ktlint") version "10.2.0"
+    id("io.gitlab.arturbosch.detekt") version "1.18.1"
     id("com.github.ben-manes.versions") version "0.39.0"
     id("com.expediagroup.graphql") version "4.2.0"
     id("org.jetbrains.qodana") version "0.1.12"
@@ -31,11 +33,15 @@ repositories {
     maven(url = "https://jitpack.io")
 }
 
+detekt {
+    config = files("detekt-config.yml")
+}
+
 dependencies {
     implementation(enforcedPlatform("io.ktor:ktor-bom:1.5.4"))
     implementation(enforcedPlatform("org.jetbrains.kotlin:kotlin-bom:1.5.31"))
     implementation(enforcedPlatform("org.jetbrains.kotlinx:kotlinx-coroutines-bom:1.5.2"))
-    //implementation(enforcedPlatform("org.jetbrains.kotlinx:kotlinx-serialization-bom:1.1.0"))
+    // implementation(enforcedPlatform("org.jetbrains.kotlinx:kotlinx-serialization-bom:1.1.0"))
 
     implementation(kotlin("stdlib-jdk8"))
     implementation(kotlin("reflect"))
@@ -170,11 +176,13 @@ tasks {
         )
 
         // Get the latest available change notes from the changelog file
-        changeNotes.set(provider {
-            changelog.run {
-                getOrNull(properties("pluginVersion")) ?: getLatest()
-            }.toHTML()
-        })
+        changeNotes.set(
+            provider {
+                changelog.run {
+                    getOrNull(properties("pluginVersion")) ?: getLatest()
+                }.toHTML()
+            }
+        )
     }
 
     runPluginVerifier {

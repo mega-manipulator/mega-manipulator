@@ -2,6 +2,7 @@ package com.github.jensim.megamanipulator.http
 
 import com.github.jensim.megamanipulator.actions.NotificationsOperator
 import com.github.jensim.megamanipulator.project.lazyService
+import com.github.jensim.megamanipulator.settings.SerializationHolder
 import com.github.jensim.megamanipulator.settings.SettingsFileOperator
 import com.github.jensim.megamanipulator.settings.passwords.PasswordsOperator
 import com.github.jensim.megamanipulator.settings.types.AuthMethod
@@ -61,11 +62,7 @@ class HttpClientProvider @NonInjectable constructor(
     private fun bakeClient(installs: HttpClientConfig<ApacheEngineConfig>.() -> Unit): HttpClient = HttpClient(Apache) {
         install(JsonFeature) {
             serializer = KotlinxSerializer(
-                json = Json {
-                    ignoreUnknownKeys = true
-                    isLenient = true
-                    encodeDefaults = true
-                }
+                json = SerializationHolder.compactJson
             )
         }
         install(Logging) {

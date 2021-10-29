@@ -4,6 +4,10 @@
 
 ## [Unreleased]
 
+### Removed 
+- The unused 'err'-block apply outputs  
+stdErr is joined with the stdOut since last `0.0.37` 
+
 ## [0.0.37]
 ### Fixed
 - Multiline output, and err redirect from Apply

@@ -35,9 +35,8 @@ class ApplyWindow(private val project: Project) : ToolWindowTab {
         ApplyOutput::class,
         listOf(
             "Directory" to { it.dir },
-            "Exit code" to { "${it.exitCode}" },
-            "StdOut" to { it.std },
-            "StdErr" to { it.err },
+            "Exit code" to { it.exitCode.toString() },
+            "Output (last line)" to { it.lastLine },
         )
     ) { it.exitCode != 0 }
     private val scrollableResult = JBScrollPane(resultList)

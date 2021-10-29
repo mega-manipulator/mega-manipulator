@@ -69,7 +69,7 @@ class CloneOperator @NonInjectable constructor(
             data = repos,
         ) { repo: SearchResult ->
             val codeSettings: CodeHostSettings = settings.resolveSettings(repo.searchHostName, repo.codeHostName)?.second
-                ?: return@mapConcurrentWithProgress listOf("Settings" to ApplyOutput.dummy(err = "Settings were not resolvable for ${repo.searchHostName}/${repo.codeHostName}, most likely the key of the code host does not match the one returned by your search host!"))
+                ?: return@mapConcurrentWithProgress listOf("Settings" to ApplyOutput.dummy(std = "Settings were not resolvable for ${repo.searchHostName}/${repo.codeHostName}, most likely the key of the code host does not match the one returned by your search host!"))
             prRouter.getRepo(repo)?.let { vcsRepo: RepoWrapper ->
                 val cloneUrl = gitUrlHelper.buildCloneUrl(codeSettings, vcsRepo)
                 val defaultBranch = prRouter.getRepo(repo)?.getDefaultBranch()!!
@@ -101,7 +101,7 @@ class CloneOperator @NonInjectable constructor(
                 prefix = "<ul>",
                 separator = "<br>",
                 postfix = "</ul>"
-            ) { "<li>${it.first}${it.second?.lastOrNull()?.second?.let { "<br>output:'${it.std}'<br>err:'${it.err}'" } ?: "..."}</li>" }
+            ) { "<li>${it.first}${it.second?.lastOrNull()?.second?.let { "<br>output:'${it.std.replace("\n","<br>\n")}'" } ?: "..."}</li>" }
             notificationsOperator.show(
                 title = "Cloning done with failures",
                 body = "Failed cloning ${badState.size}/${state.size} repos. More info in IDE logs...<br>$stateAsString",
@@ -116,7 +116,7 @@ class CloneOperator @NonInjectable constructor(
     fun clone(pullRequests: List<PullRequestWrapper>, sparseDef: String?) {
         val settings = uiProtector.uiProtectedOperation("Load settings") { settingsFileOperator.readSettings() }
         if (settings == null) {
-            reportState(listOf("Settings" to listOf("Load Settings" to ApplyOutput.dummy(err = "No settings found for project."))))
+            reportState(listOf("Settings" to listOf("Load Settings" to ApplyOutput.dummy(std = "No settings found for project."))))
         } else {
             val state: List<Pair<PullRequestWrapper, List<Action>?>> =
                 uiProtector.mapConcurrentWithProgress(
@@ -145,7 +145,7 @@ class CloneOperator @NonInjectable constructor(
                 ?: return listOf(
                     "Settings" to ApplyOutput.dummy(
                         dir = pullRequest.asPathString(),
-                        err = "No settings found for ${pullRequest.searchHostName()}/${pullRequest.codeHostName()}, most likely the key of the code host does not match the one returned by your search host!"
+                        std = "No settings found for ${pullRequest.searchHostName()}/${pullRequest.codeHostName()}, most likely the key of the code host does not match the one returned by your search host!"
                     )
                 )
         val badState: List<Action> =
@@ -220,10 +220,10 @@ class CloneOperator @NonInjectable constructor(
                 try {
                     val sparseFile = File(dir, ".git/info/sparse-checkout")
                     sparseFile.writeText(sparseDef)
-                    actionTrace.add("Setup sparse checkout config" to ApplyOutput(dir = dir.absolutePath, std = "Setup successful", err = "", exitCode = 0))
+                    actionTrace.add("Setup sparse checkout config" to ApplyOutput(dir = dir.absolutePath, std = "Setup successful", exitCode = 0))
                 } catch (e: Exception) {
-                    e.printStackTrace()
-                    actionTrace.add("Setup sparse checkout config" to ApplyOutput(dir = dir.absolutePath, std = "Failed writing sparse config file", err = e.stackTraceToString(), 1))
+                    //e.printStackTrace()
+                    actionTrace.add("Setup sparse checkout config" to ApplyOutput(dir = dir.absolutePath, std = "Failed writing sparse config file\n${e.stackTraceToString()}", exitCode = 1))
                 }
             }
         }

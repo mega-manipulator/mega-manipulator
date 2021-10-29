@@ -17,7 +17,6 @@ class ProcessOperator(private val project: Project) {
         return proc.onExit().thenApply {
             ApplyOutput(
                 std = it.inputStream.readAllBytes().decodeToString(),
-                err = "",
                 exitCode = it.exitValue(),
                 dir = workingDir.trimProjectPath(project = project),
             )

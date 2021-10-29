@@ -25,6 +25,7 @@ exceptions:
 style:
   MaxLineLength:
     active: false
+    maxLineLength: 300
   MagicNumber:
     active: false
   LoopWithTooManyJumpStatements:

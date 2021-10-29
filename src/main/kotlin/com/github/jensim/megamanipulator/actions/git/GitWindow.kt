@@ -168,8 +168,7 @@ class GitWindow(private val project: Project) : ToolWindowTab {
                     data = dirs,
                 ) { commitOperator.commitProcess(it, result, commitMessage, push, settings) }
                 if (result.isEmpty()) {
-                    result["no result"] =
-                        mutableListOf("nothing" to ApplyOutput(".", std = "", err = "", exitCode = 1))
+                    result["no result"] = mutableListOf("nothing" to ApplyOutput.dummy())
                 }
                 repoList.setListData(result.toList().toTypedArray())
             }
@@ -193,7 +192,7 @@ class GitWindow(private val project: Project) : ToolWindowTab {
 
                 if (result.isEmpty()) {
                     result["no result"] =
-                        mutableListOf("nothing" to ApplyOutput(".", std = "", err = "", exitCode = 1))
+                        mutableListOf("nothing" to ApplyOutput.dummy())
                 }
                 repoList.setListData(result.toList().toTypedArray())
             }
@@ -239,12 +238,7 @@ class GitWindow(private val project: Project) : ToolWindowTab {
                     uiProtector.uiProtectedOperation(title = "Remove all local clones") {
                         processOperator.runCommandAsync(File(dir), listOf("rm", "-rf", "clones")).await()
                     }
-                } ?: ApplyOutput(
-                    dir = ".",
-                    std = "Unable to perform clean operation",
-                    err = "Unable to perform clean operation",
-                    exitCode = 1
-                )
+                } ?: ApplyOutput.dummy(std = "Unable to perform clean operation")
                 repoList.setListData(arrayOf(Pair("Clean", listOf("rm" to output))))
                 repoList.selectedIndex = 0
                 filesOperator.refreshClones()
@@ -266,7 +260,7 @@ class GitWindow(private val project: Project) : ToolWindowTab {
         }.map {
             it.first.trimProjectPath(project = project) to (
                 it.second
-                    ?: listOf("Operation failed" to ApplyOutput.dummy(dir = it.first.path, err = "Failed git operation"))
+                    ?: listOf("Operation failed" to ApplyOutput.dummy(dir = it.first.path, std = "Failed git operation"))
                 )
         }
         if (result.isNotEmpty()) {

@@ -6,7 +6,6 @@ import kotlinx.serialization.Serializable
 data class ApplyOutput(
     val dir: String,
     val std: String,
-    val err: String,
     val exitCode: Int,
 ) {
 
@@ -14,25 +13,23 @@ data class ApplyOutput(
         fun dummy(
             dir: String = "",
             std: String = "",
-            err: String = "",
             exitCode: Int = 1,
         ): ApplyOutput = ApplyOutput(
             dir = dir,
             std = std,
-            err = err,
             exitCode = exitCode,
         )
     }
 
+    val lastLine: String = try {
+        std.lines().reversed().first { it.isNotEmpty() }
+    } catch (e: NoSuchElementException) {
+        ""
+    }
+
     override fun toString(): String = dir
-    fun getFullDescription() = """
-DIR: $dir
+    fun getFullDescription() = """DIR: $dir
 EXIT_CODE: $exitCode
-=== STD_OUT ===
-$std
-===============
-=== STD_ERR ===
-$err
-===============
-    """.trimIndent()
+=== OUTPUT ===
+$std"""
 }

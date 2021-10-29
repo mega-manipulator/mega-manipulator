@@ -71,9 +71,8 @@ data class BitBucketPullRequest(
     val locked: Boolean? = null,
     val fromRef: BitBucketBranchRef,
     val toRef: BitBucketBranchRef,
-    @Transient
     val author: BitBucketParticipant? = null,
-    val reviewers: List<BitBucketParticipant> = emptyList(),
+    val reviewers: List<BitBucketParticipant>? = null,
     val links: BitBucketPullRequestLinks? = null,
 )
 

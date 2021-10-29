@@ -87,6 +87,8 @@ class GithubComClient @NonInjectable constructor(
                 body = description,
                 head = "$headProject:$localBranch",
                 base = ghRepo.default_branch,
+                draft = false,
+                maintainer_can_modify = true
             )
         }
         val pr: GithubComPullRequest = json.decodeFromJsonElement(prRaw)

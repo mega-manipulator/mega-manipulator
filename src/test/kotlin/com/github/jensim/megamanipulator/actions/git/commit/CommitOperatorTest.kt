@@ -57,8 +57,8 @@ class CommitOperatorTest {
     private val tempDirPath: Path = createTempDirectory(prefix = null, attributes = emptyArray())
     private val tempDir: File = File(tempDirPath.toUri())
 
-    private val successOutput = ApplyOutput("any", "any", "any", 0)
-    private val unsuccessfulOutput = ApplyOutput("any", "any", "any", 1)
+    private val successOutput = ApplyOutput(dir = "any", std = "any", exitCode = 0)
+    private val unsuccessfulOutput = ApplyOutput(dir = "any", std = "any", exitCode = 1)
 
     @AfterEach
     internal fun tearDown() {
