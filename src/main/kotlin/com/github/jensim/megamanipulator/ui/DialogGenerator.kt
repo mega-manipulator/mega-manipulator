@@ -11,6 +11,10 @@ import com.intellij.ui.components.JBLabel
 import com.intellij.ui.components.JBScrollPane
 import com.intellij.ui.components.JBTextField
 import com.intellij.ui.layout.panel
+import com.intellij.util.ui.JBFont
+import com.intellij.util.ui.UIUtil
+import java.awt.event.KeyEvent
+import java.awt.event.KeyListener
 import javax.swing.JButton
 import javax.swing.JComponent
 import javax.swing.text.JTextComponent
@@ -72,6 +76,7 @@ class DialogGenerator(private val project: Project) {
         field: JTextComponent = JBTextField(),
         focusComponent: JComponent,
         position: Balloon.Position = Balloon.Position.above,
+        validationPattern: String? = null,
         yesText: String = "Ok",
         noText: String = "Cancel",
         onNo: () -> Unit = {},
@@ -81,14 +86,47 @@ class DialogGenerator(private val project: Project) {
             val popupFactory: JBPopupFactory = JBPopupFactory.getInstance()
             val btnYes = JButton(yesText)
             val btnNo = JButton(noText)
+            val rex = validationPattern?.let { Regex(it)}
+
+            val validationPanel =  rex?.let { pattern ->
+                panel{
+                    row {
+                        label("Invalid input, must match pattern: $pattern", JBFont.small(), UIUtil.FontColor.BRIGHTER)
+                    }
+                }
+            }
+            val validation: (()->Unit)? = rex?.let {
+                {
+                    val isValid = field.text.matches(rex)
+                    btnYes.isEnabled = isValid
+                    validationPanel?.isVisible = !isValid
+                }
+            }
+            validationPanel?.apply {
+                field.addKeyListener(object:KeyListener{
+                    override fun keyTyped(e: KeyEvent?) = Unit
+                    override fun keyPressed(e: KeyEvent?) = Unit
+                    override fun keyReleased(e: KeyEvent?):Unit = validation?.invoke() ?: Unit
+
+                })
+                isVisible = true
+                btnYes.isEnabled = false
+            }
+
             val prefillButton = prefill?.let { pre ->
                 PrefillHistoryButton(project, pre, field) {
                     field.text = it
+                    validation?.invoke()
                 }
             }
             val panel = panel {
                 row {
                     label(message)
+                }
+                validationPanel?.let {
+                    row {
+                        component(it)
+                    }
                 }
                 row {
                     cell {

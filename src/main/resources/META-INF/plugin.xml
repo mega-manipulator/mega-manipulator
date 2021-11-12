@@ -43,5 +43,7 @@
         <projectService serviceImplementation="com.github.jensim.megamanipulator.onboarding.OnboardingOperator"/>
         <projectService serviceImplementation="com.github.jensim.megamanipulator.ui.CloneDialogFactory"/>
         <projectService serviceImplementation="com.github.jensim.megamanipulator.ui.DialogGenerator"/>
+        <projectService serviceImplementation="com.github.jensim.megamanipulator.ui.CommitDialogFactory"/>
+        <projectService serviceImplementation="com.github.jensim.megamanipulator.ui.PushDialogFactory"/>
     </extensions>
 </idea-plugin>

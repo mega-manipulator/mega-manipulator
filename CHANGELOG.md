@@ -4,6 +4,12 @@
 
 ## [Unreleased]
 
+### Added
+- Force push
+
+### Fixed
+- Validation of branch renaming
+
 ## [0.0.38]
 ### Removed
 - The unused 'err'-block apply outputs  

@@ -66,13 +66,11 @@ class LocalRepoOperator @NonInjectable constructor(
         return getBranch(dir)
     }
 
-    suspend fun push(repoDir: File): ApplyOutput {
+    suspend fun push(repoDir: File, force: Boolean): ApplyOutput {
         val branch = getBranch(repoDir)!!
-        return if (hasFork(repoDir)) {
-            processOperator.runCommandAsync(repoDir, listOf("git", "push", "--set-upstream", "fork", branch)).await()
-        } else {
-            processOperator.runCommandAsync(repoDir, listOf("git", "push", "--set-upstream", "origin", branch)).await()
-        }
+        val upstream = if (hasFork(repoDir)) "fork" else "origin"
+        val forceFlag: String? = if (force) "--force" else null
+        return processOperator.runCommandAsync(repoDir, listOfNotNull("git", "push", forceFlag, "--set-upstream", upstream, branch)).await()
     }
 
     suspend fun getForkProject(repo: SearchResult): Pair<String, String>? {

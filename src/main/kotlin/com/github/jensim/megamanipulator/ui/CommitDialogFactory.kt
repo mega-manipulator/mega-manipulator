@@ -10,38 +10,49 @@ import com.intellij.ui.layout.panel
 import javax.swing.JButton
 import javax.swing.JComponent
 
-object CommitDialogFactory {
+class CommitDialogFactory(project: Project) {
+
+    private val commitMessage = JBTextField(40)
+    private val forceBox = JBCheckBox("Force push?")
+    private val pushBox = JBCheckBox("Push?").apply {
+        isSelected = true
+        addActionListener {
+            if (!isSelected) {
+                forceBox.isSelected = false
+            }
+            forceBox.isEnabled = isSelected
+        }
+    }
+    private val okBtn = JButton("Commit")
+    private val cancelBtn = JButton("Cancel")
+    private val panel = panel {
+        row {
+            label("Create commits for all changes in all checked out repositories")
+        }
+        row {
+            cell {
+                scrollPane(commitMessage)
+                component(
+                    PrefillHistoryButton(project, PrefillString.COMMIT_MESSAGE, commitMessage) {
+                        commitMessage.text = it
+                    }
+                )
+            }
+        }
+        row {
+            component(pushBox)
+            component(forceBox)
+        }
+        row {
+            component(okBtn)
+            component(cancelBtn)
+        }
+    }
 
     fun openCommitDialog(
         focusComponent: JComponent,
-        project: Project,
-        onOk: (commitMessage: String, push: Boolean) -> Unit
+        onOk: (commitMessage: String, push: Boolean, force:Boolean) -> Unit
     ) {
-        val commitMessage = JBTextField(40)
-        val pushBox = JBCheckBox("Push?")
-        pushBox.isSelected = true
-        val okBtn = JButton("Commit")
-        val cancelBtn = JButton("Cancel")
-        val panel = panel {
-            row {
-                label("Create commits for all changes in all checked out repositories")
-            }
-            row {
-                cell {
-                    scrollPane(commitMessage)
-                    component(
-                        PrefillHistoryButton(project, PrefillString.COMMIT_MESSAGE, commitMessage) {
-                            commitMessage.text = it
-                        }
-                    )
-                }
-            }
-            row { component(pushBox) }
-            row {
-                component(okBtn)
-                component(cancelBtn)
-            }
-        }
         val popupFactory: JBPopupFactory = try {
             JBPopupFactory.getInstance()
         } catch (e: Exception) {
@@ -51,7 +62,7 @@ object CommitDialogFactory {
         val balloon = popupFactory.createDialogBalloonBuilder(panel, "Commit").createBalloon()
         okBtn.addActionListener {
             balloon.hide()
-            onOk(commitMessage.text, pushBox.isSelected)
+            onOk(commitMessage.text, pushBox.isSelected, pushBox.isSelected && forceBox.isSelected)
         }
         cancelBtn.addActionListener {
             balloon.hide()

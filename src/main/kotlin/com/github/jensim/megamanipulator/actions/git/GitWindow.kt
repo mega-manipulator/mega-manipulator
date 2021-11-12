@@ -19,6 +19,7 @@ import com.github.jensim.megamanipulator.ui.CommitDialogFactory
 import com.github.jensim.megamanipulator.ui.CreatePullRequestDialog
 import com.github.jensim.megamanipulator.ui.DialogGenerator
 import com.github.jensim.megamanipulator.ui.GeneralListCellRenderer.addCellRenderer
+import com.github.jensim.megamanipulator.ui.PushDialogFactory
 import com.github.jensim.megamanipulator.ui.UiProtector
 import com.github.jensim.megamanipulator.ui.trimProjectPath
 import com.intellij.icons.AllIcons
@@ -54,6 +55,8 @@ class GitWindow(private val project: Project) : ToolWindowTab {
     private val onboardingOperator: OnboardingOperator by lazy { project.service() }
     private val prefillStringSuggestionOperator: PrefillStringSuggestionOperator by lazy { project.service() }
     private val dialogGenerator: DialogGenerator by lazy { project.service() }
+    private val commitDialogFactory: CommitDialogFactory by lazy { project.service() }
+    private val pushDialogFactory: PushDialogFactory by lazy { project.service() }
 
     private val repoList = JBList<DirResult>().apply {
         minimumSize = Dimension(250, 50)
@@ -131,13 +134,14 @@ class GitWindow(private val project: Project) : ToolWindowTab {
             refresh()
         }
         btnSetBranch.addActionListener {
+            val pattern = "^[a-zA-Z][a-zA-Z0-9/_-]*[a-zA-Z0-9]$"
             dialogGenerator.askForInput(
                 title = "Select branch name",
                 message = "This will NOT reset the repos to origin/default-branch first!!",
+                validationPattern = pattern,
                 prefill = PrefillString.BRANCH,
                 focusComponent = btnSetBranch,
             ) { branch: String ->
-                val pattern = "[^a-z0-9/_ -]"
                 if (branch.isBlank() || branch.isEmpty() || branch.contains(Regex(pattern))) {
                     dialogGenerator.showConfirm(
                         title = "Bad branch name.",
@@ -154,10 +158,9 @@ class GitWindow(private val project: Project) : ToolWindowTab {
             }
         }
         btnCommitAndPush.addActionListener { _: ActionEvent ->
-            CommitDialogFactory.openCommitDialog(
-                project = project,
+            commitDialogFactory.openCommitDialog(
                 focusComponent = btnCommitAndPush,
-            ) { commitMessage: String, push: Boolean ->
+            ) { commitMessage: String, push: Boolean, force:Boolean ->
                 val result = ConcurrentHashMap<String, MutableList<Pair<String, ApplyOutput>>>()
                 val settings: MegaManipulatorSettings = settingsFileOperator.readSettings()!!
                 var workTitle = "Commiting"
@@ -166,7 +169,7 @@ class GitWindow(private val project: Project) : ToolWindowTab {
                 uiProtector.mapConcurrentWithProgress(
                     title = workTitle,
                     data = dirs,
-                ) { commitOperator.commitProcess(it, result, commitMessage, push, settings) }
+                ) { commitOperator.commitProcess(it, result, commitMessage, push, force, settings) }
                 if (result.isEmpty()) {
                     result["no result"] = mutableListOf("nothing" to ApplyOutput.dummy())
                 }
@@ -174,25 +177,22 @@ class GitWindow(private val project: Project) : ToolWindowTab {
             }
         }
         btnJustPush.addActionListener {
-            dialogGenerator.showConfirm(
-                title = "Push",
-                message = "Push local commits to remote?",
+            pushDialogFactory.openPushDialog(
                 focusComponent = btnJustPush,
-            ) {
-                val result = ConcurrentHashMap<String, MutableList<Pair<String, ApplyOutput>>>()
+            ) { force ->
+                val result = mutableListOf<Pair<String, List<Pair<String, ApplyOutput>>>>()
 
                 val dirs = localRepoOperator.getLocalRepoFiles()
                 val settings: MegaManipulatorSettings = settingsFileOperator.readSettings()!!
-                uiProtector.mapConcurrentWithProgress(
+                result += uiProtector.mapConcurrentWithProgress(
                     title = "Pushing",
                     data = dirs
                 ) { dir ->
-                    commitOperator.push(settings, dir, result.computeIfAbsent(dir.path) { ArrayList() })
-                }
+                    commitOperator.push(settings, dir, force)
+                }.map { it.first.path to it.second.orEmpty() }
 
                 if (result.isEmpty()) {
-                    result["no result"] =
-                        mutableListOf("nothing" to ApplyOutput.dummy())
+                    result += "no result" to mutableListOf("nothing" to ApplyOutput.dummy())
                 }
                 repoList.setListData(result.toList().toTypedArray())
             }

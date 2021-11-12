@@ -38,38 +38,43 @@ class CommitOperator @NonInjectable constructor(
         result: ConcurrentHashMap<String, MutableList<Pair<String, ApplyOutput>>>,
         commitMessage: String,
         push: Boolean,
-        settings: MegaManipulatorSettings
+        force: Boolean,
+        settings: MegaManipulatorSettings,
     ) {
         processOperator.runCommandAsync(it, listOf("git", "add", "--all")).await()
         val log = result.computeIfAbsent(it.path) { ArrayList() }
         val commit = processOperator.runCommandAsync(it, listOf("git", "commit", "-m", commitMessage)).await()
             .also { output -> log += "commit" to output }
         if (push && commit.exitCode == 0) {
-            push(settings, it, log)
+            log += push(settings, it, force)
         }
     }
 
     suspend fun push(
         settings: MegaManipulatorSettings,
         dir: File,
-        log: MutableList<Pair<String, ApplyOutput>>
-    ) {
+        force: Boolean,
+
+    ) : List<Pair<String, ApplyOutput>> {
+        val log = mutableListOf<Pair<String, ApplyOutput>>()
         val codeHostSettings: CodeHostSettings = settings.resolveSettings(dir)!!.second
         if (localRepoOperator.hasFork(dir) || codeHostSettings.forkSetting == ForkSetting.PLAIN_BRANCH) {
-            localRepoOperator.push(dir)
+            localRepoOperator.push(dir, force)
                 .also { output -> log += "push" to output }
         } else if (codeHostSettings.forkSetting == ForkSetting.LAZY_FORK) {
-            val pushResult = localRepoOperator.push(dir)
+            val pushResult = localRepoOperator.push(dir, force)
                 .also { output -> log += "push" to output }
             if (pushResult.exitCode != 0) {
-                forkAndPush(dir, log)
+                forkAndPush(dir, force)
             }
         } else if (codeHostSettings.forkSetting == ForkSetting.EAGER_FORK) {
-            forkAndPush(dir, log)
+            forkAndPush(dir, force)
         }
+        return log
     }
 
-    private suspend fun forkAndPush(dir: File, log: MutableList<Pair<String, ApplyOutput>>) {
+    private suspend fun forkAndPush(dir: File, force:Boolean): List<Pair<String, ApplyOutput>> {
+        val log = mutableListOf<Pair<String, ApplyOutput>>()
         val repo = SearchResult.fromPath(dir)
         val cloneUrl = prRouter.createFork(repo)
         if (cloneUrl != null) {
@@ -81,11 +86,12 @@ class CommitOperator @NonInjectable constructor(
                 val actualGitUrl = gitUrlHelper.buildCloneUrl(settings, cloneUrl)
                 val fork = localRepoOperator.addForkRemote(dir, actualGitUrl).also { output -> log += "fork" to output }
                 if (fork.exitCode == 0) {
-                    localRepoOperator.push(dir).also { output -> log += "push" to output }
+                    localRepoOperator.push(dir, force).also { output -> log += "push" to output }
                 }
             }
         } else {
             log += "fork" to ApplyOutput.dummy(dir = dir.path, std = "Failed creating or finding fork", exitCode = 1)
         }
+        return log
     }
 }
