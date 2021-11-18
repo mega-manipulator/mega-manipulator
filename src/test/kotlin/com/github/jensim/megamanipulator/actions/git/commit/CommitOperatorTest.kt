@@ -69,7 +69,7 @@ class CommitOperatorTest {
     @ValueSource(booleans = [true, false])
     fun commit(push: Boolean) {
         val codeHostSettings: CodeHostSettings = mockk {
-            every { forkSetting } returns ForkSetting.LAZY_FORK
+            every { forkSetting } returns ForkSetting.PLAIN_BRANCH
         }
         val settings: MegaManipulatorSettings = mockk {
             every { resolveSettings(any())!!.second } returns codeHostSettings
@@ -86,18 +86,15 @@ class CommitOperatorTest {
         every { localRepoOperator.getLocalRepoFiles() } returns listOf(file)
         every { processOperator.runCommandAsync(file, any()) } returns CompletableDeferred(successOutput)
 
-        val searchResultSlot = slot<SearchResult>()
         every { gitUrlHelper.buildCloneUrl(any(), any<String>()) } returns "clonedUrl"
         every { settingsFileOperator.readSettings() } returns settings
         every { localRepoOperator.getLocalRepoFiles() } returns listOf(file)
         every { processOperator.runCommandAsync(file, any()) } returns CompletableDeferred(successOutput)
         every { localRepoOperator.hasFork(file) } returns false
-        coEvery { localRepoOperator.push(file) } returnsMany listOf(unsuccessfulOutput, successOutput)
-        coEvery { prRouter.createFork(capture(searchResultSlot)) } returns "clonedUrl"
-        coEvery { localRepoOperator.addForkRemote(file, "clonedUrl") } returns successOutput
+        coEvery { localRepoOperator.push(file, false) } returnsMany listOf(successOutput)
         val result = ConcurrentHashMap<String, MutableList<Pair<String, ApplyOutput>>>()
 
-        runBlocking { commitOperator.commitProcess(file, result, commitMessage, push, settings) }
+        runBlocking { commitOperator.commitProcess(file, result, commitMessage, push, false, settings) }
 
         assertThat(result.size, equalTo(1))
         val nextElement: MutableList<Pair<String, ApplyOutput>> = result.elements().nextElement()
@@ -119,7 +116,7 @@ class CommitOperatorTest {
         every { processOperator.runCommandAsync(file, any()) } returns CompletableDeferred(successOutput)
 
         val result = ConcurrentHashMap<String, MutableList<Pair<String, ApplyOutput>>>()
-        commitOperator.commitProcess(file, result, commitMessage, false, settings)
+        commitOperator.commitProcess(file, result, commitMessage, false, false, settings)
 
         verify { localRepoOperator wasNot Called }
         verify(exactly = 2) { processOperator.runCommandAsync(file, any()) }
@@ -141,13 +138,13 @@ class CommitOperatorTest {
         every { localRepoOperator.getLocalRepoFiles() } returns listOf(file)
         every { processOperator.runCommandAsync(file, any()) } returns CompletableDeferred(successOutput)
         every { localRepoOperator.hasFork(file) } returns true
-        coEvery { localRepoOperator.push(file) } returns successOutput
+        coEvery { localRepoOperator.push(file, false) } returns successOutput
 
         val result = ConcurrentHashMap<String, MutableList<Pair<String, ApplyOutput>>>()
-        commitOperator.commitProcess(file, result, commitMessage, true, settings)
+        commitOperator.commitProcess(file, result, commitMessage, true, false, settings)
 
         verify(exactly = 2) { processOperator.runCommandAsync(file, any()) }
-        coVerify { localRepoOperator.push(file) }
+        coVerify { localRepoOperator.push(file, false) }
     }
 
     @Test
@@ -172,12 +169,12 @@ class CommitOperatorTest {
         every { localRepoOperator.getLocalRepoFiles() } returns listOf(file)
         every { processOperator.runCommandAsync(file, any()) } returns CompletableDeferred(successOutput)
         every { localRepoOperator.hasFork(file) } returns false
-        coEvery { localRepoOperator.push(file) } returns unsuccessfulOutput
+        coEvery { localRepoOperator.push(file, false) } returns unsuccessfulOutput
         coEvery { prRouter.createFork(capture(searchResultSlot)) } returns "clonedUrl"
         coEvery { localRepoOperator.addForkRemote(file, "clonedUrl") } returns successOutput
 
         val result = ConcurrentHashMap<String, MutableList<Pair<String, ApplyOutput>>>()
-        commitOperator.commitProcess(file, result, commitMessage, true, settings)
+        commitOperator.commitProcess(file, result, commitMessage, true, false, settings)
 
         verify(exactly = 2) { processOperator.runCommandAsync(file, any()) }
         coVerify { prRouter.createFork(searchResultSlot.captured) }
@@ -185,7 +182,7 @@ class CommitOperatorTest {
         val captured = searchResultSlot.captured
         assertThat(captured.searchHostName, equalTo("searchHostName"))
         coVerify { localRepoOperator.addForkRemote(file, "clonedUrl") }
-        coVerify(exactly = 2) { localRepoOperator.push(file) }
+        coVerify(exactly = 2) { localRepoOperator.push(file, false) }
     }
 
     @Test
@@ -211,7 +208,7 @@ class CommitOperatorTest {
         every { localRepoOperator.getLocalRepoFiles() } returns listOf(file)
         every { processOperator.runCommandAsync(file, any()) } returns CompletableDeferred(successOutput)
         every { localRepoOperator.hasFork(file) } returns false
-        coEvery { localRepoOperator.push(file) } returns successOutput
+        coEvery { localRepoOperator.push(file, false) } returns successOutput
         coEvery { prRouter.createFork(capture(searchResultSlot)) } returns "clonedUrl"
         coEvery { localRepoOperator.addForkRemote(file, "clonedUrl") } returns successOutput
         val resultAggregate = ConcurrentHashMap<String, MutableList<Pair<String, ApplyOutput>>>()
@@ -223,6 +220,7 @@ class CommitOperatorTest {
                 result = resultAggregate,
                 commitMessage = commitMessage,
                 push = true,
+                force = false,
                 settings = settings
             )
         }
@@ -234,13 +232,14 @@ class CommitOperatorTest {
         val captured = searchResultSlot.captured
         assertThat(captured.searchHostName, equalTo("searchHostName"))
         coVerify { localRepoOperator.addForkRemote(file, "clonedUrl") }
-        coVerify { localRepoOperator.push(file) }
+        coVerify { localRepoOperator.push(file, false) }
     }
 
     @Test
     fun push() {
+        // given
         val codeHostSettings: CodeHostSettings = mockk {
-            every { forkSetting } returns ForkSetting.EAGER_FORK
+            every { forkSetting } returns ForkSetting.PLAIN_BRANCH
         }
         val settings: MegaManipulatorSettings = mockk {
             every { resolveSettings(any())!!.second } returns codeHostSettings
@@ -252,23 +251,21 @@ class CommitOperatorTest {
             every { parentFile.parentFile.name } returns "parentParentName"
             every { parentFile.parentFile.parentFile.name } returns "searchHostName"
         }
-        val searchResultSlot = slot<SearchResult>()
-
         every { gitUrlHelper.buildCloneUrl(any(), any<String>()) } returns "clonedUrl"
         every { settingsFileOperator.readSettings() } returns settings
         every { localRepoOperator.getLocalRepoFiles() } returns listOf(file)
         every { processOperator.runCommandAsync(file, any()) } returns CompletableDeferred(successOutput)
         every { localRepoOperator.hasFork(file) } returns false
-        coEvery { localRepoOperator.push(file) } returns successOutput
-        coEvery { prRouter.createFork(capture(searchResultSlot)) } returns "clonedUrl"
-        coEvery { localRepoOperator.addForkRemote(file, "clonedUrl") } returns successOutput
+        coEvery { localRepoOperator.push(file, false) } returns successOutput
         every { settingsFileOperator.readSettings() } returns settings
         every { localRepoOperator.getLocalRepoFiles() } returns listOf(file)
         every { processOperator.runCommandAsync(file, any()) } returns CompletableDeferred(successOutput)
 
-        val result = mutableListOf<Pair<String, ApplyOutput>>()
-        runBlocking { commitOperator.push(settings, file, result) }
+        // when
+        val result: List<Pair<String, ApplyOutput>> = runBlocking { commitOperator.push(settings, file, false) }
 
-        coVerify { localRepoOperator.push(file) }
+        // then
+        assertThat(result.lastOrNull()?.second?.exitCode, equalTo(0))
+        coVerify { localRepoOperator.push(file, false) }
     }
 }

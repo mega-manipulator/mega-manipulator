@@ -160,7 +160,7 @@ class GitWindow(private val project: Project) : ToolWindowTab {
         btnCommitAndPush.addActionListener { _: ActionEvent ->
             commitDialogFactory.openCommitDialog(
                 focusComponent = btnCommitAndPush,
-            ) { commitMessage: String, push: Boolean, force:Boolean ->
+            ) { commitMessage: String, push: Boolean, force: Boolean ->
                 val result = ConcurrentHashMap<String, MutableList<Pair<String, ApplyOutput>>>()
                 val settings: MegaManipulatorSettings = settingsFileOperator.readSettings()!!
                 var workTitle = "Commiting"

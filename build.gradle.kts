@@ -45,7 +45,7 @@ configure<org.jlleitschuh.gradle.ktlint.KtlintExtension> {
     outputToConsole.set(true)
     filter {
         exclude("**/generated/**")
-        include("src/main/kotlin/**", "src/test/kotlin/**")
+        include("**/kotlin/**")
     }
 }
 
@@ -72,8 +72,8 @@ dependencies {
     implementation("com.expediagroup:graphql-kotlin-ktor-client:4.2.0")
     implementation("com.expediagroup:graphql-kotlin-client-serialization:4.2.0")
 
-    testImplementation("org.awaitility:awaitility:4.1.0")
-    testImplementation("io.mockk:mockk:1.12.0")
+    testImplementation("org.awaitility:awaitility:4.1.1")
+    testImplementation("io.mockk:mockk:1.12.1")
     testImplementation("org.hamcrest:hamcrest:2.2")
     testImplementation("org.hamcrest:hamcrest-library:2.2")
     testImplementation("org.junit.jupiter:junit-jupiter-api:5.8.1")

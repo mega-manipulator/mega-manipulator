@@ -10,6 +10,9 @@
 ### Fixed
 - Validation of branch renaming
 
+### Security
+- Upgrade gradle version to 7.3
+
 ## [0.0.38]
 ### Removed
 - The unused 'err'-block apply outputs  

@@ -51,7 +51,7 @@ class CommitDialogFactory(project: Project) {
 
     fun openCommitDialog(
         focusComponent: JComponent,
-        onOk: (commitMessage: String, push: Boolean, force:Boolean) -> Unit
+        onOk: (commitMessage: String, push: Boolean, force: Boolean) -> Unit
     ) {
         val popupFactory: JBPopupFactory = try {
             JBPopupFactory.getInstance()

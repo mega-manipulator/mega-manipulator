@@ -86,16 +86,16 @@ class DialogGenerator(private val project: Project) {
             val popupFactory: JBPopupFactory = JBPopupFactory.getInstance()
             val btnYes = JButton(yesText)
             val btnNo = JButton(noText)
-            val rex = validationPattern?.let { Regex(it)}
+            val rex = validationPattern?.let { Regex(it) }
 
-            val validationPanel =  rex?.let { pattern ->
-                panel{
+            val validationPanel = rex?.let { pattern ->
+                panel {
                     row {
                         label("Invalid input, must match pattern: $pattern", JBFont.small(), UIUtil.FontColor.BRIGHTER)
                     }
                 }
             }
-            val validation: (()->Unit)? = rex?.let {
+            val validation: (() -> Unit)? = rex?.let {
                 {
                     val isValid = field.text.matches(rex)
                     btnYes.isEnabled = isValid
@@ -103,11 +103,10 @@ class DialogGenerator(private val project: Project) {
                 }
             }
             validationPanel?.apply {
-                field.addKeyListener(object:KeyListener{
+                field.addKeyListener(object : KeyListener {
                     override fun keyTyped(e: KeyEvent?) = Unit
                     override fun keyPressed(e: KeyEvent?) = Unit
-                    override fun keyReleased(e: KeyEvent?):Unit = validation?.invoke() ?: Unit
-
+                    override fun keyReleased(e: KeyEvent?): Unit = validation?.invoke() ?: Unit
                 })
                 isVisible = true
                 btnYes.isEnabled = false

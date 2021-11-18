@@ -125,7 +125,7 @@ class LocalRepoOperatorTest {
         every { processOperatorMock.runCommandAsync(tempDir, capture(listSlot)) } returns CompletableDeferred(
             successOutput
         )
-        localRepoOperator.push(tempDir)
+        localRepoOperator.push(tempDir, false)
         val list = listSlot.captured
         assertThat(list[3], equalTo("origin"))
     }
@@ -145,7 +145,7 @@ class LocalRepoOperatorTest {
         every { processOperatorMock.runCommandAsync(tempDir, capture(listSlot)) } returns CompletableDeferred(
             successOutput
         )
-        localRepoOperator.push(tempDir)
+        localRepoOperator.push(tempDir, false)
         val list = listSlot.captured
         assertThat(list[3], equalTo("fork"))
     }

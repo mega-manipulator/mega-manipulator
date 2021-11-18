@@ -94,6 +94,7 @@ class IntegrationTest {
                 result = commitResults,
                 commitMessage = commitMessage,
                 push = true,
+                force = true,
                 settings = wiring.settings
             )
         }

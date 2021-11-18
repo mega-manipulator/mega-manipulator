@@ -55,7 +55,7 @@ class CommitOperator @NonInjectable constructor(
         dir: File,
         force: Boolean,
 
-    ) : List<Pair<String, ApplyOutput>> {
+    ): List<Pair<String, ApplyOutput>> {
         val log = mutableListOf<Pair<String, ApplyOutput>>()
         val codeHostSettings: CodeHostSettings = settings.resolveSettings(dir)!!.second
         if (localRepoOperator.hasFork(dir) || codeHostSettings.forkSetting == ForkSetting.PLAIN_BRANCH) {
@@ -73,7 +73,7 @@ class CommitOperator @NonInjectable constructor(
         return log
     }
 
-    private suspend fun forkAndPush(dir: File, force:Boolean): List<Pair<String, ApplyOutput>> {
+    private suspend fun forkAndPush(dir: File, force: Boolean): List<Pair<String, ApplyOutput>> {
         val log = mutableListOf<Pair<String, ApplyOutput>>()
         val repo = SearchResult.fromPath(dir)
         val cloneUrl = prRouter.createFork(repo)
