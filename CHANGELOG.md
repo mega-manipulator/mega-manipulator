@@ -4,6 +4,7 @@
 
 ## [Unreleased]
 
+## [0.0.39]
 ### Added
 - Force push
 
