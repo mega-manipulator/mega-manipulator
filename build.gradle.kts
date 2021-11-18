@@ -165,6 +165,12 @@ tasks {
         }
     }
 
+    test {
+        testLogging {
+            showStandardStreams = true
+        }
+    }
+
     wrapper {
         gradleVersion = properties("gradleVersion")
     }

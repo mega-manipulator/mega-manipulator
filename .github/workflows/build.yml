@@ -21,6 +21,11 @@ on:
   # Trigger the workflow on any pull request
   pull_request:
   workflow_dispatch:
+    inputs:
+      extra_args_gradle:
+        description: 'Add additional arguments to the gradle run commands, enabling extra output'
+        required: false
+        default: '--stacktrace --info'
 
 jobs:
   validateEnvs:
