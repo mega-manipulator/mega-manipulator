@@ -65,10 +65,10 @@ class CommitOperator @NonInjectable constructor(
             val pushResult = localRepoOperator.push(dir, force)
                 .also { output -> log += "push" to output }
             if (pushResult.exitCode != 0) {
-                forkAndPush(dir, force)
+                log += forkAndPush(dir, force)
             }
         } else if (codeHostSettings.forkSetting == ForkSetting.EAGER_FORK) {
-            forkAndPush(dir, force)
+            log += forkAndPush(dir, force)
         }
         return log
     }
