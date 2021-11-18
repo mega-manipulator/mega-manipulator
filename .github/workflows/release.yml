@@ -58,6 +58,11 @@ jobs:
           git config user.email "action@github.com"
           git config user.name "GitHub Action"
           git checkout -b $BRANCH
+
+          echo 'Update dev version' >&2
+          IFS=. read -r major minor patch <<<"$VERSION"
+          sed -i "s|^pluginVersion=.*|pluginVersion=${major}.${minor}.$((patch+1))|" gradle.properties
+
           git commit -am "Changelog update - $VERSION"
           git push --set-upstream origin $BRANCH
           gh pr create \
