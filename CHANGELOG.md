@@ -4,6 +4,7 @@
 
 ## [Unreleased]
 
+## [0.0.40]
 ### Added
 - Stop running background processes with the Cancel button
 
