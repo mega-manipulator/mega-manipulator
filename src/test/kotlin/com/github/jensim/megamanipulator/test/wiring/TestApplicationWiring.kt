@@ -2,6 +2,7 @@ package com.github.jensim.megamanipulator.test.wiring
 
 import com.github.jensim.megamanipulator.actions.NotificationsOperator
 import com.github.jensim.megamanipulator.actions.ProcessOperator
+import com.github.jensim.megamanipulator.actions.ProcessOperatorImpl
 import com.github.jensim.megamanipulator.actions.apply.ApplyOperator
 import com.github.jensim.megamanipulator.actions.git.GitUrlHelper
 import com.github.jensim.megamanipulator.actions.git.clone.CloneOperator
@@ -55,7 +56,7 @@ open class TestApplicationWiring {
     }
 
     val processOperator: ProcessOperator by lazy {
-        ProcessOperator(
+        ProcessOperatorImpl(
             project = mockProject,
         )
     }

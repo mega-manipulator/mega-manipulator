@@ -1,6 +1,7 @@
 package com.github.jensim.megamanipulator.ui
 
 import com.github.jensim.megamanipulator.actions.NotificationsOperator
+import com.github.jensim.megamanipulator.actions.ProcessOperator
 import com.intellij.notification.NotificationType
 import com.intellij.openapi.components.service
 import com.intellij.openapi.progress.ProgressIndicator
@@ -16,6 +17,7 @@ import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.sync.Semaphore
 import kotlinx.coroutines.withTimeout
 import java.util.concurrent.CancellationException
+import java.util.concurrent.atomic.AtomicBoolean
 import kotlin.coroutines.CoroutineContext
 
 class UiProtectorImpl(
@@ -23,6 +25,7 @@ class UiProtectorImpl(
 ) : UiProtector {
 
     private val notificationsOperator: NotificationsOperator by lazy { project.service() }
+    private val processOperator: ProcessOperator by lazy { project.service() }
     private val coroutineCntx: CoroutineContext = Dispatchers.Default + SupervisorJob()
 
     override fun <T> uiProtectedOperation(
@@ -31,6 +34,7 @@ class UiProtectorImpl(
     ): T? {
         val task = object : Task.WithResult<T, Exception>(project, title, true) {
             override fun compute(indicator: ProgressIndicator): T? = runBlocking {
+                processOperator.clearPids()
                 indicator.isIndeterminate = true
                 try {
                     val deferred = async(context = coroutineCntx) {
@@ -60,7 +64,12 @@ class UiProtectorImpl(
                         }
                     }
                     try {
-                        deferred.getCompleted()
+                        if (indicator.isCanceled) {
+                            processOperator.stopAll()
+                        }
+                        withTimeout(250) {
+                            deferred.await()
+                        }
                     } catch (e: Exception) {
                         try {
                             deferred.cancel(cause = CancellationException("Action cancelled"))
@@ -103,6 +112,7 @@ class UiProtectorImpl(
         val task = object : Task.WithResult<List<Pair<T, U?>>, Exception>(project, title, true) {
             @Suppress("LongMethod")
             override fun compute(indicator: ProgressIndicator): List<Pair<T, U?>> {
+                processOperator.clearPids()
                 indicator.isIndeterminate = false
                 extraText1?.let { text ->
                     indicator.text = text
@@ -148,10 +158,21 @@ class UiProtectorImpl(
                     }
                     // Try last chance
                     try {
+                        if (indicator.isCanceled) {
+                            processOperator.stopAll()
+                        }
+                        val first = AtomicBoolean(true)
                         futures.map {
                             it.first to try {
-                                it.second?.getCompleted()
+                                if (first.getAndSet(false)) {
+                                    withTimeout(250) {
+                                        it.second?.await()
+                                    }
+                                } else {
+                                    it.second?.getCompleted()
+                                }
                             } catch (e: Exception) {
+                                e.printStackTrace()
                                 try {
                                     it.second?.cancel(cause = CancellationException("Job not completed in time or cancelled"))
                                 } catch (e: Exception) {

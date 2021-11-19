@@ -12,14 +12,14 @@ import java.io.File
 import java.nio.file.Path
 import kotlin.io.path.createTempDirectory
 
-class ProcessOperatorTest {
+class ProcessOperatorImplTest {
 
     private val tempDirPath: Path = createTempDirectory(prefix = null, attributes = emptyArray())
     private val tempDir: File = File(tempDirPath.toUri())
     private val projectMock: Project = mockk {
         every { basePath } returns tempDir.absolutePath
     }
-    private val target = ProcessOperator(projectMock)
+    private val target = ProcessOperatorImpl(projectMock)
 
     @Test
     fun `Run JQ`() = runBlocking {

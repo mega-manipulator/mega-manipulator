@@ -4,6 +4,9 @@
 
 ## [Unreleased]
 
+### Added
+- Stop running background processes with the Cancel button
+
 ## [0.0.39]
 ### Added
 - Force push

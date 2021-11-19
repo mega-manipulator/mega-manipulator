@@ -34,7 +34,8 @@
                         serviceInterface="com.github.jensim.megamanipulator.ui.UiProtector"/>
         <projectService serviceImplementation="com.github.jensim.megamanipulator.actions.apply.ApplyOperator"/>
         <projectService serviceImplementation="com.github.jensim.megamanipulator.actions.localrepo.LocalRepoOperator"/>
-        <projectService serviceImplementation="com.github.jensim.megamanipulator.actions.ProcessOperator"/>
+        <projectService serviceInterface="com.github.jensim.megamanipulator.actions.ProcessOperator"
+                serviceImplementation="com.github.jensim.megamanipulator.actions.ProcessOperatorImpl"/>
         <projectService serviceImplementation="com.github.jensim.megamanipulator.actions.vcs.PrRouter"/>
         <projectService serviceImplementation="com.github.jensim.megamanipulator.files.FilesOperator"/>
         <projectService serviceImplementation="com.github.jensim.megamanipulator.actions.git.commit.CommitOperator"/>

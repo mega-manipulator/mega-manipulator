@@ -1,6 +1,7 @@
 package com.github.jensim.megamanipulator.actions.localrepo
 
 import com.github.jensim.megamanipulator.actions.ProcessOperator
+import com.github.jensim.megamanipulator.actions.ProcessOperatorImpl
 import com.github.jensim.megamanipulator.actions.apply.ApplyOutput
 import com.github.jensim.megamanipulator.ui.TestUiProtector
 import com.intellij.openapi.project.Project
@@ -47,7 +48,7 @@ class LocalRepoOperatorTest {
     internal fun setUp() {
         every { project.basePath } returns tempDir.absolutePath
 
-        processOperator = ProcessOperator(project)
+        processOperator = ProcessOperatorImpl(project)
         localRepoOperator = LocalRepoOperator(project, processOperator, uiProtector)
     }
 
