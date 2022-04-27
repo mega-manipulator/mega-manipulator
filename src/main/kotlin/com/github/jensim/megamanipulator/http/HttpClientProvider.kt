@@ -127,7 +127,7 @@ class HttpClientProvider @NonInjectable constructor(
         throw e
     }
 
-    fun getClient(httpsOverride: HttpsOverride?, auth: HostWithAuth, password: String): HttpClient {
+    private fun getClient(httpsOverride: HttpsOverride?, auth: HostWithAuth, password: String): HttpClient {
         return bakeClient {
 
             install(HttpTimeout) {
@@ -138,6 +138,7 @@ class HttpClientProvider @NonInjectable constructor(
             when (httpsOverride) {
                 HttpsOverride.ALLOW_SELF_SIGNED_CERT -> trustSelfSignedClient()
                 HttpsOverride.ALLOW_ANYTHING -> trustAnyClient()
+                else -> {}
             }
             auth.getAuthHeaderValue(password)?.let {
                 installBasicAuth(it)

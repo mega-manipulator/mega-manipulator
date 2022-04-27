@@ -66,20 +66,20 @@ dependencies {
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.1.0")
     implementation("com.github.Ricky12Awesome:json-schema-serialization:0.6.6")
 
-    implementation("org.eclipse.jgit:org.eclipse.jgit:5.13.0.202109080827-r")
-    implementation("org.apache.logging.log4j:log4j-slf4j-impl:2.14.1")
-    implementation("me.xdrop:fuzzywuzzy:1.3.1")
+    implementation("org.eclipse.jgit:org.eclipse.jgit:6.1.0.202203080745-r")
+    implementation("org.apache.logging.log4j:log4j-slf4j-impl:2.17.2")
+    implementation("me.xdrop:fuzzywuzzy:1.4.0")
     implementation("com.expediagroup:graphql-kotlin-ktor-client:4.2.0")
     implementation("com.expediagroup:graphql-kotlin-client-serialization:4.2.0")
 
-    testImplementation("org.awaitility:awaitility:4.1.1")
-    testImplementation("io.mockk:mockk:1.12.1")
+    testImplementation("org.awaitility:awaitility:4.2.0")
+    testImplementation("io.mockk:mockk:1.12.3")
     testImplementation("org.hamcrest:hamcrest:2.2")
     testImplementation("org.hamcrest:hamcrest-library:2.2")
-    testImplementation("org.junit.jupiter:junit-jupiter-api:5.8.1")
-    testImplementation("org.junit.jupiter:junit-jupiter-params:5.8.1")
+    testImplementation("org.junit.jupiter:junit-jupiter-api:5.8.2")
+    testImplementation("org.junit.jupiter:junit-jupiter-params:5.8.2")
 
-    testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:5.8.1")
+    testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:5.8.2")
 }
 
 // Configure Gradle IntelliJ Plugin - read more: https://github.com/JetBrains/gradle-intellij-plugin
