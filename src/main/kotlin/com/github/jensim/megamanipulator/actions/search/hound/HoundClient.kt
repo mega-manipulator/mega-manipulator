@@ -9,11 +9,11 @@ import com.github.jensim.megamanipulator.settings.SerializationHolder
 import com.github.jensim.megamanipulator.settings.types.SearchHostSettings.HoundSettings
 import com.intellij.openapi.project.Project
 import com.intellij.serviceContainer.NonInjectable
+import io.ktor.client.call.body
 import io.ktor.client.request.get
 import io.ktor.client.request.header
 import io.ktor.client.request.parameter
 import io.ktor.client.statement.HttpResponse
-import io.ktor.client.statement.readText
 import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.json.Json
 
@@ -29,8 +29,8 @@ class HoundClient @NonInjectable constructor(
 
     suspend fun search(searchHostName: String, settings: HoundSettings, search: String): Set<SearchResult> {
         val client = httpClientProvider.getClient(searchHostName, settings)
-        val repos =
-            client.get<Map<String, HoundRepo>>("${settings.baseUrl}/api/v1/repos").filterValues { it.vcs == "git" }
+        val response = client.get("${settings.baseUrl}/api/v1/repos")
+        val repos = response.body<Map<String, HoundRepo>>().filterValues { it.vcs == "git" }
         val rawResp: HttpResponse = client.get("${settings.baseUrl}/api/v1/search") {
             parameter("q", search)
             parameter("stats", "nope") // fosho or nope (true or false)
@@ -40,14 +40,14 @@ class HoundClient @NonInjectable constructor(
             parameter("i", "fosho")
             header("Accept", "application/json")
         }
-        val body = rawResp.readText()
+        val body: String = rawResp.body()
         val searchResp: HoundSearchResults = json.decodeFromString(body)
         return searchResp.Results.keys.mapNotNull { repos[it]?.url?.gitUrlToResult(searchHostName) }.toSet()
     }
 
     suspend fun validate(searchHostName: String, settings: HoundSettings): String = try {
         val client = httpClientProvider.getClient(searchHostName, settings)
-        val response = client.get<HttpResponse>("${settings.baseUrl}/api/v1/repos") {
+        val response: HttpResponse = client.get("${settings.baseUrl}/api/v1/repos") {
             header("Accept", "application/json")
         }
         "${response.status.value}:${response.status.description}"

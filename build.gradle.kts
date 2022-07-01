@@ -9,18 +9,18 @@ fun properties(key: String) = project.findProperty(key).toString()
 plugins {
     id("java")
     // Kotlin support
-    kotlin("jvm") version "1.5.31"
-    kotlin("plugin.serialization") version "1.5.31"
+    kotlin("jvm") version "1.6.21"
+    kotlin("plugin.serialization") version "1.6.21"
     // gradle-intellij-plugin - read more: https://github.com/JetBrains/gradle-intellij-plugin
-    id("org.jetbrains.intellij") version "1.1.6"
+    id("org.jetbrains.intellij") version "1.6.0"
     // gradle-changelog-plugin - read more: https://github.com/JetBrains/gradle-changelog-plugin
     id("org.jetbrains.changelog") version "1.3.1"
 
-    id("org.jlleitschuh.gradle.ktlint") version "10.2.0"
-    id("io.gitlab.arturbosch.detekt") version "1.18.1"
-    id("com.github.ben-manes.versions") version "0.39.0"
-    id("com.expediagroup.graphql") version "4.2.0"
-    id("org.jetbrains.qodana") version "0.1.12"
+    id("org.jlleitschuh.gradle.ktlint") version "10.3.0"
+    id("io.gitlab.arturbosch.detekt") version "1.20.0"
+    id("com.github.ben-manes.versions") version "0.42.0"
+    id("com.expediagroup.graphql") version "5.5.0"
+    id("org.jetbrains.qodana") version "0.1.13"
 }
 
 val javaVersion = properties("javaVersion")
@@ -50,36 +50,40 @@ configure<org.jlleitschuh.gradle.ktlint.KtlintExtension> {
 }
 
 dependencies {
-    implementation(enforcedPlatform("io.ktor:ktor-bom:1.5.4"))
-    implementation(enforcedPlatform("org.jetbrains.kotlin:kotlin-bom:1.5.31"))
-    implementation(enforcedPlatform("org.jetbrains.kotlinx:kotlinx-coroutines-bom:1.5.2"))
-    // implementation(enforcedPlatform("org.jetbrains.kotlinx:kotlinx-serialization-bom:1.1.0"))
+    val ktor_version = "2.0.3"
+    val kotlinVersion = "1.6.21"
+    val kotlinCoroutinesVersion = "1.6.3"
+    val graphql_kotlin_ktor_version = "5.5.0"
 
-    implementation(kotlin("stdlib-jdk8"))
-    implementation(kotlin("reflect"))
-    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-jdk8")
+    implementation(kotlin("stdlib-jdk8", kotlinVersion))
+    implementation(kotlin("reflect", kotlinVersion))
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-reactive:$kotlinCoroutinesVersion")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:$kotlinCoroutinesVersion")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-jdk8:$kotlinCoroutinesVersion")
 
-    implementation("io.ktor:ktor-client")
-    implementation("io.ktor:ktor-client-apache")
-    implementation("io.ktor:ktor-client-serialization")
-    implementation("io.ktor:ktor-client-logging")
-    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.1.0")
+    implementation("io.ktor:ktor-client:$ktor_version")
+    implementation("io.ktor:ktor-client-cio:$ktor_version")
+    implementation("io.ktor:ktor-client-content-negotiation:$ktor_version")
+    implementation("io.ktor:ktor-serialization-kotlinx-json:$ktor_version")
+    implementation("io.ktor:ktor-client-logging:$ktor_version")
+    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.3.3")
     implementation("com.github.Ricky12Awesome:json-schema-serialization:0.6.6")
+    // implementation("com.github.jensim:json-schema-serialization:0.8.1")
 
-    implementation("org.eclipse.jgit:org.eclipse.jgit:5.13.0.202109080827-r")
-    implementation("org.apache.logging.log4j:log4j-slf4j-impl:2.14.1")
-    implementation("me.xdrop:fuzzywuzzy:1.3.1")
-    implementation("com.expediagroup:graphql-kotlin-ktor-client:4.2.0")
-    implementation("com.expediagroup:graphql-kotlin-client-serialization:4.2.0")
+    implementation("org.eclipse.jgit:org.eclipse.jgit:6.2.0.202206071550-r")
+    implementation("org.apache.logging.log4j:log4j-slf4j-impl:2.17.2")
+    implementation("me.xdrop:fuzzywuzzy:1.4.0")
+    implementation("com.expediagroup:graphql-kotlin-ktor-client:$graphql_kotlin_ktor_version")
+    implementation("com.expediagroup:graphql-kotlin-client-serialization:$graphql_kotlin_ktor_version")
 
-    testImplementation("org.awaitility:awaitility:4.1.1")
+    testImplementation("org.awaitility:awaitility:4.2.0")
     testImplementation("io.mockk:mockk:1.12.1")
     testImplementation("org.hamcrest:hamcrest:2.2")
     testImplementation("org.hamcrest:hamcrest-library:2.2")
-    testImplementation("org.junit.jupiter:junit-jupiter-api:5.8.1")
-    testImplementation("org.junit.jupiter:junit-jupiter-params:5.8.1")
+    testImplementation("org.junit.jupiter:junit-jupiter-api:5.8.2")
+    testImplementation("org.junit.jupiter:junit-jupiter-params:5.8.2")
 
-    testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:5.8.1")
+    testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:5.8.2")
 }
 
 // Configure Gradle IntelliJ Plugin - read more: https://github.com/JetBrains/gradle-intellij-plugin
@@ -151,7 +155,15 @@ tasks {
         dependsOn(graphqlGenerateGithubClient)
         dependsOn(graphqlGenerateSourcegraphClient)
         dependsOn(graphqlGenerateClient)
-        kotlinOptions.jvmTarget = javaVersion
+        kotlinOptions {
+            jvmTarget = javaVersion
+            freeCompilerArgs = listOf(
+                "-opt-in=kotlin.RequiresOptIn",
+                "-opt-in=kotlinx.serialization.ImplicitReflectionSerializer",
+                "-opt-in=kotlinx.serialization.ExperimentalSerializationApi",
+                "-opt-in=kotlinx.serialization.ExperimentalCoroutinesApi",
+            )
+        }
     }
 
     withType<Test>().configureEach {
