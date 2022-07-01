@@ -17,15 +17,12 @@ import com.github.jensim.megamanipulator.settings.types.CodeHostSettings.GitHubS
 import com.intellij.openapi.project.Project
 import com.intellij.serviceContainer.NonInjectable
 import io.ktor.client.HttpClient
-import io.ktor.client.request.accept
 import io.ktor.client.request.delete
 import io.ktor.client.request.get
 import io.ktor.client.request.patch
 import io.ktor.client.request.post
 import io.ktor.client.request.put
 import io.ktor.client.statement.HttpResponse
-import io.ktor.http.ContentType
-import io.ktor.http.contentType
 import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -76,8 +73,6 @@ class GithubComClient @NonInjectable constructor(
         val headProject = fork?.first ?: repo.project
         val ghRepo: GithubComRepo = client.get<HttpResponse>("${settings.baseUrl}/repos/${repo.project}/${repo.repo}").unwrap()
         val response = client.post<HttpResponse>("${settings.baseUrl}/repos/${repo.project}/${repo.repo}/pulls") {
-            contentType(ContentType.Application.Json)
-            accept(ContentType.Application.Json)
             setBody(
                 GithubPullRequestRequest(
                     title = title,
@@ -135,7 +130,6 @@ class GithubComClient @NonInjectable constructor(
     ): PrActionStatus {
         val client: HttpClient = httpClientProvider.getClient(pullRequest.searchHost, pullRequest.codeHost, settings)
         val response: HttpResponse = client.patch(pullRequest.pullRequest.url) {
-            contentType(ContentType.Application.Json)
             setBody(mapOf("title" to newTitle, "body" to newDescription))
         }
         return if (response.status.value >= 300) {
@@ -190,7 +184,6 @@ class GithubComClient @NonInjectable constructor(
     ): PrActionStatus {
         val client: HttpClient = httpClientProvider.getClient(pullRequest.searchHost, pullRequest.codeHost, settings)
         val response: HttpResponse = client.patch(pullRequest.pullRequest.url) {
-            contentType(ContentType.Application.Json)
             setBody(mapOf<String, Any>("state" to "closed"))
         }
         if (response.status.value >= 300) {
@@ -264,7 +257,6 @@ class GithubComClient @NonInjectable constructor(
         // https://docs.github.com/en/rest/reference/issues#create-an-issue-comment
         val client: HttpClient = httpClientProvider.getClient(pullRequest.searchHost, pullRequest.codeHost, settings)
         client.post<HttpResponse>(pullRequest.pullRequest.comments_url) {
-            contentType(ContentType.Application.Json)
             setBody(mapOf("body" to comment))
         }
     }
@@ -297,8 +289,6 @@ class GithubComClient @NonInjectable constructor(
 
         val client: HttpClient = httpClientProvider.getClient(pullRequest.searchHostName(), pullRequest.codeHostName(), settings)
         val response: HttpResponse = client.post("${settings.baseUrl}/repos/${pullRequest.pullRequest.base?.repo?.full_name}/pulls/${pullRequest.pullRequest.id}/reviews") {
-            contentType(ContentType.Application.Json)
-            accept(ContentType.Application.Json)
             setBody(
                 mapOf(
                     "event" to event.name,
@@ -321,9 +311,7 @@ class GithubComClient @NonInjectable constructor(
         // https://docs.github.com/en/rest/reference/pulls#merge-a-pull-request
         // PUT /repos/{owner}/{repo}/pulls/{pull_number}/merge
         val client: HttpClient = httpClientProvider.getClient(pullRequest.searchHostName(), pullRequest.codeHostName(), settings)
-        val response: HttpResponse = client.put("${settings.baseUrl}/repos/${pullRequest.pullRequest.base?.repo?.full_name}/pulls/${pullRequest.pullRequest.id}/merge") {
-            accept(ContentType.Application.Json)
-        }
+        val response: HttpResponse = client.put("${settings.baseUrl}/repos/${pullRequest.pullRequest.base?.repo?.full_name}/pulls/${pullRequest.pullRequest.id}/merge")
         return if (response.status.value >= 300) {
             PrActionStatus(success = false, msg = "Failed merge PR due to: '${response.bodyAsText()}'")
         } else {

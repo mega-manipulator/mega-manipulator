@@ -31,11 +31,14 @@ import io.ktor.client.features.logging.LogLevel
 import io.ktor.client.features.logging.Logger
 import io.ktor.client.features.logging.Logging
 import io.ktor.client.request.HttpRequestBuilder
+import io.ktor.client.request.accept
 import io.ktor.client.request.header
 import io.ktor.client.request.headers
 import io.ktor.client.statement.HttpResponse
 import io.ktor.client.statement.readText
 import io.ktor.client.statement.request
+import io.ktor.http.ContentType
+import io.ktor.http.contentType
 import io.ktor.http.isSuccess
 import org.apache.http.conn.ssl.TrustStrategy
 import java.security.cert.X509Certificate
@@ -68,7 +71,11 @@ class HttpClientProvider @NonInjectable constructor(
         install(ContentNegotiation) {
             jackson {}
         }
-         */
+        */
+        defaultRequest {
+            contentType(ContentType.Application.Json)
+            accept(ContentType.Application.Json)
+        }
         install(JsonFeature){
             this.serializer = JacksonSerializer(jackson = SerializationHolder.objectMapper)
         }
@@ -98,8 +105,7 @@ class HttpClientProvider @NonInjectable constructor(
     }
 
     fun getClient(searchHostName: String, codeHostName: String, settings: CodeHostSettings): HttpClient {
-        val httpsOverride: HttpsOverride? =
-            settingsFileOperator.readSettings()?.resolveHttpsOverride(searchHostName, codeHostName)
+        val httpsOverride: HttpsOverride? = settingsFileOperator.readSettings()?.resolveHttpsOverride(searchHostName, codeHostName)
         val password: String = getPassword(settings.authMethod, settings.baseUrl, settings.username ?: "token")
         return getClient(httpsOverride, settings, password)
     }

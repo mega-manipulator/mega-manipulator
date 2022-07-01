@@ -32,15 +32,12 @@ import com.intellij.serviceContainer.NonInjectable
 import com.intellij.util.containers.isNullOrEmpty
 import com.intellij.util.io.encodeUrlQueryParameter
 import io.ktor.client.HttpClient
-import io.ktor.client.request.accept
 import io.ktor.client.request.delete
 import io.ktor.client.request.get
 import io.ktor.client.request.post
 import io.ktor.client.request.put
 import io.ktor.client.statement.HttpResponse
-import io.ktor.http.ContentType
 import io.ktor.http.HttpStatusCode
-import io.ktor.http.contentType
 import kotlinx.coroutines.delay
 import org.slf4j.LoggerFactory
 import java.net.URL
@@ -82,9 +79,7 @@ class GitLabClient @NonInjectable constructor(
     ): GitLabRepoWrapping {
         // https://docs.gitlab.com/ee/api/projects.html#get-single-project
         // GET /api/v4/projects/:id
-        val response = client.get<HttpResponse>("${settings.baseUrl}/api/v4/projects/$projectId") {
-            accept(ContentType.Application.Json)
-        }
+        val response = client.get<HttpResponse>("${settings.baseUrl}/api/v4/projects/$projectId")
         if (response.status.value >= 300) {
             throw RuntimeException("Failed getting repo ${response.bodyAsText()}")
         } else {
@@ -124,7 +119,6 @@ class GitLabClient @NonInjectable constructor(
         val iid = pullRequest.mergeRequestIid
         val response =
             client.post<HttpResponse>("${settings.baseUrl}/api/v4/projects/${pullRequest.targetProjectId}/merge_requests/$iid/notes") {
-                contentType(ContentType.Application.Json)
                 setBody(mapOf("body" to comment))
             }
         if (response.status.value >= 300) {
@@ -387,7 +381,6 @@ class GitLabClient @NonInjectable constructor(
         val mergeRequestIid = pullRequest.mergeRequestIid
         val response: HttpResponse =
             client.put("${settings.baseUrl}/api/v4/projects/$projectId/merge_requests/$mergeRequestIid") {
-                contentType(ContentType.Application.Json)
                 setBody(mapOf("description" to newDescription, "title" to newTitle))
             }
         return if (response.status.value >= 300) {
@@ -410,8 +403,6 @@ class GitLabClient @NonInjectable constructor(
         val groupRepo: GitLabRepoWrapping = getRepo(searchResult = repo, settings = settings)
         val client: HttpClient = httpClientProvider.getClient(repo.searchHostName, repo.codeHostName, settings)
         val response = client.post<HttpResponse>("${settings.baseUrl}/api/v4/projects/${groupRepo.projectId}/fork") {
-            contentType(ContentType.Application.Json)
-            accept(ContentType.Application.Json)
             setBody(mapOf<String, String>())
         }
         if (response.status.value >= 300) {
@@ -460,8 +451,6 @@ class GitLabClient @NonInjectable constructor(
             description = description
         )
         val response: HttpResponse = client.post(urlString) {
-            contentType(ContentType.Application.Json)
-            accept(ContentType.Application.Json)
             setBody(requestBody)
         }
         val content = response.bodyAsText()
@@ -495,9 +484,7 @@ class GitLabClient @NonInjectable constructor(
         // https://docs.gitlab.com/ee/api/merge_request_approvals.html#unapprove-merge-request
         // POST /api/v4/projects/:id/merge_requests/:merge_request_iid/unapprove
         val client: HttpClient = httpClientProvider.getClient(pullRequest.searchHostName(), pullRequest.codeHostName(), settings)
-        val response: HttpResponse = client.post("${settings.baseUrl}/api/v4/projects/${pullRequest.targetProjectId}/merge_requests/${pullRequest.mergeRequestIid}/$endpoint") {
-            accept(ContentType.Application.Json)
-        }
+        val response: HttpResponse = client.post("${settings.baseUrl}/api/v4/projects/${pullRequest.targetProjectId}/merge_requests/${pullRequest.mergeRequestIid}/$endpoint")
         return if (response.status.value >= 300) {
             PrActionStatus(success = false, msg = "Failed $endpoint PR due to: '${response.bodyAsText()}'")
         } else {
@@ -509,10 +496,7 @@ class GitLabClient @NonInjectable constructor(
         // https://docs.gitlab.com/ee/api/merge_requests.html#accept-mr
         // PUT /projects/:id/merge_requests/:merge_request_iid/merge
         val client: HttpClient = httpClientProvider.getClient(pullRequest.searchHostName(), pullRequest.codeHostName(), settings)
-        val response: HttpResponse = client.put("${settings.baseUrl}/api/v4/projects/${pullRequest.targetProjectId}/merge_requests/${pullRequest.mergeRequestIid}/merge") {
-            contentType(ContentType.Application.Json)
-            accept(ContentType.Application.Json)
-        }
+        val response: HttpResponse = client.put("${settings.baseUrl}/api/v4/projects/${pullRequest.targetProjectId}/merge_requests/${pullRequest.mergeRequestIid}/merge")
         return if (response.status.value >= 300) {
             PrActionStatus(success = false, msg = "Failed disapproving PR due to: '${response.bodyAsText()}'")
         } else {
