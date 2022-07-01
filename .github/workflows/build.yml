@@ -143,6 +143,14 @@ jobs:
       - name: Run Plugin Verifier
         run: ./gradlew runPluginVerifier ${{ github.event.inputs.extra_args_gradle }} -Pplugin.verifier.home.dir=${{ steps.properties.outputs.pluginVerifierHomeDir }}
 
+      - name: Publish Test Report
+        uses: mikepenz/action-junit-report@v3
+        if: always() # always run even if the previous step fails
+        with:
+          report_paths: '**/build/test-results/test/TEST-*.xml'
+          require_tests: true
+          fail_on_failure: true
+
   # Build plugin with buildPlugin Gradle task and provide the artifact for the next workflow jobs
   # Requires test job to be passed
   build:
