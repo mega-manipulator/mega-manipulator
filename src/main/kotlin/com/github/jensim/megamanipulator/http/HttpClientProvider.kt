@@ -1,5 +1,6 @@
 package com.github.jensim.megamanipulator.http
 
+import com.fasterxml.jackson.jr.ob.JSON
 import com.github.jensim.megamanipulator.actions.NotificationsOperator
 import com.github.jensim.megamanipulator.project.lazyService
 import com.github.jensim.megamanipulator.settings.SerializationHolder
@@ -18,23 +19,24 @@ import com.intellij.openapi.project.Project
 import com.intellij.serviceContainer.NonInjectable
 import io.ktor.client.HttpClient
 import io.ktor.client.HttpClientConfig
-import io.ktor.client.call.body
+import io.ktor.client.call.receive
 import io.ktor.client.engine.cio.CIO
 import io.ktor.client.engine.cio.CIOEngineConfig
-import io.ktor.client.plugins.HttpTimeout
-import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
-import io.ktor.client.plugins.defaultRequest
-import io.ktor.client.plugins.logging.DEFAULT
-import io.ktor.client.plugins.logging.LogLevel
-import io.ktor.client.plugins.logging.Logger
-import io.ktor.client.plugins.logging.Logging
+import io.ktor.client.features.HttpTimeout
+import io.ktor.client.features.defaultRequest
+import io.ktor.client.features.json.JacksonSerializer
+import io.ktor.client.features.json.JsonFeature
+import io.ktor.client.features.logging.DEFAULT
+import io.ktor.client.features.logging.LogLevel
+import io.ktor.client.features.logging.Logger
+import io.ktor.client.features.logging.Logging
+import io.ktor.client.request.HttpRequestBuilder
 import io.ktor.client.request.header
 import io.ktor.client.request.headers
 import io.ktor.client.statement.HttpResponse
-import io.ktor.client.statement.bodyAsText
+import io.ktor.client.statement.readText
 import io.ktor.client.statement.request
 import io.ktor.http.isSuccess
-import io.ktor.serialization.kotlinx.json.json
 import org.apache.http.conn.ssl.TrustStrategy
 import java.security.cert.X509Certificate
 import javax.net.ssl.X509TrustManager
@@ -62,12 +64,17 @@ class HttpClientProvider @NonInjectable constructor(
     }
 
     private fun bakeClient(installs: HttpClientConfig<CIOEngineConfig>.() -> Unit): HttpClient = HttpClient(CIO) {
+        /*
         install(ContentNegotiation) {
-            json(SerializationHolder.compactJson)
+            jackson {}
+        }
+         */
+        install(JsonFeature){
+            this.serializer = JacksonSerializer(jackson = SerializationHolder.objectMapper)
         }
         install(Logging) {
             logger = Logger.DEFAULT
-            level = LogLevel.HEADERS
+            level = LogLevel.ALL
         }
         installs()
     }
@@ -114,7 +121,6 @@ class HttpClientProvider @NonInjectable constructor(
 
     fun getClient(httpsOverride: HttpsOverride?, auth: HostWithAuth, password: String): HttpClient {
         return bakeClient {
-
             install(HttpTimeout) {
                 connectTimeoutMillis = 1_000
                 requestTimeoutMillis = 60_000
@@ -141,9 +147,16 @@ class HttpClientProvider @NonInjectable constructor(
 
 suspend inline fun <reified T> HttpResponse.unwrap(): T {
     if (status.isSuccess()) {
-        return body()
+        // return body()
+        return receive()
     } else {
         val body: String = bodyAsText()
         throw RuntimeException("Respone status ${status.value} from ${request.url} with message: $body")
     }
+}
+
+
+suspend fun HttpResponse.bodyAsText() = this.readText()
+inline fun <reified T : Any> HttpRequestBuilder.setBody(t: T) {
+    this.body = t
 }

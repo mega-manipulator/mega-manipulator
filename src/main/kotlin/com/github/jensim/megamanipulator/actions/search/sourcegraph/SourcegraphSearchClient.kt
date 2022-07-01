@@ -1,7 +1,7 @@
 package com.github.jensim.megamanipulator.actions.search.sourcegraph
 
+import com.expediagroup.graphql.client.jackson.GraphQLClientJacksonSerializer
 import com.expediagroup.graphql.client.ktor.GraphQLKtorClient
-import com.expediagroup.graphql.client.serialization.GraphQLClientKotlinxSerializer
 import com.expediagroup.graphql.client.types.GraphQLClientResponse
 import com.github.jensim.megamanipulator.actions.NotificationsOperator
 import com.github.jensim.megamanipulator.actions.search.SearchResult
@@ -36,7 +36,7 @@ class SourcegraphSearchClient @NonInjectable constructor(
     private val httpClientProvider: HttpClientProvider by lazyService(project, httpClientProvider)
     private val notificationsOperator: NotificationsOperator by lazyService(project, notificationsOperator)
 
-    private val graphQLClientKotlinxSerializer = GraphQLClientKotlinxSerializer()
+    private val graphQLClientJacksonSerializer = GraphQLClientJacksonSerializer()
     private val log = LoggerFactory.getLogger(this.javaClass)
 
     suspend fun search(searchHostName: String, settings: SourceGraphSettings, search: String): Set<SearchResult> {
@@ -58,6 +58,7 @@ class SourcegraphSearchClient @NonInjectable constructor(
                     is CommitSearchResult -> it.commit.repository.name
                     is FileMatch -> it.repository.name
                     is Repository2 -> it.name
+                    else -> null
                 }
                 internalNameToSearchResult(searchHostName, repoName)
             }.toSet()
@@ -86,7 +87,7 @@ class SourcegraphSearchClient @NonInjectable constructor(
     private fun getClient(searchHost: String, settings: SourceGraphSettings) = GraphQLKtorClient(
         url = URL("${settings.baseUrl}/.api/graphql"),
         httpClient = httpClientProvider.getClient(searchHost, settings),
-        serializer = graphQLClientKotlinxSerializer,
+        serializer = graphQLClientJacksonSerializer,
     )
 
     private fun internalNameToSearchResult(searchHostName: String, name: String?): SearchResult? {
@@ -109,7 +110,7 @@ class SourcegraphSearchClient @NonInjectable constructor(
             else -> "NO SEARCH RESULT"
         }
     } catch (e: Exception) {
-        e.printStackTrace()
+        log.error("Failed request", e)
         "Client error"
     }
 }

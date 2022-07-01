@@ -1,6 +1,5 @@
 package com.github.jensim.megamanipulator.settings
 
-import com.github.jensim.megamanipulator.settings.SerializationHolder.readableJson
 import com.github.jensim.megamanipulator.settings.types.CodeHostSettings
 import com.github.jensim.megamanipulator.settings.types.MegaManipulatorSettings
 import com.github.jensim.megamanipulator.settings.types.SearchHostSettings
@@ -8,6 +7,7 @@ import com.github.ricky12awesome.jss.encodeToSchema
 import com.github.ricky12awesome.jss.globalJson
 import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.encodeToString
+import kotlinx.serialization.json.Json
 import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Disabled
@@ -40,6 +40,15 @@ class SettingsFileOperatorTest {
             )
         ),
     )
+
+    private val readableJson = Json {
+        isLenient = true
+        ignoreUnknownKeys = true
+        prettyPrint = true
+        prettyPrintIndent = "  "
+        encodeDefaults = true
+    }
+
 
     @Test
     fun `serialize deserialize`() {

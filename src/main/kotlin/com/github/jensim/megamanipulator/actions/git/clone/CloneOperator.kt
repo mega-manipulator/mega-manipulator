@@ -108,7 +108,7 @@ class CloneOperator @NonInjectable constructor(
                 type = WARNING,
             )
             val serializaleBadState: List<Pair<String, List<Action>?>> = badState.map { it.first.toString() to it.second }
-            val badStateString = SerializationHolder.readableJson.encodeToString(serializaleBadState)
+            val badStateString = SerializationHolder.objectMapper.writeValueAsString(serializaleBadState)
             System.err.println("Failed cloning ${badState.size}/${state.size} repos, these are the causes:\n$badStateString")
         }
     }

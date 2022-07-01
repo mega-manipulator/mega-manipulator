@@ -1,8 +1,5 @@
 package com.github.jensim.megamanipulator.actions.apply
 
-import kotlinx.serialization.Serializable
-
-@Serializable
 data class ApplyOutput(
     val dir: String,
     val std: String,

@@ -1,24 +1,16 @@
 package com.github.jensim.megamanipulator.settings
 
-import kotlinx.serialization.json.Json
+import com.fasterxml.jackson.databind.DeserializationFeature.ACCEPT_EMPTY_ARRAY_AS_NULL_OBJECT
+import com.fasterxml.jackson.databind.DeserializationFeature.ACCEPT_EMPTY_STRING_AS_NULL_OBJECT
+import com.fasterxml.jackson.databind.DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES
+import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.module.kotlin.KotlinModule
 
 object SerializationHolder {
-
-    val compactJson: Json by lazy {
-        Json {
-            isLenient = true
-            ignoreUnknownKeys = true
-            prettyPrint = false
-            encodeDefaults = false
-        }
-    }
-    val readableJson: Json by lazy {
-        Json {
-            isLenient = true
-            ignoreUnknownKeys = true
-            prettyPrint = true
-            prettyPrintIndent = "  "
-            encodeDefaults = true
-        }
+    val objectMapper = ObjectMapper().apply {
+        configure(FAIL_ON_UNKNOWN_PROPERTIES, false)
+        configure(ACCEPT_EMPTY_STRING_AS_NULL_OBJECT, true)
+        configure(ACCEPT_EMPTY_ARRAY_AS_NULL_OBJECT, true)
+        registerModule(KotlinModule())
     }
 }

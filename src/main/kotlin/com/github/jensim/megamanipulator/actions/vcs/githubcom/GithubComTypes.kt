@@ -2,9 +2,6 @@
 
 package com.github.jensim.megamanipulator.actions.vcs.githubcom
 
-import kotlinx.serialization.Serializable
-
-@Serializable
 data class GithubComRepo(
     // https://api.github.com/users/jensim/repos?page=1
     val id: Long, // 1296269,
@@ -24,7 +21,6 @@ data class GithubComRepo(
     val open_issues_count: Long,
 )
 
-@Serializable
 data class GithubPullRequestRequest(
     val title: String,
     val body: String,
@@ -34,14 +30,12 @@ data class GithubPullRequestRequest(
     val base: String, // " to ghrepo.default_branch,
 )
 
-@Serializable
 data class GithubComUser(
     val login: String, // "octocat",
     val id: Long, // 1296269,
     val type: String, // Organization, User
 )
 
-@Serializable
 data class GithubComLicence(
     val key: String? = null, // ": "apache-2.0",
     val name: String? = null, // ": "Apache License 2.0",
@@ -50,7 +44,6 @@ data class GithubComLicence(
     val node_id: String? = null, // ": "MDc6TGljZW5zZTI="
 )
 
-@Serializable
 data class GithubComPullRequest(
     val id: Long,
     // https://api.github.com/repos/jensim/jensim.github.io/pulls/3
@@ -58,7 +51,7 @@ data class GithubComPullRequest(
     val html_url: String,
     val comments_url: String,
     val user: GithubComUser,
-    val body: String,
+    val body: String?,
     val state: String,
     val title: String,
     /** from */
@@ -67,28 +60,24 @@ data class GithubComPullRequest(
     val base: GithubComRef? = null,
 )
 
-@Serializable
 data class GithubComRef(
     /** branch */
     val ref: String? = null,
     val repo: GithubComRepo? = null,
 )
 
-@Serializable
 data class GithubComSearchResult<T>(
     val total_count: Long,
     val incomplete_results: Boolean,
     val items: List<T>,
 )
 
-@Serializable
 data class GithubComIssue(
     val id: Long,
     val node_id: String,
     val pull_request: GithubComPullRequestLinks? = null,
 )
 
-@Serializable
 data class GithubComPullRequestLinks(
     val url: String? = null,
 )
