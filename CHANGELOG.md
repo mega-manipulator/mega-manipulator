@@ -8,7 +8,7 @@
 - Verify with 2022.1
 
 ### Removed
-- Verify with 2021.2
+- Verify with 2021
 
 ### Changed
 - Upgraded versions
