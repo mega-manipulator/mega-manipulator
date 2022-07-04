@@ -7,9 +7,7 @@ import com.github.jensim.megamanipulator.graphql.generated.gitlab.singlerepoquer
 import com.github.jensim.megamanipulator.settings.types.CloneType
 import com.github.jensim.megamanipulator.settings.types.CloneType.HTTPS
 import com.github.jensim.megamanipulator.settings.types.CloneType.SSH
-import kotlinx.serialization.Serializable
 
-@Serializable
 sealed class RepoWrapper {
     abstract fun getSearchHost(): String
     abstract fun getCodeHost(): String
@@ -21,7 +19,6 @@ sealed class RepoWrapper {
     fun asPathString() = "${getSearchHost()}/${getCodeHost()}/${getProject()}/${getRepo()}"
 }
 
-@Serializable
 data class BitBucketRepoWrapping(
     private val searchHost: String,
     private val codeHost: String,
@@ -40,7 +37,6 @@ data class BitBucketRepoWrapping(
     override fun getDefaultBranch(): String? = defaultBranch
 }
 
-@Serializable
 data class GithubComRepoWrapping(
     private val searchHost: String,
     private val codeHost: String,

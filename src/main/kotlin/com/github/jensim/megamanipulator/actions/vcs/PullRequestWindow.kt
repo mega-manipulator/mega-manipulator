@@ -125,7 +125,7 @@ class PullRequestWindow(project: Project) : ToolWindowTab {
             val selected: List<PullRequestWrapper> = prTable.selectedValuesList
             if (selected.isNotEmpty()) {
                 if (selected.size == 1) {
-                    peekArea.text = SerializationHolder.readableJson.encodeToString(selected.first())
+                    peekArea.text = SerializationHolder.objectMapper.writeValueAsString(selected.first())
                 }
                 menuOpenButton.isEnabled = true
             } else {

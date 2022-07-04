@@ -1,11 +1,13 @@
 package com.github.jensim.megamanipulator.actions.search.hound
 
+import com.fasterxml.jackson.module.kotlin.readValue
 import com.github.jensim.megamanipulator.actions.search.SearchResult
 import com.github.jensim.megamanipulator.actions.search.hound.HoundTypes.HoundRepo
 import com.github.jensim.megamanipulator.actions.search.hound.HoundTypes.HoundSearchResults
 import com.github.jensim.megamanipulator.http.HttpClientProvider
+import com.github.jensim.megamanipulator.http.unwrap
 import com.github.jensim.megamanipulator.project.lazyService
-import com.github.jensim.megamanipulator.settings.SerializationHolder
+import com.github.jensim.megamanipulator.settings.SerializationHolder.objectMapper
 import com.github.jensim.megamanipulator.settings.types.SearchHostSettings.HoundSettings
 import com.intellij.openapi.project.Project
 import com.intellij.serviceContainer.NonInjectable
@@ -14,8 +16,6 @@ import io.ktor.client.request.header
 import io.ktor.client.request.parameter
 import io.ktor.client.statement.HttpResponse
 import io.ktor.client.statement.readText
-import kotlinx.serialization.decodeFromString
-import kotlinx.serialization.json.Json
 
 class HoundClient @NonInjectable constructor(
     project: Project,
@@ -25,12 +25,10 @@ class HoundClient @NonInjectable constructor(
 
     private val httpClientProvider: HttpClientProvider by lazyService(project, httpClientProvider)
 
-    private val json: Json = SerializationHolder.readableJson
-
     suspend fun search(searchHostName: String, settings: HoundSettings, search: String): Set<SearchResult> {
         val client = httpClientProvider.getClient(searchHostName, settings)
-        val repos =
-            client.get<Map<String, HoundRepo>>("${settings.baseUrl}/api/v1/repos").filterValues { it.vcs == "git" }
+        val response: HttpResponse = client.get("${settings.baseUrl}/api/v1/repos")
+        val repos = response.unwrap<Map<String, HoundRepo>>().filterValues { it.vcs == "git" }
         val rawResp: HttpResponse = client.get("${settings.baseUrl}/api/v1/search") {
             parameter("q", search)
             parameter("stats", "nope") // fosho or nope (true or false)
@@ -40,14 +38,14 @@ class HoundClient @NonInjectable constructor(
             parameter("i", "fosho")
             header("Accept", "application/json")
         }
-        val body = rawResp.readText()
-        val searchResp: HoundSearchResults = json.decodeFromString(body)
+        val body: String = rawResp.readText()
+        val searchResp: HoundSearchResults = objectMapper.readValue(body)
         return searchResp.Results.keys.mapNotNull { repos[it]?.url?.gitUrlToResult(searchHostName) }.toSet()
     }
 
     suspend fun validate(searchHostName: String, settings: HoundSettings): String = try {
         val client = httpClientProvider.getClient(searchHostName, settings)
-        val response = client.get<HttpResponse>("${settings.baseUrl}/api/v1/repos") {
+        val response: HttpResponse = client.get("${settings.baseUrl}/api/v1/repos") {
             header("Accept", "application/json")
         }
         "${response.status.value}:${response.status.description}"

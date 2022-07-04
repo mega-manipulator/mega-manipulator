@@ -9,18 +9,18 @@ fun properties(key: String) = project.findProperty(key).toString()
 plugins {
     id("java")
     // Kotlin support
-    kotlin("jvm") version "1.5.31"
-    kotlin("plugin.serialization") version "1.5.31"
+    kotlin("jvm") version "1.6.21"
+    kotlin("plugin.serialization") version "1.6.21"
     // gradle-intellij-plugin - read more: https://github.com/JetBrains/gradle-intellij-plugin
-    id("org.jetbrains.intellij") version "1.1.6"
+    id("org.jetbrains.intellij") version "1.6.0"
     // gradle-changelog-plugin - read more: https://github.com/JetBrains/gradle-changelog-plugin
     id("org.jetbrains.changelog") version "1.3.1"
 
-    id("org.jlleitschuh.gradle.ktlint") version "10.2.0"
-    id("io.gitlab.arturbosch.detekt") version "1.18.1"
-    id("com.github.ben-manes.versions") version "0.39.0"
-    id("com.expediagroup.graphql") version "4.2.0"
-    id("org.jetbrains.qodana") version "0.1.12"
+    id("org.jlleitschuh.gradle.ktlint") version "10.3.0"
+    id("io.gitlab.arturbosch.detekt") version "1.20.0"
+    id("com.github.ben-manes.versions") version "0.42.0"
+    id("com.expediagroup.graphql") version "6.0.0-alpha.5"
+    id("org.jetbrains.qodana") version "0.1.13"
 }
 
 val javaVersion = properties("javaVersion")
@@ -50,36 +50,44 @@ configure<org.jlleitschuh.gradle.ktlint.KtlintExtension> {
 }
 
 dependencies {
-    implementation(enforcedPlatform("io.ktor:ktor-bom:1.5.4"))
-    implementation(enforcedPlatform("org.jetbrains.kotlin:kotlin-bom:1.5.31"))
-    implementation(enforcedPlatform("org.jetbrains.kotlinx:kotlinx-coroutines-bom:1.5.2"))
-    // implementation(enforcedPlatform("org.jetbrains.kotlinx:kotlinx-serialization-bom:1.1.0"))
+    val ktor_version = "1.6.8"
+    val kotlinVersion = "1.6.21"
+    val kotlinCoroutinesVersion = "1.6.3"
+    val graphql_kotlin_ktor_version = "5.5.0"
 
-    implementation(kotlin("stdlib-jdk8"))
-    implementation(kotlin("reflect"))
-    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-jdk8")
+    api(kotlin("stdlib-jdk8", kotlinVersion))
+    api(kotlin("reflect", kotlinVersion))
+    api("org.jetbrains.kotlinx:kotlinx-coroutines-reactive:$kotlinCoroutinesVersion")
+    api("org.jetbrains.kotlinx:kotlinx-coroutines-core:$kotlinCoroutinesVersion")
+    api("org.jetbrains.kotlinx:kotlinx-coroutines-jdk8:$kotlinCoroutinesVersion")
 
-    implementation("io.ktor:ktor-client")
-    implementation("io.ktor:ktor-client-apache")
-    implementation("io.ktor:ktor-client-serialization")
-    implementation("io.ktor:ktor-client-logging")
-    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.1.0")
-    implementation("com.github.Ricky12Awesome:json-schema-serialization:0.6.6")
+    api("io.ktor:ktor-client:$ktor_version")
+    api("io.ktor:ktor-client-cio:$ktor_version")
+    api("io.ktor:ktor-client-jackson:$ktor_version")
+    api("io.ktor:ktor-client-logging:$ktor_version")
+    api("com.fasterxml.jackson.core:jackson-databind:2.13.2.1") // To override vulnerable version from ktor
 
-    implementation("org.eclipse.jgit:org.eclipse.jgit:5.13.0.202109080827-r")
-    implementation("org.apache.logging.log4j:log4j-slf4j-impl:2.14.1")
-    implementation("me.xdrop:fuzzywuzzy:1.3.1")
-    implementation("com.expediagroup:graphql-kotlin-ktor-client:4.2.0")
-    implementation("com.expediagroup:graphql-kotlin-client-serialization:4.2.0")
+    api("org.eclipse.jgit:org.eclipse.jgit:6.2.0.202206071550-r")
+    api("ch.qos.logback:logback-classic:1.2.11")
+    api("me.xdrop:fuzzywuzzy:1.4.0")
+    api("com.expediagroup:graphql-kotlin-ktor-client:$graphql_kotlin_ktor_version") {
+        exclude("com.expediagroup:graphql-kotlin-client-serialization")
+        exclude("org.jetbrains.kotlinx:kotlinx-serialization-json")
+    }
+    api("com.expediagroup:graphql-kotlin-client-jackson:$graphql_kotlin_ktor_version")
+    api("jakarta.validation:jakarta.validation-api:3.0.2")
 
-    testImplementation("org.awaitility:awaitility:4.1.1")
+    testImplementation("com.github.victools:jsonschema-generator:4.25.0")
+    testImplementation("com.github.victools:jsonschema-module-jackson:4.25.0")
+    testImplementation("com.github.victools:jsonschema-module-jakarta-validation:4.25.0")
+    testImplementation("org.awaitility:awaitility:4.2.0")
     testImplementation("io.mockk:mockk:1.12.1")
     testImplementation("org.hamcrest:hamcrest:2.2")
     testImplementation("org.hamcrest:hamcrest-library:2.2")
-    testImplementation("org.junit.jupiter:junit-jupiter-api:5.8.1")
-    testImplementation("org.junit.jupiter:junit-jupiter-params:5.8.1")
+    testImplementation("org.junit.jupiter:junit-jupiter-api:5.8.2")
+    testImplementation("org.junit.jupiter:junit-jupiter-params:5.8.2")
 
-    testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:5.8.1")
+    testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:5.8.2")
 }
 
 // Configure Gradle IntelliJ Plugin - read more: https://github.com/JetBrains/gradle-intellij-plugin
@@ -123,7 +131,7 @@ tasks {
             *fileTree("${project.projectDir.absolutePath}/src/test/resources/graphql/gitlab/queries").files.toTypedArray()
         )
         schemaFile.set(file("${project.projectDir.absolutePath}/src/test/resources/graphql/gitlab/gitlab.graphql.schema"))
-        serializer.set(GraphQLSerializer.KOTLINX)
+        serializer.set(GraphQLSerializer.JACKSON)
     }
     val graphqlGenerateSourcegraphClient by register("graphqlGenerateSourcegraphClient", GraphQLGenerateClientTask::class) {
         packageName.set("com.github.jensim.megamanipulator.graphql.generated.sourcegraph")
@@ -131,7 +139,7 @@ tasks {
             *fileTree("${project.projectDir.absolutePath}/src/test/resources/graphql/sourcegraph/queries").files.toTypedArray()
         )
         schemaFile.set(file("${project.projectDir.absolutePath}/src/test/resources/graphql/sourcegraph/sourcegraph.graphql.schema"))
-        serializer.set(GraphQLSerializer.KOTLINX)
+        serializer.set(GraphQLSerializer.JACKSON)
     }
     val graphqlGenerateGithubClient by register("graphqlGenerateGithubClient", GraphQLGenerateClientTask::class) {
         packageName.set("com.github.jensim.megamanipulator.graphql.generated.github")
@@ -139,7 +147,7 @@ tasks {
             *fileTree("${project.projectDir.absolutePath}/src/test/resources/graphql/github/queries").files.toTypedArray()
         )
         schemaFile.set(file("${project.projectDir.absolutePath}/src/test/resources/graphql/github/github.graphql.schema"))
-        serializer.set(GraphQLSerializer.KOTLINX)
+        serializer.set(GraphQLSerializer.JACKSON)
     }
 
     // Set the compatibility jvm versions
@@ -151,7 +159,15 @@ tasks {
         dependsOn(graphqlGenerateGithubClient)
         dependsOn(graphqlGenerateSourcegraphClient)
         dependsOn(graphqlGenerateClient)
-        kotlinOptions.jvmTarget = javaVersion
+        kotlinOptions {
+            jvmTarget = javaVersion
+            freeCompilerArgs = listOf(
+                "-opt-in=kotlin.RequiresOptIn",
+                "-opt-in=kotlinx.serialization.ImplicitReflectionSerializer",
+                "-opt-in=kotlinx.serialization.ExperimentalSerializationApi",
+                "-opt-in=kotlinx.serialization.ExperimentalCoroutinesApi",
+            )
+        }
     }
 
     withType<Test>().configureEach {

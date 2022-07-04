@@ -6,9 +6,7 @@ import com.github.jensim.megamanipulator.actions.vcs.bitbucketserver.BitBucketPu
 import com.github.jensim.megamanipulator.actions.vcs.githubcom.GithubComPullRequest
 import com.github.jensim.megamanipulator.actions.vcs.gitlab.GitLabMergeRequest
 import com.github.jensim.megamanipulator.settings.types.CloneType
-import kotlinx.serialization.Serializable
 
-@Serializable
 sealed class PullRequestWrapper : GitCloneable {
     abstract fun codeHostName(): String
     abstract fun searchHostName(): String
@@ -23,7 +21,6 @@ sealed class PullRequestWrapper : GitCloneable {
     fun asPathString(): String = "${searchHostName()}/${codeHostName()}/${project()}/${baseRepo()}"
 }
 
-@Serializable
 data class BitBucketPullRequestWrapper(
     val searchHost: String,
     val codeHost: String,
@@ -66,7 +63,6 @@ data class BitBucketPullRequestWrapper(
     override fun browseUrl(): String? = bitbucketPR.links?.self?.firstOrNull()?.href
 }
 
-@Serializable
 data class GithubComPullRequestWrapper(
     val searchHost: String,
     val codeHost: String,
@@ -78,7 +74,7 @@ data class GithubComPullRequestWrapper(
     override fun project(): String = pullRequest.base?.repo?.owner?.login ?: "<?>"
     override fun baseRepo(): String = pullRequest.base?.repo?.name ?: "<?>"
     override fun title(): String = pullRequest.title
-    override fun body(): String = pullRequest.body
+    override fun body(): String = pullRequest.body ?: ""
     override fun author(): String = pullRequest.user.login
     override fun state(): String = pullRequest.state
     override fun fromBranch(): String = pullRequest.head?.ref ?: "<?>"
@@ -104,7 +100,6 @@ sealed class GitLabMergeRequestWrapper : PullRequestWrapper() {
     abstract val mergeRequestIid: Long
 }
 
-@Serializable
 data class GitLabMergeRequestListItemWrapper(
     val searchHost: String,
     val codeHost: String,
@@ -140,7 +135,6 @@ data class GitLabMergeRequestListItemWrapper(
     override fun browseUrl(): String? = mergeRequest.webUrl
 }
 
-@Serializable
 data class GitLabAssignedMergeRequestListItemWrapper(
     val searchHost: String,
     val codeHost: String,
@@ -176,7 +170,6 @@ data class GitLabAssignedMergeRequestListItemWrapper(
     override fun browseUrl(): String? = mergeRequest.webUrl
 }
 
-@Serializable
 data class GitLabMergeRequestApiWrapper(
     val searchHost: String,
     val codeHost: String,

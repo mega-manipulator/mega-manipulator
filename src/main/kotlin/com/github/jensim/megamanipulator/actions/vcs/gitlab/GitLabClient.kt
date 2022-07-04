@@ -1,8 +1,9 @@
 package com.github.jensim.megamanipulator.actions.vcs.gitlab
 
+import com.expediagroup.graphql.client.jackson.GraphQLClientJacksonSerializer
 import com.expediagroup.graphql.client.ktor.GraphQLKtorClient
-import com.expediagroup.graphql.client.serialization.GraphQLClientKotlinxSerializer
 import com.expediagroup.graphql.client.types.GraphQLClientResponse
+import com.fasterxml.jackson.module.kotlin.readValue
 import com.github.jensim.megamanipulator.actions.localrepo.LocalRepoOperator
 import com.github.jensim.megamanipulator.actions.search.SearchResult
 import com.github.jensim.megamanipulator.actions.vcs.GitLabApiRepoWrapping
@@ -21,8 +22,10 @@ import com.github.jensim.megamanipulator.graphql.generated.gitlab.GetForkRepos
 import com.github.jensim.megamanipulator.graphql.generated.gitlab.SingleRepoQuery
 import com.github.jensim.megamanipulator.graphql.generated.gitlab.enums.MergeRequestState
 import com.github.jensim.megamanipulator.http.HttpClientProvider
+import com.github.jensim.megamanipulator.http.bodyAsText
+import com.github.jensim.megamanipulator.http.setBody
 import com.github.jensim.megamanipulator.project.lazyService
-import com.github.jensim.megamanipulator.settings.SerializationHolder
+import com.github.jensim.megamanipulator.settings.SerializationHolder.objectMapper
 import com.github.jensim.megamanipulator.settings.types.CodeHostSettings.GitLabSettings
 import com.intellij.openapi.project.Project
 import com.intellij.serviceContainer.NonInjectable
@@ -35,13 +38,10 @@ import io.ktor.client.request.get
 import io.ktor.client.request.post
 import io.ktor.client.request.put
 import io.ktor.client.statement.HttpResponse
-import io.ktor.client.statement.readText
 import io.ktor.http.ContentType
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.contentType
 import kotlinx.coroutines.delay
-import kotlinx.serialization.encodeToString
-import kotlinx.serialization.json.Json
 import org.slf4j.LoggerFactory
 import java.net.URL
 import java.util.concurrent.atomic.AtomicInteger
@@ -62,8 +62,7 @@ class GitLabClient @NonInjectable constructor(
     private val httpClientProvider: HttpClientProvider by lazyService(project, httpClientProvider)
     private val localRepoOperator: LocalRepoOperator by lazyService(project, localRepoOperator)
 
-    private val graphQLClientKotlinxSerializer = GraphQLClientKotlinxSerializer()
-    private val json: Json = SerializationHolder.readableJson
+    private val graphQlSerializer = GraphQLClientJacksonSerializer(mapper = objectMapper)
     private val log = LoggerFactory.getLogger(this.javaClass)
 
     // https://gitlab.com/-/graphql-explorer
@@ -72,7 +71,7 @@ class GitLabClient @NonInjectable constructor(
     private fun getClient(searchHost: String, codeHost: String, settings: GitLabSettings) = GraphQLKtorClient(
         url = URL("${settings.baseUrl}/api/graphql"),
         httpClient = httpClientProvider.getClient(searchHost, codeHost, settings),
-        serializer = graphQLClientKotlinxSerializer,
+        serializer = graphQlSerializer,
     )
 
     private suspend fun getRepo(
@@ -87,10 +86,10 @@ class GitLabClient @NonInjectable constructor(
             accept(ContentType.Application.Json)
         }
         if (response.status.value >= 300) {
-            throw RuntimeException("Failed getting repo ${response.readText()}")
+            throw RuntimeException("Failed getting repo ${response.bodyAsText()}")
         } else {
-            val content = response.readText()
-            val project = json.decodeFromString(GitLabProject.serializer(), content)
+            val content = response.bodyAsText()
+            val project: GitLabProject = objectMapper.readValue(content)
             return GitLabApiRepoWrapping(
                 searchHost = pullRequest.searchHostName(),
                 codeHost = pullRequest.codeHostName(),
@@ -126,10 +125,10 @@ class GitLabClient @NonInjectable constructor(
         val response =
             client.post<HttpResponse>("${settings.baseUrl}/api/v4/projects/${pullRequest.targetProjectId}/merge_requests/$iid/notes") {
                 contentType(ContentType.Application.Json)
-                body = mapOf("body" to comment)
+                setBody(mapOf("body" to comment))
             }
         if (response.status.value >= 300) {
-            log.warn("Failed creatibg comment '${response.readText()}'")
+            log.warn("Failed creatibg comment '${response.bodyAsText()}'")
         }
     }
 
@@ -160,7 +159,7 @@ class GitLabClient @NonInjectable constructor(
         val response: HttpResponse = client.delete("${settings.baseUrl}/api/v4/projects/$projectId")
         return if (response.status.value >= 300) {
             val msg =
-                "Failed deleting Gitlab repo ${fork.fullPath} http status code ${response.status} and message '${response.readText()}'"
+                "Failed deleting Gitlab repo ${fork.fullPath} http status code ${response.status} and message '${response.bodyAsText()}'"
             log.warn(msg)
             PrActionStatus(success = false, msg = msg)
         } else {
@@ -231,11 +230,10 @@ class GitLabClient @NonInjectable constructor(
             codeHostName = pullRequest.codeHostName(),
             settings = settings
         )
-        val response =
-            client.delete<HttpResponse>("${settings.baseUrl}/api/v4/projects/${pullRequest.targetProjectId}/merge_requests/${pullRequest.mergeRequestIid}")
+        val response = client.delete<HttpResponse>("${settings.baseUrl}/api/v4/projects/${pullRequest.targetProjectId}/merge_requests/${pullRequest.mergeRequestIid}")
 
         return if (response.status.value >= 300) {
-            val msg = "Failed deleting merge request '${response.readText()}'"
+            val msg = "Failed deleting merge request '${response.bodyAsText()}'"
             log.warn(msg)
             PrActionStatus(success = false, msg = msg)
         } else {
@@ -252,8 +250,7 @@ class GitLabClient @NonInjectable constructor(
                 val branchResponse: HttpResponse =
                     client.delete("${settings.baseUrl}/api/v4/projects/$sourceProjectId/repository/branches/${sourceBranch.encodeUrlQueryParameter()}")
                 if (branchResponse.status.value >= 300) {
-                    val msg =
-                        "Failed deleting branch '$sourceBranch' for '${pullRequest.asPathString()}' due to ${branchResponse.readText()}"
+                    val msg = "Failed deleting branch '$sourceBranch' for '${pullRequest.asPathString()}' due to ${branchResponse.bodyAsText()}"
                     log.warn(msg)
                     PrActionStatus(success = false, msg = msg)
                 } else {
@@ -300,7 +297,7 @@ class GitLabClient @NonInjectable constructor(
                 !resp.data?.currentUser?.assignedMergeRequests?.nodes.isNullOrEmpty() ->
                     resp.data?.currentUser?.assignedMergeRequests?.nodes?.mapNotNull {
                         it?.let {
-                            val raw = json.encodeToString(it)
+                            val raw = objectMapper.writeValueAsString(it)
                             accumulator.add(
                                 GitLabAssignedMergeRequestListItemWrapper(
                                     searchHost = searchHost,
@@ -349,7 +346,7 @@ class GitLabClient @NonInjectable constructor(
                 !resp.data?.currentUser?.authoredMergeRequests?.nodes.isNullOrEmpty() ->
                     resp.data?.currentUser?.authoredMergeRequests?.nodes?.mapNotNull {
                         it?.let {
-                            val raw = json.encodeToString(it)
+                            val raw = objectMapper.writeValueAsString(it)
                             accumulator.add(
                                 GitLabMergeRequestListItemWrapper(
                                     searchHost = searchHost,
@@ -391,10 +388,10 @@ class GitLabClient @NonInjectable constructor(
         val response: HttpResponse =
             client.put("${settings.baseUrl}/api/v4/projects/$projectId/merge_requests/$mergeRequestIid") {
                 contentType(ContentType.Application.Json)
-                body = mapOf("description" to newDescription, "title" to newTitle)
+                setBody(mapOf("description" to newDescription, "title" to newTitle))
             }
         return if (response.status.value >= 300) {
-            PrActionStatus(success = false, msg = "Failed updating PR due to: '${response.readText()}'")
+            PrActionStatus(success = false, msg = "Failed updating PR due to: '${response.bodyAsText()}'")
         } else {
             PrActionStatus(success = true)
         }
@@ -415,11 +412,11 @@ class GitLabClient @NonInjectable constructor(
         val response = client.post<HttpResponse>("${settings.baseUrl}/api/v4/projects/${groupRepo.projectId}/fork") {
             contentType(ContentType.Application.Json)
             accept(ContentType.Application.Json)
-            body = mapOf<String, String>()
+            setBody(mapOf<String, String>())
         }
         if (response.status.value >= 300) {
             val status = HttpStatusCode.fromValue(response.status.value)
-            throw RuntimeException("Failed forking repo ${repo.asPathString()} due to httpStatus:$status and message: '${response.readText()}'")
+            throw RuntimeException("Failed forking repo ${repo.asPathString()} due to httpStatus:$status and message: '${response.bodyAsText()}'")
         }
         val counter = AtomicInteger()
         while (counter.getAndIncrement() < 30) {
@@ -455,7 +452,7 @@ class GitLabClient @NonInjectable constructor(
         val client: HttpClient = httpClientProvider.getClient(repo.searchHostName, repo.codeHostName, settings)
         val urlString = "${settings.baseUrl}/api/v4/projects/$sourceProjectId/merge_requests"
         val targetProjectIdNumeric: Long = gitlabTargetRepo.projectId
-        val body = GitLabMergeRequestRequest(
+        val requestBody = GitLabMergeRequestRequest(
             source_branch = localBranch,
             target_branch = gitlabTargetRepo.getDefaultBranch()!!,
             target_project_id = targetProjectIdNumeric,
@@ -465,13 +462,13 @@ class GitLabClient @NonInjectable constructor(
         val response: HttpResponse = client.post(urlString) {
             contentType(ContentType.Application.Json)
             accept(ContentType.Application.Json)
-            this.body = body
+            setBody(requestBody)
         }
-        val content = response.readText()
+        val content = response.bodyAsText()
         if (response.status.value >= 300) {
             log.warn("Failed creating MergeRequest $content") // TODO improve visibility to user
         }
-        val mergeRequest: GitLabMergeRequest = json.decodeFromString(GitLabMergeRequest.serializer(), content)
+        val mergeRequest: GitLabMergeRequest = objectMapper.readValue(content)
         return GitLabMergeRequestApiWrapper(
             searchHost = repo.searchHostName,
             codeHost = repo.codeHostName,
@@ -502,7 +499,7 @@ class GitLabClient @NonInjectable constructor(
             accept(ContentType.Application.Json)
         }
         return if (response.status.value >= 300) {
-            PrActionStatus(success = false, msg = "Failed $endpoint PR due to: '${response.readText()}'")
+            PrActionStatus(success = false, msg = "Failed $endpoint PR due to: '${response.bodyAsText()}'")
         } else {
             PrActionStatus(success = true)
         }
@@ -517,7 +514,7 @@ class GitLabClient @NonInjectable constructor(
             accept(ContentType.Application.Json)
         }
         return if (response.status.value >= 300) {
-            PrActionStatus(success = false, msg = "Failed disapproving PR due to: '${response.readText()}'")
+            PrActionStatus(success = false, msg = "Failed disapproving PR due to: '${response.bodyAsText()}'")
         } else {
             PrActionStatus(success = true)
         }

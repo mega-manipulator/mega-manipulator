@@ -1,8 +1,9 @@
 package com.github.jensim.megamanipulator.settings.passwords
 
+import com.fasterxml.jackson.core.type.TypeReference
 import com.github.jensim.megamanipulator.actions.NotificationsOperator
 import com.github.jensim.megamanipulator.project.lazyService
-import com.github.jensim.megamanipulator.settings.SerializationHolder
+import com.github.jensim.megamanipulator.settings.SerializationHolder.objectMapper
 import com.github.jensim.megamanipulator.ui.PasswordDialogFactory
 import com.intellij.credentialStore.CredentialAttributes
 import com.intellij.credentialStore.Credentials
@@ -11,8 +12,6 @@ import com.intellij.notification.NotificationType
 import com.intellij.openapi.project.Project
 import com.intellij.remoteServer.util.CloudConfigurationUtil.createCredentialAttributes
 import com.intellij.serviceContainer.NonInjectable
-import kotlinx.serialization.decodeFromString
-import kotlinx.serialization.encodeToString
 import java.util.concurrent.ConcurrentHashMap
 import javax.annotation.concurrent.NotThreadSafe
 import javax.swing.JComponent
@@ -25,6 +24,7 @@ class IntelliJPasswordsOperator @NonInjectable constructor(
 
     companion object {
         private const val service = "mega-manipulator"
+        private val typeRef: TypeReference<HashMap<String, String?>> = object : TypeReference<HashMap<String, String?>>() {}
     }
 
     constructor(project: Project) : this(project, null)
@@ -80,7 +80,7 @@ class IntelliJPasswordsOperator @NonInjectable constructor(
             null
         } else {
             PasswordSafe.instance.getPassword(credentialAttributes)?.let { passMapStr ->
-                val passMap: Map<String, String> = SerializationHolder.readableJson.decodeFromString(passMapStr)
+                val passMap: Map<String, String?> = objectMapper.readValue(passMapStr, typeRef)
                 passMap[usernameKey]
             }
         }
@@ -102,15 +102,14 @@ class IntelliJPasswordsOperator @NonInjectable constructor(
             val preexisting: String? = PasswordSafe.instance.getPassword(credentialAttributes)
             if (preexisting == null) {
                 val passwordsMap = mapOf(usernameKey to password)
-                val passMapStr = SerializationHolder.readableJson.encodeToString(passwordsMap)
+                val passMapStr: String = objectMapper.writeValueAsString(passwordsMap)
                 val credentials = Credentials(serviceUsername, passMapStr)
                 PasswordSafe.instance.set(credentialAttributes, credentials)
             } else {
                 PasswordSafe.instance.getPassword(credentialAttributes)?.let { passMapStr: String ->
-                    val passMap: MutableMap<String, String> =
-                        SerializationHolder.readableJson.decodeFromString(passMapStr)
+                    val passMap: MutableMap<String, String?> = objectMapper.readValue(passMapStr, typeRef)
                     passMap[usernameKey] = password
-                    val passMapStrMod = SerializationHolder.readableJson.encodeToString(passMap)
+                    val passMapStrMod = objectMapper.writeValueAsString(passMap)
                     val credentials = Credentials(serviceUsername, passMapStrMod)
                     PasswordSafe.instance.set(credentialAttributes, credentials)
                 }

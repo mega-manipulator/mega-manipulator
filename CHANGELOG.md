@@ -4,6 +4,17 @@
 
 ## [Unreleased]
 
+### Added
+- Verify with 2022.1
+
+### Removed
+- Verify with 2021
+
+### Changed
+- Upgraded versions
+- Swapped kotlinx serialization for jackson  
+As it seemed to result in odd behaviours running the plugin with newer versions
+
 ## [0.0.40]
 ### Added
 - Stop running background processes with the Cancel button
