@@ -114,6 +114,8 @@ class GithubComClient @NonInjectable constructor(
             // TODO fix fork repo name
             val previewRepo: GithubComRepo = client.post<HttpResponse>("${settings.baseUrl}/repos/${repo.project}/${repo.repo}/forks") {
                 setBody(emptyMap<String, Any>())
+                accept(ContentType.Application.Json)
+                contentType(ContentType.Application.Json)
             }.unwrap()
             when (settings.cloneType) {
                 CloneType.SSH -> previewRepo.ssh_url
