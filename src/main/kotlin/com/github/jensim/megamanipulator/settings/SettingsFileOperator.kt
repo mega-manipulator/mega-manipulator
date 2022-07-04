@@ -7,8 +7,6 @@ import com.intellij.notification.NotificationType.WARNING
 import com.intellij.openapi.fileEditor.FileDocumentManager
 import com.intellij.openapi.project.Project
 import com.intellij.serviceContainer.NonInjectable
-import kotlinx.serialization.decodeFromString
-import kotlinx.serialization.json.Json
 import java.io.File
 import java.util.concurrent.atomic.AtomicLong
 import java.util.concurrent.atomic.AtomicReference
@@ -53,7 +51,7 @@ class SettingsFileOperator @NonInjectable constructor(
                 bufferedSettings.get()
             } else {
                 val json = String(settingsFile.readBytes(), UTF_8)
-                val readValue: MegaManipulatorSettings? = Json.decodeFromString(json)
+                val readValue: MegaManipulatorSettings? = SerializationHolder.objectMapper.readValue(json, MegaManipulatorSettings::class.java)
                 readValue?.let {
                     lastUpdated.set(settingsFile.lastModified())
                     bufferedSettings.set(it)

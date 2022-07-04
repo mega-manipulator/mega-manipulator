@@ -1,14 +1,12 @@
 package com.github.jensim.megamanipulator.settings.types
 
-import com.github.ricky12awesome.jss.JsonSchema
-import kotlinx.serialization.Serializable
+import com.fasterxml.jackson.annotation.JsonPropertyDescription
 
-@Serializable
 enum class AuthMethod {
-    @JsonSchema.Description(["Username and access token combination"])
+    @JsonPropertyDescription("Username and access token combination")
     USERNAME_TOKEN,
 
-    @JsonSchema.Description(["Token without username"])
+    @JsonPropertyDescription("Token without username")
     JUST_TOKEN,
     NONE,
 }

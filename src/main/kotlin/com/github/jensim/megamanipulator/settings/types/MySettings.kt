@@ -1,34 +1,43 @@
 package com.github.jensim.megamanipulator.settings.types
 
+import com.fasterxml.jackson.annotation.JsonProperty
+import com.fasterxml.jackson.annotation.JsonPropertyDescription
+import com.fasterxml.jackson.annotation.JsonSubTypes
+import com.fasterxml.jackson.annotation.JsonSubTypes.Type
+import com.fasterxml.jackson.annotation.JsonTypeInfo
 import com.github.jensim.megamanipulator.graphql.generated.gitlab.enums.MergeRequestState
-import com.github.ricky12awesome.jss.JsonSchema
-import kotlinx.serialization.SerialName
-import kotlinx.serialization.Serializable
+import com.github.jensim.megamanipulator.settings.types.CodeHostSettings.BitBucketSettings
+import com.github.jensim.megamanipulator.settings.types.CodeHostSettings.GitHubSettings
+import com.github.jensim.megamanipulator.settings.types.CodeHostSettings.GitLabSettings
+import com.github.jensim.megamanipulator.settings.types.SearchHostSettings.HoundSettings
+import com.github.jensim.megamanipulator.settings.types.SearchHostSettings.SourceGraphSettings
+import jakarta.validation.constraints.Max
+import jakarta.validation.constraints.Min
 import java.io.File
 import java.util.Base64
 
 private val base64encoder = Base64.getEncoder()
 
-@Serializable
 data class MegaManipulatorSettings(
-    @JsonSchema.IntRange(1, 100)
-    @JsonSchema.Description(
-        [
-            "When applying changes using the scripted method,",
-            "number of parallel executing changes"
-        ]
+    @Min(1)
+    @Max(100)
+    @JsonPropertyDescription(
+        """
+When applying changes using the scripted method,
+number of parallel executing changes
+"""
     )
     val concurrency: Int = 5,
-    @JsonSchema.Description(
-        [
-            "Override the default strict https validation",
-            "May be set less strict on searchHost or codeHost level as well"
-        ]
+    @JsonPropertyDescription(
+        """
+Override the default strict https validation
+May be set less strict on searchHost or codeHost level as well
+"""
     )
     val defaultHttpsOverride: HttpsOverride? = null,
-    @JsonSchema.Description(["Search host definitions"])
+    @JsonPropertyDescription("Search host definitions")
     val searchHostSettings: Map<String, SearchHostSettings>,
-    @SerialName("\$schema")
+    @JsonProperty(value = "\$schema")
     val schema: String = "mega-manipulator-schema.json",
 ) {
     init {
@@ -72,7 +81,17 @@ private fun validateBaseUrl(baseUrl: String) {
     }
 }
 
-@Serializable
+@JsonTypeInfo(
+    use = JsonTypeInfo.Id.NAME,
+    include = JsonTypeInfo.As.PROPERTY,
+    property = "type"
+)
+@JsonSubTypes(
+    value = [
+        Type(value = HoundSettings::class, name = "HOUND"),
+        Type(value = SourceGraphSettings::class, name = "SOURCEGRAPH"),
+    ]
+)
 sealed class SearchHostSettings : HostWithAuth {
 
     abstract val docLinkHref: String
@@ -83,24 +102,21 @@ sealed class SearchHostSettings : HostWithAuth {
     abstract val httpsOverride: HttpsOverride?
     abstract val codeHostSettings: Map<String, CodeHostSettings>
 
-    @Serializable
-    @SerialName("HOUND")
     data class HoundSettings(
-        @JsonSchema.Description(
-            [
-                "Base url to your SourceGraph installation",
-                "For example https://sourcegraph.com",
-            ]
+        @JsonPropertyDescription(
+            """
+Base url to your SourceGraph installation
+For example https://sourcegraph.com
+"""
         )
         override val baseUrl: String,
-        @JsonSchema.Description(["Override the default strict https validation"])
+        @JsonPropertyDescription("Override the default strict https validation")
         override val httpsOverride: HttpsOverride? = null,
-        @JsonSchema.Description(
-            [
-                "Code hosts.",
-                "The names in this map is used to connect with the hostname.",
-                "!!! IT'S THEREFORE REALLY IMPORTANT !!!"
-            ]
+        @JsonPropertyDescription(
+            """
+Code hosts.
+The names in this map is used to connect with the hostname.
+!!! IT'S THEREFORE REALLY IMPORTANT !!!"""
         )
         override val codeHostSettings: Map<String, CodeHostSettings>,
     ) : SearchHostSettings() {
@@ -111,25 +127,19 @@ sealed class SearchHostSettings : HostWithAuth {
         override fun getAuthHeaderValue(password: String?): String? = null
     }
 
-    @Serializable
-    @SerialName("SOURCEGRAPH")
     data class SourceGraphSettings(
-        @JsonSchema.Description(
-            [
-                "Base url to your SourceGraph installation",
-                "For example https://sourcegraph.com",
-            ]
-        )
+        @JsonPropertyDescription("""
+Base url to your SourceGraph installation
+For example https://sourcegraph.com
+""")
         override val baseUrl: String,
-        @JsonSchema.Description(["Override the default strict https validation"])
+        @JsonPropertyDescription("Override the default strict https validation")
         override val httpsOverride: HttpsOverride? = null,
-        @JsonSchema.Description(
-            [
-                "Code hosts.",
-                "The names in this map is used to connect with the naming used on the search host.",
-                "!!! IT'S THEREFORE REALLY IMPORTANT !!!"
-            ]
-        )
+        @JsonPropertyDescription("""
+Code hosts.
+The names in this map is used to connect with the naming used on the search host.
+!!! IT'S THEREFORE REALLY IMPORTANT !!!
+""")
         override val codeHostSettings: Map<String, CodeHostSettings>,
         override val authMethod: AuthMethod = AuthMethod.JUST_TOKEN,
     ) : SearchHostSettings() {
@@ -153,7 +163,19 @@ sealed class SearchHostSettings : HostWithAuth {
     }
 }
 
-@Serializable
+@JsonTypeInfo(
+    use = JsonTypeInfo.Id.NAME,
+    include = JsonTypeInfo.As.PROPERTY,
+    property = "type"
+)
+@JsonSubTypes(
+    value = [
+        Type(value = BitBucketSettings::class, name = "BITBUCKET_SERVER"),
+        Type(value = GitHubSettings::class, name = "GITHUB"),
+        Type(value = GitLabSettings::class, name = "GITLAB"),
+
+    ]
+)
 sealed class CodeHostSettings
 @SuppressWarnings("LongParameterList") constructor() : HostWithAuth {
 
@@ -205,25 +227,16 @@ sealed class CodeHostSettings
         );
     }
 
-    @Serializable
-    @SerialName("BITBUCKET_SERVER")
     data class BitBucketSettings(
-        @JsonSchema.Description(["Base url, like https://bitbucket.example.com"])
+        @JsonPropertyDescription("Base url, like https://bitbucket.example.com")
         override val baseUrl: String,
-        @JsonSchema.Description(["Override the default, strict https validation"])
+        @JsonPropertyDescription("Override the default, strict https validation")
         override val httpsOverride: HttpsOverride? = null,
-        @JsonSchema.Description(["Your username at the code host"])
+        @JsonPropertyDescription("Your username at the code host")
         override val username: String,
-        @JsonSchema.Description(
-            [
-                "Fork settings is used to decide when to fork a repo:",
-                "PLAIN_BRANCH: Will require write access to the repo",
-                "LAZY_FORK: When not permitted to push into origin, attempt fork strategy",
-                "EAGER_FORK: Fork before push, for every repo",
-            ]
-        )
+        @JsonPropertyDescription(forkSettingDescription)
         override val forkSetting: ForkSetting = ForkSetting.LAZY_FORK,
-        @JsonSchema.Description(["It's strongly recommended to use SSH clone type."])
+        @JsonPropertyDescription("It's strongly recommended to use SSH clone type.")
         override val cloneType: CloneType = CloneType.SSH,
     ) : CodeHostSettings() {
 
@@ -242,23 +255,14 @@ sealed class CodeHostSettings
         }
     }
 
-    @Serializable
-    @SerialName("GITHUB")
     data class GitHubSettings(
-        @JsonSchema.Description(["Override the default, strict https validation"])
+        @JsonPropertyDescription("Override the default, strict https validation")
         override val httpsOverride: HttpsOverride? = null,
-        @JsonSchema.Description(["Your username at the code host"])
+        @JsonPropertyDescription("Your username at the code host")
         override val username: String,
-        @JsonSchema.Description(
-            [
-                "Fork settings is used to decide when to fork a repo:",
-                "PLAIN_BRANCH: Will require write access to the repo",
-                "LAZY_FORK: When not permitted to push into origin, attempt fork strategy",
-                "EAGER_FORK: Fork before push, for every repo",
-            ]
-        )
+        @JsonPropertyDescription(forkSettingDescription)
         override val forkSetting: ForkSetting = ForkSetting.LAZY_FORK,
-        @JsonSchema.Description(["It's strongly recommended to use SSH clone type."])
+        @JsonPropertyDescription("It's strongly recommended to use SSH clone type.")
         override val cloneType: CloneType = CloneType.SSH,
     ) : CodeHostSettings() {
 
@@ -278,23 +282,14 @@ sealed class CodeHostSettings
         }
     }
 
-    @Serializable
-    @SerialName("GITLAB")
     data class GitLabSettings(
-        @JsonSchema.Description(["Override the default, strict https validation"])
+        @JsonPropertyDescription("Override the default, strict https validation")
         override val httpsOverride: HttpsOverride? = null,
-        @JsonSchema.Description(["Your username at the code host"])
+        @JsonPropertyDescription("Your username at the code host")
         override val username: String,
-        @JsonSchema.Description(
-            [
-                "Fork settings is used to decide when to fork a repo:",
-                "PLAIN_BRANCH: Will require write access to the repo",
-                "LAZY_FORK: When not permitted to push into origin, attempt fork strategy",
-                "EAGER_FORK: Fork before push, for every repo",
-            ]
-        )
+        @JsonPropertyDescription(forkSettingDescription)
         override val forkSetting: ForkSetting = ForkSetting.LAZY_FORK,
-        @JsonSchema.Description(["It's strongly recommended to use SSH clone type."])
+        @JsonPropertyDescription("It's strongly recommended to use SSH clone type.")
         override val cloneType: CloneType = CloneType.SSH,
         override val baseUrl: String = "https://gitlab.com",
     ) : CodeHostSettings() {

@@ -65,19 +65,21 @@ dependencies {
     api("io.ktor:ktor-client-cio:$ktor_version")
     api("io.ktor:ktor-client-jackson:$ktor_version")
     api("io.ktor:ktor-client-logging:$ktor_version")
-    //api("org.jetbrains.kotlinx:kotlinx-serialization-json:1.3.3")
-    api("com.github.Ricky12Awesome:json-schema-serialization:0.6.6")
-    // api("com.github.jensim:json-schema-serialization:0.8.1")
+    api("com.fasterxml.jackson.core:jackson-databind:2.13.2.1") // To override vulnerable version from ktor
 
     api("org.eclipse.jgit:org.eclipse.jgit:6.2.0.202206071550-r")
     api("ch.qos.logback:logback-classic:1.2.11")
     api("me.xdrop:fuzzywuzzy:1.4.0")
     api("com.expediagroup:graphql-kotlin-ktor-client:$graphql_kotlin_ktor_version") {
         exclude("com.expediagroup:graphql-kotlin-client-serialization")
+        exclude("org.jetbrains.kotlinx:kotlinx-serialization-json")
     }
-    // api("com.expediagroup:graphql-kotlin-client-serialization:$graphql_kotlin_ktor_version")
     api("com.expediagroup:graphql-kotlin-client-jackson:$graphql_kotlin_ktor_version")
+    api("jakarta.validation:jakarta.validation-api:3.0.2")
 
+    testImplementation("com.github.victools:jsonschema-generator:4.25.0")
+    testImplementation("com.github.victools:jsonschema-module-jackson:4.25.0")
+    testImplementation("com.github.victools:jsonschema-module-jakarta-validation:4.25.0")
     testImplementation("org.awaitility:awaitility:4.2.0")
     testImplementation("io.mockk:mockk:1.12.1")
     testImplementation("org.hamcrest:hamcrest:2.2")
