@@ -8,7 +8,7 @@ import com.github.jensim.megamanipulator.http.HttpClientProvider
 import com.github.jensim.megamanipulator.http.unwrap
 import com.github.jensim.megamanipulator.project.lazyService
 import com.github.jensim.megamanipulator.settings.SerializationHolder.objectMapper
-import com.github.jensim.megamanipulator.settings.types.SearchHostSettings.HoundSettings
+import com.github.jensim.megamanipulator.settings.types.searchhost.HoundSettings
 import com.intellij.openapi.project.Project
 import com.intellij.serviceContainer.NonInjectable
 import io.ktor.client.request.get

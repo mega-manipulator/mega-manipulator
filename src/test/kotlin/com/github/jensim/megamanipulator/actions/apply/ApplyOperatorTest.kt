@@ -7,7 +7,7 @@ import com.github.jensim.megamanipulator.project.ProjectOperator
 import com.github.jensim.megamanipulator.settings.SettingsFileOperator
 import com.github.jensim.megamanipulator.settings.types.CloneType
 import com.github.jensim.megamanipulator.settings.types.MegaManipulatorSettings
-import com.github.jensim.megamanipulator.settings.types.SearchHostSettings
+import com.github.jensim.megamanipulator.settings.types.searchhost.SearchHostSettings
 import com.github.jensim.megamanipulator.ui.TestUiProtector
 import com.github.jensim.megamanipulator.ui.UiProtector
 import com.intellij.openapi.project.Project

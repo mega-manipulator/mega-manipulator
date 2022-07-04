@@ -4,9 +4,9 @@ import com.github.jensim.megamanipulator.actions.search.hound.HoundClient
 import com.github.jensim.megamanipulator.actions.search.sourcegraph.SourcegraphSearchClient
 import com.github.jensim.megamanipulator.project.lazyService
 import com.github.jensim.megamanipulator.settings.SettingsFileOperator
-import com.github.jensim.megamanipulator.settings.types.SearchHostSettings
-import com.github.jensim.megamanipulator.settings.types.SearchHostSettings.HoundSettings
-import com.github.jensim.megamanipulator.settings.types.SearchHostSettings.SourceGraphSettings
+import com.github.jensim.megamanipulator.settings.types.searchhost.SearchHostSettings
+import com.github.jensim.megamanipulator.settings.types.searchhost.HoundSettings
+import com.github.jensim.megamanipulator.settings.types.searchhost.SourceGraphSettings
 import com.intellij.openapi.project.Project
 import com.intellij.serviceContainer.NonInjectable
 import kotlinx.coroutines.Deferred
@@ -31,7 +31,7 @@ class SearchOperator @NonInjectable constructor(
     private val houndClient: HoundClient by lazyService(project, houndClient)
 
     suspend fun search(searchHostName: String, search: String): Set<SearchResult> {
-        val settings: SearchHostSettings = settingsFileOperator.readSettings()?.searchHostSettings?.get(searchHostName)
+        val settings: SearchHostSettings = settingsFileOperator.readSettings()?.searchHostSettings?.get(searchHostName)?.value
             ?: throw NullPointerException("No settings for search host named $searchHostName")
         return when (settings) {
             is SourceGraphSettings -> sourcegraphSearchClient.search(searchHostName, settings, search)
@@ -40,11 +40,11 @@ class SearchOperator @NonInjectable constructor(
     }
 
     suspend fun validateTokens(): Map<String, Deferred<String>> =
-        settingsFileOperator.readSettings()?.searchHostSettings.orEmpty().map { (name, settings) ->
+        settingsFileOperator.readSettings()?.searchHostSettings.orEmpty().map { (name, settingsGroup) ->
             name to GlobalScope.async {
-                when (settings) {
-                    is SourceGraphSettings -> sourcegraphSearchClient.validateToken(name, settings)
-                    is HoundSettings -> houndClient.validate(name, settings)
+                when (settingsGroup.value) {
+                    is SourceGraphSettings -> sourcegraphSearchClient.validateToken(name, settingsGroup.sourceGraph!!)
+                    is HoundSettings -> houndClient.validate(name, settingsGroup.hound!!)
                 }
             }
         }.toMap()

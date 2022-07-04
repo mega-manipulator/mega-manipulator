@@ -4,8 +4,9 @@ import com.github.jensim.megamanipulator.actions.search.SearchResult
 import com.github.jensim.megamanipulator.actions.vcs.GitLabRepoWrapping
 import com.github.jensim.megamanipulator.actions.vcs.PullRequestWrapper
 import com.github.jensim.megamanipulator.actions.vcs.RepoWrapper
-import com.github.jensim.megamanipulator.settings.types.CloneType
-import com.github.jensim.megamanipulator.settings.types.CodeHostSettings
+import com.github.jensim.megamanipulator.settings.types.CloneType.HTTPS
+import com.github.jensim.megamanipulator.settings.types.codehost.CodeHostSettingsType.GITLAB
+import com.github.jensim.megamanipulator.settings.types.codehost.GitLabSettings
 import com.github.jensim.megamanipulator.test.EnvHelper
 import com.github.jensim.megamanipulator.test.EnvHelper.EnvProperty.GITLAB_GROUP
 import com.github.jensim.megamanipulator.test.EnvHelper.EnvProperty.GITLAB_PROJECT
@@ -39,9 +40,9 @@ internal class GitLabClientTest {
         }
     }
 
-    private val gitlabSettings = CodeHostSettings.GitLabSettings(
+    private val gitlabSettings = GitLabSettings(
         username = envHelper.resolve(GITLAB_USERNAME)!!,
-        cloneType = CloneType.HTTPS,
+        cloneType = HTTPS,
     )
     private val wiring = object : TestApplicationWiring() {
         override val envHelper: EnvHelper = GitLabClientTest.envHelper
@@ -58,7 +59,7 @@ internal class GitLabClientTest {
                     project = envHelper.resolve(GITLAB_GROUP)!!,
                     repo = envHelper.resolve(GITLAB_PROJECT)!!,
                     codeHostName = EnvUserSettingsSetup.gitlabSettings?.first!!,
-                    searchHostName = EnvUserSettingsSetup.sourcegraphName
+                    searchHostName = EnvUserSettingsSetup.sourcegraphName,
                 ),
                 settings = gitlabSettings
             )
@@ -81,7 +82,7 @@ internal class GitLabClientTest {
             wiring.gitLabClient.validateAccess(
                 searchHost = EnvUserSettingsSetup.sourcegraphName,
                 codeHost = EnvUserSettingsSetup.gitlabSettings?.first!!,
-                settings = gitlabSettings
+                settings = gitlabSettings,
             )
         }
 
@@ -100,8 +101,8 @@ internal class GitLabClientTest {
                 codeHost = EnvUserSettingsSetup.gitlabSettings?.first!!,
                 settings = gitlabSettings,
                 limit = 10,
-                state = CodeHostSettings.CodeHostSettingsType.GITLAB.prStateOpen,
-                role = CodeHostSettings.CodeHostSettingsType.GITLAB.prRoleAuthor,
+                state = GITLAB.prStateOpen,
+                role = GITLAB.prRoleAuthor,
             )
         }
 
@@ -120,8 +121,8 @@ internal class GitLabClientTest {
                 codeHost = EnvUserSettingsSetup.gitlabSettings?.first!!,
                 settings = gitlabSettings,
                 limit = 10,
-                state = CodeHostSettings.CodeHostSettingsType.GITLAB.prStateOpen,
-                role = CodeHostSettings.CodeHostSettingsType.GITLAB.prRoleAssignee
+                state = GITLAB.prStateOpen,
+                role = GITLAB.prRoleAssignee,
             )
         }
 

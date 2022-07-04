@@ -7,7 +7,9 @@ import com.github.jensim.megamanipulator.onboarding.OnboardingOperator
 import com.github.jensim.megamanipulator.project.PrefillString
 import com.github.jensim.megamanipulator.project.PrefillStringSuggestionOperator
 import com.github.jensim.megamanipulator.settings.SettingsFileOperator
-import com.github.jensim.megamanipulator.settings.types.SearchHostSettings
+import com.github.jensim.megamanipulator.settings.types.searchhost.HoundSettings
+import com.github.jensim.megamanipulator.settings.types.searchhost.SearchHostSettings
+import com.github.jensim.megamanipulator.settings.types.searchhost.SearchHostSettingsGroup
 import com.github.jensim.megamanipulator.toolswindow.TabKey
 import com.github.jensim.megamanipulator.toolswindow.ToolWindowTab
 import com.github.jensim.megamanipulator.ui.CloneDialogFactory
@@ -40,7 +42,7 @@ class SearchWindow(
     private val prefillOperator: PrefillStringSuggestionOperator by lazy { project.service() }
     private val cloneDialogFactory: CloneDialogFactory by lazy { project.service() }
 
-    private val EMPTY = "-" to SearchHostSettings.HoundSettings("http://0.0.0.0", null, emptyMap())
+    private val EMPTY = "-" to HoundSettings("http://0.0.0.0", null, emptyMap())
     private val searchHostSelect = ComboBox<Pair<String, SearchHostSettings>>()
     private val searchHostLink = JButton("SearchDocs", AllIcons.Toolwindows.Documentation)
     private val searchButton = JButton("Search", AllIcons.Actions.Search)
@@ -147,8 +149,8 @@ class SearchWindow(
         onboardingOperator.registerTarget(OnboardingId.SEARCH_CLONE_BUTTON, cloneButton)
 
         searchHostSelect.removeAllItems()
-        settingsFileOperator.readSettings()?.searchHostSettings?.forEach {
-            searchHostSelect.addItem(it.toPair())
+        settingsFileOperator.readSettings()?.searchHostSettings?.forEach { (name: String, group: SearchHostSettingsGroup) ->
+            searchHostSelect.addItem(name to group.value)
         }
         if (searchHostSelect.itemCount == 0) {
             searchButton.isEnabled = false

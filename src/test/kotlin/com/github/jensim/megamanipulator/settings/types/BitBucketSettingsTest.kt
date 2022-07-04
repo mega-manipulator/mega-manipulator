@@ -1,5 +1,6 @@
 package com.github.jensim.megamanipulator.settings.types
 
+import com.github.jensim.megamanipulator.settings.types.codehost.BitBucketSettings
 import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.Test
 
@@ -8,7 +9,7 @@ internal class BitBucketSettingsTest {
     @Test
     internal fun name() {
         // given
-        val settings = CodeHostSettings.BitBucketSettings(
+        val settings = BitBucketSettings(
             baseUrl = "https://foo.bar",
             username = "foo",
         )
