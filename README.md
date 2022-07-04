@@ -4,9 +4,6 @@
 [![Version](https://img.shields.io/jetbrains/plugin/v/16396.svg)](https://plugins.jetbrains.com/plugin/16396)
 [![Downloads](https://img.shields.io/jetbrains/plugin/d/16396.svg)](https://plugins.jetbrains.com/plugin/16396)
 
-[![Average time to resolve an issue](http://isitmaintained.com/badge/resolution/mega-manipulator/mega-manipulator.svg)](http://isitmaintained.com/project/mega-manipulator/mega-manipulator "Average time to resolve an issue")
-[![Percentage of issues still open](http://isitmaintained.com/badge/open/mega-manipulator/mega-manipulator.svg)](http://isitmaintained.com/project/mega-manipulator/mega-manipulator "Percentage of issues still open")
-
 <!-- Plugin description -->
 
 <h1><b>Mega Manipulator (m²)</b></h1>
