@@ -293,23 +293,23 @@ class SettingsWindow(project: Project) : ToolWindowTab {
         validateConfigButton.isEnabled = true
         if (settings != null) {
             val arrayOf: Array<ConfigHostHolder> = (
-                settings.searchHostSettings.map {
+                settings.searchHostSettings.map { (name, group) ->
                     ConfigHostHolder(
                         hostType = HostType.SEARCH,
-                        authMethod = it.value.authMethod,
-                        baseUri = it.value.baseUrl,
-                        username = it.value.username,
-                        hostNaming = it.key
+                        authMethod = group.value().authMethod,
+                        baseUri = group.value().baseUrl,
+                        username = group.value().username,
+                        hostNaming = name
                     )
                 } + settings.searchHostSettings.values.flatMap {
-                    it.codeHostSettings.map {
+                    it.value().codeHostSettings.map { (name, group) ->
 
                         ConfigHostHolder(
                             hostType = HostType.CODE,
-                            authMethod = it.value.authMethod,
-                            baseUri = it.value.baseUrl,
-                            username = it.value.username ?: "token",
-                            hostNaming = it.key
+                            authMethod = group.value().authMethod,
+                            baseUri = group.value().baseUrl,
+                            username = group.value().username ?: "token",
+                            hostNaming = name
                         )
                     }
                 }

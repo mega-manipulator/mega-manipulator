@@ -26,7 +26,7 @@ import com.github.jensim.megamanipulator.http.bodyAsText
 import com.github.jensim.megamanipulator.http.setBody
 import com.github.jensim.megamanipulator.project.lazyService
 import com.github.jensim.megamanipulator.settings.SerializationHolder.objectMapper
-import com.github.jensim.megamanipulator.settings.types.CodeHostSettings.GitLabSettings
+import com.github.jensim.megamanipulator.settings.types.codehost.GitLabSettings
 import com.intellij.openapi.project.Project
 import com.intellij.serviceContainer.NonInjectable
 import com.intellij.util.containers.isNullOrEmpty

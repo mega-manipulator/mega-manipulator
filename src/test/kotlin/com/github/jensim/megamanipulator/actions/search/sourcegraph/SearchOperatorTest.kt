@@ -4,10 +4,12 @@ import com.github.jensim.megamanipulator.actions.search.SearchOperator
 import com.github.jensim.megamanipulator.actions.search.SearchResult
 import com.github.jensim.megamanipulator.actions.search.hound.HoundClient
 import com.github.jensim.megamanipulator.settings.SettingsFileOperator
-import com.github.jensim.megamanipulator.settings.types.CodeHostSettings
-import com.github.jensim.megamanipulator.settings.types.ForkSetting
+import com.github.jensim.megamanipulator.settings.types.ForkSetting.PLAIN_BRANCH
 import com.github.jensim.megamanipulator.settings.types.MegaManipulatorSettings
-import com.github.jensim.megamanipulator.settings.types.SearchHostSettings
+import com.github.jensim.megamanipulator.settings.types.codehost.CodeHostSettingsGroup
+import com.github.jensim.megamanipulator.settings.types.codehost.GitHubSettings
+import com.github.jensim.megamanipulator.settings.types.searchhost.SearchHostSettingsGroup
+import com.github.jensim.megamanipulator.settings.types.searchhost.SourceGraphSettings
 import com.github.jensim.megamanipulator.test.EnvHelper
 import com.github.jensim.megamanipulator.test.EnvHelper.EnvProperty.SRC_COM_USERNAME
 import com.intellij.openapi.project.Project
@@ -39,19 +41,21 @@ class SearchOperatorTest {
     private val envHelper = EnvHelper()
 
     private val codeHostName = "github.com"
-    private val sourceGraphSettings = SearchHostSettings.SourceGraphSettings(
+    private val sourceGraphSettings = SourceGraphSettings(
         baseUrl = "https://sourcegraph.com",
         codeHostSettings = mapOf(
-            codeHostName to CodeHostSettings.GitHubSettings(
-                username = envHelper.resolve(SRC_COM_USERNAME)!!,
-                forkSetting = ForkSetting.PLAIN_BRANCH,
+            codeHostName to CodeHostSettingsGroup(
+                gitHub = GitHubSettings(
+                    username = envHelper.resolve(SRC_COM_USERNAME)!!,
+                    forkSetting = PLAIN_BRANCH,
+                )
             )
         )
     )
     private val searchHostName = "sourcegraph.com"
     private val settings = MegaManipulatorSettings(
         searchHostSettings = mapOf(
-            searchHostName to sourceGraphSettings
+            searchHostName to SearchHostSettingsGroup(sourceGraph = sourceGraphSettings)
         )
     )
 

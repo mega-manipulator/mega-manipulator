@@ -13,14 +13,13 @@ import com.github.jensim.megamanipulator.files.FilesOperator
 import com.github.jensim.megamanipulator.project.lazyService
 import com.github.jensim.megamanipulator.settings.SerializationHolder
 import com.github.jensim.megamanipulator.settings.SettingsFileOperator
-import com.github.jensim.megamanipulator.settings.types.CodeHostSettings
 import com.github.jensim.megamanipulator.settings.types.MegaManipulatorSettings
+import com.github.jensim.megamanipulator.settings.types.codehost.CodeHostSettings
 import com.github.jensim.megamanipulator.ui.UiProtector
 import com.intellij.notification.NotificationType.INFORMATION
 import com.intellij.notification.NotificationType.WARNING
 import com.intellij.openapi.project.Project
 import com.intellij.serviceContainer.NonInjectable
-import kotlinx.serialization.encodeToString
 import java.io.File
 
 private typealias Action = Pair<String, ApplyOutput>

@@ -4,7 +4,7 @@ import com.github.jensim.megamanipulator.actions.apply.ApplyOutput
 import com.github.jensim.megamanipulator.actions.search.SearchResult
 import com.github.jensim.megamanipulator.actions.vcs.PrActionStatus
 import com.github.jensim.megamanipulator.actions.vcs.PullRequestWrapper
-import com.github.jensim.megamanipulator.settings.types.CodeHostSettings
+import com.github.jensim.megamanipulator.settings.types.codehost.CodeHostSettings
 import com.github.jensim.megamanipulator.test.wiring.EnvUserSettingsSetup
 import com.github.jensim.megamanipulator.test.wiring.TestApplicationWiring
 import com.intellij.notification.NotificationType

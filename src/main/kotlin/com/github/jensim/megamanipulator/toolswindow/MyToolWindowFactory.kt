@@ -70,13 +70,13 @@ class MyToolWindowFactory : ToolWindowFactory, TabServiceListener {
                     }
             }
         } catch (e: NullPointerException) {
-            logger.error("Was unable to open the mega-manipulator.md welcome screen",e)
+            logger.error("Was unable to open the mega-manipulator.md welcome screen", e)
         }
         try {
             project.getService(TabSelectorService::class.java)
                 ?.connectTabListener(this)
         } catch (e: Exception) {
-            logger.error("Was unable to open the Mega Manipulator tab",e)
+            logger.error("Was unable to open the Mega Manipulator tab", e)
         }
     }
 

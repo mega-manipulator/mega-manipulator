@@ -1,6 +1,6 @@
 package com.github.jensim.megamanipulator.ui
 
-import com.github.jensim.megamanipulator.settings.types.CodeHostSettings
+import com.github.jensim.megamanipulator.settings.types.codehost.CodeHostSettingsType
 import com.intellij.openapi.ui.ComboBox
 import com.intellij.openapi.ui.popup.Balloon
 import com.intellij.openapi.ui.popup.JBPopupFactory
@@ -17,7 +17,7 @@ object PullRequestLoaderDialogGenerator {
     private val roleSelector = ComboBox<String>()
 
     private val limitField = JBTextField("100")
-    private var lastUsedType: CodeHostSettings.CodeHostSettingsType? = null
+    private var lastUsedType: CodeHostSettingsType? = null
     private val btnYes = JButton("Load")
     private val btnNo = JButton("Cancel")
     private const val MAGIC_NULL = "*"
@@ -35,9 +35,8 @@ object PullRequestLoaderDialogGenerator {
         }
     }
 
-    fun generateDialog(focus: JComponent, type: CodeHostSettings.CodeHostSettingsType, onYes: (state: String?, role: String?, limit: Int) -> Unit) {
+    fun generateDialog(focus: JComponent, type: CodeHostSettingsType, onYes: (state: String?, role: String?, limit: Int) -> Unit) {
         try {
-
             if (type != lastUsedType) {
                 stateSelector.removeAllItems()
                 type.prStates.forEach { stateSelector.addItem(it ?: MAGIC_NULL) }

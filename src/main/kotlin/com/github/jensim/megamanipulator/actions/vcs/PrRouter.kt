@@ -7,10 +7,10 @@ import com.github.jensim.megamanipulator.actions.vcs.githubcom.GithubComClient
 import com.github.jensim.megamanipulator.actions.vcs.gitlab.GitLabClient
 import com.github.jensim.megamanipulator.project.lazyService
 import com.github.jensim.megamanipulator.settings.SettingsFileOperator
-import com.github.jensim.megamanipulator.settings.types.CodeHostSettings
-import com.github.jensim.megamanipulator.settings.types.CodeHostSettings.BitBucketSettings
-import com.github.jensim.megamanipulator.settings.types.CodeHostSettings.GitHubSettings
-import com.github.jensim.megamanipulator.settings.types.CodeHostSettings.GitLabSettings
+import com.github.jensim.megamanipulator.settings.types.codehost.BitBucketSettings
+import com.github.jensim.megamanipulator.settings.types.codehost.CodeHostSettings
+import com.github.jensim.megamanipulator.settings.types.codehost.GitHubSettings
+import com.github.jensim.megamanipulator.settings.types.codehost.GitLabSettings
 import com.intellij.notification.NotificationType.WARNING
 import com.intellij.openapi.project.Project
 import com.intellij.serviceContainer.NonInjectable
@@ -52,7 +52,7 @@ class PrRouter @NonInjectable constructor(
 
     private fun resolve(searchHost: String, codeHost: String): CodeHostSettings? {
         val resolved = settingsFileOperator.readSettings()
-            ?.searchHostSettings?.get(searchHost)?.codeHostSettings?.get(codeHost)
+            ?.searchHostSettings?.get(searchHost)?.value()?.codeHostSettings?.get(codeHost)?.value()
         if (resolved == null) {
             val last = lastSettingsWarning.get()
             val current = System.currentTimeMillis()
@@ -173,9 +173,9 @@ class PrRouter @NonInjectable constructor(
 
     suspend fun validateAccess(): Map<String, Deferred<String>> = withContext(coroutineCntx) {
         settingsFileOperator.readSettings()?.searchHostSettings.orEmpty().flatMap { search ->
-            search.value.codeHostSettings.map { code ->
+            search.value.value().codeHostSettings.map { code ->
                 "${search.key}/${code.key}" to async {
-                    when (val settings = code.value) {
+                    when (val settings = code.value.value()) {
                         is BitBucketSettings -> bitbucketServerClient.validateAccess(search.key, code.key, settings)
                         is GitHubSettings -> githubComClient.validateAccess(search.key, code.key, settings)
                         is GitLabSettings -> gitLabClient.validateAccess(search.key, code.key, settings)

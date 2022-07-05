@@ -1,7 +1,5 @@
 package com.github.jensim.megamanipulator.actions.vcs.gitlab
 
-
-
 @Suppress("ConstructorParameterNaming")
 data class GitLabProject(
     val id: Long,

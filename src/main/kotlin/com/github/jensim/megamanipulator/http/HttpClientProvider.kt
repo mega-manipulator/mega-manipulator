@@ -1,6 +1,5 @@
 package com.github.jensim.megamanipulator.http
 
-import com.fasterxml.jackson.jr.ob.JSON
 import com.github.jensim.megamanipulator.actions.NotificationsOperator
 import com.github.jensim.megamanipulator.project.lazyService
 import com.github.jensim.megamanipulator.settings.SerializationHolder
@@ -10,10 +9,10 @@ import com.github.jensim.megamanipulator.settings.types.AuthMethod
 import com.github.jensim.megamanipulator.settings.types.AuthMethod.JUST_TOKEN
 import com.github.jensim.megamanipulator.settings.types.AuthMethod.NONE
 import com.github.jensim.megamanipulator.settings.types.AuthMethod.USERNAME_TOKEN
-import com.github.jensim.megamanipulator.settings.types.CodeHostSettings
 import com.github.jensim.megamanipulator.settings.types.HostWithAuth
 import com.github.jensim.megamanipulator.settings.types.HttpsOverride
-import com.github.jensim.megamanipulator.settings.types.SearchHostSettings
+import com.github.jensim.megamanipulator.settings.types.codehost.CodeHostSettings
+import com.github.jensim.megamanipulator.settings.types.searchhost.SearchHostSettings
 import com.intellij.notification.NotificationType
 import com.intellij.openapi.project.Project
 import com.intellij.serviceContainer.NonInjectable
@@ -69,7 +68,7 @@ class HttpClientProvider @NonInjectable constructor(
             jackson {}
         }
          */
-        install(JsonFeature){
+        install(JsonFeature) {
             this.serializer = JacksonSerializer(jackson = SerializationHolder.objectMapper)
         }
         install(Logging) {
@@ -154,7 +153,6 @@ suspend inline fun <reified T> HttpResponse.unwrap(): T {
         throw RuntimeException("Respone status ${status.value} from ${request.url} with message: $body")
     }
 }
-
 
 suspend fun HttpResponse.bodyAsText() = this.readText()
 inline fun <reified T : Any> HttpRequestBuilder.setBody(t: T) {

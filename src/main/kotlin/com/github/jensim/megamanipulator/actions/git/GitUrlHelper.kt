@@ -4,7 +4,7 @@ import com.github.jensim.megamanipulator.actions.vcs.RepoWrapper
 import com.github.jensim.megamanipulator.project.lazyService
 import com.github.jensim.megamanipulator.settings.passwords.PasswordsOperator
 import com.github.jensim.megamanipulator.settings.types.CloneType
-import com.github.jensim.megamanipulator.settings.types.CodeHostSettings
+import com.github.jensim.megamanipulator.settings.types.codehost.CodeHostSettings
 import com.intellij.openapi.project.Project
 import com.intellij.serviceContainer.NonInjectable
 

@@ -5,10 +5,12 @@ import com.github.jensim.megamanipulator.actions.localrepo.LocalRepoOperator
 import com.github.jensim.megamanipulator.http.HttpClientProvider
 import com.github.jensim.megamanipulator.settings.SettingsFileOperator
 import com.github.jensim.megamanipulator.settings.types.CloneType.HTTPS
-import com.github.jensim.megamanipulator.settings.types.CodeHostSettings.BitBucketSettings
 import com.github.jensim.megamanipulator.settings.types.ForkSetting.PLAIN_BRANCH
 import com.github.jensim.megamanipulator.settings.types.MegaManipulatorSettings
-import com.github.jensim.megamanipulator.settings.types.SearchHostSettings.SourceGraphSettings
+import com.github.jensim.megamanipulator.settings.types.codehost.BitBucketSettings
+import com.github.jensim.megamanipulator.settings.types.codehost.CodeHostSettingsGroup
+import com.github.jensim.megamanipulator.settings.types.searchhost.SearchHostSettingsGroup
+import com.github.jensim.megamanipulator.settings.types.searchhost.SourceGraphSettings
 import com.github.jensim.megamanipulator.test.EnvHelper
 import com.github.jensim.megamanipulator.test.EnvHelper.EnvProperty.BITBUCKET_SERVER_BASEURL
 import com.github.jensim.megamanipulator.test.EnvHelper.EnvProperty.BITBUCKET_SERVER_TOKEN
@@ -49,9 +51,11 @@ internal class BitbucketServerClientTest {
     private val searchHost = "sourcegraph.com"
     private val settings = MegaManipulatorSettings(
         searchHostSettings = mapOf(
-            searchHost to SourceGraphSettings(
-                baseUrl = "https://sourcegraph.com",
-                codeHostSettings = mapOf(codeHost to bitBucketSettings)
+            searchHost to SearchHostSettingsGroup(
+                sourceGraph = SourceGraphSettings(
+                    baseUrl = "https://sourcegraph.com",
+                    codeHostSettings = mapOf(codeHost to CodeHostSettingsGroup(bitBucket = bitBucketSettings))
+                )
             )
         )
     )

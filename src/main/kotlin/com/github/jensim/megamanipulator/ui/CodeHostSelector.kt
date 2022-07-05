@@ -9,7 +9,7 @@ class CodeHostSelector(
     private val settingsFileOperator: SettingsFileOperator,
     private val codeHostLoader: () -> List<CodeHostSelect> = {
         settingsFileOperator.readSettings()?.searchHostSettings?.flatMap { (searchName, searchWrapper) ->
-            searchWrapper.codeHostSettings.keys.map { codeHost ->
+            searchWrapper.value().codeHostSettings.keys.map { codeHost ->
                 CodeHostSelect(searchName, codeHost)
             }
         }.orEmpty()
