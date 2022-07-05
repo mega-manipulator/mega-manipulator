@@ -3,6 +3,8 @@
 # mega-manipulator Changelog
 
 ## [Unreleased]
+
+## [0.0.43]
 ### Changed
 - Breaking change to the json schema, in order to use jackson
 
