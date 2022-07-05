@@ -8,6 +8,7 @@
 
 ### Fix
 - Fix the toolwindow initiation
+- Fix version f-up
 
 ## [0.0.41]
 ### Added
