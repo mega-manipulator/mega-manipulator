@@ -2,27 +2,31 @@
   "$schema": "mega-manipulator-schema.json",
   "searchHostSettings": {
     "private_sourcegraph": {
-      "type": "SOURCEGRAPH",
-      "baseUrl": "https://sourcegraph.example.com",
-      "codeHostSettings": {
-        "github.com": {
-          "type": "GITHUB",
-          "username": "jensim"
-        },
-        "bitbucket": {
-          "type": "BITBUCKET_SERVER",
-          "baseUrl": "https://bitbucket.server.example.com",
-          "username": "jensim"
+      "sourceGraph": {
+        "baseUrl": "https://sourcegraph.example.com",
+        "codeHostSettings": {
+          "github.com": {
+            "gitHub": {
+              "username": "jensim"
+            }
+          },
+          "bitbucket": {
+            "bitBucket": {
+              "baseUrl": "https://bitbucket.server.example.com",
+              "username": "jensim"
+            }
+          }
         }
       }
     },
     "sourcegraph_com": {
-      "type": "SOURCEGRAPH",
-      "baseUrl": "https://sourcegraph.com",
-      "codeHostSettings": {
-        "github.com": {
-          "type": "GITHUB",
-          "username": "jensim"
+      "sourceGraph": {
+        "baseUrl": "https://sourcegraph.com",
+        "codeHostSettings": {
+          "github.com": {
+            "type": "GITHUB",
+            "username": "jensim"
+          }
         }
       }
     }

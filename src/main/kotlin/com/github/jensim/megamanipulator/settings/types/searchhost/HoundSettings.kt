@@ -29,4 +29,3 @@ The names in this map is used to connect with the hostname.
     override val authMethod = NONE
     override fun getAuthHeaderValue(password: String?): String? = null
 }
-

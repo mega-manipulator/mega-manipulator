@@ -38,4 +38,3 @@ data class GitHubSettings(
         else -> null
     }
 }
-

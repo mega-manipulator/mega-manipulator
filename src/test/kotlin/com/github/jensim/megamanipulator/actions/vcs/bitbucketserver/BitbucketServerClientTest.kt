@@ -5,9 +5,9 @@ import com.github.jensim.megamanipulator.actions.localrepo.LocalRepoOperator
 import com.github.jensim.megamanipulator.http.HttpClientProvider
 import com.github.jensim.megamanipulator.settings.SettingsFileOperator
 import com.github.jensim.megamanipulator.settings.types.CloneType.HTTPS
-import com.github.jensim.megamanipulator.settings.types.codehost.BitBucketSettings
 import com.github.jensim.megamanipulator.settings.types.ForkSetting.PLAIN_BRANCH
 import com.github.jensim.megamanipulator.settings.types.MegaManipulatorSettings
+import com.github.jensim.megamanipulator.settings.types.codehost.BitBucketSettings
 import com.github.jensim.megamanipulator.settings.types.codehost.CodeHostSettingsGroup
 import com.github.jensim.megamanipulator.settings.types.searchhost.SearchHostSettingsGroup
 import com.github.jensim.megamanipulator.settings.types.searchhost.SourceGraphSettings
@@ -51,10 +51,12 @@ internal class BitbucketServerClientTest {
     private val searchHost = "sourcegraph.com"
     private val settings = MegaManipulatorSettings(
         searchHostSettings = mapOf(
-            searchHost to SearchHostSettingsGroup(sourceGraph = SourceGraphSettings(
-                baseUrl = "https://sourcegraph.com",
-                codeHostSettings = mapOf(codeHost to CodeHostSettingsGroup(bitBucket = bitBucketSettings))
-            ))
+            searchHost to SearchHostSettingsGroup(
+                sourceGraph = SourceGraphSettings(
+                    baseUrl = "https://sourcegraph.com",
+                    codeHostSettings = mapOf(codeHost to CodeHostSettingsGroup(bitBucket = bitBucketSettings))
+                )
+            )
         )
     )
     private val settingsMock: SettingsFileOperator = mockk {

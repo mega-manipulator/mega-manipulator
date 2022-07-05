@@ -4,10 +4,10 @@ import com.github.jensim.megamanipulator.actions.NotificationsOperator
 import com.github.jensim.megamanipulator.actions.search.SearchResult
 import com.github.jensim.megamanipulator.http.HttpClientProvider
 import com.github.jensim.megamanipulator.settings.SettingsFileOperator
-import com.github.jensim.megamanipulator.settings.types.codehost.GitHubSettings
 import com.github.jensim.megamanipulator.settings.types.ForkSetting.PLAIN_BRANCH
 import com.github.jensim.megamanipulator.settings.types.MegaManipulatorSettings
 import com.github.jensim.megamanipulator.settings.types.codehost.CodeHostSettingsGroup
+import com.github.jensim.megamanipulator.settings.types.codehost.GitHubSettings
 import com.github.jensim.megamanipulator.settings.types.searchhost.SearchHostSettingsGroup
 import com.github.jensim.megamanipulator.settings.types.searchhost.SourceGraphSettings
 import com.github.jensim.megamanipulator.test.EnvHelper
@@ -32,10 +32,12 @@ internal class SourcegraphSearchClientTest {
     private val sourceGraphSettings = SourceGraphSettings(
         baseUrl = "https://sourcegraph.com",
         codeHostSettings = mapOf(
-            codeHostName to CodeHostSettingsGroup(gitHub = GitHubSettings(
-                username = envHelper.resolve(GITHUB_USERNAME)!!,
-                forkSetting = PLAIN_BRANCH,
-            ))
+            codeHostName to CodeHostSettingsGroup(
+                gitHub = GitHubSettings(
+                    username = envHelper.resolve(GITHUB_USERNAME)!!,
+                    forkSetting = PLAIN_BRANCH,
+                )
+            )
         )
     )
     private val searchHostName = "sourcegraph.com"

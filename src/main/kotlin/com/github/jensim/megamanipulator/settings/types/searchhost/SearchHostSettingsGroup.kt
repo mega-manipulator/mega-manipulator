@@ -3,7 +3,7 @@ package com.github.jensim.megamanipulator.settings.types.searchhost
 data class SearchHostSettingsGroup(
     val sourceGraph: SourceGraphSettings? = null,
     val hound: HoundSettings? = null,
-){
+) {
     init {
         val defined = listOfNotNull(sourceGraph, hound)
         if (defined.size != 1) {

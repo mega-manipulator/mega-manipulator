@@ -15,5 +15,3 @@ sealed class SearchHostSettings : HostWithAuth {
     abstract val httpsOverride: HttpsOverride?
     abstract val codeHostSettings: Map<String, CodeHostSettingsGroup>
 }
-
-

@@ -8,11 +8,11 @@ import com.github.jensim.megamanipulator.actions.vcs.GithubComRepoWrapping
 import com.github.jensim.megamanipulator.http.HttpClientProvider
 import com.github.jensim.megamanipulator.settings.SettingsFileOperator
 import com.github.jensim.megamanipulator.settings.types.CloneType.HTTPS
-import com.github.jensim.megamanipulator.settings.types.codehost.CodeHostSettingsType
-import com.github.jensim.megamanipulator.settings.types.codehost.GitHubSettings
 import com.github.jensim.megamanipulator.settings.types.ForkSetting.PLAIN_BRANCH
 import com.github.jensim.megamanipulator.settings.types.MegaManipulatorSettings
 import com.github.jensim.megamanipulator.settings.types.codehost.CodeHostSettingsGroup
+import com.github.jensim.megamanipulator.settings.types.codehost.CodeHostSettingsType
+import com.github.jensim.megamanipulator.settings.types.codehost.GitHubSettings
 import com.github.jensim.megamanipulator.settings.types.searchhost.SearchHostSettingsGroup
 import com.github.jensim.megamanipulator.settings.types.searchhost.SourceGraphSettings
 import com.github.jensim.megamanipulator.test.EnvHelper
@@ -47,10 +47,12 @@ class GithubComClientTest {
     private val searchHost = "sourcegraph.com"
     private val settings = MegaManipulatorSettings(
         searchHostSettings = mapOf(
-            searchHost to SearchHostSettingsGroup(sourceGraph = SourceGraphSettings(
-                baseUrl = "https://sourcegraph.com",
-                codeHostSettings = mapOf(codeHost to CodeHostSettingsGroup(gitHub = githubSettings))
-            ))
+            searchHost to SearchHostSettingsGroup(
+                sourceGraph = SourceGraphSettings(
+                    baseUrl = "https://sourcegraph.com",
+                    codeHostSettings = mapOf(codeHost to CodeHostSettingsGroup(gitHub = githubSettings))
+                )
+            )
         )
     )
     private val settingsMock: SettingsFileOperator = mockk {

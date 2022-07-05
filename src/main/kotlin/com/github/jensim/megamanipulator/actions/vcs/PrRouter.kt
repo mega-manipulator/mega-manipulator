@@ -7,8 +7,8 @@ import com.github.jensim.megamanipulator.actions.vcs.githubcom.GithubComClient
 import com.github.jensim.megamanipulator.actions.vcs.gitlab.GitLabClient
 import com.github.jensim.megamanipulator.project.lazyService
 import com.github.jensim.megamanipulator.settings.SettingsFileOperator
-import com.github.jensim.megamanipulator.settings.types.codehost.CodeHostSettings
 import com.github.jensim.megamanipulator.settings.types.codehost.BitBucketSettings
+import com.github.jensim.megamanipulator.settings.types.codehost.CodeHostSettings
 import com.github.jensim.megamanipulator.settings.types.codehost.GitHubSettings
 import com.github.jensim.megamanipulator.settings.types.codehost.GitLabSettings
 import com.intellij.notification.NotificationType.WARNING

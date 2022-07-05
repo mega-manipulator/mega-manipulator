@@ -4,8 +4,8 @@ import com.github.jensim.megamanipulator.actions.search.hound.HoundClient
 import com.github.jensim.megamanipulator.actions.search.sourcegraph.SourcegraphSearchClient
 import com.github.jensim.megamanipulator.project.lazyService
 import com.github.jensim.megamanipulator.settings.SettingsFileOperator
-import com.github.jensim.megamanipulator.settings.types.searchhost.SearchHostSettings
 import com.github.jensim.megamanipulator.settings.types.searchhost.HoundSettings
+import com.github.jensim.megamanipulator.settings.types.searchhost.SearchHostSettings
 import com.github.jensim.megamanipulator.settings.types.searchhost.SourceGraphSettings
 import com.intellij.openapi.project.Project
 import com.intellij.serviceContainer.NonInjectable

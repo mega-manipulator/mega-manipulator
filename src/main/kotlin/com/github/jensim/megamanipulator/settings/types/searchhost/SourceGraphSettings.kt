@@ -47,4 +47,3 @@ The names in this map is used to connect with the naming used on the search host
         else -> null
     }
 }
-
