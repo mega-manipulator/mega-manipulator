@@ -4,6 +4,7 @@
 
 ## [Unreleased]
 
+## [0.0.41]
 ### Added
 - Verify with 2022.1
 
