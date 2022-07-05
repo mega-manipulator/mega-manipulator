@@ -19,15 +19,18 @@ import com.intellij.ui.content.Content
 import com.intellij.ui.content.ContentFactory
 import com.intellij.ui.content.ContentManagerEvent
 import com.intellij.ui.content.ContentManagerListener
+import org.slf4j.LoggerFactory
 import java.io.File
 
 class MyToolWindowFactory : ToolWindowFactory, TabServiceListener {
 
+    private val logger = LoggerFactory.getLogger(javaClass)
     private val refreshMap = mutableMapOf<String, ToolWindowTab>()
     private val selectMap = mutableMapOf<TabKey, Content>()
     private lateinit var toolWindow: ToolWindow
 
     override fun createToolWindowContent(project: Project, toolWindow: ToolWindow) {
+        logger.debug("CreateToolWindowContent")
         val contentFactory: ContentFactory = ContentFactory.SERVICE.getInstance()
         this.toolWindow = toolWindow
         val tabs = listOf<Pair<TabKey, ToolWindowTab>>(
@@ -67,13 +70,13 @@ class MyToolWindowFactory : ToolWindowFactory, TabServiceListener {
                     }
             }
         } catch (e: NullPointerException) {
-            e.printStackTrace()
+            logger.error("Was unable to open the mega-manipulator.md welcome screen",e)
         }
         try {
             project.getService(TabSelectorService::class.java)
                 ?.connectTabListener(this)
         } catch (e: Exception) {
-            e.printStackTrace()
+            logger.error("Was unable to open the Mega Manipulator tab",e)
         }
     }
 

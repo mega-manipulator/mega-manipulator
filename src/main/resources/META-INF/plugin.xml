@@ -8,8 +8,6 @@
     <depends>com.intellij.modules.platform</depends>
 
     <extensions defaultExtensionNs="com.intellij">
-        <toolWindow id="Mega Manipulator" secondary="true" icon="AllIcons.General.Modified" anchor="bottom"
-                    factoryClass="com.github.jensim.megamanipulator.toolswindow.MyToolWindowFactory"/>
         <moduleType id="mega-manipulator"
                     implementationClass="com.github.jensim.megamanipulator.project.MegaManipulatorModuleType"/>
         <moduleBuilder builderClass="com.github.jensim.megamanipulator.project.MegaManipulatorModuleBuilder"/>
