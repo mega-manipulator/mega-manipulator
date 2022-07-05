@@ -77,8 +77,8 @@ dependencies {
     api("com.expediagroup:graphql-kotlin-client-jackson:$graphql_kotlin_ktor_version")
     api("jakarta.validation:jakarta.validation-api:3.0.2")
 
-    testImplementation("org.skyscreamer:jsonassert:1.5.1")
     testImplementation("com.fasterxml.jackson.module:jackson-module-jsonSchema:2.13.3")
+    testImplementation("org.skyscreamer:jsonassert:1.5.1")
     testImplementation("org.awaitility:awaitility:4.2.0")
     testImplementation("io.mockk:mockk:1.12.1")
     testImplementation("org.hamcrest:hamcrest:2.2")
