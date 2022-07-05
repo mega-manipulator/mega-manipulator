@@ -41,10 +41,10 @@ May be set less strict on searchHost or codeHost level as well
     }
 
     fun resolveHttpsOverride(searchHostName: String): HttpsOverride? = searchHostSettings[searchHostName]
-        ?.value?.httpsOverride ?: defaultHttpsOverride
+        ?.value()?.httpsOverride ?: defaultHttpsOverride
 
     fun resolveHttpsOverride(searchHostName: String, codeHostName: String): HttpsOverride? = searchHostSettings[searchHostName]
-        ?.value?.codeHostSettings?.get(codeHostName)?.value?.httpsOverride ?: defaultHttpsOverride
+        ?.value()?.codeHostSettings?.get(codeHostName)?.value()?.httpsOverride ?: defaultHttpsOverride
 
     fun resolveSettings(repoDir: File): Pair<SearchHostSettings, CodeHostSettings>? {
         val codeHostDir: String = repoDir.parentFile.parentFile.name
@@ -53,8 +53,8 @@ May be set less strict on searchHost or codeHost level as well
     }
 
     fun resolveSettings(searchHostName: String, codeHostName: String): Pair<SearchHostSettings, CodeHostSettings>? {
-        return searchHostSettings[searchHostName]?.value?.let { first ->
-            searchHostSettings[searchHostName]?.value?.codeHostSettings?.get(codeHostName)?.value?.let { second ->
+        return searchHostSettings[searchHostName]?.value()?.let { first ->
+            searchHostSettings[searchHostName]?.value()?.codeHostSettings?.get(codeHostName)?.value()?.let { second ->
                 Pair(first, second)
             }
         }

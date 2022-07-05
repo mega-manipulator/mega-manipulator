@@ -3,6 +3,11 @@
 # mega-manipulator Changelog
 
 ## [Unreleased]
+### Changed
+- Breaking change to the json schema, in order to use jackson
+
+### Fix
+- Fix the toolwindow initiation
 
 ## [0.0.41]
 ### Added

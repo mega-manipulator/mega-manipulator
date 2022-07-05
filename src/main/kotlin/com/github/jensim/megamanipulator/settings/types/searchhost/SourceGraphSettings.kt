@@ -16,7 +16,7 @@ Base url to your SourceGraph installation
 For example https://sourcegraph.com
 """
     )
-    override val baseUrl: String,
+    override val baseUrl: String = "https://sourcegraph.com",
     @JsonPropertyDescription("Override the default strict https validation")
     override val httpsOverride: HttpsOverride? = null,
     @JsonPropertyDescription(

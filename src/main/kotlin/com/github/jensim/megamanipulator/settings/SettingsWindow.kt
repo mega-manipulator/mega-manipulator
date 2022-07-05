@@ -296,19 +296,19 @@ class SettingsWindow(project: Project) : ToolWindowTab {
                 settings.searchHostSettings.map { (name, group) ->
                     ConfigHostHolder(
                         hostType = HostType.SEARCH,
-                        authMethod = group.value.authMethod,
-                        baseUri = group.value.baseUrl,
-                        username = group.value.username,
+                        authMethod = group.value().authMethod,
+                        baseUri = group.value().baseUrl,
+                        username = group.value().username,
                         hostNaming = name
                     )
                 } + settings.searchHostSettings.values.flatMap {
-                    it.value.codeHostSettings.map { (name, group) ->
+                    it.value().codeHostSettings.map { (name, group) ->
 
                         ConfigHostHolder(
                             hostType = HostType.CODE,
-                            authMethod = group.value.authMethod,
-                            baseUri = group.value.baseUrl,
-                            username = group.value.username ?: "token",
+                            authMethod = group.value().authMethod,
+                            baseUri = group.value().baseUrl,
+                            username = group.value().username ?: "token",
                             hostNaming = name
                         )
                     }

@@ -172,44 +172,6 @@
                           "enum" : [ "USERNAME_TOKEN", "JUST_TOKEN", "NONE" ]
                         }
                       }
-                    },
-                    "value" : {
-                      "type" : "object",
-                      "id" : "urn:jsonschema:com:github:jensim:megamanipulator:settings:types:codehost:CodeHostSettings",
-                      "required" : true,
-                      "properties" : {
-                        "httpsOverride" : {
-                          "type" : "string",
-                          "enum" : [ "ALLOW_ANYTHING" ]
-                        },
-                        "authMethod" : {
-                          "type" : "string",
-                          "required" : true,
-                          "enum" : [ "USERNAME_TOKEN", "JUST_TOKEN", "NONE" ]
-                        },
-                        "username" : {
-                          "type" : "string"
-                        },
-                        "forkSetting" : {
-                          "type" : "string",
-                          "required" : true,
-                          "enum" : [ "PLAIN_BRANCH", "LAZY_FORK", "EAGER_FORK" ]
-                        },
-                        "cloneType" : {
-                          "type" : "string",
-                          "required" : true,
-                          "enum" : [ "SSH", "HTTPS" ]
-                        },
-                        "codeHostType" : {
-                          "type" : "string",
-                          "required" : true,
-                          "enum" : [ "BITBUCKET_SERVER", "GITHUB", "GITLAB" ]
-                        },
-                        "baseUrl" : {
-                          "type" : "string",
-                          "required" : true
-                        }
-                      }
                     }
                   }
                 }
@@ -264,42 +226,6 @@
                 "type" : "string",
                 "required" : true,
                 "enum" : [ "USERNAME_TOKEN", "JUST_TOKEN", "NONE" ]
-              }
-            }
-          },
-          "value" : {
-            "type" : "object",
-            "id" : "urn:jsonschema:com:github:jensim:megamanipulator:settings:types:searchhost:SearchHostSettings",
-            "required" : true,
-            "properties" : {
-              "httpsOverride" : {
-                "type" : "string",
-                "enum" : [ "ALLOW_ANYTHING" ]
-              },
-              "codeHostSettings" : {
-                "type" : "object",
-                "required" : true,
-                "additionalProperties" : {
-                  "type" : "object",
-                  "$ref" : "urn:jsonschema:com:github:jensim:megamanipulator:settings:types:codehost:CodeHostSettingsGroup"
-                }
-              },
-              "authMethod" : {
-                "type" : "string",
-                "required" : true,
-                "enum" : [ "USERNAME_TOKEN", "JUST_TOKEN", "NONE" ]
-              },
-              "username" : {
-                "type" : "string",
-                "required" : true
-              },
-              "docLinkHref" : {
-                "type" : "string",
-                "required" : true
-              },
-              "baseUrl" : {
-                "type" : "string",
-                "required" : true
               }
             }
           }

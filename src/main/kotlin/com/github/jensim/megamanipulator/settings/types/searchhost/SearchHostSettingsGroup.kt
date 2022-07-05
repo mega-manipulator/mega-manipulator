@@ -11,6 +11,5 @@ data class SearchHostSettingsGroup(
         }
     }
 
-    val value: SearchHostSettings
-        get() = (sourceGraph ?: hound)!!
+    fun value(): SearchHostSettings = (sourceGraph ?: hound)!!
 }

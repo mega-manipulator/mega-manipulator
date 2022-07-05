@@ -91,7 +91,9 @@ class SettingsFileOperatorTest {
 
     @Test
     fun `test default settings`() {
-        val defaultFileContent = File("src/main/resources/base-files/soft/mega-manipulator.json").readText()
+        val file = File("src/main/resources/base-files/soft/mega-manipulator.json")
+        // file.writeText(SerializationHolder.readable.writeValueAsString(testData))
+        val defaultFileContent = file.readText()
 
         val fromFile = SerializationHolder.readable.readValue(defaultFileContent, MegaManipulatorSettings::class.java)
         assertEquals(fromFile, testData)
@@ -100,7 +102,6 @@ class SettingsFileOperatorTest {
     @Test
     fun `generate json schema and compare to file`() {
         val baseFile = File("src/main/resources/base-files/hard/mega-manipulator-schema.json")
-        val fileSystemSchema: String = baseFile.readText().trim()
         val schemaGen = JsonSchemaGenerator(SerializationHolder.readable)
         val schema: JsonSchema = schemaGen.generateSchema(MegaManipulatorSettings::class.java)
         val jsonSchemaString = SerializationHolder.readable.writeValueAsString(schema)

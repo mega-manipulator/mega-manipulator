@@ -12,6 +12,5 @@ data class CodeHostSettingsGroup(
         }
     }
 
-    val value: CodeHostSettings
-        get() = (gitHub ?: gitLab ?: bitBucket)!!
+    fun value(): CodeHostSettings = (gitHub ?: gitLab ?: bitBucket)!!
 }

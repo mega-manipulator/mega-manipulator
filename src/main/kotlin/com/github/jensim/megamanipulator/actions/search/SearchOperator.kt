@@ -31,7 +31,7 @@ class SearchOperator @NonInjectable constructor(
     private val houndClient: HoundClient by lazyService(project, houndClient)
 
     suspend fun search(searchHostName: String, search: String): Set<SearchResult> {
-        val settings: SearchHostSettings = settingsFileOperator.readSettings()?.searchHostSettings?.get(searchHostName)?.value
+        val settings: SearchHostSettings = settingsFileOperator.readSettings()?.searchHostSettings?.get(searchHostName)?.value()
             ?: throw NullPointerException("No settings for search host named $searchHostName")
         return when (settings) {
             is SourceGraphSettings -> sourcegraphSearchClient.search(searchHostName, settings, search)
@@ -42,7 +42,7 @@ class SearchOperator @NonInjectable constructor(
     suspend fun validateTokens(): Map<String, Deferred<String>> =
         settingsFileOperator.readSettings()?.searchHostSettings.orEmpty().map { (name, settingsGroup) ->
             name to GlobalScope.async {
-                when (settingsGroup.value) {
+                when (settingsGroup.value()) {
                     is SourceGraphSettings -> sourcegraphSearchClient.validateToken(name, settingsGroup.sourceGraph!!)
                     is HoundSettings -> houndClient.validate(name, settingsGroup.hound!!)
                 }

@@ -21,6 +21,7 @@ import com.github.jensim.megamanipulator.test.EnvHelper.EnvProperty.GITHUB_USERN
 import com.github.jensim.megamanipulator.test.Login
 import com.github.jensim.megamanipulator.test.Password
 import com.github.jensim.megamanipulator.test.TestPasswordOperator
+import com.github.jensim.megamanipulator.test.Username
 import org.slf4j.LoggerFactory
 
 object EnvUserSettingsSetup {
@@ -31,13 +32,22 @@ object EnvUserSettingsSetup {
     val helper = EnvHelper()
 
     val passwordsOperator: PasswordsOperator by lazy {
-        val githubLogin: Pair<Login, Password> = (githubSettings.second.value.username!! to githubSettings.second.value.baseUrl) to helper.resolve(EnvHelper.EnvProperty.GITHUB_TOKEN)!!
         val sourceGraphLogin: Pair<Login, Password> = sourceGraphSettings.username to sourceGraphSettings.baseUrl to helper.resolve(EnvHelper.EnvProperty.SRC_COM_ACCESS_TOKEN)!!
-        val gitLabLogin: Pair<Login, Password> = gitlabSettings?.second?.value!!.let { it.username!! to it.baseUrl } to helper.resolve(EnvHelper.EnvProperty.GITLAB_TOKEN)!!
-        val bitBucketLogin: Pair<Login, Password> = bitbucketSettings?.second?.value!!.let { it.username!! to it.baseUrl to helper.resolve(EnvHelper.EnvProperty.BITBUCKET_SERVER_TOKEN)!! }
+        val githubLogin: Pair<Login, Password>? = toLoginAndPass(githubSettings, EnvHelper.EnvProperty.GITHUB_TOKEN)
+        val gitLabLogin: Pair<Login, Password>? = toLoginAndPass(gitlabSettings, EnvHelper.EnvProperty.GITLAB_TOKEN)
+        val bitBucketLogin: Pair<Login, Password>? = toLoginAndPass(bitbucketSettings, EnvHelper.EnvProperty.BITBUCKET_SERVER_TOKEN)
         TestPasswordOperator(
             listOfNotNull(sourceGraphLogin, githubLogin, gitLabLogin, bitBucketLogin).toMap()
         )
+    }
+
+    private fun toLoginAndPass(settingsNode: Pair<String, CodeHostSettingsGroup>?, passwordProperty: EnvHelper.EnvProperty): Pair<Login, Password>? {
+        return settingsNode?.second?.value()?.username?.let { username: Username ->
+            val baseUrl = settingsNode.second.value().baseUrl
+            helper.resolve(passwordProperty)?.let { password: Password ->
+                username to baseUrl to password
+            }
+        }
     }
 
     val searchResults: List<SearchResult> by lazy {

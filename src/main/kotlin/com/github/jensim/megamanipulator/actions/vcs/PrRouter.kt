@@ -52,7 +52,7 @@ class PrRouter @NonInjectable constructor(
 
     private fun resolve(searchHost: String, codeHost: String): CodeHostSettings? {
         val resolved = settingsFileOperator.readSettings()
-            ?.searchHostSettings?.get(searchHost)?.value?.codeHostSettings?.get(codeHost)?.value
+            ?.searchHostSettings?.get(searchHost)?.value()?.codeHostSettings?.get(codeHost)?.value()
         if (resolved == null) {
             val last = lastSettingsWarning.get()
             val current = System.currentTimeMillis()
@@ -173,9 +173,9 @@ class PrRouter @NonInjectable constructor(
 
     suspend fun validateAccess(): Map<String, Deferred<String>> = withContext(coroutineCntx) {
         settingsFileOperator.readSettings()?.searchHostSettings.orEmpty().flatMap { search ->
-            search.value.value.codeHostSettings.map { code ->
+            search.value.value().codeHostSettings.map { code ->
                 "${search.key}/${code.key}" to async {
-                    when (val settings = code.value.value) {
+                    when (val settings = code.value.value()) {
                         is BitBucketSettings -> bitbucketServerClient.validateAccess(search.key, code.key, settings)
                         is GitHubSettings -> githubComClient.validateAccess(search.key, code.key, settings)
                         is GitLabSettings -> gitLabClient.validateAccess(search.key, code.key, settings)

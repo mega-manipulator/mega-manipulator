@@ -150,7 +150,7 @@ class SearchWindow(
 
         searchHostSelect.removeAllItems()
         settingsFileOperator.readSettings()?.searchHostSettings?.forEach { (name: String, group: SearchHostSettingsGroup) ->
-            searchHostSelect.addItem(name to group.value)
+            searchHostSelect.addItem(name to group.value())
         }
         if (searchHostSelect.itemCount == 0) {
             searchButton.isEnabled = false

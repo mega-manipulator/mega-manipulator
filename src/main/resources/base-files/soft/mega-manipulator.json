@@ -1,31 +1,37 @@
 {
-  "$schema": "mega-manipulator-schema.json",
-  "searchHostSettings": {
-    "private_sourcegraph": {
-      "sourceGraph": {
-        "baseUrl": "https://sourcegraph.example.com",
-        "codeHostSettings": {
-          "github.com": {
-            "gitHub": {
-              "username": "jensim"
-            }
-          },
-          "bitbucket": {
-            "bitBucket": {
-              "baseUrl": "https://bitbucket.server.example.com",
-              "username": "jensim"
+  "$schema" : "mega-manipulator-schema.json",
+  "concurrency" : 5,
+  "searchHostSettings" : {
+    "sourcegraph_com" : {
+      "sourceGraph" : {
+        "codeHostSettings" : {
+          "github.com" : {
+            "gitHub" : {
+              "username" : "jensim"
             }
           }
         }
       }
     },
-    "sourcegraph_com": {
-      "sourceGraph": {
-        "baseUrl": "https://sourcegraph.com",
-        "codeHostSettings": {
-          "github.com": {
-            "type": "GITHUB",
-            "username": "jensim"
+    "private_sourcegraph" : {
+      "sourceGraph" : {
+        "baseUrl" : "https://sourcegraph.example.com",
+        "codeHostSettings" : {
+          "github.com" : {
+            "gitHub" : {
+              "username" : "jensim"
+            }
+          },
+          "bitbucket" : {
+            "bitBucket" : {
+              "baseUrl" : "https://bitbucket.server.example.com",
+              "username" : "jensim"
+            }
+          },
+          "gitlab.com" : {
+            "gitLab" : {
+              "username" : "jensim"
+            }
           }
         }
       }
