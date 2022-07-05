@@ -1,18 +1,11 @@
 package com.github.jensim.megamanipulator.settings
 
 import com.fasterxml.jackson.databind.JsonNode
+import com.fasterxml.jackson.module.jsonSchema.JsonSchema
+import com.fasterxml.jackson.module.jsonSchema.JsonSchemaGenerator
 import com.github.jensim.megamanipulator.settings.types.CodeHostSettings
 import com.github.jensim.megamanipulator.settings.types.MegaManipulatorSettings
 import com.github.jensim.megamanipulator.settings.types.SearchHostSettings
-import com.github.victools.jsonschema.generator.OptionPreset
-import com.github.victools.jsonschema.generator.SchemaGenerator
-import com.github.victools.jsonschema.generator.SchemaGeneratorConfig
-import com.github.victools.jsonschema.generator.SchemaGeneratorConfigBuilder
-import com.github.victools.jsonschema.generator.SchemaVersion
-import com.github.victools.jsonschema.module.jackson.JacksonModule
-import com.github.victools.jsonschema.module.jakarta.validation.JakartaValidationModule
-import com.github.victools.jsonschema.module.jakarta.validation.JakartaValidationOption.INCLUDE_PATTERN_EXPRESSIONS
-import com.github.victools.jsonschema.module.jakarta.validation.JakartaValidationOption.NOT_NULLABLE_FIELD_IS_REQUIRED
 import org.hamcrest.MatcherAssert.assertThat
 import org.hamcrest.Matchers.equalTo
 import org.junit.jupiter.api.Assertions
@@ -90,13 +83,9 @@ class SettingsFileOperatorTest {
     fun `generate json schema and compare to file`() {
         val baseFile = File("src/main/resources/base-files/hard/mega-manipulator-schema.json")
         val fileSystemSchema: String = baseFile.readText().trim()
-        val config: SchemaGeneratorConfig = SchemaGeneratorConfigBuilder(SchemaVersion.DRAFT_2019_09, OptionPreset.PLAIN_JSON)
-            .with(JacksonModule())
-            .with(JakartaValidationModule(INCLUDE_PATTERN_EXPRESSIONS, NOT_NULLABLE_FIELD_IS_REQUIRED))
-            .build()
-        val generator = SchemaGenerator(config)
-        val jsonSchema: JsonNode = generator.generateSchema(MegaManipulatorSettings::class.java)
-        val jsonSchemaString = SerializationHolder.readable.writeValueAsString(jsonSchema)
+        val schemaGen = JsonSchemaGenerator(SerializationHolder.readable)
+        val schema: JsonSchema = schemaGen.generateSchema(MegaManipulatorSettings::class.java)
+        val jsonSchemaString = SerializationHolder.readable.writeValueAsString(schema)
 
         // baseFile.writeText(generatedSchema)
         assertThat(fileSystemSchema, equalTo(jsonSchemaString))
