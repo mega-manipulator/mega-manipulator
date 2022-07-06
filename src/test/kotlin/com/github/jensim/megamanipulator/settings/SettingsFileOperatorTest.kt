@@ -2,6 +2,7 @@ package com.github.jensim.megamanipulator.settings
 
 import com.fasterxml.jackson.module.jsonSchema.JsonSchema
 import com.fasterxml.jackson.module.jsonSchema.JsonSchemaGenerator
+import com.github.jensim.megamanipulator.settings.types.HttpsOverride.ALLOW_ANYTHING
 import com.github.jensim.megamanipulator.settings.types.MegaManipulatorSettings
 import com.github.jensim.megamanipulator.settings.types.codehost.BitBucketSettings
 import com.github.jensim.megamanipulator.settings.types.codehost.CodeHostSettingsGroup
@@ -34,7 +35,8 @@ class SettingsFileOperatorTest {
             ),
             "private_sourcegraph" to SearchHostSettingsGroup(
                 sourceGraph = SourceGraphSettings(
-                    baseUrl = "https://sourcegraph.example.com",
+                    baseUrl = "http://localhost:7080",
+                    httpsOverride = ALLOW_ANYTHING,
                     codeHostSettings = mapOf(
                         "github.com" to CodeHostSettingsGroup(
                             gitHub = GitHubSettings(
@@ -43,7 +45,8 @@ class SettingsFileOperatorTest {
                         ),
                         "bitbucket" to CodeHostSettingsGroup(
                             bitBucket = BitBucketSettings(
-                                "https://bitbucket.server.example.com",
+                                baseUrl = "http://localhost:7081",
+                                httpsOverride = ALLOW_ANYTHING,
                                 username = "jensim",
                             )
                         ),

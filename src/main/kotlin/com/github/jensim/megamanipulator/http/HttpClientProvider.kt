@@ -63,11 +63,6 @@ class HttpClientProvider @NonInjectable constructor(
     }
 
     private fun bakeClient(installs: HttpClientConfig<CIOEngineConfig>.() -> Unit): HttpClient = HttpClient(CIO) {
-        /*
-        install(ContentNegotiation) {
-            jackson {}
-        }
-         */
         install(JsonFeature) {
             this.serializer = JacksonSerializer(jackson = SerializationHolder.objectMapper)
         }

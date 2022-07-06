@@ -100,17 +100,22 @@ class SourcegraphSearchClient @NonInjectable constructor(
     }
 
     suspend fun validateToken(searchHostName: String, settings: SourceGraphSettings): String = try {
-        val response: GraphQLClientResponse<Result> = rawSearch(searchHostName, settings, "count:1 timeout:10s f")
+        val searchString = "count:1 timeout:10s f"
+        val response: GraphQLClientResponse<Result> = rawSearch(searchHostName, settings, searchString)
         when {
             !response.errors.isNullOrEmpty() -> {
                 log.warn("Errors from SourceGraph GraphQL response {}", response.errors)
-                "ERRORS"
+                "ERRORS: ${response.errors}"
             }
             response.data?.search?.results?.results?.size == 1 -> "OK"
-            else -> "NO SEARCH RESULT"
+            response.data?.search?.results?.results?.size == 0 -> "Zero hits for '$searchString', if you have no code indexed that could be the problem"
+            (response.data?.search?.results?.results?.size ?: 0) > 1 -> "Too many results returned in test query"
+            else -> {
+                "Something failed, check log"
+            }
         }
     } catch (e: Exception) {
         log.error("Failed request", e)
-        "Client error"
+        "Client error: ${e.message}"
     }
 }

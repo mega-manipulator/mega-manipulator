@@ -1,6 +1,6 @@
 {
   "$schema" : "mega-manipulator-schema.json",
-  "concurrency" : 5,
+  "concurrency" : 1,
   "searchHostSettings" : {
     "sourcegraph_com" : {
       "sourceGraph" : {
@@ -15,7 +15,8 @@
     },
     "private_sourcegraph" : {
       "sourceGraph" : {
-        "baseUrl" : "https://sourcegraph.example.com",
+        "baseUrl" : "http://localhost:7080",
+        "httpsOverride": "ALLOW_ANYTHING",
         "codeHostSettings" : {
           "github.com" : {
             "gitHub" : {

@@ -37,6 +37,7 @@ import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.withContext
+import org.slf4j.LoggerFactory
 import java.util.concurrent.atomic.AtomicInteger
 import java.util.regex.Pattern
 import kotlin.coroutines.CoroutineContext
@@ -47,6 +48,8 @@ class GithubComClient @NonInjectable constructor(
     httpClientProvider: HttpClientProvider?,
     localRepoOperator: LocalRepoOperator?,
 ) {
+
+    private val logger = LoggerFactory.getLogger(javaClass)
 
     constructor(project: Project) : this(project, null, null)
 
@@ -273,16 +276,19 @@ class GithubComClient @NonInjectable constructor(
 
     suspend fun validateAccess(searchHost: String, codeHost: String, settings: GitHubSettings): String = try {
         val client: HttpClient = httpClientProvider.getClient(searchHost, codeHost, settings)
-        val response: HttpResponse = client.get("${settings.baseUrl}/repos/jensim/mega-manipulator")
+        val response: HttpResponse = client.get("${settings.baseUrl}/repos/mega-manipulator/mega-manipulator")
         val scopeString = response.headers["X-OAuth-Scopes"]
         val scopes = scopeString.orEmpty().split(Pattern.compile(",")).map { it.trim() }
+        println(scopes)
         val expected = listOf("repo", "delete_repo")
         val missing = expected - scopes
-        val missingText = if (missing.isNotEmpty()) ", missing scopes: $missing" else ""
-        "${response.status.value}:${response.status.description}$missingText"
+        val missingText = if (missing.isNotEmpty()) "\nmissing scopes: $missing" else ""
+        val rateLimit = response.headers["X-RateLimit-Limit"].orEmpty()
+        val rateLimitText: String = if (rateLimit == "") "\nNo rate limit header in response, bad token?" else if ((rateLimit.toIntOrNull() ?: 0) < 100) "\nRateLimit is low, token is probably not setup correctly" else ""
+        "${response.status.value}:${response.status.description}$missingText$rateLimitText"
     } catch (e: Exception) {
-        e.printStackTrace()
-        "Client error"
+        logger.error("Failed request", e)
+        "Client error: ${e.message}"
     }
 
     suspend fun approvePr(pullRequest: GithubComPullRequestWrapper, settings: GitHubSettings): PrActionStatus {
