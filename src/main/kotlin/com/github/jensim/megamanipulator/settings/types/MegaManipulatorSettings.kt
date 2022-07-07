@@ -26,6 +26,8 @@ May be set less strict on searchHost or codeHost level as well
 """
     )
     val defaultHttpsOverride: HttpsOverride? = null,
+    @JsonPropertyDescription("Override the default http logging level")
+    val httpLoggingLevel: HttpLoggingLevel = HttpLoggingLevel.ALL,
     @JsonPropertyDescription("Search host definitions")
     val searchHostSettings: Map<String, SearchHostSettingsGroup>,
     @JsonProperty(value = "\$schema")

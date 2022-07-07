@@ -3,14 +3,12 @@ package com.github.jensim.megamanipulator.settings.types.codehost
 import com.fasterxml.jackson.annotation.JsonPropertyDescription
 import com.github.jensim.megamanipulator.settings.types.AuthMethod
 import com.github.jensim.megamanipulator.settings.types.AuthMethod.JUST_TOKEN
-import com.github.jensim.megamanipulator.settings.types.AuthMethod.USERNAME_TOKEN
 import com.github.jensim.megamanipulator.settings.types.CloneType
 import com.github.jensim.megamanipulator.settings.types.CloneType.SSH
 import com.github.jensim.megamanipulator.settings.types.ForkSetting
 import com.github.jensim.megamanipulator.settings.types.ForkSetting.LAZY_FORK
 import com.github.jensim.megamanipulator.settings.types.HttpsOverride
 import com.github.jensim.megamanipulator.settings.types.codehost.CodeHostSettingsType.GITHUB
-import com.github.jensim.megamanipulator.settings.types.encodeToBase64String
 import com.github.jensim.megamanipulator.settings.types.forkSettingDescription
 
 data class GitHubSettings(

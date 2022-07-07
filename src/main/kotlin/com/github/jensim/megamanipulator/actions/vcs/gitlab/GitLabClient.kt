@@ -119,7 +119,7 @@ class GitLabClient @NonInjectable constructor(
         val client: HttpClient = httpClientProvider.getClient(
             searchHostName = pullRequest.searchHostName(),
             codeHostName = pullRequest.codeHostName(),
-            settings = settings
+            codeHostSettings = settings
         )
         val iid = pullRequest.mergeRequestIid
         val response =
@@ -228,7 +228,7 @@ class GitLabClient @NonInjectable constructor(
         val client: HttpClient = httpClientProvider.getClient(
             searchHostName = pullRequest.searchHostName(),
             codeHostName = pullRequest.codeHostName(),
-            settings = settings
+            codeHostSettings = settings
         )
         val response = client.delete<HttpResponse>("${settings.baseUrl}/api/v4/projects/${pullRequest.targetProjectId}/merge_requests/${pullRequest.mergeRequestIid}")
 
