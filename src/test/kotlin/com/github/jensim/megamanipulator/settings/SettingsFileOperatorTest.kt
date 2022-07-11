@@ -10,6 +10,9 @@ import com.github.jensim.megamanipulator.settings.types.codehost.GitHubSettings
 import com.github.jensim.megamanipulator.settings.types.codehost.GitLabSettings
 import com.github.jensim.megamanipulator.settings.types.searchhost.SearchHostSettingsGroup
 import com.github.jensim.megamanipulator.settings.types.searchhost.SourceGraphSettings
+import org.hamcrest.MatcherAssert.assertThat
+import org.hamcrest.Matchers.containsString
+import org.hamcrest.Matchers.not
 import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
@@ -110,6 +113,8 @@ class SettingsFileOperatorTest {
         val jsonSchemaString = SerializationHolder.readable.writeValueAsString(schema)
 
         // baseFile.writeText(jsonSchemaString)
-        JSONAssert.assertEquals(baseFile.readText(), jsonSchemaString, STRICT)
+        val baseFileText = baseFile.readText()
+        JSONAssert.assertEquals(baseFileText, jsonSchemaString, STRICT)
+        assertThat(baseFileText, not(containsString(": \"\\")))
     }
 }

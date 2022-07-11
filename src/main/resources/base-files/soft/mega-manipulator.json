@@ -1,5 +1,5 @@
 {
-  "$schema" : "mega-manipulator-schema.json",
+  "$schema" : "../hard/mega-manipulator-schema.json",
   "concurrency" : 1,
   "searchHostSettings" : {
     "sourcegraph_com" : {
@@ -25,7 +25,8 @@
           },
           "bitbucket" : {
             "bitBucket" : {
-              "baseUrl" : "https://bitbucket.server.example.com",
+              "baseUrl" : "http://localhost:7081",
+              "httpsOverride": "ALLOW_ANYTHING",
               "username" : "jensim"
             }
           },

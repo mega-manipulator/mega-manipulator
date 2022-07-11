@@ -5,12 +5,18 @@
     "concurrency" : {
       "type" : "integer",
       "required" : true,
-      "description" : "\nWhen applying changes using the scripted method,\nnumber of parallel executing changes\n"
+      "description" : "When applying changes using the scripted method,\nnumber of parallel executing changes"
     },
     "defaultHttpsOverride" : {
       "type" : "string",
-      "description" : "\nOverride the default strict https validation\nMay be set less strict on searchHost or codeHost level as well\n",
-      "enum" : [ "ALLOW_ANYTHING" ]
+      "description" : "Override the default strict https validation\nMay be set less strict on searchHost or codeHost level as well",
+      "enum" : [ "ALLOW_SELF_SIGNED", "ALLOW_ANYTHING" ]
+    },
+    "httpLoggingLevel" : {
+      "type" : "string",
+      "required" : true,
+      "description" : "Override the default http logging level",
+      "enum" : [ "ALL", "HEADERS", "BODY", "INFO", "NONE" ]
     },
     "searchHostSettings" : {
       "type" : "object",
@@ -27,17 +33,17 @@
               "baseUrl" : {
                 "type" : "string",
                 "required" : true,
-                "description" : "\nBase url to your SourceGraph installation\nFor example https://sourcegraph.com\n"
+                "description" : "Base url to your SourceGraph installation\nFor example https://sourcegraph.com"
               },
               "httpsOverride" : {
                 "type" : "string",
                 "description" : "Override the default strict https validation",
-                "enum" : [ "ALLOW_ANYTHING" ]
+                "enum" : [ "ALLOW_SELF_SIGNED", "ALLOW_ANYTHING" ]
               },
               "codeHostSettings" : {
                 "type" : "object",
                 "required" : true,
-                "description" : "\nCode hosts.\nThe names in this map is used to connect with the naming used on the search host.\n!!! IT'S THEREFORE REALLY IMPORTANT !!!\n",
+                "description" : "Code hosts.\nThe names in this map is used to connect with the naming used on the search host.\n!!! IT'S THEREFORE REALLY IMPORTANT !!!",
                 "additionalProperties" : {
                   "type" : "object",
                   "id" : "urn:jsonschema:com:github:jensim:megamanipulator:settings:types:codehost:CodeHostSettingsGroup",
@@ -49,7 +55,7 @@
                         "httpsOverride" : {
                           "type" : "string",
                           "description" : "Override the default, strict https validation",
-                          "enum" : [ "ALLOW_ANYTHING" ]
+                          "enum" : [ "ALLOW_SELF_SIGNED", "ALLOW_ANYTHING" ]
                         },
                         "username" : {
                           "type" : "string",
@@ -59,7 +65,7 @@
                         "forkSetting" : {
                           "type" : "string",
                           "required" : true,
-                          "description" : "\nFork settings is used to decide when to fork a repo:\n* PLAIN_BRANCH: Will require write access to the repo\n* LAZY_FORK: When not permitted to push into origin, attempt fork strategy\n* EAGER_FORK: Fork before push, for every repo\n",
+                          "description" : "Fork settings is used to decide when to fork a repo:\n* PLAIN_BRANCH: Will require write access to the repo\n* LAZY_FORK: When not permitted to push into origin, attempt fork strategy\n* EAGER_FORK: Fork before push, for every repo",
                           "enum" : [ "PLAIN_BRANCH", "LAZY_FORK", "EAGER_FORK" ]
                         },
                         "cloneType" : {
@@ -91,7 +97,7 @@
                         "httpsOverride" : {
                           "type" : "string",
                           "description" : "Override the default, strict https validation",
-                          "enum" : [ "ALLOW_ANYTHING" ]
+                          "enum" : [ "ALLOW_SELF_SIGNED", "ALLOW_ANYTHING" ]
                         },
                         "username" : {
                           "type" : "string",
@@ -101,7 +107,7 @@
                         "forkSetting" : {
                           "type" : "string",
                           "required" : true,
-                          "description" : "\nFork settings is used to decide when to fork a repo:\n* PLAIN_BRANCH: Will require write access to the repo\n* LAZY_FORK: When not permitted to push into origin, attempt fork strategy\n* EAGER_FORK: Fork before push, for every repo\n",
+                          "description" : "Fork settings is used to decide when to fork a repo:\n* PLAIN_BRANCH: Will require write access to the repo\n* LAZY_FORK: When not permitted to push into origin, attempt fork strategy\n* EAGER_FORK: Fork before push, for every repo",
                           "enum" : [ "PLAIN_BRANCH", "LAZY_FORK", "EAGER_FORK" ]
                         },
                         "cloneType" : {
@@ -142,7 +148,7 @@
                         "httpsOverride" : {
                           "type" : "string",
                           "description" : "Override the default, strict https validation",
-                          "enum" : [ "ALLOW_ANYTHING" ]
+                          "enum" : [ "ALLOW_SELF_SIGNED", "ALLOW_ANYTHING" ]
                         },
                         "username" : {
                           "type" : "string",
@@ -152,7 +158,7 @@
                         "forkSetting" : {
                           "type" : "string",
                           "required" : true,
-                          "description" : "\nFork settings is used to decide when to fork a repo:\n* PLAIN_BRANCH: Will require write access to the repo\n* LAZY_FORK: When not permitted to push into origin, attempt fork strategy\n* EAGER_FORK: Fork before push, for every repo\n",
+                          "description" : "Fork settings is used to decide when to fork a repo:\n* PLAIN_BRANCH: Will require write access to the repo\n* LAZY_FORK: When not permitted to push into origin, attempt fork strategy\n* EAGER_FORK: Fork before push, for every repo",
                           "enum" : [ "PLAIN_BRANCH", "LAZY_FORK", "EAGER_FORK" ]
                         },
                         "cloneType" : {
@@ -184,10 +190,6 @@
               "username" : {
                 "type" : "string",
                 "required" : true
-              },
-              "docLinkHref" : {
-                "type" : "string",
-                "required" : true
               }
             }
           },
@@ -198,25 +200,21 @@
               "baseUrl" : {
                 "type" : "string",
                 "required" : true,
-                "description" : "\nBase url to your SourceGraph installation\nFor example https://sourcegraph.com\n"
+                "description" : "Base url to your SourceGraph installation\nFor example https://sourcegraph.com"
               },
               "httpsOverride" : {
                 "type" : "string",
                 "description" : "Override the default strict https validation",
-                "enum" : [ "ALLOW_ANYTHING" ]
+                "enum" : [ "ALLOW_SELF_SIGNED", "ALLOW_ANYTHING" ]
               },
               "codeHostSettings" : {
                 "type" : "object",
                 "required" : true,
-                "description" : "\nCode hosts.\nThe names in this map is used to connect with the hostname.\n!!! IT'S THEREFORE REALLY IMPORTANT !!!",
+                "description" : "Code hosts.\nThe names in this map is used to connect with the hostname.\n!!! IT'S THEREFORE REALLY IMPORTANT !!!",
                 "additionalProperties" : {
                   "type" : "object",
                   "$ref" : "urn:jsonschema:com:github:jensim:megamanipulator:settings:types:codehost:CodeHostSettingsGroup"
                 }
-              },
-              "docLinkHref" : {
-                "type" : "string",
-                "required" : true
               },
               "username" : {
                 "type" : "string",
