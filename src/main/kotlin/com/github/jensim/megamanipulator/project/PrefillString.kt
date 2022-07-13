@@ -16,12 +16,12 @@ enum class PrefillString(val fallback: PrefillString? = null, val default: Strin
     PR_TITLE(
         fallback = COMMIT_MESSAGE,
         default = "Bulk changes",
-        maxHistory = 5,
+        maxHistory = 10,
     ),
     PR_BODY(
         fallback = COMMIT_MESSAGE,
         default = "Bulk changes",
-        maxHistory = 5,
+        maxHistory = 10,
     ),
     SEARCH(
         maxHistory = 25,

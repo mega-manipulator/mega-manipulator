@@ -5,8 +5,6 @@ import com.github.jensim.megamanipulator.actions.vcs.PrRouter
 import com.github.jensim.megamanipulator.files.FilesOperator
 import com.github.jensim.megamanipulator.onboarding.OnboardingId
 import com.github.jensim.megamanipulator.onboarding.OnboardingOperator
-import com.github.jensim.megamanipulator.project.ApplicationLevelPropertiesOperator
-import com.github.jensim.megamanipulator.project.ApplicationLevelPropertiesOperator.ApplicationLevelFlag.GLOBAL_ONBOARDING
 import com.github.jensim.megamanipulator.project.MegaManipulatorSettingsState
 import com.github.jensim.megamanipulator.project.ProjectOperator
 import com.github.jensim.megamanipulator.settings.passwords.PasswordsOperator
@@ -220,7 +218,6 @@ class SettingsWindow(project: Project) : ToolWindowTab {
                 focusComponent = resetOnboardingButton
             ) {
                 megaManipulatorSettingsState.resetOnBoarding()
-                ApplicationLevelPropertiesOperator.unset(GLOBAL_ONBOARDING)
                 refresh()
             }
         }

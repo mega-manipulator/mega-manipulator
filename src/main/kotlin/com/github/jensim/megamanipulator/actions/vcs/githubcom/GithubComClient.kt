@@ -282,9 +282,9 @@ class GithubComClient @NonInjectable constructor(
         println(scopes)
         val expected = listOf("repo", "delete_repo")
         val missing = expected - scopes
-        val missingText = if (missing.isNotEmpty()) "\nmissing scopes: $missing" else ""
+        val missingText = if (missing.isNotEmpty()) "<br>\nmissing scopes: $missing" else ""
         val rateLimit = response.headers["X-RateLimit-Limit"].orEmpty()
-        val rateLimitText: String = if (rateLimit == "") "\nNo rate limit header in response, bad token?" else if ((rateLimit.toIntOrNull() ?: 0) < 100) "\nRateLimit is low, token is probably not setup correctly" else ""
+        val rateLimitText: String = if (rateLimit == "") "<br>\nNo rate limit header in response, bad token?" else if ((rateLimit.toIntOrNull() ?: 0) < 100) "\nRateLimit is low, token is probably not setup correctly" else ""
         "${response.status.value}:${response.status.description}$missingText$rateLimitText"
     } catch (e: Exception) {
         logger.error("Failed request", e)

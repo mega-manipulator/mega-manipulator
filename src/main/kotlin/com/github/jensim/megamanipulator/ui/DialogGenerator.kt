@@ -2,6 +2,7 @@ package com.github.jensim.megamanipulator.ui
 
 import com.github.jensim.megamanipulator.project.PrefillString
 import com.github.jensim.megamanipulator.project.PrefillStringSuggestionOperator
+import com.intellij.ide.DataManager
 import com.intellij.openapi.components.service
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.ui.popup.Balloon
@@ -13,6 +14,9 @@ import com.intellij.ui.components.JBTextField
 import com.intellij.ui.layout.panel
 import com.intellij.util.ui.JBFont
 import com.intellij.util.ui.UIUtil
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.launch
+import org.jetbrains.concurrency.await
 import java.awt.event.KeyEvent
 import java.awt.event.KeyListener
 import javax.swing.JButton
@@ -26,7 +30,7 @@ class DialogGenerator(private val project: Project) {
     fun showConfirm(
         title: String,
         message: String,
-        focusComponent: JComponent,
+        focusComponent: JComponent?,
         position: Balloon.Position = Balloon.Position.above,
         convertMultiLine: Boolean = true,
         yesText: String = "Yes",
@@ -59,8 +63,16 @@ class DialogGenerator(private val project: Project) {
                 popup.hide()
                 onNo()
             }
-            val location = popupFactory.guessBestPopupLocation(focusComponent)
-            popup.show(location, position)
+            if (focusComponent != null) {
+                val location = popupFactory.guessBestPopupLocation(focusComponent)
+                popup.show(location, position)
+            } else {
+                GlobalScope.launch {
+                    val dataContext = DataManager.getInstance().dataContextFromFocusAsync.await()
+                    val location = popupFactory.guessBestPopupLocation(dataContext)
+                    popup.show(location, position)
+                }
+            }
             yesBtn.requestFocus(true)
         } catch (e: Exception) {
             e.printStackTrace()
