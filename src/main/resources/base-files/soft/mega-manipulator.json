@@ -1,5 +1,5 @@
 {
-  "$schema" : "../hard/mega-manipulator-schema.json",
+  "$schema" : "mega-manipulator-schema.json",
   "concurrency" : 1,
   "searchHostSettings" : {
     "sourcegraph_com" : {
