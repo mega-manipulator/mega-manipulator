@@ -10,8 +10,10 @@ import com.github.jensim.megamanipulator.settings.types.AuthMethod.JUST_TOKEN
 import com.github.jensim.megamanipulator.settings.types.AuthMethod.NONE
 import com.github.jensim.megamanipulator.settings.types.AuthMethod.USERNAME_TOKEN
 import com.github.jensim.megamanipulator.settings.types.HostWithAuth
+import com.github.jensim.megamanipulator.settings.types.HttpLoggingLevel
 import com.github.jensim.megamanipulator.settings.types.HttpsOverride
 import com.github.jensim.megamanipulator.settings.types.codehost.CodeHostSettings
+import com.github.jensim.megamanipulator.settings.types.orDefault
 import com.github.jensim.megamanipulator.settings.types.searchhost.SearchHostSettings
 import com.intellij.notification.NotificationType
 import com.intellij.openapi.project.Project
@@ -19,15 +21,14 @@ import com.intellij.serviceContainer.NonInjectable
 import io.ktor.client.HttpClient
 import io.ktor.client.HttpClientConfig
 import io.ktor.client.call.receive
-import io.ktor.client.engine.cio.CIO
-import io.ktor.client.engine.cio.CIOEngineConfig
+import io.ktor.client.engine.apache.Apache
+import io.ktor.client.engine.apache.ApacheEngineConfig
 import io.ktor.client.features.HttpTimeout
 import io.ktor.client.features.defaultRequest
 import io.ktor.client.features.json.JacksonSerializer
 import io.ktor.client.features.json.JsonFeature
 import io.ktor.client.features.logging.DEFAULT
 import io.ktor.client.features.logging.LogLevel
-import io.ktor.client.features.logging.Logger
 import io.ktor.client.features.logging.Logging
 import io.ktor.client.request.HttpRequestBuilder
 import io.ktor.client.request.header
@@ -36,9 +37,12 @@ import io.ktor.client.statement.HttpResponse
 import io.ktor.client.statement.readText
 import io.ktor.client.statement.request
 import io.ktor.http.isSuccess
+import org.apache.http.conn.ssl.NoopHostnameVerifier
+import org.apache.http.conn.ssl.TrustSelfSignedStrategy
 import org.apache.http.conn.ssl.TrustStrategy
+import org.apache.http.ssl.SSLContextBuilder
 import java.security.cert.X509Certificate
-import javax.net.ssl.X509TrustManager
+import javax.net.ssl.SSLContext
 
 class HttpClientProvider @NonInjectable constructor(
     project: Project,
@@ -47,6 +51,15 @@ class HttpClientProvider @NonInjectable constructor(
     notificationsOperator: NotificationsOperator?,
 ) {
 
+    private val noopHostnameVerifier = NoopHostnameVerifier()
+    private val trustAnySslContext: SSLContext = SSLContextBuilder
+        .create()
+        .loadTrustMaterial(TrustAnythingStrategy())
+        .build()
+    private val selfSignedSslContext: SSLContext = SSLContextBuilder
+        .create()
+        .loadTrustMaterial(TrustSelfSignedStrategy())
+        .build()
     private val notificationsOperator: NotificationsOperator by lazyService(project, notificationsOperator)
     private val settingsFileOperator: SettingsFileOperator by lazyService(project, settingsFileOperator)
     private val passwordsOperator: PasswordsOperator by lazyService(project, passwordsOperator)
@@ -62,45 +75,68 @@ class HttpClientProvider @NonInjectable constructor(
         override fun isTrusted(p0: Array<out X509Certificate>?, p1: String?): Boolean = true
     }
 
-    private fun bakeClient(installs: HttpClientConfig<CIOEngineConfig>.() -> Unit): HttpClient = HttpClient(CIO) {
-        /*
-        install(ContentNegotiation) {
-            jackson {}
-        }
-         */
+    private fun bakeClient(
+        httpLoggingLevel: HttpLoggingLevel,
+        installs: HttpClientConfig<ApacheEngineConfig>.() -> Unit,
+    ): HttpClient = HttpClient(Apache) {
         install(JsonFeature) {
             this.serializer = JacksonSerializer(jackson = SerializationHolder.objectMapper)
         }
         install(Logging) {
-            logger = Logger.DEFAULT
-            level = LogLevel.ALL
+            logger = io.ktor.client.features.logging.Logger.DEFAULT
+            level = httpLoggingLevel.toKtorLevel()
         }
         installs()
     }
 
-    private fun HttpClientConfig<CIOEngineConfig>.trustAnyClient() {
+    private fun HttpLoggingLevel.toKtorLevel() = when (this) {
+        HttpLoggingLevel.ALL -> LogLevel.ALL
+        HttpLoggingLevel.HEADERS -> LogLevel.HEADERS
+        HttpLoggingLevel.BODY -> LogLevel.BODY
+        HttpLoggingLevel.INFO -> LogLevel.INFO
+        HttpLoggingLevel.NONE -> LogLevel.NONE
+    }
+
+    private fun HttpClientConfig<ApacheEngineConfig>.trustAny() {
         engine {
-            https {
-                trustManager = object : X509TrustManager {
-                    override fun checkClientTrusted(p0: Array<out X509Certificate>?, p1: String?) = Unit
-                    override fun checkServerTrusted(p0: Array<out X509Certificate>?, p1: String?) = Unit
-                    override fun getAcceptedIssuers(): Array<X509Certificate>? = null
-                }
+            customizeClient {
+                setSSLContext(trustAnySslContext)
+                setSSLHostnameVerifier(noopHostnameVerifier)
             }
         }
     }
 
-    fun getClient(searchHostName: String, settings: SearchHostSettings): HttpClient {
-        val httpsOverride: HttpsOverride? = settingsFileOperator.readSettings()?.resolveHttpsOverride(searchHostName)
-        val password: String = getPassword(settings.authMethod, settings.baseUrl, settings.username)
-        return getClient(httpsOverride, settings, password)
+    private fun HttpClientConfig<ApacheEngineConfig>.trustSelfSigned() {
+        engine {
+            customizeClient {
+                setSSLContext(selfSignedSslContext)
+                setSSLHostnameVerifier(noopHostnameVerifier)
+            }
+        }
     }
 
-    fun getClient(searchHostName: String, codeHostName: String, settings: CodeHostSettings): HttpClient {
+    fun getClient(
+        searchHostName: String,
+        searchHostSettings: SearchHostSettings,
+    ): HttpClient {
+        val settings = settingsFileOperator.readSettings()
+        val httpLoggingLevel = settings?.httpLoggingLevel.orDefault()
+        val httpsOverride: HttpsOverride? = settings?.resolveHttpsOverride(searchHostName)
+        val password: String = getPassword(searchHostSettings.authMethod, searchHostSettings.baseUrl, searchHostSettings.username)
+        return getClient(httpLoggingLevel, httpsOverride, searchHostSettings, password)
+    }
+
+    fun getClient(
+        searchHostName: String,
+        codeHostName: String,
+        codeHostSettings: CodeHostSettings,
+    ): HttpClient {
+        val settings = settingsFileOperator.readSettings()
+        val httpLoggingLevel = settings?.httpLoggingLevel.orDefault()
         val httpsOverride: HttpsOverride? =
-            settingsFileOperator.readSettings()?.resolveHttpsOverride(searchHostName, codeHostName)
-        val password: String = getPassword(settings.authMethod, settings.baseUrl, settings.username ?: "token")
-        return getClient(httpsOverride, settings, password)
+            settings?.resolveHttpsOverride(searchHostName, codeHostName)
+        val password: String = getPassword(codeHostSettings.authMethod, codeHostSettings.baseUrl, codeHostSettings.username ?: "token")
+        return getClient(httpLoggingLevel, httpsOverride, codeHostSettings, password)
     }
 
     private fun getPassword(authMethod: AuthMethod, baseUrl: String, username: String?) = try {
@@ -118,15 +154,21 @@ class HttpClientProvider @NonInjectable constructor(
         throw e
     }
 
-    fun getClient(httpsOverride: HttpsOverride?, auth: HostWithAuth, password: String): HttpClient {
-        return bakeClient {
+    fun getClient(
+        httpLoggingLevel: HttpLoggingLevel,
+        httpsOverride: HttpsOverride?,
+        auth: HostWithAuth,
+        password: String,
+    ): HttpClient {
+        return bakeClient(httpLoggingLevel) {
             install(HttpTimeout) {
                 connectTimeoutMillis = 1_000
                 requestTimeoutMillis = 60_000
                 socketTimeoutMillis = 60_000
             }
             when (httpsOverride) {
-                HttpsOverride.ALLOW_ANYTHING -> trustAnyClient()
+                HttpsOverride.ALLOW_ANYTHING -> trustAny()
+                HttpsOverride.ALLOW_SELF_SIGNED -> trustSelfSigned()
                 else -> {}
             }
             auth.getAuthHeaderValue(password)?.let {
@@ -135,7 +177,7 @@ class HttpClientProvider @NonInjectable constructor(
         }
     }
 
-    private fun HttpClientConfig<CIOEngineConfig>.installBasicAuth(headerValue: String) {
+    private fun HttpClientConfig<ApacheEngineConfig>.installBasicAuth(headerValue: String) {
         defaultRequest {
             headers {
                 header("Authorization", headerValue)
@@ -150,7 +192,7 @@ suspend inline fun <reified T> HttpResponse.unwrap(): T {
         return receive()
     } else {
         val body: String = bodyAsText()
-        throw RuntimeException("Respone status ${status.value} from ${request.url} with message: $body")
+        throw RuntimeException("Response status ${status.value} from ${request.url} with message: $body")
     }
 }
 

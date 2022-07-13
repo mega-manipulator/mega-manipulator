@@ -1,5 +1,6 @@
 package com.github.jensim.megamanipulator.settings.types.searchhost
 
+import com.fasterxml.jackson.annotation.JsonIgnore
 import com.fasterxml.jackson.annotation.JsonPropertyDescription
 import com.github.jensim.megamanipulator.settings.types.AuthMethod
 import com.github.jensim.megamanipulator.settings.types.AuthMethod.JUST_TOKEN
@@ -11,26 +12,23 @@ import com.github.jensim.megamanipulator.settings.types.validateBaseUrl
 
 data class SourceGraphSettings(
     @JsonPropertyDescription(
-        """
-Base url to your SourceGraph installation
-For example https://sourcegraph.com
-"""
+        """Base url to your SourceGraph installation
+For example https://sourcegraph.com"""
     )
     override val baseUrl: String = "https://sourcegraph.com",
     @JsonPropertyDescription("Override the default strict https validation")
     override val httpsOverride: HttpsOverride? = null,
     @JsonPropertyDescription(
-        """
-Code hosts.
+        """Code hosts.
 The names in this map is used to connect with the naming used on the search host.
-!!! IT'S THEREFORE REALLY IMPORTANT !!!
-"""
+!!! IT'S THEREFORE REALLY IMPORTANT !!!"""
     )
     override val codeHostSettings: Map<String, CodeHostSettingsGroup>,
     override val authMethod: AuthMethod = JUST_TOKEN,
 ) : SearchHostSettings() {
 
     override val username: String = "token"
+    @JsonIgnore
     override val docLinkHref: String = "https://mega-manipulator.github.io/docs/Search%20hosts/sourcegraph"
 
     init {

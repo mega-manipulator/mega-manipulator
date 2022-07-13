@@ -2,6 +2,7 @@ package com.github.jensim.megamanipulator.settings
 
 import com.fasterxml.jackson.module.jsonSchema.JsonSchema
 import com.fasterxml.jackson.module.jsonSchema.JsonSchemaGenerator
+import com.github.jensim.megamanipulator.settings.types.HttpsOverride.ALLOW_ANYTHING
 import com.github.jensim.megamanipulator.settings.types.MegaManipulatorSettings
 import com.github.jensim.megamanipulator.settings.types.codehost.BitBucketSettings
 import com.github.jensim.megamanipulator.settings.types.codehost.CodeHostSettingsGroup
@@ -9,6 +10,9 @@ import com.github.jensim.megamanipulator.settings.types.codehost.GitHubSettings
 import com.github.jensim.megamanipulator.settings.types.codehost.GitLabSettings
 import com.github.jensim.megamanipulator.settings.types.searchhost.SearchHostSettingsGroup
 import com.github.jensim.megamanipulator.settings.types.searchhost.SourceGraphSettings
+import org.hamcrest.MatcherAssert.assertThat
+import org.hamcrest.Matchers.containsString
+import org.hamcrest.Matchers.not
 import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
@@ -34,7 +38,8 @@ class SettingsFileOperatorTest {
             ),
             "private_sourcegraph" to SearchHostSettingsGroup(
                 sourceGraph = SourceGraphSettings(
-                    baseUrl = "https://sourcegraph.example.com",
+                    baseUrl = "http://localhost:7080",
+                    httpsOverride = ALLOW_ANYTHING,
                     codeHostSettings = mapOf(
                         "github.com" to CodeHostSettingsGroup(
                             gitHub = GitHubSettings(
@@ -43,7 +48,8 @@ class SettingsFileOperatorTest {
                         ),
                         "bitbucket" to CodeHostSettingsGroup(
                             bitBucket = BitBucketSettings(
-                                "https://bitbucket.server.example.com",
+                                baseUrl = "http://localhost:7081",
+                                httpsOverride = ALLOW_ANYTHING,
                                 username = "jensim",
                             )
                         ),
@@ -107,6 +113,8 @@ class SettingsFileOperatorTest {
         val jsonSchemaString = SerializationHolder.readable.writeValueAsString(schema)
 
         // baseFile.writeText(jsonSchemaString)
-        JSONAssert.assertEquals(baseFile.readText(), jsonSchemaString, STRICT)
+        val baseFileText = baseFile.readText()
+        JSONAssert.assertEquals(baseFileText, jsonSchemaString, STRICT)
+        assertThat(baseFileText, not(containsString(": \"\\")))
     }
 }

@@ -62,7 +62,7 @@ dependencies {
     api("org.jetbrains.kotlinx:kotlinx-coroutines-jdk8:$kotlinCoroutinesVersion")
 
     implementation("io.ktor:ktor-client:$ktor_version")
-    implementation("io.ktor:ktor-client-cio:$ktor_version")
+    implementation("io.ktor:ktor-client-apache:$ktor_version")
     implementation("io.ktor:ktor-client-jackson:$ktor_version")
     implementation("io.ktor:ktor-client-logging:$ktor_version")
     api("com.fasterxml.jackson.core:jackson-databind:2.13.3") // To override vulnerable version from ktor

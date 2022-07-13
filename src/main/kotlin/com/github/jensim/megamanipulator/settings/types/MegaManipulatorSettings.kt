@@ -13,19 +13,17 @@ data class MegaManipulatorSettings(
     @Min(1)
     @Max(100)
     @JsonPropertyDescription(
-        """
-When applying changes using the scripted method,
-number of parallel executing changes
-"""
+        """When applying changes using the scripted method,
+number of parallel executing changes"""
     )
-    val concurrency: Int = 5,
+    val concurrency: Int = 1,
     @JsonPropertyDescription(
-        """
-Override the default strict https validation
-May be set less strict on searchHost or codeHost level as well
-"""
+        """Override the default strict https validation
+May be set less strict on searchHost or codeHost level as well"""
     )
     val defaultHttpsOverride: HttpsOverride? = null,
+    @JsonPropertyDescription("Override the default http logging level")
+    val httpLoggingLevel: HttpLoggingLevel = HttpLoggingLevel.ALL,
     @JsonPropertyDescription("Search host definitions")
     val searchHostSettings: Map<String, SearchHostSettingsGroup>,
     @JsonProperty(value = "\$schema")

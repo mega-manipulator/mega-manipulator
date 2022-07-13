@@ -3,6 +3,15 @@
 # mega-manipulator Changelog
 
 ## [Unreleased]
+### Added
+- Setting to override http logging
+
+### Improvement
+- Improve the informativeness of error outputs from the token validations
+
+### Fix
+- Relaxed SSL settings got borked with CIO engine, revert to Apache engine
+- [Validate PATH on startup](https://github.com/mega-manipulator/mega-manipulator/issues/136)
 
 ## [0.0.43]
 ### Changed
