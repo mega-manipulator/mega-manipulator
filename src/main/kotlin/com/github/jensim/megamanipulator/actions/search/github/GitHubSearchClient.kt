@@ -2,7 +2,6 @@ package com.github.jensim.megamanipulator.actions.search.github
 
 import com.github.jensim.megamanipulator.actions.NotificationsOperator
 import com.github.jensim.megamanipulator.actions.search.SearchResult
-import com.github.jensim.megamanipulator.actions.vcs.githubcom.GithubComRepo
 import com.github.jensim.megamanipulator.http.HttpClientProvider
 import com.github.jensim.megamanipulator.http.unwrap
 import com.github.jensim.megamanipulator.project.lazyService
@@ -43,10 +42,10 @@ class GitHubSearchClient @NonInjectable constructor(
             val params = validateSearchString(search) ?: return emptySet()
             val client = httpClientProvider.getClient(searchHostName, settings)
             return when (params["type"]) {
-                "code" -> search(params["q"]!!, searchHostName, settings, client, "code") { it: GitHubCode -> it.repository }
-                "commits" -> search(params["q"]!!, searchHostName, settings, client, "commits") { it: GitHubCommit -> it.repository }
+                "code" -> search(params["q"]!!, settings, client, "code") { it: GitHubCode -> SearchResult(it.repository.owner.login, it.repository.name, "github.com", searchHostName) }
+                "commits" -> search(params["q"]!!, settings, client, "commits") { it: GitHubCommit -> SearchResult(it.repository.owner.login, it.repository.name, "github.com", searchHostName) }
                 null, "",
-                "repositories" -> search(params["q"]!!, searchHostName, settings, client, "repositories") { it: GithubComRepo -> it }
+                "repositories" -> search(params["q"]!!,  settings, client, "repositories") { it: GithubRepo -> SearchResult(it.owner.login, it.name, "github.com", searchHostName) }
                 else -> {
                     notificationsOperator.show("Failed GitHub search", "Unknown search type", WARNING)
                     emptySet()
@@ -60,13 +59,12 @@ class GitHubSearchClient @NonInjectable constructor(
         }
     }
 
-    private suspend fun <T> search(
+    private suspend inline fun <reified T> search(
         q: String,
-        searchHostName: String,
         settings: GithubSearchSettings,
         client: HttpClient,
         type: String,
-        repoExtract: (T) -> GithubComRepo
+        transformResult: (T) -> SearchResult
     ): Set<SearchResult> {
         val accumulator = HashSet<SearchResult>()
         var page = 1
@@ -75,10 +73,7 @@ class GitHubSearchClient @NonInjectable constructor(
                 accept(ContentType.Application.Json)
             }
             val searchResponse = response.unwrap<GithubSearchResponse<T>>()
-            val items = searchResponse.items.orEmpty().map {
-                val repo = repoExtract(it)
-                SearchResult(repo.owner.login, repo.name, "github.com", searchHostName)
-            }.toSet()
+            val items = searchResponse.items.orEmpty().map { transformResult(it) }.toSet()
             accumulator.addAll(items)
             if (!searchResponse.incomplete_results) break
             page += 1
