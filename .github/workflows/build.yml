@@ -158,6 +158,9 @@ jobs:
     name: Build
     needs: test
     runs-on: ubuntu-latest
+    concurrency:
+      group: ${{ github.head_ref || github.run_id }}
+      cancel-in-progress: ${{ github.head_ref == 'main' }}
     outputs:
       version: ${{ steps.properties.outputs.version }}
       changelog: ${{ steps.properties.outputs.changelog }}

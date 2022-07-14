@@ -4,6 +4,7 @@
 
 ## [Unreleased]
 ### Added
+- GitHub search
 - Setting to override http logging
 
 ### Improvement
