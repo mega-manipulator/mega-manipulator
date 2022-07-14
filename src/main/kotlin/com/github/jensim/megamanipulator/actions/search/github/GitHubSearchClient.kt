@@ -44,6 +44,7 @@ class GitHubSearchClient @NonInjectable constructor(
             val client = httpClientProvider.getClient(searchHostName, settings)
             return when (params["type"]) {
                 "code" -> search(params["q"]!!, searchHostName, settings, client, "code") { it: GitHubCode -> it.repository }
+                "commits" -> search(params["q"]!!, searchHostName, settings, client, "commits") { it: GitHubCommit -> it.repository }
                 null, "",
                 "repositories" -> search(params["q"]!!, searchHostName, settings, client, "repositories") { it: GithubComRepo -> it }
                 else -> {
