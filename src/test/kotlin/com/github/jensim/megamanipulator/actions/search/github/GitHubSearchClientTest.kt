@@ -13,10 +13,12 @@ import org.hamcrest.MatcherAssert.assertThat
 import org.hamcrest.Matchers.equalTo
 import org.junit.jupiter.api.Test
 
-internal class GitHubSearchClientTest {
+class GitHubSearchClientTest {
 
     private val clientProviderMockk: HttpClientProvider = mockk()
-    private val notificationsOperatorMockk: NotificationsOperator = mockk()
+    private val notificationsOperatorMockk: NotificationsOperator = mockk {
+        every { show(any(), any(), any()) } returns Unit
+    }
     private val client = GitHubSearchClient(mockk(), clientProviderMockk, notificationsOperatorMockk)
 
     @Test
