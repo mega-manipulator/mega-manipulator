@@ -3,6 +3,8 @@
 # mega-manipulator Changelog
 
 ## [Unreleased]
+
+## [0.0.44]
 ### Added
 - GitHub search
 - Setting to override http logging
