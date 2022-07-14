@@ -45,7 +45,7 @@ class GitHubSearchClient @NonInjectable constructor(
                 "code" -> search(params["q"]!!, settings, client, "code") { it: GitHubCode -> SearchResult(it.repository.owner.login, it.repository.name, "github.com", searchHostName) }
                 "commits" -> search(params["q"]!!, settings, client, "commits") { it: GitHubCommit -> SearchResult(it.repository.owner.login, it.repository.name, "github.com", searchHostName) }
                 null, "",
-                "repositories" -> search(params["q"]!!,  settings, client, "repositories") { it: GithubRepo -> SearchResult(it.owner.login, it.name, "github.com", searchHostName) }
+                "repositories" -> search(params["q"]!!, settings, client, "repositories") { it: GithubRepo -> SearchResult(it.owner.login, it.name, "github.com", searchHostName) }
                 else -> {
                     notificationsOperator.show("Failed GitHub search", "Unknown search type", WARNING)
                     emptySet()
