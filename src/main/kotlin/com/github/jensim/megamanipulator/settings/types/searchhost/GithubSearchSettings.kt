@@ -17,7 +17,7 @@ data class GithubSearchSettings(
     @JsonPropertyDescription("It's strongly recommended to use SSH clone type.")
     val cloneType: CloneType = SSH,
 ) : SearchHostSettings() {
-    override val docLinkHref: String = "https://mega-manipulator.github.io"
+    override val docLinkHref: String = "https://mega-manipulator.github.io/docs/Search%20hosts/github"
     override val authMethod = JUST_TOKEN
     override val baseUrl: String = "https://api.github.com"
     override val httpsOverride = null
