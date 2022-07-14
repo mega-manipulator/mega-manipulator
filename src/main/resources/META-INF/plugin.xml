@@ -23,6 +23,7 @@
         <projectService serviceImplementation="com.github.jensim.megamanipulator.actions.vcs.gitlab.GitLabClient"/>
         <projectService serviceImplementation="com.github.jensim.megamanipulator.actions.vcs.githubcom.GithubComClient"/>
         <projectService serviceImplementation="com.github.jensim.megamanipulator.actions.vcs.bitbucketserver.BitbucketServerClient"/>
+        <projectService serviceImplementation="com.github.jensim.megamanipulator.actions.search.github.GitHubSearchClient"/>
         <projectService serviceImplementation="com.github.jensim.megamanipulator.actions.search.hound.HoundClient"/>
         <projectService serviceImplementation="com.github.jensim.megamanipulator.actions.git.GitUrlHelper"/>
         <projectService serviceImplementation="com.github.jensim.megamanipulator.actions.git.clone.CloneOperator"/>

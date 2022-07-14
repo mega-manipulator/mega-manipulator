@@ -226,6 +226,49 @@
                 "enum" : [ "USERNAME_TOKEN", "JUST_TOKEN", "NONE" ]
               }
             }
+          },
+          "gitHub" : {
+            "type" : "object",
+            "id" : "urn:jsonschema:com:github:jensim:megamanipulator:settings:types:searchhost:GithubSearchSettings",
+            "properties" : {
+              "username" : {
+                "type" : "string",
+                "required" : true
+              },
+              "forkSetting" : {
+                "type" : "string",
+                "required" : true,
+                "description" : "Fork settings is used to decide when to fork a repo:\n* PLAIN_BRANCH: Will require write access to the repo\n* LAZY_FORK: When not permitted to push into origin, attempt fork strategy\n* EAGER_FORK: Fork before push, for every repo",
+                "enum" : [ "PLAIN_BRANCH", "LAZY_FORK", "EAGER_FORK" ]
+              },
+              "cloneType" : {
+                "type" : "string",
+                "required" : true,
+                "description" : "It's strongly recommended to use SSH clone type.",
+                "enum" : [ "SSH", "HTTPS" ]
+              },
+              "docLinkHref" : {
+                "type" : "string",
+                "required" : true
+              },
+              "authMethod" : {
+                "type" : "string",
+                "required" : true,
+                "enum" : [ "USERNAME_TOKEN", "JUST_TOKEN", "NONE" ]
+              },
+              "baseUrl" : {
+                "type" : "string",
+                "required" : true
+              },
+              "codeHostSettings" : {
+                "type" : "object",
+                "required" : true,
+                "additionalProperties" : {
+                  "type" : "object",
+                  "$ref" : "urn:jsonschema:com:github:jensim:megamanipulator:settings:types:codehost:CodeHostSettingsGroup"
+                }
+              }
+            }
           }
         }
       }

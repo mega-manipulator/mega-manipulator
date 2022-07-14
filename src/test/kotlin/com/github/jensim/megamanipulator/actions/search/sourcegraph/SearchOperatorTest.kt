@@ -2,6 +2,7 @@ package com.github.jensim.megamanipulator.actions.search.sourcegraph
 
 import com.github.jensim.megamanipulator.actions.search.SearchOperator
 import com.github.jensim.megamanipulator.actions.search.SearchResult
+import com.github.jensim.megamanipulator.actions.search.github.GitHubSearchClient
 import com.github.jensim.megamanipulator.actions.search.hound.HoundClient
 import com.github.jensim.megamanipulator.settings.SettingsFileOperator
 import com.github.jensim.megamanipulator.settings.types.ForkSetting.PLAIN_BRANCH
@@ -31,11 +32,13 @@ class SearchOperatorTest {
     private val settingsFileOperatorMock: SettingsFileOperator = mockk()
     private val sourcegraphSearchClientMock: SourcegraphSearchClient = mockk()
     private val houndClientMock: HoundClient = mockk()
+    private val gitHubSearchClientMock: GitHubSearchClient = mockk()
     private val searchOperator = SearchOperator(
         project = project,
         settingsFileOperator = settingsFileOperatorMock,
         sourcegraphSearchClient = sourcegraphSearchClientMock,
         houndClient = houndClientMock,
+        gitHubSearchClient = gitHubSearchClientMock,
     )
 
     private val envHelper = EnvHelper()
