@@ -3,7 +3,7 @@ package com.github.jensim.megamanipulator.ui
 import com.intellij.openapi.ui.popup.Balloon
 import com.intellij.openapi.ui.popup.JBPopupFactory
 import com.intellij.ui.components.JBCheckBox
-import com.intellij.ui.layout.panel
+import com.intellij.ui.dsl.builder.panel
 import javax.swing.JButton
 import javax.swing.JComponent
 
@@ -17,11 +17,11 @@ class PushDialogFactory {
             label("Push commits to upstream")
         }
         row {
-            component(forceBox)
+            cell(forceBox)
         }
         row {
-            component(okBtn)
-            component(cancelBtn)
+            cell(okBtn)
+            cell(cancelBtn)
         }
     }
 

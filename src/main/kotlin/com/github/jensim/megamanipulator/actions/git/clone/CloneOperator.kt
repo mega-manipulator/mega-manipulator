@@ -88,7 +88,7 @@ class CloneOperator @NonInjectable constructor(
     }
 
     private fun reportState(state: List<Pair<Any, List<Action>?>>) {
-        val (badState: List<Pair<Any, List<Action>?>>, goodState: List<Pair<Any, List<Action>?>>) = state.partition { it.second.orEmpty().lastOrNull()?.second?.exitCode != 0 }
+        val badState: List<Pair<Any, List<Action>?>> = state.filter { it.second.orEmpty().lastOrNull()?.second?.exitCode != 0 }
         if (badState.isEmpty()) {
             notificationsOperator.show(
                 title = "Cloning done",

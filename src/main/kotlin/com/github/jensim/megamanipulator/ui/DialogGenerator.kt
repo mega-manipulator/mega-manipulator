@@ -14,7 +14,9 @@ import com.intellij.ui.components.JBTextField
 import com.intellij.ui.layout.panel
 import com.intellij.util.ui.JBFont
 import com.intellij.util.ui.UIUtil
-import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
 import org.jetbrains.concurrency.await
 import java.awt.event.KeyEvent
@@ -25,6 +27,7 @@ import javax.swing.text.JTextComponent
 
 class DialogGenerator(private val project: Project) {
 
+    private val scope = CoroutineScope(Dispatchers.Main + SupervisorJob())
     private val prefillOperator: PrefillStringSuggestionOperator by lazy { project.service() }
 
     fun showConfirm(
@@ -67,7 +70,7 @@ class DialogGenerator(private val project: Project) {
                 val location = popupFactory.guessBestPopupLocation(focusComponent)
                 popup.show(location, position)
             } else {
-                GlobalScope.launch {
+                scope.launch {
                     val dataContext = DataManager.getInstance().dataContextFromFocusAsync.await()
                     val location = popupFactory.guessBestPopupLocation(dataContext)
                     popup.show(location, position)

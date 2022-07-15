@@ -29,7 +29,8 @@ import com.intellij.ui.JBSplitter
 import com.intellij.ui.components.JBList
 import com.intellij.ui.components.JBScrollPane
 import com.intellij.ui.components.JBTextArea
-import com.intellij.ui.layout.panel
+import com.intellij.ui.dsl.builder.panel
+import com.intellij.ui.dsl.gridLayout.HorizontalAlign.RIGHT
 import java.awt.Color
 import java.awt.Dimension
 import java.awt.event.ActionEvent
@@ -95,20 +96,17 @@ class GitWindow(private val project: Project) : ToolWindowTab {
 
     override val content: JComponent = panel {
         row {
-            buttonGroup {
-                component(btnListBranch)
-                component(btnSetBranch)
-                component(btnCommitAndPush)
-                component(btnJustPush)
-                component(btnCreatePRs)
-            }
-            component(btnCleanLocalClones)
-            right {
-                component(OnboardingButton(project, TabKey.tabTitleClones, OnboardingId.CLONES_TAB))
-            }
+            cell(btnListBranch)
+            cell(btnSetBranch)
+            cell(btnCommitAndPush)
+            cell(btnJustPush)
+            cell(btnCreatePRs)
+            cell(btnCleanLocalClones)
+            cell(OnboardingButton(project, TabKey.tabTitleClones, OnboardingId.CLONES_TAB))
+                .horizontalAlign(RIGHT)
         }
         row {
-            component(splitLeft)
+            cell(splitLeft)
         }
     }
 

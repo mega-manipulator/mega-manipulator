@@ -17,7 +17,8 @@ import com.intellij.ui.JBSplitter
 import com.intellij.ui.components.JBScrollPane
 import com.intellij.ui.components.JBTextArea
 import com.intellij.ui.components.JBTextField
-import com.intellij.ui.layout.panel
+import com.intellij.ui.dsl.builder.panel
+import com.intellij.ui.dsl.gridLayout.HorizontalAlign.RIGHT
 import me.xdrop.fuzzywuzzy.FuzzySearch
 import org.slf4j.LoggerFactory
 import java.awt.Dimension
@@ -64,21 +65,17 @@ class PullRequestWindow(project: Project) : ToolWindowTab {
 
     override val content: JComponent = panel {
         row {
-            component(codeHostSelect)
-            component(fetchPRsButton)
+            cell(codeHostSelect)
+            cell(fetchPRsButton)
             label("Filter:")
-            component(filterField)
-            right {
-                cell {
-                    buttonGroup {
-                        component(OnboardingButton(project, TabKey.tabTitlePRsManage, OnboardingId.PR_TAB))
-                        component(menuOpenButton)
-                    }
-                }
-            }
+            cell(filterField)
+            cell(OnboardingButton(project, TabKey.tabTitlePRsManage, OnboardingId.PR_TAB))
+                .horizontalAlign(RIGHT)
+            cell(menuOpenButton)
+                .horizontalAlign(RIGHT)
         }
         row {
-            component(split)
+            cell(split)
         }
     }
 

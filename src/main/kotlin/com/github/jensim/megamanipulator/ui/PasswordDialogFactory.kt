@@ -4,7 +4,7 @@ import com.intellij.openapi.ui.popup.Balloon
 import com.intellij.openapi.ui.popup.JBPopupFactory
 import com.intellij.ui.awt.RelativePoint
 import com.intellij.ui.components.JBPasswordField
-import com.intellij.ui.layout.panel
+import com.intellij.ui.dsl.builder.panel
 import javax.swing.JButton
 import javax.swing.JComponent
 
@@ -33,11 +33,11 @@ object PasswordDialogFactory {
                 }
                 row {
                     label("Password:")
-                    component(passwordField)
+                    cell(passwordField)
                 }
                 row {
-                    component(btnYes)
-                    component(btnNo)
+                    cell(btnYes)
+                    cell(btnNo)
                 }
             }
             val popup = popupFactory.createDialogBalloonBuilder(content, "Password")

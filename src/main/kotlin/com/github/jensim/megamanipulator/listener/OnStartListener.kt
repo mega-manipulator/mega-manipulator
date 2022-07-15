@@ -11,7 +11,9 @@ import com.intellij.icons.AllIcons
 import com.intellij.openapi.components.service
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.startup.StartupActivity
+import com.intellij.openapi.wm.RegisterToolWindowTask
 import com.intellij.openapi.wm.ToolWindowAnchor
+import com.intellij.openapi.wm.ToolWindowEP
 import com.intellij.openapi.wm.ToolWindowManager
 import kotlinx.coroutines.runBlocking
 import org.slf4j.LoggerFactory
@@ -23,11 +25,16 @@ class OnStartListener : StartupActivity {
 
     override fun runActivity(project: Project) {
         if (isMM(project)) {
+            val toolWindowEP = project.service<ToolWindowEP>()
+
             ToolWindowManager.getInstance(project)?.let {
-                val toolWindow = it.registerToolWindow("Mega Manipulator") {
-                    this.icon = AllIcons.General.Modified
-                    this.anchor = ToolWindowAnchor.BOTTOM
-                }
+                val toolWindow = it.registerToolWindow(
+                    RegisterToolWindowTask(
+                        id = "Mega Manipulator",
+                        anchor = ToolWindowAnchor.BOTTOM,
+                        icon = AllIcons.General.Modified,
+                    )
+                )
                 val factory = MyToolWindowFactory()
                 factory.createToolWindowContent(project, toolWindow)
                 toolWindow.show()

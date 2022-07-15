@@ -11,8 +11,10 @@ import com.github.jensim.megamanipulator.settings.types.searchhost.SearchHostSet
 import com.github.jensim.megamanipulator.settings.types.searchhost.SourceGraphSettings
 import com.intellij.openapi.project.Project
 import com.intellij.serviceContainer.NonInjectable
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Deferred
-import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.async
 
 class SearchOperator @NonInjectable constructor(
@@ -30,6 +32,7 @@ class SearchOperator @NonInjectable constructor(
         gitHubSearchClient = null,
     )
 
+    private val scope = CoroutineScope(Dispatchers.Main + SupervisorJob())
     private val settingsFileOperator: SettingsFileOperator by lazyService(project, settingsFileOperator)
     private val sourcegraphSearchClient: SourcegraphSearchClient by lazyService(project, sourcegraphSearchClient)
     private val houndClient: HoundClient by lazyService(project, houndClient)
@@ -47,7 +50,7 @@ class SearchOperator @NonInjectable constructor(
 
     suspend fun validateTokens(): Map<String, Deferred<String>> =
         settingsFileOperator.readSettings()?.searchHostSettings.orEmpty().map { (name, settingsGroup) ->
-            name to GlobalScope.async {
+            name to scope.async {
                 when (settingsGroup.value()) {
                     is SourceGraphSettings -> sourcegraphSearchClient.validateToken(name, settingsGroup.sourceGraph!!)
                     is HoundSettings -> houndClient.validate(name, settingsGroup.hound!!)

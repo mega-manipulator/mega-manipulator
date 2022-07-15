@@ -18,7 +18,8 @@ import com.intellij.openapi.vfs.VirtualFileManager
 import com.intellij.ui.JBSplitter
 import com.intellij.ui.components.JBScrollPane
 import com.intellij.ui.components.JBTextArea
-import com.intellij.ui.layout.panel
+import com.intellij.ui.dsl.builder.panel
+import com.intellij.ui.dsl.gridLayout.HorizontalAlign.RIGHT
 import com.intellij.util.ui.components.BorderLayoutPanel
 import java.awt.BorderLayout
 import java.awt.Dimension
@@ -55,16 +56,14 @@ class ApplyWindow(private val project: Project) : ToolWindowTab {
     }
     override val content: DialogPanel = panel {
         row {
-            cell {
-                component(applyButton)
-                component(openScriptButton)
-            }
-            right {
-                component(OnboardingButton(project, TabKey.tabTitleApply, OnboardingId.APPLY_TAB))
-            }
+            cell(applyButton)
+            cell(openScriptButton)
+
+            cell(OnboardingButton(project, TabKey.tabTitleApply, OnboardingId.APPLY_TAB))
+                .horizontalAlign(RIGHT)
         }
         row {
-            component(bigAreaPanel)
+            cell(bigAreaPanel)
         }
     }
 

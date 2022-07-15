@@ -6,7 +6,7 @@ import com.intellij.openapi.ui.popup.Balloon
 import com.intellij.openapi.ui.popup.JBPopupFactory
 import com.intellij.ui.components.JBCheckBox
 import com.intellij.ui.components.JBTextField
-import com.intellij.ui.layout.panel
+import com.intellij.ui.dsl.builder.panel
 import javax.swing.JButton
 import javax.swing.JComponent
 
@@ -30,22 +30,20 @@ class CommitDialogFactory(project: Project) {
             label("Create commits for all changes in all checked out repositories")
         }
         row {
-            cell {
-                scrollPane(commitMessage)
-                component(
-                    PrefillHistoryButton(project, PrefillString.COMMIT_MESSAGE, commitMessage) {
-                        commitMessage.text = it
-                    }
-                )
-            }
+            scrollCell(commitMessage)
+            cell(
+                PrefillHistoryButton(project, PrefillString.COMMIT_MESSAGE, commitMessage) {
+                    commitMessage.text = it
+                }
+            )
         }
         row {
-            component(pushBox)
-            component(forceBox)
+            cell(pushBox)
+            cell(forceBox)
         }
         row {
-            component(okBtn)
-            component(cancelBtn)
+            cell(okBtn)
+            cell(cancelBtn)
         }
     }
 
