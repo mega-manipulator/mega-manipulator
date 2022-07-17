@@ -5,7 +5,7 @@ import com.github.jensim.megamanipulator.ui.GeneralListCellRenderer.addCellRende
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.ui.ComboBox
 import com.intellij.openapi.ui.DialogPanel
-import com.intellij.ui.layout.panel
+import com.intellij.ui.dsl.builder.panel
 
 class EditPullRequestDialog(
     pullRequests: List<PullRequestWrapper>,
@@ -27,17 +27,19 @@ class EditPullRequestDialog(
     }
     override val panel: DialogPanel = panel {
         row {
-            component(
-                panel(title = "Template from") {
-                    row {
-                        component(preExistingSelect)
+            cell(
+                com.intellij.ui.dsl.builder.panel {
+                    group("Template from") {
+                        row {
+                            cell(preExistingSelect)
+                        }
                     }
                 }
             )
         }
-        row { component(titlePanel) }
-        row { component(descriptionPanel) }
-        row { component(buttonPanel) }
+        row { cell(titlePanel) }
+        row { cell(descriptionPanel) }
+        row { cell(buttonPanel) }
     }
 
     private fun String.fixedLength(len: Int) = take(len).padEnd(len, ' ')

@@ -3,6 +3,14 @@
 # mega-manipulator Changelog
 
 ## [Unreleased]
+### Added
+- Support idea 2022.2
+
+### Fix
+- Update deprecated UI builders
+  - Token validation output now fits on screen
+- The "Set branch button" in the "Clones window" now works as expected (inverted rex validation)
+- Closing tabs in the Mega Manipulator tool window is now blocked
 
 ## [0.0.44]
 ### Added

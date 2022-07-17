@@ -29,7 +29,6 @@ import com.github.jensim.megamanipulator.settings.SerializationHolder.objectMapp
 import com.github.jensim.megamanipulator.settings.types.codehost.GitLabSettings
 import com.intellij.openapi.project.Project
 import com.intellij.serviceContainer.NonInjectable
-import com.intellij.util.containers.isNullOrEmpty
 import com.intellij.util.io.encodeUrlQueryParameter
 import io.ktor.client.HttpClient
 import io.ktor.client.request.accept

@@ -18,7 +18,9 @@ import com.intellij.notification.NotificationType
 import com.intellij.openapi.components.service
 import com.intellij.openapi.project.Project
 import com.intellij.ui.components.JBScrollPane
-import com.intellij.ui.layout.panel
+import com.intellij.ui.dsl.builder.panel
+import com.intellij.ui.dsl.gridLayout.HorizontalAlign.RIGHT
+import java.awt.Dimension
 import javax.swing.JButton
 import javax.swing.JComponent
 
@@ -41,22 +43,21 @@ class ForksWindow(project: Project) : ToolWindowTab {
             "Repo" to { it.getRepo() },
         )
     )
-    private val scroll = JBScrollPane(staleForkTable)
+    private val scroll = JBScrollPane(staleForkTable).apply {
+        preferredSize = Dimension(10_000, 10_000)
+    }
     private val loadStaleForksButton = JButton("Load forks without OPEN PRs")
 
     override val content: JComponent = panel {
         row {
-            cell {
-                component(codeHostSelect)
-                component(loadStaleForksButton)
-                component(deleteButton)
-            }
-            right {
-                component(OnboardingButton(project, TabKey.tabTitleForks, OnboardingId.FORK_TAB))
-            }
+            cell(codeHostSelect)
+            cell(loadStaleForksButton)
+            cell(deleteButton)
+            cell(OnboardingButton(project, TabKey.tabTitleForks, OnboardingId.FORK_TAB))
+                .horizontalAlign(RIGHT)
         }
         row {
-            component(scroll)
+            cell(scroll)
         }
     }
 
@@ -67,10 +68,10 @@ class ForksWindow(project: Project) : ToolWindowTab {
                 dialogGenerator.showConfirm(
                     title = "Delete selected forks?",
                     message = """
-                                Are you sure?
-                                Really, really, sure?
+                    Are you sure?
+                    Really, really, sure?
                     """.trimIndent(),
-                    focusComponent = this
+                    focusComponent = deleteButton
                 ) {
                     uiProtector.mapConcurrentWithProgress(
                         title = "Delete forks",

@@ -23,8 +23,7 @@ import com.intellij.openapi.vfs.VirtualFileManager
 import com.intellij.ui.JBSplitter
 import com.intellij.ui.components.JBLabel
 import com.intellij.ui.components.JBList
-import com.intellij.ui.layout.LCFlags
-import com.intellij.ui.layout.panel
+import com.intellij.ui.dsl.builder.panel
 import kotlinx.coroutines.Deferred
 import java.awt.Color
 import java.io.File
@@ -71,41 +70,47 @@ class SettingsWindow(project: Project) : ToolWindowTab {
     private val openConfigButton = JButton("Open config")
     private val validateConfigButton = JButton("Validate config")
     private val hostConfigSelect = JBList<ConfigHostHolder>()
-    private val confButtonsPanel = panel(title = "Config", constraints = arrayOf(LCFlags.flowY)) {
-        row {
-            scrollPane(
-                panel {
-                    row {
-                        component(openConfigButton)
+    private val confButtonsPanel = panel {
+        group("Config") {
+            row {
+                scrollCell(
+                    com.intellij.ui.dsl.builder.panel {
+                        row {
+                            cell(openConfigButton)
+                        }
+                        row {
+                            cell(validateConfigButton)
+                        }
+                        row {
+                            cell(toggleClonesButton)
+                        }
+                        row {
+                            cell(docsButton)
+                        }
+                        row {
+                            cell(resetOnboardingButton)
+                        }
+                        row {
+                            cell(resetPrefillButton)
+                        }
                     }
-                    row {
-                        component(validateConfigButton)
-                    }
-                    row {
-                        component(toggleClonesButton)
-                    }
-                    row {
-                        component(docsButton)
-                    }
-                    row {
-                        component(resetOnboardingButton)
-                    }
-                    row {
-                        component(resetPrefillButton)
-                    }
-                }
-            )
+                )
+            }
         }
     }
-    private val tokensPanel = panel(title = "Tokens", constraints = arrayOf(LCFlags.flowY)) {
-        row {
-            component(validateTokensButton)
-            scrollPane(hostConfigSelect)
+    private val tokensPanel = panel {
+        group("Tokens") {
+            row {
+                cell(validateTokensButton)
+                scrollCell(hostConfigSelect)
+            }
         }
     }
-    private val validationOutputPanel = panel(title = "Validation output", constraints = arrayOf(LCFlags.flowY)) {
-        row {
-            scrollPane(validationOutputLabel)
+    private val validationOutputPanel = panel {
+        group("Validation output") {
+            row {
+                scrollCell(validationOutputLabel)
+            }
         }
     }
     private val split2 = JBSplitter(0.5f).apply {
@@ -117,9 +122,9 @@ class SettingsWindow(project: Project) : ToolWindowTab {
         secondComponent = split2
     }
 
-    override val content: JComponent = panel(constraints = arrayOf(LCFlags.noGrid)) {
+    override val content: JComponent = panel {
         row {
-            component(split)
+            cell(split)
         }
     }
 

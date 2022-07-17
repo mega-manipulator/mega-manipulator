@@ -23,7 +23,8 @@ import com.intellij.openapi.project.Project
 import com.intellij.openapi.ui.ComboBox
 import com.intellij.ui.components.JBScrollPane
 import com.intellij.ui.components.JBTextField
-import com.intellij.ui.layout.panel
+import com.intellij.ui.dsl.builder.panel
+import com.intellij.ui.dsl.gridLayout.HorizontalAlign.RIGHT
 import com.intellij.util.castSafelyTo
 import java.awt.Dimension
 import java.awt.event.KeyEvent
@@ -53,31 +54,30 @@ class SearchWindow(
         search()
     }
     private val table = GeneralKtDataTable(
-        SearchResult::class,
-        listOf(
+        type = SearchResult::class,
+        columns = listOf(
             "Code host" to { it.codeHostName },
             "Project" to { it.project },
             "Repo" to { it.repo },
-        )
+        ),
     )
-    private val scroll = JBScrollPane(table)
+    private val scroll = JBScrollPane(table).apply {
+        preferredSize = Dimension(10_000, 10_000)
+    }
 
     override val content = panel {
         row {
-            cell {
-                component(searchHostLink)
-                component(searchHostSelect)
-                component(historyButton)
-                component(searchField)
-                component(searchButton)
-                component(cloneButton)
-            }
-            right {
-                component(OnboardingButton(project, TabKey.tabTitleSearch, OnboardingId.SEARCH_TAB))
-            }
+            cell(searchHostLink)
+            cell(searchHostSelect)
+            cell(historyButton)
+            cell(searchField)
+            cell(searchButton)
+            cell(cloneButton)
+            cell(OnboardingButton(project, TabKey.tabTitleSearch, OnboardingId.SEARCH_TAB))
+                .horizontalAlign(RIGHT)
         }
         row {
-            component(scroll)
+            cell(scroll)
         }
     }
 

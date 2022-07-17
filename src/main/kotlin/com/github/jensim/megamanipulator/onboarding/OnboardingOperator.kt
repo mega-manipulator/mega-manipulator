@@ -10,7 +10,7 @@ import com.intellij.openapi.ui.popup.JBPopupFactory
 import com.intellij.openapi.wm.WindowManager
 import com.intellij.ui.awt.RelativePoint
 import com.intellij.ui.components.JBLabel
-import com.intellij.ui.layout.panel
+import com.intellij.ui.dsl.builder.panel
 import java.util.EnumMap
 import javax.swing.JButton
 import javax.swing.JComponent
@@ -55,11 +55,11 @@ class OnboardingOperator(private val project: Project) {
         val text = if (id.autoMultiLineConvertion) id.text.convertMultiLineToHtml() else id.text
         val panel = panel {
             row {
-                component(JBLabel(text))
+                cell(JBLabel(text))
             }
             row {
-                component(closeButton)
-                component(stopButton)
+                cell(closeButton)
+                cell(stopButton)
             }
         }
         val balloon = popupFactory.createDialogBalloonBuilder(panel, id.title)

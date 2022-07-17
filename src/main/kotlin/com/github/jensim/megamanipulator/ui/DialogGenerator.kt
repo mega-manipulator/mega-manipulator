@@ -1,5 +1,6 @@
 package com.github.jensim.megamanipulator.ui
 
+import com.github.jensim.megamanipulator.project.CoroutinesHolder.scope
 import com.github.jensim.megamanipulator.project.PrefillString
 import com.github.jensim.megamanipulator.project.PrefillStringSuggestionOperator
 import com.intellij.ide.DataManager
@@ -11,10 +12,9 @@ import com.intellij.ui.awt.RelativePoint
 import com.intellij.ui.components.JBLabel
 import com.intellij.ui.components.JBScrollPane
 import com.intellij.ui.components.JBTextField
-import com.intellij.ui.layout.panel
-import com.intellij.util.ui.JBFont
-import com.intellij.util.ui.UIUtil
-import kotlinx.coroutines.GlobalScope
+import com.intellij.ui.dsl.builder.panel
+import com.intellij.util.ui.UIUtil.ComponentStyle.SMALL
+import com.intellij.util.ui.UIUtil.FontColor.BRIGHTER
 import kotlinx.coroutines.launch
 import org.jetbrains.concurrency.await
 import java.awt.event.KeyEvent
@@ -45,11 +45,11 @@ class DialogGenerator(private val project: Project) {
             val message1 = if (convertMultiLine) message.convertMultiLineToHtml() else message
             val panel = panel {
                 row {
-                    component(JBScrollPane(JBLabel(message1)))
+                    cell(JBScrollPane(JBLabel(message1)))
                 }
                 row {
-                    component(yesBtn)
-                    component(noBtn)
+                    cell(yesBtn)
+                    cell(noBtn)
                 }
             }
             val popup = popupFactory.createDialogBalloonBuilder(panel, title)
@@ -67,7 +67,7 @@ class DialogGenerator(private val project: Project) {
                 val location = popupFactory.guessBestPopupLocation(focusComponent)
                 popup.show(location, position)
             } else {
-                GlobalScope.launch {
+                scope.launch {
                     val dataContext = DataManager.getInstance().dataContextFromFocusAsync.await()
                     val location = popupFactory.guessBestPopupLocation(dataContext)
                     popup.show(location, position)
@@ -85,7 +85,7 @@ class DialogGenerator(private val project: Project) {
         title: String,
         message: String,
         prefill: PrefillString?,
-        field: JTextComponent = JBTextField(),
+        field: JTextComponent = JBTextField(40),
         focusComponent: JComponent,
         position: Balloon.Position = Balloon.Position.above,
         validationPattern: String? = null,
@@ -103,7 +103,7 @@ class DialogGenerator(private val project: Project) {
             val validationPanel = rex?.let { pattern ->
                 panel {
                     row {
-                        label("Invalid input, must match pattern: $pattern", JBFont.small(), UIUtil.FontColor.BRIGHTER)
+                        cell(JBLabel("Invalid input, must match pattern: $pattern", SMALL, BRIGHTER))
                     }
                 }
             }
@@ -136,22 +136,18 @@ class DialogGenerator(private val project: Project) {
                 }
                 validationPanel?.let {
                     row {
-                        component(it)
+                        cell(it)
                     }
                 }
                 row {
-                    cell {
-                        scrollPane(field)
-                        prefillButton?.let {
-                            component(it)
-                        }
+                    scrollCell(field)
+                    prefillButton?.let {
+                        cell(it)
                     }
                 }
                 row {
-                    cell {
-                        component(btnYes)
-                        component(btnNo)
-                    }
+                    cell(btnYes)
+                    cell(btnNo)
                 }
             }
             val popup = popupFactory.createDialogBalloonBuilder(panel, title)

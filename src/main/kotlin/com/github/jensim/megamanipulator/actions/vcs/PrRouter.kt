@@ -84,7 +84,6 @@ class PrRouter @NonInjectable constructor(
             is GitHubSettings -> githubComClient.createPr(title, description, settings, repo)
             is GitLabSettings -> gitLabClient.createPr(title, description, settings, repo)
             null -> null
-            else -> throw IllegalArgumentException("Unable to match config correctly")
         }
     }
 
@@ -94,7 +93,6 @@ class PrRouter @NonInjectable constructor(
             is GitHubSettings -> githubComClient.createFork(settings, repo)
             is GitLabSettings -> gitLabClient.createFork(settings, repo)
             null -> null
-            else -> throw IllegalArgumentException("Unable to match config correctly")
         }
     }
 

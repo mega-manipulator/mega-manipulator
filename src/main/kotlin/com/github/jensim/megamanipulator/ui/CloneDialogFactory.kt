@@ -11,7 +11,7 @@ import com.intellij.ui.components.JBCheckBox
 import com.intellij.ui.components.JBLabel
 import com.intellij.ui.components.JBTextArea
 import com.intellij.ui.components.JBTextField
-import com.intellij.ui.layout.panel
+import com.intellij.ui.dsl.builder.panel
 import java.awt.event.MouseEvent
 import java.awt.event.MouseListener
 import javax.swing.JButton
@@ -99,45 +99,39 @@ class CloneDialogFactory(
             panel = panel {
                 if (!fromPR) {
                     row(label = "Branch") {
-                        cell {
-                            scrollPane(branchTextArea)
-                            component(branchHistoryButton)
-                        }
+                        scrollCell(branchTextArea)
+                        cell(branchHistoryButton)
                     }
                     row(label = "Shallow clone?") {
-                        component(shallowBox)
+                        cell(shallowBox)
                     }
                 }
                 row(label = "Sparse clone?") {
-                    cell {
-                        component(sparseDefBox)
-                        component(
-                            JBLabel("https://git-scm.com/docs/git-sparse-checkout").apply {
-                                toolTipText = "Click to open in browser"
-                                addMouseListener(object : MouseListener {
-                                    override fun mouseClicked(e: MouseEvent?) = try {
-                                        com.intellij.ide.BrowserUtil.browse("https://git-scm.com/docs/git-sparse-checkout")
-                                    } catch (e: Exception) {
-                                        e.printStackTrace()
-                                    }
+                    cell(sparseDefBox)
+                    cell(
+                        JBLabel("https://git-scm.com/docs/git-sparse-checkout").apply {
+                            toolTipText = "Click to open in browser"
+                            addMouseListener(object : MouseListener {
+                                override fun mouseClicked(e: MouseEvent?) = try {
+                                    com.intellij.ide.BrowserUtil.browse("https://git-scm.com/docs/git-sparse-checkout")
+                                } catch (e: Exception) {
+                                    e.printStackTrace()
+                                }
 
-                                    override fun mousePressed(e: MouseEvent?) = Unit
-                                    override fun mouseReleased(e: MouseEvent?) = Unit
-                                    override fun mouseEntered(e: MouseEvent?) = Unit
-                                    override fun mouseExited(e: MouseEvent?) = Unit
-                                })
-                            }
-                        )
-                    }
+                                override fun mousePressed(e: MouseEvent?) = Unit
+                                override fun mouseReleased(e: MouseEvent?) = Unit
+                                override fun mouseEntered(e: MouseEvent?) = Unit
+                                override fun mouseExited(e: MouseEvent?) = Unit
+                            })
+                        }
+                    )
                 }
                 row(label = "Sparse checkout config") {
-                    scrollPane(sparseDefField)
+                    scrollCell(sparseDefField)
                 }
                 row {
-                    cell {
-                        component(cloneButton)
-                        component(cancelButton)
-                    }
+                    cell(cloneButton)
+                    cell(cancelButton)
                 }
             }
         }

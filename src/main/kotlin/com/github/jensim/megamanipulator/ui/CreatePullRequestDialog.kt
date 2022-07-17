@@ -10,7 +10,7 @@ import com.intellij.openapi.ui.popup.JBPopupFactory
 import com.intellij.ui.components.JBScrollPane
 import com.intellij.ui.components.JBTextArea
 import com.intellij.ui.components.JBTextField
-import com.intellij.ui.layout.panel
+import com.intellij.ui.dsl.builder.panel
 import javax.swing.JButton
 import javax.swing.JComponent
 
@@ -22,11 +22,11 @@ open class CreatePullRequestDialog(
     private val prefillOperator: PrefillStringSuggestionOperator by lazy { project.service() }
     private val titleField = JBTextField(30)
     private val titlePane = JBScrollPane(titleField)
-    protected val titlePanel = panel(title = "PR Title") {
-        row {
-            cell {
-                component(titlePane)
-                component(
+    protected val titlePanel = panel {
+        group("PR Title") {
+            row {
+                cell(titlePane)
+                cell(
                     PrefillHistoryButton(project, PrefillString.PR_TITLE, titlePane) {
                         titleField.text = it
                     }
@@ -36,11 +36,11 @@ open class CreatePullRequestDialog(
     }
     private val descriptionField = JBTextArea(5, 30)
     private val descriptionPane = JBScrollPane(descriptionField)
-    protected val descriptionPanel = panel(title = "PR Description") {
-        row {
-            cell {
-                component(descriptionPane)
-                component(
+    protected val descriptionPanel = panel {
+        group("PR Description") {
+            row {
+                cell(descriptionPane)
+                cell(
                     PrefillHistoryButton(project, PrefillString.PR_BODY, descriptionPane) {
                         descriptionField.text = it
                     }
@@ -53,22 +53,20 @@ open class CreatePullRequestDialog(
     private val cancelButton = JButton("Cancel")
     protected val buttonPanel = panel {
         row {
-            cell {
-                component(okButton)
-                component(cancelButton)
-            }
+            cell(okButton)
+            cell(cancelButton)
         }
     }
 
     protected open val panel: DialogPanel = panel {
         row {
-            component(titlePanel)
+            cell(titlePanel)
         }
         row {
-            component(descriptionPanel)
+            cell(descriptionPanel)
         }
         row {
-            component(buttonPanel)
+            cell(buttonPanel)
         }
     }
 
