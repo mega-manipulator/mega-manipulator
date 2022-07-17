@@ -13,6 +13,8 @@ import com.intellij.ui.components.JBLabel
 import com.intellij.ui.components.JBScrollPane
 import com.intellij.ui.components.JBTextField
 import com.intellij.ui.dsl.builder.panel
+import com.intellij.util.ui.UIUtil.ComponentStyle.SMALL
+import com.intellij.util.ui.UIUtil.FontColor.BRIGHTER
 import kotlinx.coroutines.launch
 import org.jetbrains.concurrency.await
 import java.awt.event.KeyEvent
@@ -83,7 +85,7 @@ class DialogGenerator(private val project: Project) {
         title: String,
         message: String,
         prefill: PrefillString?,
-        field: JTextComponent = JBTextField(),
+        field: JTextComponent = JBTextField(40),
         focusComponent: JComponent,
         position: Balloon.Position = Balloon.Position.above,
         validationPattern: String? = null,
@@ -101,7 +103,7 @@ class DialogGenerator(private val project: Project) {
             val validationPanel = rex?.let { pattern ->
                 panel {
                     row {
-                        label("Invalid input, must match pattern: $pattern")
+                        cell(JBLabel("Invalid input, must match pattern: $pattern", SMALL, BRIGHTER))
                     }
                 }
             }

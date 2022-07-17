@@ -46,6 +46,8 @@ private typealias DirResult = Pair<String, List<StepResult>>
 @SuppressWarnings("LongParameterList")
 class GitWindow(private val project: Project) : ToolWindowTab {
 
+    private val branchNamePattern = "^[a-zA-Z][a-zA-Z0-9/_-]*[a-zA-Z0-9]$"
+
     private val localRepoOperator: LocalRepoOperator by lazy { project.service() }
     private val settingsFileOperator: SettingsFileOperator by lazy { project.service() }
     private val processOperator: ProcessOperator by lazy { project.service() }
@@ -132,18 +134,17 @@ class GitWindow(private val project: Project) : ToolWindowTab {
             refresh()
         }
         btnSetBranch.addActionListener {
-            val pattern = "^[a-zA-Z][a-zA-Z0-9/_-]*[a-zA-Z0-9]$"
             dialogGenerator.askForInput(
                 title = "Select branch name",
                 message = "This will NOT reset the repos to origin/default-branch first!!",
-                validationPattern = pattern,
+                validationPattern = branchNamePattern,
                 prefill = PrefillString.BRANCH,
                 focusComponent = btnSetBranch,
             ) { branch: String ->
-                if (branch.isBlank() || branch.isEmpty() || branch.contains(Regex(pattern))) {
+                if (branch.isBlank() || branch.isEmpty() || !branch.matches(Regex(branchNamePattern))) {
                     dialogGenerator.showConfirm(
                         title = "Bad branch name.",
-                        message = "$branch didnt match pattern $pattern",
+                        message = "$branch didnt match pattern $branchNamePattern",
                         yesText = "Ok",
                         noText = "Cancel",
                         focusComponent = btnSetBranch

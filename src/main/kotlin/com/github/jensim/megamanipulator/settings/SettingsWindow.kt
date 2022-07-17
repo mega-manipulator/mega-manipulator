@@ -99,7 +99,7 @@ class SettingsWindow(project: Project) : ToolWindowTab {
         }
     }
     private val tokensPanel = panel {
-        group("Tokens"){
+        group("Tokens") {
             row {
                 cell(validateTokensButton)
                 scrollCell(hostConfigSelect)
@@ -107,7 +107,7 @@ class SettingsWindow(project: Project) : ToolWindowTab {
         }
     }
     private val validationOutputPanel = panel {
-        group("Validation output"){
+        group("Validation output") {
             row {
                 scrollCell(validationOutputLabel)
             }

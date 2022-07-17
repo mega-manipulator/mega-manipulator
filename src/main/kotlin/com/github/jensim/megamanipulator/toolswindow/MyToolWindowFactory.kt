@@ -60,6 +60,10 @@ class MyToolWindowFactory : ToolWindowFactory, TabServiceListener {
                     }
                 }
             }
+            override fun contentRemoveQuery(event: ContentManagerEvent) {
+                logger.warn("User tried to remove a tab")
+                event.consume()
+            }
         })
         filesOperator.makeUpBaseFiles()
         try {

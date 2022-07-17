@@ -26,16 +26,18 @@ open class CreatePullRequestDialog(
         group("PR Title") {
             row {
                 cell(titlePane)
-                cell(PrefillHistoryButton(project, PrefillString.PR_TITLE, titlePane) {
-                    titleField.text = it
-                })
+                cell(
+                    PrefillHistoryButton(project, PrefillString.PR_TITLE, titlePane) {
+                        titleField.text = it
+                    }
+                )
             }
         }
     }
     private val descriptionField = JBTextArea(5, 30)
     private val descriptionPane = JBScrollPane(descriptionField)
     protected val descriptionPanel = panel {
-        group("PR Description"){
+        group("PR Description") {
             row {
                 cell(descriptionPane)
                 cell(

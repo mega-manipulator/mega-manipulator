@@ -46,25 +46,31 @@ object PullRequestLoaderDialogGenerator {
 
             val content = com.intellij.ui.dsl.builder.panel {
                 row {
-                    cell(com.intellij.ui.dsl.builder.panel {
-                        group("Pull request state") {
-                            row { cell(stateSelector) }
+                    cell(
+                        com.intellij.ui.dsl.builder.panel {
+                            group("Pull request state") {
+                                row { cell(stateSelector) }
+                            }
                         }
-                    })
+                    )
                 }
                 row {
-                    cell(com.intellij.ui.dsl.builder.panel {
-                        group("Pull request role") {
-                            row { cell(roleSelector) }
+                    cell(
+                        com.intellij.ui.dsl.builder.panel {
+                            group("Pull request role") {
+                                row { cell(roleSelector) }
+                            }
                         }
-                    })
+                    )
                 }
                 row {
-                    cell(com.intellij.ui.dsl.builder.panel {
-                        group("Limit") {
-                            row { cell(limitField) }
+                    cell(
+                        com.intellij.ui.dsl.builder.panel {
+                            group("Limit") {
+                                row { cell(limitField) }
+                            }
                         }
-                    })
+                    )
                 }
                 row {
                     cell(btnYes); cell(btnNo)
