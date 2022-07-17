@@ -6,7 +6,6 @@ import com.intellij.openapi.ui.popup.Balloon
 import com.intellij.openapi.ui.popup.JBPopupFactory
 import com.intellij.ui.awt.RelativePoint
 import com.intellij.ui.components.JBTextField
-import com.intellij.ui.layout.panel
 import javax.swing.InputVerifier
 import javax.swing.JButton
 import javax.swing.JComponent
@@ -45,11 +44,31 @@ object PullRequestLoaderDialogGenerator {
                 lastUsedType = type
             }
 
-            val content = panel {
-                row { component(panel(title = "Pull request state") { row { component(stateSelector) } }) }
-                row { component(panel(title = "Pull request role") { row { component(roleSelector) } }) }
-                row { component(panel(title = "Limit") { row { component(limitField) } }) }
-                row { cell { component(btnYes); component(btnNo) } }
+            val content = com.intellij.ui.dsl.builder.panel {
+                row {
+                    cell(com.intellij.ui.dsl.builder.panel {
+                        group("Pull request state") {
+                            row { cell(stateSelector) }
+                        }
+                    })
+                }
+                row {
+                    cell(com.intellij.ui.dsl.builder.panel {
+                        group("Pull request role") {
+                            row { cell(roleSelector) }
+                        }
+                    })
+                }
+                row {
+                    cell(com.intellij.ui.dsl.builder.panel {
+                        group("Limit") {
+                            row { cell(limitField) }
+                        }
+                    })
+                }
+                row {
+                    cell(btnYes); cell(btnNo)
+                }
             }
             val popupFactory: JBPopupFactory = JBPopupFactory.getInstance()
             val popup = popupFactory.createDialogBalloonBuilder(content, "Load pull requests")

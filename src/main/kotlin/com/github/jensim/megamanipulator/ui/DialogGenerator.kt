@@ -12,9 +12,7 @@ import com.intellij.ui.awt.RelativePoint
 import com.intellij.ui.components.JBLabel
 import com.intellij.ui.components.JBScrollPane
 import com.intellij.ui.components.JBTextField
-import com.intellij.ui.layout.panel
-import com.intellij.util.ui.JBFont
-import com.intellij.util.ui.UIUtil
+import com.intellij.ui.dsl.builder.panel
 import kotlinx.coroutines.launch
 import org.jetbrains.concurrency.await
 import java.awt.event.KeyEvent
@@ -45,11 +43,11 @@ class DialogGenerator(private val project: Project) {
             val message1 = if (convertMultiLine) message.convertMultiLineToHtml() else message
             val panel = panel {
                 row {
-                    component(JBScrollPane(JBLabel(message1)))
+                    cell(JBScrollPane(JBLabel(message1)))
                 }
                 row {
-                    component(yesBtn)
-                    component(noBtn)
+                    cell(yesBtn)
+                    cell(noBtn)
                 }
             }
             val popup = popupFactory.createDialogBalloonBuilder(panel, title)
@@ -103,7 +101,7 @@ class DialogGenerator(private val project: Project) {
             val validationPanel = rex?.let { pattern ->
                 panel {
                     row {
-                        label("Invalid input, must match pattern: $pattern", JBFont.small(), UIUtil.FontColor.BRIGHTER)
+                        label("Invalid input, must match pattern: $pattern")
                     }
                 }
             }
@@ -136,22 +134,18 @@ class DialogGenerator(private val project: Project) {
                 }
                 validationPanel?.let {
                     row {
-                        component(it)
+                        cell(it)
                     }
                 }
                 row {
-                    cell {
-                        scrollPane(field)
-                        prefillButton?.let {
-                            component(it)
-                        }
+                    scrollCell(field)
+                    prefillButton?.let {
+                        cell(it)
                     }
                 }
                 row {
-                    cell {
-                        component(btnYes)
-                        component(btnNo)
-                    }
+                    cell(btnYes)
+                    cell(btnNo)
                 }
             }
             val popup = popupFactory.createDialogBalloonBuilder(panel, title)
