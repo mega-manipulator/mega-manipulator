@@ -3,6 +3,9 @@
 # mega-manipulator Changelog
 
 ## [Unreleased]
+### Added
+- Support idea 2022.2
+
 ### Fix
 - Update deprecated UI builders
   - Token validation output now fits on screen
