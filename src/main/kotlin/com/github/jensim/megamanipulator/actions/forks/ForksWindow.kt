@@ -20,6 +20,7 @@ import com.intellij.openapi.project.Project
 import com.intellij.ui.components.JBScrollPane
 import com.intellij.ui.dsl.builder.panel
 import com.intellij.ui.dsl.gridLayout.HorizontalAlign.RIGHT
+import java.awt.Dimension
 import javax.swing.JButton
 import javax.swing.JComponent
 
@@ -42,7 +43,9 @@ class ForksWindow(project: Project) : ToolWindowTab {
             "Repo" to { it.getRepo() },
         )
     )
-    private val scroll = JBScrollPane(staleForkTable)
+    private val scroll = JBScrollPane(staleForkTable).apply {
+        preferredSize = Dimension(10_000, 10_000)
+    }
     private val loadStaleForksButton = JButton("Load forks without OPEN PRs")
 
     override val content: JComponent = panel {
@@ -65,10 +68,10 @@ class ForksWindow(project: Project) : ToolWindowTab {
                 dialogGenerator.showConfirm(
                     title = "Delete selected forks?",
                     message = """
-                                Are you sure?
-                                Really, really, sure?
+                    Are you sure?
+                    Really, really, sure?
                     """.trimIndent(),
-                    focusComponent = this
+                    focusComponent = deleteButton
                 ) {
                     uiProtector.mapConcurrentWithProgress(
                         title = "Delete forks",

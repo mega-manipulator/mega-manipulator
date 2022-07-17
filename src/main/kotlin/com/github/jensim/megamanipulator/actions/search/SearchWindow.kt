@@ -54,14 +54,16 @@ class SearchWindow(
         search()
     }
     private val table = GeneralKtDataTable(
-        SearchResult::class,
-        listOf(
+        type = SearchResult::class,
+        columns = listOf(
             "Code host" to { it.codeHostName },
             "Project" to { it.project },
             "Repo" to { it.repo },
-        )
+        ),
     )
-    private val scroll = JBScrollPane(table)
+    private val scroll = JBScrollPane(table).apply {
+        preferredSize = Dimension(10_000, 10_000)
+    }
 
     override val content = panel {
         row {

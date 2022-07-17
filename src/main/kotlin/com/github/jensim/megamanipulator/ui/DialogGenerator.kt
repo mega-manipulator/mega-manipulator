@@ -1,5 +1,6 @@
 package com.github.jensim.megamanipulator.ui
 
+import com.github.jensim.megamanipulator.project.CoroutinesHolder.scope
 import com.github.jensim.megamanipulator.project.PrefillString
 import com.github.jensim.megamanipulator.project.PrefillStringSuggestionOperator
 import com.intellij.ide.DataManager
@@ -14,9 +15,6 @@ import com.intellij.ui.components.JBTextField
 import com.intellij.ui.layout.panel
 import com.intellij.util.ui.JBFont
 import com.intellij.util.ui.UIUtil
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
 import org.jetbrains.concurrency.await
 import java.awt.event.KeyEvent
@@ -27,7 +25,6 @@ import javax.swing.text.JTextComponent
 
 class DialogGenerator(private val project: Project) {
 
-    private val scope = CoroutineScope(Dispatchers.Main + SupervisorJob())
     private val prefillOperator: PrefillStringSuggestionOperator by lazy { project.service() }
 
     fun showConfirm(

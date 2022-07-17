@@ -3,6 +3,7 @@ package com.github.jensim.megamanipulator.actions.search
 import com.github.jensim.megamanipulator.actions.search.github.GitHubSearchClient
 import com.github.jensim.megamanipulator.actions.search.hound.HoundClient
 import com.github.jensim.megamanipulator.actions.search.sourcegraph.SourcegraphSearchClient
+import com.github.jensim.megamanipulator.project.CoroutinesHolder.scope
 import com.github.jensim.megamanipulator.project.lazyService
 import com.github.jensim.megamanipulator.settings.SettingsFileOperator
 import com.github.jensim.megamanipulator.settings.types.searchhost.GithubSearchSettings
@@ -11,10 +12,7 @@ import com.github.jensim.megamanipulator.settings.types.searchhost.SearchHostSet
 import com.github.jensim.megamanipulator.settings.types.searchhost.SourceGraphSettings
 import com.intellij.openapi.project.Project
 import com.intellij.serviceContainer.NonInjectable
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Deferred
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.async
 
 class SearchOperator @NonInjectable constructor(
@@ -32,7 +30,6 @@ class SearchOperator @NonInjectable constructor(
         gitHubSearchClient = null,
     )
 
-    private val scope = CoroutineScope(Dispatchers.Main + SupervisorJob())
     private val settingsFileOperator: SettingsFileOperator by lazyService(project, settingsFileOperator)
     private val sourcegraphSearchClient: SourcegraphSearchClient by lazyService(project, sourcegraphSearchClient)
     private val houndClient: HoundClient by lazyService(project, houndClient)

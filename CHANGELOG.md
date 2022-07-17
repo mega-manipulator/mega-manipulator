@@ -3,6 +3,8 @@
 # mega-manipulator Changelog
 
 ## [Unreleased]
+### Fix
+- Update deprecated UI builders
 
 ## [0.0.44]
 ### Added
