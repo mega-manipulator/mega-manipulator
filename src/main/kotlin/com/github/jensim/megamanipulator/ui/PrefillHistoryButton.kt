@@ -20,7 +20,7 @@ class PrefillHistoryButton(
     private val prefillString: PrefillString,
     private val focusComponent: JComponent,
     private val action: (String) -> Unit,
-) : JBLabel(AllIcons.Actions.ShowHiddens) {
+) : JBLabel(AllIcons.Actions.ToggleVisibility) {
 
     private val prefillStringSuggestionOperator: PrefillStringSuggestionOperator by lazy { project.service() }
 
