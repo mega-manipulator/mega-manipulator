@@ -64,19 +64,19 @@ class CloneOperator @NonInjectable constructor(
         ) { repo: SearchResult ->
             val codeSettings: CodeHostSettings = settings.resolveSettings(repo.searchHostName, repo.codeHostName)?.second
                 ?: return@mapConcurrentWithProgress listOf("Settings" to ApplyOutput.dummy(std = "Settings were not resolvable for ${repo.searchHostName}/${repo.codeHostName}, most likely the key of the code host does not match the one returned by your search host!"))
-            prRouter.getRepo(repo)?.let { vcsRepo: RepoWrapper ->
-                val cloneUrl = gitUrlHelper.buildCloneUrl(codeSettings, vcsRepo)
-                val defaultBranch = prRouter.getRepo(repo)?.getDefaultBranch()!!
-                val dir = File(basePath, "clones/${repo.asPathString()}")
-                remoteCloneOperator.clone(
-                    dir = dir,
-                    cloneUrl = cloneUrl,
-                    defaultBranch = defaultBranch,
-                    branch = branchName,
-                    shallow = shallow,
-                    sparseDef = sparseDef
-                )
-            }
+            val vcsRepo: RepoWrapper = prRouter.getRepo(repo)
+                ?: return@mapConcurrentWithProgress listOf("Finding repo on code host" to ApplyOutput.dummy(std = "Didn't match settings on remote code host for ${repo.searchHostName}/${repo.codeHostName}"))
+            val cloneUrl = gitUrlHelper.buildCloneUrl(codeSettings, vcsRepo)
+            val defaultBranch = prRouter.getRepo(repo)?.getDefaultBranch()!!
+            val dir = File(basePath, "clones/${repo.asPathString()}")
+            remoteCloneOperator.clone(
+                dir = dir,
+                cloneUrl = cloneUrl,
+                defaultBranch = defaultBranch,
+                branch = branchName,
+                shallow = shallow,
+                sparseDef = sparseDef
+            )
         }
         filesOperator.refreshClones()
         reportState(state)
@@ -86,23 +86,23 @@ class CloneOperator @NonInjectable constructor(
         val settings = settingsFileOperator.readSettings()
         if (settings == null) {
             reportState(listOf("Settings" to listOf("Load Settings" to ApplyOutput.dummy(std = "No settings found for project."))))
-        } else {
-            val state: List<Pair<PullRequestWrapper, List<Action>?>> =
-                uiProtector.mapConcurrentWithProgress(
-                    title = "Cloning repos",
-                    extraText1 = "Cloning repos",
-                    extraText2 = { it.asPathString() },
-                    data = pullRequests,
-                ) {
-                    remoteCloneOperator.cloneRepos(
-                        pullRequest = it,
-                        settings = settings,
-                        sparseDef = sparseDef
-                    )
-                }
-            filesOperator.refreshClones()
-            reportState(state)
+            return
         }
+        val state: List<Pair<PullRequestWrapper, List<Action>?>> =
+            uiProtector.mapConcurrentWithProgress(
+                title = "Cloning repos",
+                extraText1 = "Cloning repos",
+                extraText2 = { it.asPathString() },
+                data = pullRequests,
+            ) {
+                remoteCloneOperator.cloneRepos(
+                    pullRequest = it,
+                    settings = settings,
+                    sparseDef = sparseDef
+                )
+            }
+        filesOperator.refreshClones()
+        reportState(state)
     }
 
     private fun reportState(state: List<Pair<Any, List<Action>?>>) {
