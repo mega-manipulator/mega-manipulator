@@ -3,7 +3,7 @@ package com.github.jensim.megamanipulator.actions.git
 import com.github.jensim.megamanipulator.actions.ProcessOperator
 import com.github.jensim.megamanipulator.actions.apply.ApplyOutput
 import com.github.jensim.megamanipulator.actions.git.commit.CommitOperator
-import com.github.jensim.megamanipulator.actions.localrepo.LocalRepoOperator
+import com.github.jensim.megamanipulator.actions.git.localrepo.LocalRepoOperator
 import com.github.jensim.megamanipulator.actions.vcs.PrRouter
 import com.github.jensim.megamanipulator.files.FilesOperator
 import com.github.jensim.megamanipulator.onboarding.OnboardingButton

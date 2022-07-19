@@ -1,6 +1,6 @@
 package com.github.jensim.megamanipulator.actions.search
 
-import com.github.jensim.megamanipulator.actions.git.clone.RemoteCloneOperator
+import com.github.jensim.megamanipulator.actions.git.clone.CloneOperator
 import com.github.jensim.megamanipulator.onboarding.OnboardingButton
 import com.github.jensim.megamanipulator.onboarding.OnboardingId
 import com.github.jensim.megamanipulator.onboarding.OnboardingOperator
@@ -37,7 +37,7 @@ class SearchWindow(
 
     private val searchOperator: SearchOperator by lazy { project.service() }
     private val settingsFileOperator: SettingsFileOperator by lazy { project.service() }
-    private val remoteCloneOperator: RemoteCloneOperator by lazy { project.service() }
+    private val cloneOperator: CloneOperator by lazy { project.service() }
     private val uiProtector: UiProtector by lazy { project.service() }
     private val onboardingOperator: OnboardingOperator by lazy { project.service() }
     private val prefillOperator: PrefillStringSuggestionOperator by lazy { project.service() }
@@ -115,7 +115,7 @@ class SearchWindow(
             val selected = table.selectedValuesList.toSet()
             if (selected.isNotEmpty()) {
                 cloneDialogFactory.showCloneDialog(cloneButton) { branch: String, shallow: Boolean, sparseDef: String? ->
-                    remoteCloneOperator.clone(repos = selected, branchName = branch, shallow = shallow, sparseDef = sparseDef)
+                    cloneOperator.clone(repos = selected, branchName = branch, shallow = shallow, sparseDef = sparseDef)
                     table.clearSelection()
                     prefillOperator.addPrefill(PrefillString.BRANCH, branch)
                 }

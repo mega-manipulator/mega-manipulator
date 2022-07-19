@@ -5,9 +5,11 @@ import com.github.jensim.megamanipulator.actions.ProcessOperator
 import com.github.jensim.megamanipulator.actions.ProcessOperatorImpl
 import com.github.jensim.megamanipulator.actions.apply.ApplyOperator
 import com.github.jensim.megamanipulator.actions.git.GitUrlHelper
+import com.github.jensim.megamanipulator.actions.git.clone.CloneOperator
+import com.github.jensim.megamanipulator.actions.git.clone.LocalCloneOperator
 import com.github.jensim.megamanipulator.actions.git.clone.RemoteCloneOperator
 import com.github.jensim.megamanipulator.actions.git.commit.CommitOperator
-import com.github.jensim.megamanipulator.actions.localrepo.LocalRepoOperator
+import com.github.jensim.megamanipulator.actions.git.localrepo.LocalRepoOperator
 import com.github.jensim.megamanipulator.actions.vcs.PrRouter
 import com.github.jensim.megamanipulator.actions.vcs.bitbucketserver.BitbucketServerClient
 import com.github.jensim.megamanipulator.actions.vcs.githubcom.GithubComClient
@@ -106,19 +108,20 @@ open class TestApplicationWiring {
             notificationsOperator = notificationsOperator,
         )
     }
+    val localCloneOperator: LocalCloneOperator by lazy {
+        LocalCloneOperator(mockProject, filesOperator)
+    }
     val remoteCloneOperator: RemoteCloneOperator by lazy {
         RemoteCloneOperator(
             project = mockProject,
-            filesOperator = filesOperator,
-            prRouter = prRouter,
             localRepoOperator = localRepoOperator,
             processOperator = processOperator,
-            notificationsOperator = notificationsOperator,
-            uiProtector = uiProtector,
-            settingsFileOperator = settingsFileOperator,
-            gitUrlHelper = gitUrlHelper,
         )
     }
+    val cloneOperator: CloneOperator by lazy {
+        CloneOperator(mockProject, remoteCloneOperator, localCloneOperator, settingsFileOperator, filesOperator, prRouter, notificationsOperator, uiProtector, gitUrlHelper)
+    }
+
     val applyOperator: ApplyOperator by lazy {
         ApplyOperator(
             project = mockProject,

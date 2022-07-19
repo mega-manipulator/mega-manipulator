@@ -26,13 +26,15 @@
         <projectService serviceImplementation="com.github.jensim.megamanipulator.actions.search.github.GitHubSearchClient"/>
         <projectService serviceImplementation="com.github.jensim.megamanipulator.actions.search.hound.HoundClient"/>
         <projectService serviceImplementation="com.github.jensim.megamanipulator.actions.git.GitUrlHelper"/>
+        <projectService serviceImplementation="com.github.jensim.megamanipulator.actions.git.clone.CloneOperator"/>
+        <projectService serviceImplementation="com.github.jensim.megamanipulator.actions.git.clone.LocalCloneOperator"/>
         <projectService serviceImplementation="com.github.jensim.megamanipulator.actions.git.clone.RemoteCloneOperator"/>
         <projectService serviceImplementation="com.github.jensim.megamanipulator.settings.passwords.IntelliJPasswordsOperator"
                         serviceInterface="com.github.jensim.megamanipulator.settings.passwords.PasswordsOperator"/>
         <projectService serviceImplementation="com.github.jensim.megamanipulator.ui.UiProtectorImpl"
                         serviceInterface="com.github.jensim.megamanipulator.ui.UiProtector"/>
         <projectService serviceImplementation="com.github.jensim.megamanipulator.actions.apply.ApplyOperator"/>
-        <projectService serviceImplementation="com.github.jensim.megamanipulator.actions.localrepo.LocalRepoOperator"/>
+        <projectService serviceImplementation="com.github.jensim.megamanipulator.actions.git.localrepo.LocalRepoOperator"/>
         <projectService serviceInterface="com.github.jensim.megamanipulator.actions.ProcessOperator"
                 serviceImplementation="com.github.jensim.megamanipulator.actions.ProcessOperatorImpl"/>
         <projectService serviceImplementation="com.github.jensim.megamanipulator.actions.vcs.PrRouter"/>

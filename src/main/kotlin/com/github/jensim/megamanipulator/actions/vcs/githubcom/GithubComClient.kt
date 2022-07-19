@@ -1,7 +1,7 @@
 package com.github.jensim.megamanipulator.actions.vcs.githubcom
 
 import com.fasterxml.jackson.module.kotlin.readValue
-import com.github.jensim.megamanipulator.actions.localrepo.LocalRepoOperator
+import com.github.jensim.megamanipulator.actions.git.localrepo.LocalRepoOperator
 import com.github.jensim.megamanipulator.actions.search.SearchResult
 import com.github.jensim.megamanipulator.actions.vcs.GithubComPullRequestWrapper
 import com.github.jensim.megamanipulator.actions.vcs.GithubComRepoWrapping
