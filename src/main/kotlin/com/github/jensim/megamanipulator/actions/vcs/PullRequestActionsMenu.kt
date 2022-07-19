@@ -1,7 +1,7 @@
 package com.github.jensim.megamanipulator.actions.vcs
 
 import com.github.jensim.megamanipulator.actions.NotificationsOperator
-import com.github.jensim.megamanipulator.actions.git.clone.CloneOperator
+import com.github.jensim.megamanipulator.actions.git.clone.RemoteCloneOperator
 import com.github.jensim.megamanipulator.project.PrefillString
 import com.github.jensim.megamanipulator.ui.CloneDialogFactory
 import com.github.jensim.megamanipulator.ui.ClosePRDialogFactory
@@ -28,7 +28,7 @@ class PullRequestActionsMenu(
 
     private val prRouter: PrRouter by lazy { project.service() }
     private val notificationsOperator: NotificationsOperator by lazy { project.service() }
-    private val cloneOperator: CloneOperator by lazy { project.service() }
+    private val remoteCloneOperator: RemoteCloneOperator by lazy { project.service() }
     private val uiProtector: UiProtector by lazy { project.service() }
     private val cloneDialogFactory: CloneDialogFactory by lazy { project.service() }
     private val dialogGenerator: DialogGenerator by lazy { project.service() }
@@ -107,7 +107,9 @@ class PullRequestActionsMenu(
             addActionListener {
                 val prs = prProvider()
                 cloneDialogFactory.showCloneFromPrDialog(focusComponent) { sparseDef ->
-                    cloneOperator.clone(prs, sparseDef = sparseDef)
+                    uiProtector.uiProtectedOperation("Clone from PRs") {
+                        remoteCloneOperator.clone(prs, sparseDef = sparseDef)
+                    }
                 }
             }
         }

@@ -25,7 +25,7 @@ import java.io.File
 private typealias Action = Pair<String, ApplyOutput>
 
 @SuppressWarnings("LongParameterList")
-class CloneOperator @NonInjectable constructor(
+class RemoteCloneOperator @NonInjectable constructor(
     private val project: Project,
     filesOperator: FilesOperator?,
     prRouter: PrRouter?,
@@ -113,7 +113,7 @@ class CloneOperator @NonInjectable constructor(
     }
 
     fun clone(pullRequests: List<PullRequestWrapper>, sparseDef: String?) {
-        val settings = uiProtector.uiProtectedOperation("Load settings") { settingsFileOperator.readSettings() }
+        val settings = settingsFileOperator.readSettings()
         if (settings == null) {
             reportState(listOf("Settings" to listOf("Load Settings" to ApplyOutput.dummy(std = "No settings found for project."))))
         } else {

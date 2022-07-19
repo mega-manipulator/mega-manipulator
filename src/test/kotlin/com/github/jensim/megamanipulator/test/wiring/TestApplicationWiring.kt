@@ -5,7 +5,7 @@ import com.github.jensim.megamanipulator.actions.ProcessOperator
 import com.github.jensim.megamanipulator.actions.ProcessOperatorImpl
 import com.github.jensim.megamanipulator.actions.apply.ApplyOperator
 import com.github.jensim.megamanipulator.actions.git.GitUrlHelper
-import com.github.jensim.megamanipulator.actions.git.clone.CloneOperator
+import com.github.jensim.megamanipulator.actions.git.clone.RemoteCloneOperator
 import com.github.jensim.megamanipulator.actions.git.commit.CommitOperator
 import com.github.jensim.megamanipulator.actions.localrepo.LocalRepoOperator
 import com.github.jensim.megamanipulator.actions.vcs.PrRouter
@@ -106,8 +106,8 @@ open class TestApplicationWiring {
             notificationsOperator = notificationsOperator,
         )
     }
-    val cloneOperator: CloneOperator by lazy {
-        CloneOperator(
+    val remoteCloneOperator: RemoteCloneOperator by lazy {
+        RemoteCloneOperator(
             project = mockProject,
             filesOperator = filesOperator,
             prRouter = prRouter,
