@@ -58,7 +58,7 @@ class IntegrationTest {
     fun `run naive scenarios`(result: SearchResult) {
         // clone
         val results: Set<SearchResult> = setOf(result)
-        wiring.remoteCloneOperator.clone(repos = results, branchName = "main", shallow = false, sparseDef = null)
+        wiring.cloneOperator.clone(repos = results, branchName = "main", shallow = false, sparseDef = null)
         verify { wiring.notificationsOperator.show(any(), any(), eq(NotificationType.INFORMATION)) }
         val dotGitDit = File(wiring.tempDir, "clones/${result.asPathString()}/.git")
         assertTrue(dotGitDit.exists())

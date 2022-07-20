@@ -8,6 +8,7 @@ import com.github.jensim.megamanipulator.settings.types.codehost.BitBucketSettin
 import com.github.jensim.megamanipulator.settings.types.codehost.CodeHostSettingsGroup
 import com.github.jensim.megamanipulator.settings.types.codehost.GitHubSettings
 import com.github.jensim.megamanipulator.settings.types.codehost.GitLabSettings
+import com.github.jensim.megamanipulator.settings.types.searchhost.GithubSearchSettings
 import com.github.jensim.megamanipulator.settings.types.searchhost.SearchHostSettingsGroup
 import com.github.jensim.megamanipulator.settings.types.searchhost.SourceGraphSettings
 import org.hamcrest.MatcherAssert.assertThat
@@ -24,6 +25,9 @@ class SettingsFileOperatorTest {
 
     private val testData = MegaManipulatorSettings(
         searchHostSettings = mapOf(
+            "github" to SearchHostSettingsGroup(
+                gitHub = GithubSearchSettings(username = "jensim")
+            ),
             "sourcegraph_com" to SearchHostSettingsGroup(
                 sourceGraph = SourceGraphSettings(
                     baseUrl = "https://sourcegraph.com",
@@ -112,7 +116,7 @@ class SettingsFileOperatorTest {
         val schema: JsonSchema = schemaGen.generateSchema(MegaManipulatorSettings::class.java)
         val jsonSchemaString = SerializationHolder.readable.writeValueAsString(schema)
 
-        // baseFile.writeText(jsonSchemaString)
+        baseFile.writeText(jsonSchemaString)
         val baseFileText = baseFile.readText()
         JSONAssert.assertEquals(baseFileText, jsonSchemaString, STRICT)
         assertThat(baseFileText, not(containsString(": \"\\")))

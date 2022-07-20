@@ -2,6 +2,11 @@
   "$schema" : "mega-manipulator-schema.json",
   "concurrency" : 1,
   "searchHostSettings" : {
+    "github": {
+      "gitHub": {
+        "username": "jensim"
+      }
+    },
     "sourcegraph_com" : {
       "sourceGraph" : {
         "codeHostSettings" : {

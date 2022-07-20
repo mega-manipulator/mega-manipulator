@@ -78,6 +78,16 @@
                           "type" : "string",
                           "required" : true
                         },
+                        "keepLocalRepos" : {
+                          "type" : "object",
+                          "id" : "urn:jsonschema:com:github:jensim:megamanipulator:settings:types:KeepLocalRepos",
+                          "properties" : {
+                            "path" : {
+                              "type" : "string",
+                              "required" : true
+                            }
+                          }
+                        },
                         "codeHostType" : {
                           "type" : "string",
                           "required" : true,
@@ -115,6 +125,10 @@
                           "required" : true,
                           "description" : "It's strongly recommended to use SSH clone type.",
                           "enum" : [ "SSH", "HTTPS" ]
+                        },
+                        "keepLocalRepos" : {
+                          "type" : "object",
+                          "$ref" : "urn:jsonschema:com:github:jensim:megamanipulator:settings:types:KeepLocalRepos"
                         },
                         "codeHostType" : {
                           "type" : "string",
@@ -166,6 +180,10 @@
                           "required" : true,
                           "description" : "It's strongly recommended to use SSH clone type.",
                           "enum" : [ "SSH", "HTTPS" ]
+                        },
+                        "keepLocalRepos" : {
+                          "type" : "object",
+                          "$ref" : "urn:jsonschema:com:github:jensim:megamanipulator:settings:types:KeepLocalRepos"
                         },
                         "codeHostType" : {
                           "type" : "string",
@@ -246,6 +264,10 @@
                 "required" : true,
                 "description" : "It's strongly recommended to use SSH clone type.",
                 "enum" : [ "SSH", "HTTPS" ]
+              },
+              "keepLocalRepos" : {
+                "type" : "object",
+                "$ref" : "urn:jsonschema:com:github:jensim:megamanipulator:settings:types:KeepLocalRepos"
               },
               "docLinkHref" : {
                 "type" : "string",

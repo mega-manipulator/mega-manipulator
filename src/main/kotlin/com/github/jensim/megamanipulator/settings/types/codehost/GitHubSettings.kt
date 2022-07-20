@@ -8,6 +8,7 @@ import com.github.jensim.megamanipulator.settings.types.CloneType.SSH
 import com.github.jensim.megamanipulator.settings.types.ForkSetting
 import com.github.jensim.megamanipulator.settings.types.ForkSetting.LAZY_FORK
 import com.github.jensim.megamanipulator.settings.types.HttpsOverride
+import com.github.jensim.megamanipulator.settings.types.KeepLocalRepos
 import com.github.jensim.megamanipulator.settings.types.codehost.CodeHostSettingsType.GITHUB
 import com.github.jensim.megamanipulator.settings.types.forkSettingDescription
 
@@ -20,6 +21,7 @@ data class GitHubSettings(
     override val forkSetting: ForkSetting = LAZY_FORK,
     @JsonPropertyDescription("It's strongly recommended to use SSH clone type.")
     override val cloneType: CloneType = SSH,
+    override val keepLocalRepos: KeepLocalRepos? = null,
 ) : CodeHostSettings() {
 
     override val codeHostType: CodeHostSettingsType = GITHUB

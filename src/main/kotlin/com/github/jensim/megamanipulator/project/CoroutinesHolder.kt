@@ -6,5 +6,5 @@ import kotlinx.coroutines.SupervisorJob
 
 object CoroutinesHolder {
 
-    val scope = CoroutineScope(Dispatchers.IO + SupervisorJob())
+    val scope: CoroutineScope = CoroutineScope(Dispatchers.IO + SupervisorJob())
 }

@@ -7,6 +7,7 @@ import com.github.jensim.megamanipulator.settings.types.ForkSetting
 import com.github.jensim.megamanipulator.settings.types.ForkSetting.PLAIN_BRANCH
 import com.github.jensim.megamanipulator.settings.types.HostWithAuth
 import com.github.jensim.megamanipulator.settings.types.HttpsOverride
+import com.github.jensim.megamanipulator.settings.types.KeepLocalRepos
 import com.github.jensim.megamanipulator.settings.types.validateBaseUrl
 
 sealed class CodeHostSettings
@@ -19,6 +20,7 @@ sealed class CodeHostSettings
     abstract val username: String?
     abstract val forkSetting: ForkSetting
     abstract val cloneType: CloneType
+    abstract val keepLocalRepos: KeepLocalRepos?
 
     internal fun validate() {
         validateBaseUrl(baseUrl)

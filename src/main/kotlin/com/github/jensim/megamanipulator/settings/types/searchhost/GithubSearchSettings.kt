@@ -6,6 +6,7 @@ import com.github.jensim.megamanipulator.settings.types.CloneType
 import com.github.jensim.megamanipulator.settings.types.CloneType.SSH
 import com.github.jensim.megamanipulator.settings.types.ForkSetting
 import com.github.jensim.megamanipulator.settings.types.ForkSetting.LAZY_FORK
+import com.github.jensim.megamanipulator.settings.types.KeepLocalRepos
 import com.github.jensim.megamanipulator.settings.types.codehost.CodeHostSettingsGroup
 import com.github.jensim.megamanipulator.settings.types.codehost.GitHubSettings
 import com.github.jensim.megamanipulator.settings.types.forkSettingDescription
@@ -16,6 +17,7 @@ data class GithubSearchSettings(
     val forkSetting: ForkSetting = LAZY_FORK,
     @JsonPropertyDescription("It's strongly recommended to use SSH clone type.")
     val cloneType: CloneType = SSH,
+    val keepLocalRepos: KeepLocalRepos? = null
 ) : SearchHostSettings() {
     override val docLinkHref: String = "https://mega-manipulator.github.io/docs/Search%20hosts/github"
     override val authMethod = JUST_TOKEN
@@ -27,6 +29,7 @@ data class GithubSearchSettings(
                 username = username,
                 forkSetting = forkSetting,
                 cloneType = cloneType,
+                keepLocalRepos = keepLocalRepos,
             )
         )
     )
