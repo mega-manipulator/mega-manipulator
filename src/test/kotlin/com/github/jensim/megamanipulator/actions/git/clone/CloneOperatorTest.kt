@@ -109,7 +109,14 @@ internal class CloneOperatorTest {
             every { getCloneUrl(HTTPS) } returns "https://example.com"
         }
         coEvery {
-            remoteCloneOperator.clone(dir = tempDir, cloneUrl = "https://example.com", defaultBranch = "main", shallow = false, sparseDef = null)
+            remoteCloneOperator.clone(
+                dir = File(tempDir, "clones/search/code/project/repo"),
+                cloneUrl = "https://username:password@example.com",
+                defaultBranch = "main",
+                branch = "main",
+                shallow = false,
+                sparseDef = null
+            )
         } returns listOf("Cloning" to ApplyOutput(dir = tempDir.absolutePath, std = "👍👌!!", 0))
 
         // When
