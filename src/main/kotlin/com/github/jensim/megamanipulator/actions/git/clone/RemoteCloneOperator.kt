@@ -5,7 +5,6 @@ import com.github.jensim.megamanipulator.actions.apply.ApplyOutput
 import com.github.jensim.megamanipulator.actions.git.localrepo.LocalRepoOperator
 import com.github.jensim.megamanipulator.actions.vcs.PullRequestWrapper
 import com.github.jensim.megamanipulator.project.lazyService
-import com.github.jensim.megamanipulator.settings.types.MegaManipulatorSettings
 import com.github.jensim.megamanipulator.settings.types.codehost.CodeHostSettings
 import com.intellij.openapi.project.Project
 import com.intellij.serviceContainer.NonInjectable
@@ -27,28 +26,19 @@ class RemoteCloneOperator @NonInjectable constructor(
     private val localRepoOperator: LocalRepoOperator by lazyService(project, localRepoOperator)
     private val processOperator: ProcessOperator by lazyService(project, processOperator)
 
-    suspend fun cloneRepos(pullRequest: PullRequestWrapper, settings: MegaManipulatorSettings, sparseDef: String?): List<Action> {
+    suspend fun cloneRepos(pullRequest: PullRequestWrapper, settings: CodeHostSettings, sparseDef: String?): List<Action> {
         val basePath = project.basePath!!
         val fullPath = "$basePath/clones/${pullRequest.asPathString()}"
         val dir = File(fullPath)
-        val prSettings: CodeHostSettings =
-            settings.resolveSettings(pullRequest.searchHostName(), pullRequest.codeHostName())?.second
-                ?: return listOf(
-                    "Settings" to ApplyOutput.dummy(
-                        dir = pullRequest.asPathString(),
-                        std = "No settings found for ${pullRequest.searchHostName()}/${pullRequest.codeHostName()}, most likely the key of the code host does not match the one returned by your search host!"
-                    )
-                )
-        val badState: List<Action> =
-            clone(
-                dir = dir,
-                cloneUrl = pullRequest.cloneUrlFrom(prSettings.cloneType)!!,
-                defaultBranch = pullRequest.fromBranch(),
-                shallow = false,
-                sparseDef = sparseDef
-            )
+        val badState: List<Action> = clone(
+            dir = dir,
+            cloneUrl = pullRequest.cloneUrlFrom(settings.cloneType)!!,
+            defaultBranch = pullRequest.fromBranch(),
+            shallow = false,
+            sparseDef = sparseDef
+        )
         if (badState.isOkay() && pullRequest.isFork()) {
-            localRepoOperator.promoteOriginToForkRemote(dir, pullRequest.cloneUrlTo(prSettings.cloneType)!!)
+            localRepoOperator.promoteOriginToForkRemote(dir, pullRequest.cloneUrlTo(settings.cloneType)!!)
         }
         return badState
     }

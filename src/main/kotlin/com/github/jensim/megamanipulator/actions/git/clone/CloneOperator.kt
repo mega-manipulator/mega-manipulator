@@ -51,6 +51,7 @@ class CloneOperator @NonInjectable constructor(
     private val notificationsOperator: NotificationsOperator by lazyService(project, notificationsOperator)
     private val uiProtector: UiProtector by lazyService(project, uiProtector)
     private val gitUrlHelper: GitUrlHelper by lazyService(project, gitUrlHelper)
+    private val localCloneOperator: LocalCloneOperator by lazyService(project, localCloneOperator)
 
     fun clone(repos: Set<SearchResult>, branchName: String, shallow: Boolean, sparseDef: String?) {
         filesOperator.refreshConf()
@@ -67,32 +68,42 @@ class CloneOperator @NonInjectable constructor(
         reportState(state)
     }
 
-    private suspend fun clone(settings: MegaManipulatorSettings, repo: SearchResult, branchName: String, shallow: Boolean, sparseDef: String?): List<Action> {
+    private suspend fun clone(
+        settings: MegaManipulatorSettings,
+        repo: SearchResult,
+        branchName: String,
+        shallow: Boolean,
+        sparseDef: String?,
+    ): List<Action> {
         val basePath = project.basePath!!
         val codeSettings: CodeHostSettings = settings.resolveSettings(repo.searchHostName, repo.codeHostName)?.second
             ?: return listOf("Settings" to ApplyOutput.dummy(std = "Settings were not resolvable for ${repo.searchHostName}/${repo.codeHostName}, most likely the key of the code host does not match the one returned by your search host!"))
         val vcsRepo: RepoWrapper = prRouter.getRepo(repo)
             ?: return listOf("Finding repo on code host" to ApplyOutput.dummy(std = "Didn't match settings on remote code host for ${repo.searchHostName}/${repo.codeHostName}"))
         val cloneUrl = gitUrlHelper.buildCloneUrl(codeSettings, vcsRepo)
-        val defaultBranch = prRouter.getRepo(repo)?.getDefaultBranch()!!
+        val defaultBranch = prRouter.getRepo(repo)?.getDefaultBranch() ?: return listOf("Resolve default branch" to ApplyOutput(repo.asPathString(), "Could not resolve default branch name", 1))
         val dir = File(basePath, "clones/${repo.asPathString()}")
-        if (codeSettings.keepLocalRepos?.path == null) {
-            return remoteCloneOperator.clone(
-                dir = dir,
-                cloneUrl = cloneUrl,
-                defaultBranch = defaultBranch,
-                branch = branchName,
-                shallow = shallow,
-                sparseDef = sparseDef
+        val history = mutableListOf<Action>()
+
+        val copyIf = localCloneOperator.copyIf(codeSettings, repo, defaultBranch, branchName)
+        if (!copyIf.success) {
+            history.addAll(
+                remoteCloneOperator.clone(
+                    dir = dir,
+                    cloneUrl = cloneUrl,
+                    defaultBranch = defaultBranch,
+                    branch = branchName,
+                    shallow = shallow,
+                    sparseDef = sparseDef
+                )
             )
-        } else {
-            println("keepLocalRepos path: ${codeSettings.keepLocalRepos?.path}")
-            TODO("Not yet implemented")
+            history.addAll(localCloneOperator.saveCopy(codeSettings, repo, defaultBranch).actions)
         }
+        return history
     }
 
     fun clone(pullRequests: List<PullRequestWrapper>, sparseDef: String?) {
-        val settings = settingsFileOperator.readSettings()
+        val settings: MegaManipulatorSettings? = settingsFileOperator.readSettings()
         if (settings == null) {
             reportState(listOf("Settings" to listOf("Load Settings" to ApplyOutput.dummy(std = "No settings found for project."))))
             return
@@ -103,14 +114,55 @@ class CloneOperator @NonInjectable constructor(
             extraText2 = { it.asPathString() },
             data = pullRequests,
         ) {
-            remoteCloneOperator.cloneRepos(
-                pullRequest = it,
-                settings = settings,
-                sparseDef = sparseDef
-            )
+            clone(it, sparseDef, settings)
         }
         filesOperator.refreshClones()
         reportState(state)
+    }
+
+    private suspend fun clone(
+        pullRequest: PullRequestWrapper,
+        sparseDef: String?,
+        settings: MegaManipulatorSettings,
+    ): List<Action> {
+        val codeHostSettings: CodeHostSettings = settings.resolveSettings(pullRequest.searchHostName(), pullRequest.codeHostName())?.second
+            ?: return listOf(
+                "Settings" to ApplyOutput.dummy(
+                    dir = pullRequest.asPathString(),
+                    std = "No settings found for ${pullRequest.searchHostName()}/${pullRequest.codeHostName()}, most likely the key of the code host does not match the one returned by your search host!"
+                )
+            )
+        val history = mutableListOf<Action>()
+        if (pullRequest.isFork()) {
+            // TODO: Solve this 😬
+            if (codeHostSettings.keepLocalRepos?.path != null) {
+                history.add("Restore kept repo" to ApplyOutput(dir = pullRequest.asPathString(), std = "Pull request clones from local keep repo is not yet supported, it quickly becomes complex when you factor in fork settings, and that those can be changed by you (the user) at any time..", exitCode = 1))
+            }
+
+            history.addAll(
+                remoteCloneOperator.cloneRepos(
+                    pullRequest = pullRequest,
+                    settings = codeHostSettings,
+                    sparseDef = sparseDef
+                )
+            )
+            return history
+        }
+        val repo = pullRequest.asSearchResult()
+        val defaultBranch = prRouter.getRepo(repo)?.getDefaultBranch() ?: return listOf("Resolve default branch" to ApplyOutput(repo.asPathString(), "Could not resolve default branch name", 1))
+
+        val copyIf = localCloneOperator.copyIf(codeHostSettings, repo, defaultBranch, pullRequest.fromBranch())
+        history.addAll(copyIf.actions)
+        if (!copyIf.success) {
+            history.addAll(
+                remoteCloneOperator.cloneRepos(
+                    pullRequest = pullRequest,
+                    settings = codeHostSettings,
+                    sparseDef = sparseDef
+                )
+            )
+        }
+        return history
     }
 
     private fun reportState(state: List<Pair<Any, List<Action>?>>) {

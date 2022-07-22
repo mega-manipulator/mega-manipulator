@@ -40,7 +40,8 @@ internal class CloneOperatorTest {
     private val codeHostSettings: CodeHostSettings = BitBucketSettings(username = "username", cloneType = HTTPS, baseUrl = "https://example")
     private val settings = mockk<MegaManipulatorSettings> {
         every { resolveSettings(any(), any()) } returns (
-                mockk<SearchHostSettings>() to codeHostSettings)
+            mockk<SearchHostSettings>() to codeHostSettings
+            )
     }
     private val settingsFileOperator: SettingsFileOperator = mockk {
         every { readSettings() } returns settings

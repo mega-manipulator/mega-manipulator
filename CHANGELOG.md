@@ -4,6 +4,11 @@
 
 ## [Unreleased]
 
+### Added
+- Keep repos between clones  
+Keep and maintain repos in a user defined dir, restore clones from keep directory.  
+This is intended to tackle code host clone throttling.
+
 ## [0.0.45]
 ### Added
   - Support idea 2022.2
