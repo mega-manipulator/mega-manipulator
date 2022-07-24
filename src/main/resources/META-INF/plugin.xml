@@ -13,7 +13,7 @@
         <moduleBuilder builderClass="com.github.jensim.megamanipulator.project.MegaManipulatorModuleBuilder"/>
         <notificationGroup id="Mega Manipulator" displayType="BALLOON"/>
         <postStartupActivity implementation="com.github.jensim.megamanipulator.listener.OnStartListener"/>
-        <projectService serviceImplementation="com.github.jensim.megamanipulator.project.MegaManipulatorSettingsState"/>
+        <projectService serviceImplementation="com.github.jensim.megamanipulator.settings.MegaManipulatorSettingsState"/>
         <projectService serviceImplementation="com.github.jensim.megamanipulator.project.PrefillStringSuggestionOperator"/>
         <projectService serviceImplementation="com.github.jensim.megamanipulator.project.ProjectOperator"/>
         <projectService serviceImplementation="com.github.jensim.megamanipulator.actions.NotificationsOperator"/>

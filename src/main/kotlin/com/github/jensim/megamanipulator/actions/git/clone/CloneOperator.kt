@@ -10,6 +10,7 @@ import com.github.jensim.megamanipulator.actions.vcs.PullRequestWrapper
 import com.github.jensim.megamanipulator.actions.vcs.RepoWrapper
 import com.github.jensim.megamanipulator.files.FilesOperator
 import com.github.jensim.megamanipulator.project.lazyService
+import com.github.jensim.megamanipulator.settings.MegaManipulatorSettingsState
 import com.github.jensim.megamanipulator.settings.SerializationHolder
 import com.github.jensim.megamanipulator.settings.SettingsFileOperator
 import com.github.jensim.megamanipulator.settings.types.MegaManipulatorSettings
@@ -31,6 +32,7 @@ class CloneOperator @NonInjectable constructor(
     notificationsOperator: NotificationsOperator?,
     uiProtector: UiProtector?,
     gitUrlHelper: GitUrlHelper?,
+    megaManipulatorSettingsState: MegaManipulatorSettingsState?
 ) {
 
     constructor(project: Project) : this(
@@ -43,6 +45,7 @@ class CloneOperator @NonInjectable constructor(
         notificationsOperator = null,
         uiProtector = null,
         gitUrlHelper = null,
+        megaManipulatorSettingsState = null,
     )
 
     private val remoteCloneOperator: RemoteCloneOperator by lazyService(project, remoteCloneOperator)
@@ -53,17 +56,24 @@ class CloneOperator @NonInjectable constructor(
     private val uiProtector: UiProtector by lazyService(project, uiProtector)
     private val gitUrlHelper: GitUrlHelper by lazyService(project, gitUrlHelper)
     private val localCloneOperator: LocalCloneOperator by lazyService(project, localCloneOperator)
+    private val megaManipulatorSettingsState: MegaManipulatorSettingsState by lazyService(project, megaManipulatorSettingsState)
 
     fun clone(repos: Set<SearchResult>, branchName: String, shallow: Boolean, sparseDef: String?) {
         filesOperator.refreshConf()
         val settings: MegaManipulatorSettings = settingsFileOperator.readSettings()!!
-        val state: List<Pair<SearchResult, List<Action>?>> = uiProtector.mapConcurrentWithProgress(
+        val state: Map<SearchResult, CloneAttemptResult> = uiProtector.mapConcurrentWithProgress(
             title = "Cloning repos",
             extraText1 = "Cloning repos",
             extraText2 = { it.asPathString() },
             data = repos,
         ) { repo: SearchResult ->
             clone(settings, repo, branchName, shallow, sparseDef)
+        }.associate {
+            it.first to if (it.second == null) {
+                CloneAttemptResult(it.first, emptyList(), false)
+            } else {
+                it.second!!
+            }
         }
         filesOperator.refreshClones()
         reportState(state)
@@ -75,14 +85,23 @@ class CloneOperator @NonInjectable constructor(
         branchName: String,
         shallow: Boolean,
         sparseDef: String?,
-    ): List<Action> {
+    ): CloneAttemptResult {
         val basePath = project.basePath!!
         val codeSettings: CodeHostSettings = settings.resolveSettings(repo.searchHostName, repo.codeHostName)?.second
-            ?: return listOf(Action("Settings", ApplyOutput(std = "Settings were not resolvable for ${repo.searchHostName}/${repo.codeHostName}, most likely the key of the code host does not match the one returned by your search host!", dir = repo.asPathString(), exitCode = 1)))
+            ?: return CloneAttemptResult.fail(
+                repo = repo,
+                what = "Settings",
+                how = "Settings were not resolvable for ${repo.searchHostName}/${repo.codeHostName}, most likely the key of the code host does not match the one returned by your search host!"
+            )
         val vcsRepo: RepoWrapper = prRouter.getRepo(repo)
-            ?: return listOf(Action("Finding repo on code host", ApplyOutput(std = "Didn't match settings on remote code host for ${repo.searchHostName}/${repo.codeHostName}", dir = repo.asPathString(), exitCode = 1)))
+            ?: return CloneAttemptResult.fail(
+                repo = repo,
+                what = "Finding repo on code host",
+                how = "Didn't match settings on remote code host for ${repo.searchHostName}/${repo.codeHostName}"
+            )
         val cloneUrl = gitUrlHelper.buildCloneUrl(codeSettings, vcsRepo)
-        val defaultBranch = prRouter.getRepo(repo)?.getDefaultBranch() ?: return listOf(Action("Resolve default branch", ApplyOutput(repo.asPathString(), "Could not resolve default branch name", 1)))
+        val defaultBranch = prRouter.getRepo(repo)?.getDefaultBranch()
+            ?: return CloneAttemptResult(repo = repo, actions = listOf(Action("Resolve default branch", ApplyOutput(repo.asPathString(), "Could not resolve default branch name", 1))), success = false)
         val dir = File(basePath, "clones/${repo.asPathString()}")
         val history = mutableListOf<Action>()
 
@@ -100,22 +119,28 @@ class CloneOperator @NonInjectable constructor(
             )
             history.addAll(localCloneOperator.saveCopy(codeSettings, repo, defaultBranch).actions)
         }
-        return history
+        return CloneAttemptResult(repo = repo, actions = history)
     }
 
     fun clone(pullRequests: List<PullRequestWrapper>, sparseDef: String?) {
         val settings: MegaManipulatorSettings? = settingsFileOperator.readSettings()
         if (settings == null) {
-            reportState(listOf("Settings" to listOf(Action("Load Settings", ApplyOutput.dummy(std = "No settings found for project.")))))
+            val repo = pullRequests.first().asSearchResult()
+            reportState(mapOf(repo to CloneAttemptResult(repo = repo, actions = listOf(Action("Load Settings", ApplyOutput(std = "No settings found for project.", dir = repo.asPathString(), exitCode = 0))), success = false)))
             return
         }
-        val state: List<Pair<PullRequestWrapper, List<Action>?>> = uiProtector.mapConcurrentWithProgress(
+        val state: Map<SearchResult, CloneAttemptResult> = uiProtector.mapConcurrentWithProgress(
             title = "Cloning repos",
             extraText1 = "Cloning repos",
             extraText2 = { it.asPathString() },
             data = pullRequests,
         ) {
             clone(it, sparseDef, settings)
+        }.associate { (pr: PullRequestWrapper, actions: List<Action>?) ->
+            val actionsList = actions.orEmpty()
+            val success = actionsList.isNotEmpty() && actionsList.last().how.exitCode == 0
+            val repo = pr.asSearchResult()
+            repo to CloneAttemptResult(repo, actionsList, success)
         }
         filesOperator.refreshClones()
         reportState(state)
@@ -170,8 +195,10 @@ class CloneOperator @NonInjectable constructor(
         return history
     }
 
-    private fun reportState(state: List<Pair<Any, List<Action>?>>) {
-        val badState: List<Pair<Any, List<Action>?>> = state.filter { it.second.orEmpty().lastOrNull()?.how?.exitCode != 0 }
+    private fun reportState(state: Map<SearchResult, CloneAttemptResult>) {
+        val attempt = CloneAttempt(state.values.toList())
+        megaManipulatorSettingsState.cloneHistory.add(attempt)
+        val badState: Map<SearchResult, CloneAttemptResult> = state.filter { !it.value.success }
         if (badState.isEmpty()) {
             notificationsOperator.show(
                 title = "Cloning done",
@@ -179,17 +206,17 @@ class CloneOperator @NonInjectable constructor(
                 type = INFORMATION,
             )
         } else {
-            val stateAsString = badState.joinToString(
+            val stateAsString = badState.toList().joinToString(
                 prefix = "<ul>",
                 separator = "<br>",
                 postfix = "</ul>"
-            ) { "<li>${it.first}${it.second?.lastOrNull()?.how?.let { "<br>output:'${it.std.replace("\n","<br>\n")}'" } ?: "..."}</li>" }
+            ) { "<li>${it.first.asPathString()}${it.second.actions.lastOrNull()?.how?.let { "<br>output:'${it.std.replace("\n", "<br>\n")}'" } ?: "..."}</li>" }
             notificationsOperator.show(
                 title = "Cloning done with failures",
                 body = "Failed cloning ${badState.size}/${state.size} repos. More info in IDE logs...<br>$stateAsString",
                 type = WARNING,
             )
-            val serializaleBadState: List<Pair<String, List<Action>?>> = badState.map { it.first.toString() to it.second }
+            val serializaleBadState: List<Pair<String, CloneAttemptResult>> = badState.map { it.key.asPathString() to it.value }
             val badStateString = SerializationHolder.objectMapper.writeValueAsString(serializaleBadState)
             System.err.println("Failed cloning ${badState.size}/${state.size} repos, these are the causes:\n$badStateString")
         }

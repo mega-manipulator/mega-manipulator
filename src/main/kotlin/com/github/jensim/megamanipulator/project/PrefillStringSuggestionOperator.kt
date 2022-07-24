@@ -1,5 +1,6 @@
 package com.github.jensim.megamanipulator.project
 
+import com.github.jensim.megamanipulator.settings.MegaManipulatorSettingsState
 import com.intellij.openapi.components.service
 import com.intellij.openapi.project.Project
 

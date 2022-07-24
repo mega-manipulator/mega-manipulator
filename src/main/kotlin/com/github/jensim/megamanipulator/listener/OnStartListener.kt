@@ -3,8 +3,8 @@ package com.github.jensim.megamanipulator.listener
 import com.github.jensim.megamanipulator.actions.ProcessOperator
 import com.github.jensim.megamanipulator.onboarding.OnboardingId
 import com.github.jensim.megamanipulator.onboarding.OnboardingOperator
-import com.github.jensim.megamanipulator.project.MegaManipulatorSettingsState
 import com.github.jensim.megamanipulator.project.MegaManipulatorUtil.isMM
+import com.github.jensim.megamanipulator.settings.MegaManipulatorSettingsState
 import com.github.jensim.megamanipulator.toolswindow.MyToolWindowFactory
 import com.github.jensim.megamanipulator.ui.DialogGenerator
 import com.intellij.icons.AllIcons

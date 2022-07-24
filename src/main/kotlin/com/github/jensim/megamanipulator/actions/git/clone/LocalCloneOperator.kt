@@ -30,13 +30,13 @@ class LocalCloneOperator @NonInjectable constructor(
      * If the repo is configured for local copy over remote clone, try to find the repo locally,
      * and create a clone from that.
      */
-    suspend fun copyIf(settings: CodeHostSettings, repo: SearchResult, defaultBranch: String, branch: String): Result {
+    suspend fun copyIf(settings: CodeHostSettings, repo: SearchResult, defaultBranch: String, branch: String): CloneAttemptResult {
         val localRepoFile = File(project.basePath!!, "clones/${repo.asPathString()}/.git")
         if (localRepoFile.exists()) {
-            return Result(listOf(Action("Copy", ApplyOutput(std = "Repo exists already", dir = repo.asPathString(), exitCode = 1))), true)
+            return CloneAttemptResult(actions = listOf(Action("Copy", ApplyOutput(std = "Repo exists already", dir = repo.asPathString(), exitCode = 1))), success = true, repo = repo)
         }
 
-        val keepRoot = settings.keepLocalRepos?.path ?: return Result(emptyList(), false)
+        val keepRoot = settings.keepLocalRepos?.path ?: return CloneAttemptResult(actions = emptyList(), success = false, repo = repo)
         val keepLocalRepoFile = File("$keepRoot/${repo.project}/${repo.repo}", ".git")
 
         val history = mutableListOf<Action>()
@@ -53,15 +53,15 @@ class LocalCloneOperator @NonInjectable constructor(
                 checkout(defaultBranch, branch, keepLocalRepoFile, history)
                 history.add(Action("Restore saved repo", ApplyOutput(repo.asPathString(), "Done", 0)))
 
-                Result(history, true)
+                CloneAttemptResult(actions = history, success = true, repo = repo)
             } catch (e: Exception) {
                 val message = "Failed copying files from keep location due to ${e.message}"
                 logger.warn(message, e)
                 history.add(Action("Restore saved repo", ApplyOutput(repo.asPathString(), "$message, more info+stacktrace in logs", 0)))
-                Result(history, false)
+                CloneAttemptResult(actions = history, success = false, repo = repo)
             }
         } else {
-            return Result(history, false)
+            return CloneAttemptResult(actions = history, success = false, repo = repo)
         }
     }
 
@@ -95,25 +95,21 @@ class LocalCloneOperator @NonInjectable constructor(
         }
     }
 
-    data class Result(
-        val actions: List<Action>,
-        val success: Boolean,
-    )
 
     /**
      * Save a copy of a clone after it has been pulled into the configured location
      */
-    suspend fun saveCopy(settings: CodeHostSettings, repo: SearchResult, defaultBranch: String): Result {
+    suspend fun saveCopy(settings: CodeHostSettings, repo: SearchResult, defaultBranch: String): CloneAttemptResult {
         val localRepoFile = File(project.basePath!!, "clones/${repo.asPathString()}/.git")
         if (!localRepoFile.exists()) {
-            return Result(listOf(Action("Save Copy", ApplyOutput.dummy(std = "Repo doesn't exist", dir = repo.asPathString()))), false)
+            return CloneAttemptResult(actions = listOf(Action("Save Copy", ApplyOutput.dummy(std = "Repo doesn't exist", dir = repo.asPathString()))), success = false, repo = repo)
         }
 
-        val keepRoot = settings.keepLocalRepos?.path ?: return Result(emptyList(), false)
+        val keepRoot = settings.keepLocalRepos?.path ?: return CloneAttemptResult(actions = emptyList(), success = false, repo = repo)
         val keepLocalRepo = "$keepRoot/${repo.project}/${repo.repo}"
         val keepLocalRepoFile = File(keepLocalRepo, ".git")
         if (keepLocalRepoFile.exists()) {
-            return Result(listOf(Action("Save copy", ApplyOutput.dummy(std = "Copy saved already, wont update", dir = repo.asPathString(), exitCode = 0))), true)
+            return CloneAttemptResult(actions = listOf(Action("Save copy", ApplyOutput.dummy(std = "Copy saved already, wont update", dir = repo.asPathString(), exitCode = 0))), success = true, repo = repo)
         }
 
         val history = mutableListOf<Action>()
@@ -136,7 +132,7 @@ class LocalCloneOperator @NonInjectable constructor(
             history.add(Action("git checkout $defaultBranch", it))
         }
 
-        return Result(history, true)
+        return CloneAttemptResult(actions = history, success = true, repo = repo)
     }
 
     private suspend fun unshallowAndFetch(dir: File, history: MutableList<Action>) {
