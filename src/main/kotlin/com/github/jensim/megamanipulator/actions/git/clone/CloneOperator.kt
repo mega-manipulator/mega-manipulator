@@ -2,6 +2,7 @@ package com.github.jensim.megamanipulator.actions.git.clone
 
 import com.github.jensim.megamanipulator.actions.NotificationsOperator
 import com.github.jensim.megamanipulator.actions.apply.ApplyOutput
+import com.github.jensim.megamanipulator.actions.git.Action
 import com.github.jensim.megamanipulator.actions.git.GitUrlHelper
 import com.github.jensim.megamanipulator.actions.search.SearchResult
 import com.github.jensim.megamanipulator.actions.vcs.PrRouter
@@ -77,11 +78,11 @@ class CloneOperator @NonInjectable constructor(
     ): List<Action> {
         val basePath = project.basePath!!
         val codeSettings: CodeHostSettings = settings.resolveSettings(repo.searchHostName, repo.codeHostName)?.second
-            ?: return listOf("Settings" to ApplyOutput.dummy(std = "Settings were not resolvable for ${repo.searchHostName}/${repo.codeHostName}, most likely the key of the code host does not match the one returned by your search host!"))
+            ?: return listOf(Action("Settings", ApplyOutput(std = "Settings were not resolvable for ${repo.searchHostName}/${repo.codeHostName}, most likely the key of the code host does not match the one returned by your search host!", dir = repo.asPathString(), exitCode = 1)))
         val vcsRepo: RepoWrapper = prRouter.getRepo(repo)
-            ?: return listOf("Finding repo on code host" to ApplyOutput.dummy(std = "Didn't match settings on remote code host for ${repo.searchHostName}/${repo.codeHostName}"))
+            ?: return listOf(Action("Finding repo on code host", ApplyOutput(std = "Didn't match settings on remote code host for ${repo.searchHostName}/${repo.codeHostName}", dir = repo.asPathString(), exitCode = 1)))
         val cloneUrl = gitUrlHelper.buildCloneUrl(codeSettings, vcsRepo)
-        val defaultBranch = prRouter.getRepo(repo)?.getDefaultBranch() ?: return listOf("Resolve default branch" to ApplyOutput(repo.asPathString(), "Could not resolve default branch name", 1))
+        val defaultBranch = prRouter.getRepo(repo)?.getDefaultBranch() ?: return listOf(Action("Resolve default branch", ApplyOutput(repo.asPathString(), "Could not resolve default branch name", 1)))
         val dir = File(basePath, "clones/${repo.asPathString()}")
         val history = mutableListOf<Action>()
 
@@ -105,7 +106,7 @@ class CloneOperator @NonInjectable constructor(
     fun clone(pullRequests: List<PullRequestWrapper>, sparseDef: String?) {
         val settings: MegaManipulatorSettings? = settingsFileOperator.readSettings()
         if (settings == null) {
-            reportState(listOf("Settings" to listOf("Load Settings" to ApplyOutput.dummy(std = "No settings found for project."))))
+            reportState(listOf("Settings" to listOf(Action("Load Settings", ApplyOutput.dummy(std = "No settings found for project.")))))
             return
         }
         val state: List<Pair<PullRequestWrapper, List<Action>?>> = uiProtector.mapConcurrentWithProgress(
@@ -127,16 +128,20 @@ class CloneOperator @NonInjectable constructor(
     ): List<Action> {
         val codeHostSettings: CodeHostSettings = settings.resolveSettings(pullRequest.searchHostName(), pullRequest.codeHostName())?.second
             ?: return listOf(
-                "Settings" to ApplyOutput.dummy(
-                    dir = pullRequest.asPathString(),
-                    std = "No settings found for ${pullRequest.searchHostName()}/${pullRequest.codeHostName()}, most likely the key of the code host does not match the one returned by your search host!"
+                Action(
+                    "Settings",
+                    ApplyOutput(
+                        dir = pullRequest.asPathString(),
+                        std = "No settings found for ${pullRequest.searchHostName()}/${pullRequest.codeHostName()}, most likely the key of the code host does not match the one returned by your search host!",
+                        exitCode = 1,
+                    )
                 )
             )
         val history = mutableListOf<Action>()
         if (pullRequest.isFork()) {
             // TODO: Solve this 😬
             if (codeHostSettings.keepLocalRepos?.path != null) {
-                history.add("Restore kept repo" to ApplyOutput(dir = pullRequest.asPathString(), std = "Pull request clones from local keep repo is not yet supported, it quickly becomes complex when you factor in fork settings, and that those can be changed by you (the user) at any time..", exitCode = 1))
+                history.add(Action("Restore kept repo", ApplyOutput(dir = pullRequest.asPathString(), std = "Pull request clones from local keep repo is not yet supported, it quickly becomes complex when you factor in fork settings, and that those can be changed by you (the user) at any time..", exitCode = 1)))
             }
 
             history.addAll(
@@ -149,7 +154,7 @@ class CloneOperator @NonInjectable constructor(
             return history
         }
         val repo = pullRequest.asSearchResult()
-        val defaultBranch = prRouter.getRepo(repo)?.getDefaultBranch() ?: return listOf("Resolve default branch" to ApplyOutput(repo.asPathString(), "Could not resolve default branch name", 1))
+        val defaultBranch = prRouter.getRepo(repo)?.getDefaultBranch() ?: return listOf(Action("Resolve default branch", ApplyOutput(repo.asPathString(), "Could not resolve default branch name", 1)))
 
         val copyIf = localCloneOperator.copyIf(codeHostSettings, repo, defaultBranch, pullRequest.fromBranch())
         history.addAll(copyIf.actions)
@@ -166,7 +171,7 @@ class CloneOperator @NonInjectable constructor(
     }
 
     private fun reportState(state: List<Pair<Any, List<Action>?>>) {
-        val badState: List<Pair<Any, List<Action>?>> = state.filter { it.second.orEmpty().lastOrNull()?.second?.exitCode != 0 }
+        val badState: List<Pair<Any, List<Action>?>> = state.filter { it.second.orEmpty().lastOrNull()?.how?.exitCode != 0 }
         if (badState.isEmpty()) {
             notificationsOperator.show(
                 title = "Cloning done",
@@ -178,7 +183,7 @@ class CloneOperator @NonInjectable constructor(
                 prefix = "<ul>",
                 separator = "<br>",
                 postfix = "</ul>"
-            ) { "<li>${it.first}${it.second?.lastOrNull()?.second?.let { "<br>output:'${it.std.replace("\n","<br>\n")}'" } ?: "..."}</li>" }
+            ) { "<li>${it.first}${it.second?.lastOrNull()?.how?.let { "<br>output:'${it.std.replace("\n","<br>\n")}'" } ?: "..."}</li>" }
             notificationsOperator.show(
                 title = "Cloning done with failures",
                 body = "Failed cloning ${badState.size}/${state.size} repos. More info in IDE logs...<br>$stateAsString",

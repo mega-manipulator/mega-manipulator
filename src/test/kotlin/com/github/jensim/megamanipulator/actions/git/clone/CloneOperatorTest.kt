@@ -2,6 +2,7 @@ package com.github.jensim.megamanipulator.actions.git.clone
 
 import com.github.jensim.megamanipulator.actions.NotificationsOperator
 import com.github.jensim.megamanipulator.actions.apply.ApplyOutput
+import com.github.jensim.megamanipulator.actions.git.Action
 import com.github.jensim.megamanipulator.actions.git.GitUrlHelper
 import com.github.jensim.megamanipulator.actions.search.SearchResult
 import com.github.jensim.megamanipulator.actions.vcs.PrRouter
@@ -118,7 +119,9 @@ internal class CloneOperatorTest {
                 shallow = false,
                 sparseDef = null
             )
-        } returns listOf("Cloning" to ApplyOutput(dir = tempDir.absolutePath, std = "👍👌!!", 0))
+        } returns listOf(
+            Action("Cloning", ApplyOutput(dir = tempDir.absolutePath, std = "👍👌!!", 0))
+        )
 
         // When
         cloneOperator.clone(repos = setOf(input), branchName = "main", shallow = false, sparseDef = null)

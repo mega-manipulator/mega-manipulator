@@ -109,7 +109,7 @@ open class TestApplicationWiring {
         )
     }
     val localCloneOperator: LocalCloneOperator by lazy {
-        LocalCloneOperator(mockProject, filesOperator)
+        LocalCloneOperator(mockProject, processOperator)
     }
     val remoteCloneOperator: RemoteCloneOperator by lazy {
         RemoteCloneOperator(

@@ -2,11 +2,13 @@ package com.github.jensim.megamanipulator.actions.git.clone
 
 import com.github.jensim.megamanipulator.actions.ProcessOperator
 import com.github.jensim.megamanipulator.actions.apply.ApplyOutput
+import com.github.jensim.megamanipulator.actions.git.Action
 import com.github.jensim.megamanipulator.actions.git.localrepo.LocalRepoOperator
 import com.github.jensim.megamanipulator.actions.search.SearchResult
 import com.github.jensim.megamanipulator.actions.vcs.PullRequestWrapper
 import com.github.jensim.megamanipulator.settings.types.CloneType.HTTPS
 import com.github.jensim.megamanipulator.settings.types.MegaManipulatorSettings
+import com.github.jensim.megamanipulator.settings.types.codehost.CodeHostSettings
 import com.github.jensim.megamanipulator.settings.types.searchhost.SearchHostSettings
 import com.intellij.openapi.project.Project
 import io.mockk.coEvery
@@ -41,13 +43,14 @@ class RemoteCloneOperatorTest {
     private val processOperator: ProcessOperator = mockk()
 
     private val project: Project = mockk()
+    private val codeHostSettings = mockk<CodeHostSettings> {
+        every { username } returns "username"
+        every { cloneType } returns HTTPS
+        every { baseUrl } returns "https://example"
+    }
     private val settings = mockk<MegaManipulatorSettings> {
         every { resolveSettings(any(), any()) } returns (
-            mockk<SearchHostSettings>() to mockk {
-                every { username } returns "username"
-                every { cloneType } returns HTTPS
-                every { baseUrl } returns "https://example"
-            }
+            mockk<SearchHostSettings>() to codeHostSettings
             )
     }
 
@@ -88,7 +91,7 @@ class RemoteCloneOperatorTest {
         // Then
         assertThat(result, hasSize(greaterThan(0)))
         result.forEachIndexed { index, action ->
-            assertThat("Result number ${index + 1}, \"${action.first}\" had exit code ${action.second.exitCode}, and output \"${action.second.std}\"", action.second.exitCode, equalTo(0))
+            assertThat("Result number ${index + 1}, \"${action.what}\" had exit code ${action.how.exitCode}, and output \"${action.how.std}\"", action.how.exitCode, equalTo(0))
         }
     }
 
@@ -109,12 +112,12 @@ class RemoteCloneOperatorTest {
         }
 
         // When
-        val first = remoteCloneOperator.cloneRepos(pullRequest = pullRequest, sparseDef = null, settings = settings)
-        val second = remoteCloneOperator.cloneRepos(pullRequest = pullRequest, sparseDef = null, settings = settings)
+        val first = remoteCloneOperator.cloneRepos(pullRequest = pullRequest, sparseDef = null, settings = codeHostSettings)
+        val second = remoteCloneOperator.cloneRepos(pullRequest = pullRequest, sparseDef = null, settings = codeHostSettings)
 
         // Then
-        assertThat(first.last().second.exitCode, equalTo(1))
-        assertThat(second.last().second.exitCode, equalTo(0))
+        assertThat(first.last().how.exitCode, equalTo(1))
+        assertThat(second.last().how.exitCode, equalTo(0))
     }
 
     @Test
@@ -134,7 +137,7 @@ class RemoteCloneOperatorTest {
         coEvery { processOperator.runCommandAsync(any(), any()) } returns CompletableDeferred(applyOutput)
 
         // When
-        remoteCloneOperator.cloneRepos(pullRequest = pullRequest, settings = settings, sparseDef = null)
+        remoteCloneOperator.cloneRepos(pullRequest = pullRequest, settings = codeHostSettings, sparseDef = null)
 
         // Then
         verify { processOperator.runCommandAsync(any(), any()) }
@@ -159,7 +162,7 @@ class RemoteCloneOperatorTest {
         coEvery { localRepoOperator.promoteOriginToForkRemote(any(), any()) } returns emptyList()
 
         // When
-        remoteCloneOperator.cloneRepos(pullRequest = pullRequest, settings = settings, sparseDef = null)
+        remoteCloneOperator.cloneRepos(pullRequest = pullRequest, settings = codeHostSettings, sparseDef = null)
 
         // Then
         verify { processOperator.runCommandAsync(any(), any()) }
@@ -198,11 +201,11 @@ class RemoteCloneOperatorTest {
         File(fullPath, ".git").createNewFile()
 
         // When
-        val states = remoteCloneOperator.cloneRepos(pullRequest, settings, null)
+        val states = remoteCloneOperator.cloneRepos(pullRequest, codeHostSettings, null)
 
         // Then
         assertThat(states.size, equalTo(1))
-        assertThat(states[0].first, equalTo("Repo already cloned"))
+        assertThat(states[0].what, equalTo("Repo already cloned"))
     }
 
     private fun mockFile(pullRequest: PullRequestWrapper): File {
