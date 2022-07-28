@@ -21,7 +21,7 @@ class CloneHistoryWindow(val project: Project) : ToolWindowTab {
     private val attemptSelector = GeneralKtDataTable(
         type = CloneAttempt::class,
         columns = listOf("Time" to { it.time.toString() }),
-        colorizer = { it.results.any { !it.success } },
+        colorizer = { it.results.any { repo -> !repo.success } },
     )
     private val resultSelector = GeneralKtDataTable(
         type = CloneAttemptResult::class,
