@@ -6,7 +6,7 @@ import com.github.jensim.megamanipulator.settings.types.AuthMethod.USERNAME_TOKE
 import com.github.jensim.megamanipulator.settings.types.CloneType
 import com.github.jensim.megamanipulator.settings.types.CloneType.SSH
 import com.github.jensim.megamanipulator.settings.types.ForkSetting
-import com.github.jensim.megamanipulator.settings.types.ForkSetting.LAZY_FORK
+import com.github.jensim.megamanipulator.settings.types.ForkSetting.PLAIN_BRANCH
 import com.github.jensim.megamanipulator.settings.types.HttpsOverride
 import com.github.jensim.megamanipulator.settings.types.KeepLocalRepos
 import com.github.jensim.megamanipulator.settings.types.codehost.CodeHostSettingsType.BITBUCKET_SERVER
@@ -21,7 +21,7 @@ data class BitBucketSettings(
     @JsonPropertyDescription("Your username at the code host")
     override val username: String,
     @JsonPropertyDescription(forkSettingDescription)
-    override val forkSetting: ForkSetting = LAZY_FORK,
+    override val forkSetting: ForkSetting = PLAIN_BRANCH,
     @JsonPropertyDescription("It's strongly recommended to use SSH clone type.")
     override val cloneType: CloneType = SSH,
     override val keepLocalRepos: KeepLocalRepos? = null,
