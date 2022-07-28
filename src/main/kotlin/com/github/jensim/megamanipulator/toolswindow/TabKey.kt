@@ -8,4 +8,5 @@ enum class TabKey {
     tabTitleClones,
     tabTitlePRsManage,
     tabTitleForks,
+    tabTitleCloneHistory,
 }

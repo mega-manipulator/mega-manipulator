@@ -50,7 +50,7 @@ class LocalCloneOperator @NonInjectable constructor(
                     logger.warn(message)
                     SKIP
                 }
-                checkout(defaultBranch, branch, keepLocalRepoFile, history)
+                checkout(defaultBranch, branch, keepLocalRepoFile.parentFile, history)
                 history.add(Action("Restore saved repo", ApplyOutput(repo.asPathString(), "Done", 0)))
 
                 CloneAttemptResult(actions = history, success = true, repo = repo)
@@ -71,30 +71,29 @@ class LocalCloneOperator @NonInjectable constructor(
          *  * Delete local branch if exists..
          *  * Handle PR clone, where branch should exist
          */
-        processOperator.runCommandAsync(repo.parentFile, listOf("git", "branch", "-delete", defaultBranch)).await().let {
-            history.add(Action("git delete default branch '$defaultBranch'", it))
-        }
-        if (defaultBranch != branch) {
-            processOperator.runCommandAsync(repo.parentFile, listOf("git", "branch", "-delete", branch)).await().let {
-                history.add(Action("git delete branch '$branch'", it))
+        processOperator.runCommandAsync(repo, listOf("git", "checkout", "-f", defaultBranch)).await().let {
+            history.add(Action("git checkout default branch '$defaultBranch'", it))
+            if (it.exitCode == 0) {
+                processOperator.runCommandAsync(repo, listOf("git", "reset", "--hard", "HEAD")).await().let {
+                    history.add(Action("git reset default branch '$defaultBranch'", it))
+                }
             }
         }
-        processOperator.runCommandAsync(repo.parentFile, listOf("git", "branch", "-delete", defaultBranch)).await().let {
-            history.add(Action("git delete default branch '$defaultBranch'", it))
-        }
-        processOperator.runCommandAsync(repo.parentFile, listOf("git", "checkout", defaultBranch)).await().let {
-            history.add(Action("git checkout default branch '$defaultBranch'", it))
-        }
-        if (defaultBranch != branch && history.last().how.exitCode == 0) {
-            val p3 = processOperator.runCommandAsync(repo, listOf("git", "checkout", branch)).await()
-            history.add(Action("Switch branch", p3))
-            if (p3.exitCode != 0) {
-                val p4 = processOperator.runCommandAsync(repo, listOf("git", "checkout", "-b", branch)).await()
-                history.add(Action("Create branch", p4))
+        if (defaultBranch != branch) {
+            if (history.last().how.exitCode == 0) {
+                val p3 = processOperator.runCommandAsync(repo, listOf("git", "checkout", "-f", branch)).await()
+                history.add(Action("Switch branch", p3))
+                if (p3.exitCode != 0) {
+                    val p4 = processOperator.runCommandAsync(repo, listOf("git", "checkout", "-f", "-b", branch)).await()
+                    history.add(Action("Create branch", p4))
+                } else {
+                    processOperator.runCommandAsync(repo, listOf("git", "reset", "--hard", "HEAD")).await().let {
+                        history.add(Action("git reset branch '$branch'", it))
+                    }
+                }
             }
         }
     }
-
 
     /**
      * Save a copy of a clone after it has been pulled into the configured location

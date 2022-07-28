@@ -7,6 +7,7 @@ import com.fasterxml.jackson.databind.DeserializationFeature.ACCEPT_EMPTY_STRING
 import com.fasterxml.jackson.databind.DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.SerializationFeature.INDENT_OUTPUT
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
 import com.fasterxml.jackson.module.kotlin.KotlinModule
 
 object SerializationHolder {
@@ -17,6 +18,7 @@ object SerializationHolder {
         configure(ACCEPT_EMPTY_ARRAY_AS_NULL_OBJECT, true)
         setDefaultPropertyInclusion(NON_NULL)
         registerModule(KotlinModule.Builder().build())
+        registerModule(JavaTimeModule())
     }
 
     val objectMapper = new()

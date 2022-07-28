@@ -1,6 +1,7 @@
 package com.github.jensim.megamanipulator.ui
 
 import com.intellij.openapi.project.Project
+import com.intellij.ui.dsl.builder.Row
 import java.io.File
 
 fun File.trimProjectPath(project: Project): String {
@@ -16,4 +17,16 @@ fun File.trimProjectPath(project: Project): String {
     } else {
         this.path
     }
+}
+
+fun Row.groupPanel(title: String, dsl: Row.() -> Unit) {
+    cell(
+        com.intellij.ui.dsl.builder.panel {
+            group(title) {
+                row {
+                    dsl()
+                }
+            }
+        }
+    )
 }

@@ -17,6 +17,7 @@ import com.github.jensim.megamanipulator.actions.vcs.gitlab.GitLabClient
 import com.github.jensim.megamanipulator.files.FilesOperator
 import com.github.jensim.megamanipulator.http.HttpClientProvider
 import com.github.jensim.megamanipulator.project.ProjectOperator
+import com.github.jensim.megamanipulator.settings.MegaManipulatorSettingsState
 import com.github.jensim.megamanipulator.settings.SettingsFileOperator
 import com.github.jensim.megamanipulator.ui.DialogGenerator
 import com.github.jensim.megamanipulator.ui.TestUiProtector
@@ -118,8 +119,20 @@ open class TestApplicationWiring {
             processOperator = processOperator,
         )
     }
+    val megaManipulatorSettingsState: MegaManipulatorSettingsState by lazy { MegaManipulatorSettingsState() }
     val cloneOperator: CloneOperator by lazy {
-        CloneOperator(mockProject, remoteCloneOperator, localCloneOperator, settingsFileOperator, filesOperator, prRouter, notificationsOperator, uiProtector, gitUrlHelper)
+        CloneOperator(
+            project = mockProject,
+            remoteCloneOperator = remoteCloneOperator,
+            localCloneOperator = localCloneOperator,
+            settingsFileOperator = settingsFileOperator,
+            filesOperator = filesOperator,
+            prRouter = prRouter,
+            notificationsOperator = notificationsOperator,
+            uiProtector = uiProtector,
+            gitUrlHelper = gitUrlHelper,
+            megaManipulatorSettingsState = megaManipulatorSettingsState,
+        )
     }
 
     val applyOperator: ApplyOperator by lazy {

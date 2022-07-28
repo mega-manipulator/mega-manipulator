@@ -101,11 +101,12 @@ class CloneOperator @NonInjectable constructor(
             )
         val cloneUrl = gitUrlHelper.buildCloneUrl(codeSettings, vcsRepo)
         val defaultBranch = prRouter.getRepo(repo)?.getDefaultBranch()
-            ?: return CloneAttemptResult(repo = repo, actions = listOf(Action("Resolve default branch", ApplyOutput(repo.asPathString(), "Could not resolve default branch name", 1))), success = false)
+            ?: return CloneAttemptResult.fail(repo = repo, what = "Resolve default branch", how = "Could not resolve default branch name")
         val dir = File(basePath, "clones/${repo.asPathString()}")
         val history = mutableListOf<Action>()
 
         val copyIf = localCloneOperator.copyIf(codeSettings, repo, defaultBranch, branchName)
+        history.addAll(copyIf.actions)
         if (!copyIf.success) {
             history.addAll(
                 remoteCloneOperator.clone(
@@ -126,7 +127,7 @@ class CloneOperator @NonInjectable constructor(
         val settings: MegaManipulatorSettings? = settingsFileOperator.readSettings()
         if (settings == null) {
             val repo = pullRequests.first().asSearchResult()
-            reportState(mapOf(repo to CloneAttemptResult(repo = repo, actions = listOf(Action("Load Settings", ApplyOutput(std = "No settings found for project.", dir = repo.asPathString(), exitCode = 0))), success = false)))
+            reportState(mapOf(repo to CloneAttemptResult.fail(repo = repo, what = "Load Settings", how = "No settings found for project.")))
             return
         }
         val state: Map<SearchResult, CloneAttemptResult> = uiProtector.mapConcurrentWithProgress(
@@ -168,7 +169,6 @@ class CloneOperator @NonInjectable constructor(
             if (codeHostSettings.keepLocalRepos?.path != null) {
                 history.add(Action("Restore kept repo", ApplyOutput(dir = pullRequest.asPathString(), std = "Pull request clones from local keep repo is not yet supported, it quickly becomes complex when you factor in fork settings, and that those can be changed by you (the user) at any time..", exitCode = 1)))
             }
-
             history.addAll(
                 remoteCloneOperator.cloneRepos(
                     pullRequest = pullRequest,
@@ -216,8 +216,8 @@ class CloneOperator @NonInjectable constructor(
                 body = "Failed cloning ${badState.size}/${state.size} repos. More info in IDE logs...<br>$stateAsString",
                 type = WARNING,
             )
-            val serializaleBadState: List<Pair<String, CloneAttemptResult>> = badState.map { it.key.asPathString() to it.value }
-            val badStateString = SerializationHolder.objectMapper.writeValueAsString(serializaleBadState)
+            val serializableBadState: List<Pair<String, CloneAttemptResult>> = badState.map { it.key.asPathString() to it.value }
+            val badStateString = SerializationHolder.objectMapper.writeValueAsString(serializableBadState)
             System.err.println("Failed cloning ${badState.size}/${state.size} repos, these are the causes:\n$badStateString")
         }
     }

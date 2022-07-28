@@ -7,6 +7,7 @@ import com.github.jensim.megamanipulator.actions.git.GitUrlHelper
 import com.github.jensim.megamanipulator.actions.search.SearchResult
 import com.github.jensim.megamanipulator.actions.vcs.PrRouter
 import com.github.jensim.megamanipulator.files.FilesOperator
+import com.github.jensim.megamanipulator.settings.MegaManipulatorSettingsState
 import com.github.jensim.megamanipulator.settings.SettingsFileOperator
 import com.github.jensim.megamanipulator.settings.passwords.PasswordsOperator
 import com.github.jensim.megamanipulator.settings.types.CloneType.HTTPS
@@ -59,16 +60,18 @@ internal class CloneOperatorTest {
     private val localCloneOperator: LocalCloneOperator = mockk()
     private val uiProtector = TestUiProtector()
     private val filesOperator: FilesOperator = mockk(relaxUnitFun = true)
+    private val megaManipulatorSettingsState = MegaManipulatorSettingsState()
     private val cloneOperator = CloneOperator(
-        project,
-        remoteCloneOperator,
-        localCloneOperator,
-        settingsFileOperator,
-        filesOperator,
-        prRouter,
-        notificationsOperator,
-        uiProtector,
-        gitUrlHelper,
+        project = project,
+        remoteCloneOperator = remoteCloneOperator,
+        localCloneOperator = localCloneOperator,
+        settingsFileOperator = settingsFileOperator,
+        filesOperator = filesOperator,
+        prRouter = prRouter,
+        notificationsOperator = notificationsOperator,
+        uiProtector = uiProtector,
+        gitUrlHelper = gitUrlHelper,
+        megaManipulatorSettingsState = megaManipulatorSettingsState,
     )
 
     private val tempDirPath: Path = createTempDirectory(prefix = null, attributes = emptyArray())

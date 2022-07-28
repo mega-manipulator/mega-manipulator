@@ -1,6 +1,7 @@
 package com.github.jensim.megamanipulator.settings
 
 import com.github.jensim.megamanipulator.actions.git.clone.CloneAttempt
+import com.github.jensim.megamanipulator.actions.git.clone.CloneAttemptConverter
 import com.github.jensim.megamanipulator.onboarding.OnboardingId
 import com.github.jensim.megamanipulator.project.PrefillString
 import com.intellij.openapi.components.PersistentStateComponent
@@ -8,6 +9,7 @@ import com.intellij.openapi.components.RoamingType.DEFAULT
 import com.intellij.openapi.components.State
 import com.intellij.openapi.components.Storage
 import com.intellij.util.xmlb.XmlSerializerUtil
+import com.intellij.util.xmlb.annotations.OptionTag
 
 @State(
     name = "MegaManipulatorSettingsState",
@@ -18,7 +20,8 @@ class MegaManipulatorSettingsState : PersistentStateComponent<MegaManipulatorSet
     var seenOnboarding: MutableMap<OnboardingId, Boolean> = mutableMapOf()
     var prefillStrings: MutableMap<PrefillString, MutableList<String>> = mutableMapOf()
     var seenGlobalOnboarding: Boolean = false
-    var cloneHistory = mutableListOf<CloneAttempt>()
+    @OptionTag(converter = CloneAttemptConverter::class)
+    var cloneHistory: MutableList<CloneAttempt> = ArrayList()
     // var applyHistory = mutableListOf<ApplyAttempt>()
 
     fun seenOnBoarding(id: OnboardingId): Boolean = seenOnboarding[id] ?: false

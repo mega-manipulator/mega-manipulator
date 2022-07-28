@@ -11,6 +11,8 @@ import com.github.jensim.megamanipulator.settings.types.searchhost.HoundSettings
 import com.github.jensim.megamanipulator.settings.types.searchhost.SearchHostSettings
 import com.github.jensim.megamanipulator.settings.types.searchhost.SearchHostSettingsGroup
 import com.github.jensim.megamanipulator.toolswindow.TabKey
+import com.github.jensim.megamanipulator.toolswindow.TabKey.tabTitleCloneHistory
+import com.github.jensim.megamanipulator.toolswindow.TabSelectorService
 import com.github.jensim.megamanipulator.toolswindow.ToolWindowTab
 import com.github.jensim.megamanipulator.ui.CloneDialogFactory
 import com.github.jensim.megamanipulator.ui.GeneralKtDataTable
@@ -42,6 +44,7 @@ class SearchWindow(
     private val onboardingOperator: OnboardingOperator by lazy { project.service() }
     private val prefillOperator: PrefillStringSuggestionOperator by lazy { project.service() }
     private val cloneDialogFactory: CloneDialogFactory by lazy { project.service() }
+    private val tabSelectorService: TabSelectorService by lazy { project.service() }
 
     private val EMPTY = "-" to HoundSettings("http://0.0.0.0", null, emptyMap())
     private val searchHostSelect = ComboBox<Pair<String, SearchHostSettings>>()
@@ -116,6 +119,7 @@ class SearchWindow(
             if (selected.isNotEmpty()) {
                 cloneDialogFactory.showCloneDialog(cloneButton) { branch: String, shallow: Boolean, sparseDef: String? ->
                     cloneOperator.clone(repos = selected, branchName = branch, shallow = shallow, sparseDef = sparseDef)
+                    tabSelectorService.selectTab(tabTitleCloneHistory)
                     table.clearSelection()
                     prefillOperator.addPrefill(PrefillString.BRANCH, branch)
                 }
