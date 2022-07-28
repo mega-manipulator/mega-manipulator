@@ -29,6 +29,10 @@ class MegaManipulatorSettingsState : PersistentStateComponent<MegaManipulatorSet
         seenOnboarding[id] = true
     }
 
+    fun addCloneAttempt(cloneAttempt: CloneAttempt){
+        cloneHistory = ArrayList(cloneHistory.takeLast(9) + cloneAttempt)
+    }
+
     fun resetPrefill() {
         prefillStrings.clear()
     }
