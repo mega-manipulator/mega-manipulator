@@ -116,7 +116,7 @@ class SettingsFileOperatorTest {
         val schema: JsonSchema = schemaGen.generateSchema(MegaManipulatorSettings::class.java)
         val jsonSchemaString = SerializationHolder.readable.writeValueAsString(schema)
 
-        baseFile.writeText(jsonSchemaString)
+        // baseFile.writeText(jsonSchemaString)
         val baseFileText = baseFile.readText()
         JSONAssert.assertEquals(baseFileText, jsonSchemaString, STRICT)
         assertThat(baseFileText, not(containsString(": \"\\")))

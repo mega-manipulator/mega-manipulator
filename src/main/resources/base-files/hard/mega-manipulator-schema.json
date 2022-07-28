@@ -65,7 +65,7 @@
                         "forkSetting" : {
                           "type" : "string",
                           "required" : true,
-                          "description" : "Fork settings is used to decide when to fork a repo:\n* PLAIN_BRANCH: Will require write access to the repo\n* LAZY_FORK: When not permitted to push into origin, attempt fork strategy\n* EAGER_FORK: Fork before push, for every repo",
+                          "description" : "Fork settings is used to decide when to fork a repo:\n* PLAIN_BRANCH: Will require write access to the repo (default)\n* LAZY_FORK: When not permitted to push into origin, attempt fork strategy\n* EAGER_FORK: Fork before push, for every repo",
                           "enum" : [ "PLAIN_BRANCH", "LAZY_FORK", "EAGER_FORK" ]
                         },
                         "cloneType" : {
@@ -117,7 +117,7 @@
                         "forkSetting" : {
                           "type" : "string",
                           "required" : true,
-                          "description" : "Fork settings is used to decide when to fork a repo:\n* PLAIN_BRANCH: Will require write access to the repo\n* LAZY_FORK: When not permitted to push into origin, attempt fork strategy\n* EAGER_FORK: Fork before push, for every repo",
+                          "description" : "Fork settings is used to decide when to fork a repo:\n* PLAIN_BRANCH: Will require write access to the repo (default)\n* LAZY_FORK: When not permitted to push into origin, attempt fork strategy\n* EAGER_FORK: Fork before push, for every repo",
                           "enum" : [ "PLAIN_BRANCH", "LAZY_FORK", "EAGER_FORK" ]
                         },
                         "cloneType" : {
@@ -172,7 +172,7 @@
                         "forkSetting" : {
                           "type" : "string",
                           "required" : true,
-                          "description" : "Fork settings is used to decide when to fork a repo:\n* PLAIN_BRANCH: Will require write access to the repo\n* LAZY_FORK: When not permitted to push into origin, attempt fork strategy\n* EAGER_FORK: Fork before push, for every repo",
+                          "description" : "Fork settings is used to decide when to fork a repo:\n* PLAIN_BRANCH: Will require write access to the repo (default)\n* LAZY_FORK: When not permitted to push into origin, attempt fork strategy\n* EAGER_FORK: Fork before push, for every repo",
                           "enum" : [ "PLAIN_BRANCH", "LAZY_FORK", "EAGER_FORK" ]
                         },
                         "cloneType" : {
@@ -256,7 +256,7 @@
               "forkSetting" : {
                 "type" : "string",
                 "required" : true,
-                "description" : "Fork settings is used to decide when to fork a repo:\n* PLAIN_BRANCH: Will require write access to the repo\n* LAZY_FORK: When not permitted to push into origin, attempt fork strategy\n* EAGER_FORK: Fork before push, for every repo",
+                "description" : "Fork settings is used to decide when to fork a repo:\n* PLAIN_BRANCH: Will require write access to the repo (default)\n* LAZY_FORK: When not permitted to push into origin, attempt fork strategy\n* EAGER_FORK: Fork before push, for every repo",
                 "enum" : [ "PLAIN_BRANCH", "LAZY_FORK", "EAGER_FORK" ]
               },
               "cloneType" : {
