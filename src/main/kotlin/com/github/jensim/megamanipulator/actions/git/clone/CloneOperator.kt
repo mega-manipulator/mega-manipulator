@@ -71,7 +71,7 @@ class CloneOperator @NonInjectable constructor(
             clone(settings, repo, branchName, shallow, sparseDef)
         }.associate {
             it.first to if (it.second == null) {
-                CloneAttemptResult(it.first, emptyList(), false)
+                CloneAttemptResult(it.first, branchName, emptyList(), false)
             } else {
                 it.second!!
             }
@@ -80,7 +80,7 @@ class CloneOperator @NonInjectable constructor(
         reportState(state)
     }
 
-    private suspend fun clone(
+    suspend fun clone(
         settings: MegaManipulatorSettings,
         repo: SearchResult,
         branchName: String,
@@ -91,18 +91,20 @@ class CloneOperator @NonInjectable constructor(
         val codeSettings: CodeHostSettings = settings.resolveSettings(repo.searchHostName, repo.codeHostName)?.second
             ?: return CloneAttemptResult.fail(
                 repo = repo,
+                branch = branchName,
                 what = "Settings",
                 how = "Settings were not resolvable for ${repo.searchHostName}/${repo.codeHostName}, most likely the key of the code host does not match the one returned by your search host!"
             )
         val vcsRepo: RepoWrapper = prRouter.getRepo(repo)
             ?: return CloneAttemptResult.fail(
                 repo = repo,
+                branch = branchName,
                 what = "Finding repo on code host",
                 how = "Didn't match settings on remote code host for ${repo.searchHostName}/${repo.codeHostName}"
             )
         val cloneUrl = gitUrlHelper.buildCloneUrl(codeSettings, vcsRepo)
         val defaultBranch = prRouter.getRepo(repo)?.getDefaultBranch()
-            ?: return CloneAttemptResult.fail(repo = repo, what = "Resolve default branch", how = "Could not resolve default branch name")
+            ?: return CloneAttemptResult.fail(repo = repo, branch = branchName, what = "Resolve default branch", how = "Could not resolve default branch name")
         val dir = File(basePath, "clones/${repo.asPathString()}")
         val history = mutableListOf<Action>()
 
@@ -111,7 +113,7 @@ class CloneOperator @NonInjectable constructor(
         if (!copyIf.success) {
             if (codeSettings.cloneSleepSeconds > 0) {
                 delay(codeSettings.cloneSleepSeconds * 1000L)
-                history.add(Action("Sleep", ApplyOutput(repo.asPathString(),"Slept for ${codeSettings.cloneSleepSeconds} seconds", 0)))
+                history.add(Action("Sleep", ApplyOutput(repo.asPathString(), "Slept for ${codeSettings.cloneSleepSeconds} seconds", 0)))
             }
             history.addAll(
                 remoteCloneOperator.clone(
@@ -125,14 +127,22 @@ class CloneOperator @NonInjectable constructor(
             )
             history.addAll(localCloneOperator.saveCopy(codeSettings, repo, defaultBranch).actions)
         }
-        return CloneAttemptResult(repo = repo, actions = history)
+        return CloneAttemptResult(repo = repo, branch = branchName, actions = history)
     }
 
     fun clone(pullRequests: List<PullRequestWrapper>, sparseDef: String?) {
         val settings: MegaManipulatorSettings? = settingsFileOperator.readSettings()
         if (settings == null) {
-            val repo = pullRequests.first().asSearchResult()
-            reportState(mapOf(repo to CloneAttemptResult.fail(repo = repo, what = "Load Settings", how = "No settings found for project.")))
+            reportState(
+                pullRequests.associate {
+                    it.asSearchResult() to CloneAttemptResult.fail(
+                        repo = it.asSearchResult(),
+                        branch = it.fromBranch(),
+                        what = "Load Settings",
+                        how = "No settings found for project."
+                    )
+                }
+            )
             return
         }
         val state: Map<SearchResult, CloneAttemptResult> = uiProtector.mapConcurrentWithProgress(
@@ -146,7 +156,7 @@ class CloneOperator @NonInjectable constructor(
             val actionsList = actions.orEmpty()
             val success = actionsList.isNotEmpty() && actionsList.last().how.exitCode == 0
             val repo = pr.asSearchResult()
-            repo to CloneAttemptResult(repo, actionsList, success)
+            repo to CloneAttemptResult(repo = repo, branch = pr.fromBranch(), actions = actionsList, success = success)
         }
         filesOperator.refreshClones()
         reportState(state)
@@ -201,7 +211,7 @@ class CloneOperator @NonInjectable constructor(
     }
 
     private fun reportState(state: Map<SearchResult, CloneAttemptResult>) {
-        val attempt = CloneAttempt(state.values.toList())
+        val attempt = CloneAttempt(results = state.values.toList())
         megaManipulatorSettingsState.addCloneAttempt(attempt)
         val badState: Map<SearchResult, CloneAttemptResult> = state.filter { !it.value.success }
         if (badState.isEmpty()) {

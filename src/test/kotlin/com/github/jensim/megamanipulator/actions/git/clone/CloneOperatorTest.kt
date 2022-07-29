@@ -111,10 +111,10 @@ internal class CloneOperatorTest {
         val repo = SearchResult(searchHostName = "search", codeHostName = "code", project = "project", repo = "repo")
         coEvery {
             localCloneOperator.copyIf(codeHostSettings, repo, "main", "main")
-        } returns CloneAttemptResult(repo, listOf(), false)
+        } returns CloneAttemptResult(repo, "main", listOf(), false)
         coEvery {
             localCloneOperator.saveCopy(codeHostSettings, repo, "main")
-        } returns CloneAttemptResult(repo, emptyList(), true)
+        } returns CloneAttemptResult(repo, "main", emptyList(), true)
         coEvery { prRouter.getRepo(repo) } returns mockk {
             every { getDefaultBranch() } returns "main"
             every { getCloneUrl(HTTPS) } returns "https://example.com"
