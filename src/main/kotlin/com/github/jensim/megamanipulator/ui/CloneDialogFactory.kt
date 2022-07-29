@@ -76,7 +76,7 @@ class CloneDialogFactory(
     private class CloneUi(fromPR: Boolean, project: Project) {
         val cloneButton = JButton("Clone")
         val cancelButton = JButton("Cancel")
-        val shallowBox = JBCheckBox(null, true)
+        val shallowBox = JBCheckBox(null, false)
         val branchTextArea = JBTextField(45).apply {
             toolTipText = "Branch"
         }

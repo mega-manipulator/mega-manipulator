@@ -65,7 +65,7 @@
                         "forkSetting" : {
                           "type" : "string",
                           "required" : true,
-                          "description" : "Fork settings is used to decide when to fork a repo:\n* PLAIN_BRANCH: Will require write access to the repo\n* LAZY_FORK: When not permitted to push into origin, attempt fork strategy\n* EAGER_FORK: Fork before push, for every repo",
+                          "description" : "Fork settings is used to decide when to fork a repo:\n* PLAIN_BRANCH: Will require write access to the repo (default)\n* LAZY_FORK: When not permitted to push into origin, attempt fork strategy\n* EAGER_FORK: Fork before push, for every repo",
                           "enum" : [ "PLAIN_BRANCH", "LAZY_FORK", "EAGER_FORK" ]
                         },
                         "cloneType" : {
@@ -76,6 +76,20 @@
                         },
                         "baseUrl" : {
                           "type" : "string",
+                          "required" : true
+                        },
+                        "keepLocalRepos" : {
+                          "type" : "object",
+                          "id" : "urn:jsonschema:com:github:jensim:megamanipulator:settings:types:KeepLocalRepos",
+                          "properties" : {
+                            "path" : {
+                              "type" : "string",
+                              "required" : true
+                            }
+                          }
+                        },
+                        "cloneSleepSeconds" : {
+                          "type" : "integer",
                           "required" : true
                         },
                         "codeHostType" : {
@@ -107,7 +121,7 @@
                         "forkSetting" : {
                           "type" : "string",
                           "required" : true,
-                          "description" : "Fork settings is used to decide when to fork a repo:\n* PLAIN_BRANCH: Will require write access to the repo\n* LAZY_FORK: When not permitted to push into origin, attempt fork strategy\n* EAGER_FORK: Fork before push, for every repo",
+                          "description" : "Fork settings is used to decide when to fork a repo:\n* PLAIN_BRANCH: Will require write access to the repo (default)\n* LAZY_FORK: When not permitted to push into origin, attempt fork strategy\n* EAGER_FORK: Fork before push, for every repo",
                           "enum" : [ "PLAIN_BRANCH", "LAZY_FORK", "EAGER_FORK" ]
                         },
                         "cloneType" : {
@@ -115,6 +129,15 @@
                           "required" : true,
                           "description" : "It's strongly recommended to use SSH clone type.",
                           "enum" : [ "SSH", "HTTPS" ]
+                        },
+                        "keepLocalRepos" : {
+                          "type" : "object",
+                          "$ref" : "urn:jsonschema:com:github:jensim:megamanipulator:settings:types:KeepLocalRepos"
+                        },
+                        "cloneSleepSeconds" : {
+                          "type" : "integer",
+                          "required" : true,
+                          "description" : "When cloning a lot from GitHub, you may hit rate limits, sleeping can get you around that -.-'"
                         },
                         "codeHostType" : {
                           "type" : "string",
@@ -158,7 +181,7 @@
                         "forkSetting" : {
                           "type" : "string",
                           "required" : true,
-                          "description" : "Fork settings is used to decide when to fork a repo:\n* PLAIN_BRANCH: Will require write access to the repo\n* LAZY_FORK: When not permitted to push into origin, attempt fork strategy\n* EAGER_FORK: Fork before push, for every repo",
+                          "description" : "Fork settings is used to decide when to fork a repo:\n* PLAIN_BRANCH: Will require write access to the repo (default)\n* LAZY_FORK: When not permitted to push into origin, attempt fork strategy\n* EAGER_FORK: Fork before push, for every repo",
                           "enum" : [ "PLAIN_BRANCH", "LAZY_FORK", "EAGER_FORK" ]
                         },
                         "cloneType" : {
@@ -166,6 +189,14 @@
                           "required" : true,
                           "description" : "It's strongly recommended to use SSH clone type.",
                           "enum" : [ "SSH", "HTTPS" ]
+                        },
+                        "keepLocalRepos" : {
+                          "type" : "object",
+                          "$ref" : "urn:jsonschema:com:github:jensim:megamanipulator:settings:types:KeepLocalRepos"
+                        },
+                        "cloneSleepSeconds" : {
+                          "type" : "integer",
+                          "required" : true
                         },
                         "codeHostType" : {
                           "type" : "string",
@@ -238,7 +269,7 @@
               "forkSetting" : {
                 "type" : "string",
                 "required" : true,
-                "description" : "Fork settings is used to decide when to fork a repo:\n* PLAIN_BRANCH: Will require write access to the repo\n* LAZY_FORK: When not permitted to push into origin, attempt fork strategy\n* EAGER_FORK: Fork before push, for every repo",
+                "description" : "Fork settings is used to decide when to fork a repo:\n* PLAIN_BRANCH: Will require write access to the repo (default)\n* LAZY_FORK: When not permitted to push into origin, attempt fork strategy\n* EAGER_FORK: Fork before push, for every repo",
                 "enum" : [ "PLAIN_BRANCH", "LAZY_FORK", "EAGER_FORK" ]
               },
               "cloneType" : {
@@ -246,6 +277,10 @@
                 "required" : true,
                 "description" : "It's strongly recommended to use SSH clone type.",
                 "enum" : [ "SSH", "HTTPS" ]
+              },
+              "keepLocalRepos" : {
+                "type" : "object",
+                "$ref" : "urn:jsonschema:com:github:jensim:megamanipulator:settings:types:KeepLocalRepos"
               },
               "docLinkHref" : {
                 "type" : "string",

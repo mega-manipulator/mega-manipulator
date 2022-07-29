@@ -1,6 +1,6 @@
 package com.github.jensim.megamanipulator.onboarding
 
-import com.github.jensim.megamanipulator.project.MegaManipulatorSettingsState
+import com.github.jensim.megamanipulator.settings.MegaManipulatorSettingsState
 import com.github.jensim.megamanipulator.toolswindow.TabKey
 import com.github.jensim.megamanipulator.toolswindow.TabSelectorService
 import com.intellij.openapi.components.service

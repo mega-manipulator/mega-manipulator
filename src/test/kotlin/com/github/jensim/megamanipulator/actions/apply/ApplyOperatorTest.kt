@@ -1,7 +1,7 @@
 package com.github.jensim.megamanipulator.actions.apply
 
 import com.github.jensim.megamanipulator.actions.ProcessOperator
-import com.github.jensim.megamanipulator.actions.localrepo.LocalRepoOperator
+import com.github.jensim.megamanipulator.actions.git.localrepo.LocalRepoOperator
 import com.github.jensim.megamanipulator.files.FilesOperator
 import com.github.jensim.megamanipulator.project.ProjectOperator
 import com.github.jensim.megamanipulator.settings.SettingsFileOperator

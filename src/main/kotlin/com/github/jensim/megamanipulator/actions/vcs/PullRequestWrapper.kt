@@ -2,6 +2,7 @@
 
 package com.github.jensim.megamanipulator.actions.vcs
 
+import com.github.jensim.megamanipulator.actions.search.SearchResult
 import com.github.jensim.megamanipulator.actions.vcs.bitbucketserver.BitBucketPullRequest
 import com.github.jensim.megamanipulator.actions.vcs.githubcom.GithubComPullRequest
 import com.github.jensim.megamanipulator.actions.vcs.gitlab.GitLabMergeRequest
@@ -19,6 +20,7 @@ sealed class PullRequestWrapper : GitCloneable {
     abstract fun browseUrl(): String?
     abstract val raw: String
     fun asPathString(): String = "${searchHostName()}/${codeHostName()}/${project()}/${baseRepo()}"
+    fun asSearchResult() = SearchResult(project = project(), repo = baseRepo(), codeHostName = codeHostName(), searchHostName = searchHostName())
 }
 
 data class BitBucketPullRequestWrapper(

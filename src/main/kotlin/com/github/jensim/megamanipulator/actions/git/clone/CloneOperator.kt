@@ -1,16 +1,16 @@
 package com.github.jensim.megamanipulator.actions.git.clone
 
 import com.github.jensim.megamanipulator.actions.NotificationsOperator
-import com.github.jensim.megamanipulator.actions.ProcessOperator
 import com.github.jensim.megamanipulator.actions.apply.ApplyOutput
+import com.github.jensim.megamanipulator.actions.git.Action
 import com.github.jensim.megamanipulator.actions.git.GitUrlHelper
-import com.github.jensim.megamanipulator.actions.localrepo.LocalRepoOperator
 import com.github.jensim.megamanipulator.actions.search.SearchResult
 import com.github.jensim.megamanipulator.actions.vcs.PrRouter
 import com.github.jensim.megamanipulator.actions.vcs.PullRequestWrapper
 import com.github.jensim.megamanipulator.actions.vcs.RepoWrapper
 import com.github.jensim.megamanipulator.files.FilesOperator
 import com.github.jensim.megamanipulator.project.lazyService
+import com.github.jensim.megamanipulator.settings.MegaManipulatorSettingsState
 import com.github.jensim.megamanipulator.settings.SerializationHolder
 import com.github.jensim.megamanipulator.settings.SettingsFileOperator
 import com.github.jensim.megamanipulator.settings.types.MegaManipulatorSettings
@@ -20,60 +20,103 @@ import com.intellij.notification.NotificationType.INFORMATION
 import com.intellij.notification.NotificationType.WARNING
 import com.intellij.openapi.project.Project
 import com.intellij.serviceContainer.NonInjectable
+import kotlinx.coroutines.delay
 import java.io.File
 
-private typealias Action = Pair<String, ApplyOutput>
-
-@SuppressWarnings("LongParameterList")
 class CloneOperator @NonInjectable constructor(
     private val project: Project,
+    remoteCloneOperator: RemoteCloneOperator?,
+    localCloneOperator: LocalCloneOperator?,
+    settingsFileOperator: SettingsFileOperator?,
     filesOperator: FilesOperator?,
     prRouter: PrRouter?,
-    localRepoOperator: LocalRepoOperator?,
-    processOperator: ProcessOperator?,
     notificationsOperator: NotificationsOperator?,
     uiProtector: UiProtector?,
-    settingsFileOperator: SettingsFileOperator?,
     gitUrlHelper: GitUrlHelper?,
+    megaManipulatorSettingsState: MegaManipulatorSettingsState?
 ) {
+
     constructor(project: Project) : this(
         project = project,
+        remoteCloneOperator = null,
+        localCloneOperator = null,
+        settingsFileOperator = null,
         filesOperator = null,
         prRouter = null,
-        localRepoOperator = null,
-        processOperator = null,
         notificationsOperator = null,
         uiProtector = null,
-        settingsFileOperator = null,
-        gitUrlHelper = null
+        gitUrlHelper = null,
+        megaManipulatorSettingsState = null,
     )
 
+    private val remoteCloneOperator: RemoteCloneOperator by lazyService(project, remoteCloneOperator)
+    private val settingsFileOperator: SettingsFileOperator by lazyService(project, settingsFileOperator)
     private val filesOperator: FilesOperator by lazyService(project, filesOperator)
     private val prRouter: PrRouter by lazyService(project, prRouter)
-    private val localRepoOperator: LocalRepoOperator by lazyService(project, localRepoOperator)
-    private val processOperator: ProcessOperator by lazyService(project, processOperator)
     private val notificationsOperator: NotificationsOperator by lazyService(project, notificationsOperator)
     private val uiProtector: UiProtector by lazyService(project, uiProtector)
-    private val settingsFileOperator: SettingsFileOperator by lazyService(project, settingsFileOperator)
     private val gitUrlHelper: GitUrlHelper by lazyService(project, gitUrlHelper)
+    private val localCloneOperator: LocalCloneOperator by lazyService(project, localCloneOperator)
+    private val megaManipulatorSettingsState: MegaManipulatorSettingsState by lazyService(project, megaManipulatorSettingsState)
 
     fun clone(repos: Set<SearchResult>, branchName: String, shallow: Boolean, sparseDef: String?) {
-        val basePath = project.basePath!!
         filesOperator.refreshConf()
-        val settings = settingsFileOperator.readSettings()!!
-        val state: List<Pair<SearchResult, List<Action>?>> = uiProtector.mapConcurrentWithProgress(
+        val settings: MegaManipulatorSettings = settingsFileOperator.readSettings()!!
+        val state: Map<SearchResult, CloneAttemptResult> = uiProtector.mapConcurrentWithProgress(
             title = "Cloning repos",
             extraText1 = "Cloning repos",
             extraText2 = { it.asPathString() },
             data = repos,
         ) { repo: SearchResult ->
-            val codeSettings: CodeHostSettings = settings.resolveSettings(repo.searchHostName, repo.codeHostName)?.second
-                ?: return@mapConcurrentWithProgress listOf("Settings" to ApplyOutput.dummy(std = "Settings were not resolvable for ${repo.searchHostName}/${repo.codeHostName}, most likely the key of the code host does not match the one returned by your search host!"))
-            prRouter.getRepo(repo)?.let { vcsRepo: RepoWrapper ->
-                val cloneUrl = gitUrlHelper.buildCloneUrl(codeSettings, vcsRepo)
-                val defaultBranch = prRouter.getRepo(repo)?.getDefaultBranch()!!
-                val dir = File(basePath, "clones/${repo.asPathString()}")
-                clone(
+            clone(settings, repo, branchName, shallow, sparseDef)
+        }.associate {
+            it.first to if (it.second == null) {
+                CloneAttemptResult(it.first, branchName, emptyList(), false)
+            } else {
+                it.second!!
+            }
+        }
+        filesOperator.refreshClones()
+        reportState(state)
+    }
+
+    suspend fun clone(
+        settings: MegaManipulatorSettings,
+        repo: SearchResult,
+        branchName: String,
+        shallow: Boolean,
+        sparseDef: String?,
+    ): CloneAttemptResult {
+        val basePath = project.basePath!!
+        val codeSettings: CodeHostSettings = settings.resolveSettings(repo.searchHostName, repo.codeHostName)?.second
+            ?: return CloneAttemptResult.fail(
+                repo = repo,
+                branch = branchName,
+                what = "Settings",
+                how = "Settings were not resolvable for ${repo.searchHostName}/${repo.codeHostName}, most likely the key of the code host does not match the one returned by your search host!"
+            )
+        val vcsRepo: RepoWrapper = prRouter.getRepo(repo)
+            ?: return CloneAttemptResult.fail(
+                repo = repo,
+                branch = branchName,
+                what = "Finding repo on code host",
+                how = "Didn't match settings on remote code host for ${repo.searchHostName}/${repo.codeHostName}"
+            )
+        val cloneUrl = gitUrlHelper.buildCloneUrl(codeSettings, vcsRepo)
+        val defaultBranch = prRouter.getRepo(repo)?.getDefaultBranch()
+            ?: return CloneAttemptResult.fail(repo = repo, branch = branchName, what = "Resolve default branch", how = "Could not resolve default branch name")
+        val dir = File(basePath, "clones/${repo.asPathString()}")
+        val history = mutableListOf<Action>()
+
+        val copyIf = localCloneOperator.copyIf(codeSettings, repo, defaultBranch, branchName)
+        history.addAll(copyIf.actions)
+        if (!copyIf.success) {
+            if (codeSettings.cloneSleepSeconds > 0) {
+                delay(codeSettings.cloneSleepSeconds * 1000L)
+                history.add(Action("Sleep", ApplyOutput(repo.asPathString(), "Slept for ${codeSettings.cloneSleepSeconds} seconds", 0)))
+            }
+            history.addAll(
+                remoteCloneOperator.clone(
                     dir = dir,
                     cloneUrl = cloneUrl,
                     defaultBranch = defaultBranch,
@@ -81,14 +124,96 @@ class CloneOperator @NonInjectable constructor(
                     shallow = shallow,
                     sparseDef = sparseDef
                 )
-            }
+            )
+            history.addAll(localCloneOperator.saveCopy(codeSettings, repo, defaultBranch).actions)
+        }
+        return CloneAttemptResult(repo = repo, branch = branchName, actions = history)
+    }
+
+    fun clone(pullRequests: List<PullRequestWrapper>, sparseDef: String?) {
+        val settings: MegaManipulatorSettings? = settingsFileOperator.readSettings()
+        if (settings == null) {
+            reportState(
+                pullRequests.associate {
+                    it.asSearchResult() to CloneAttemptResult.fail(
+                        repo = it.asSearchResult(),
+                        branch = it.fromBranch(),
+                        what = "Load Settings",
+                        how = "No settings found for project."
+                    )
+                }
+            )
+            return
+        }
+        val state: Map<SearchResult, CloneAttemptResult> = uiProtector.mapConcurrentWithProgress(
+            title = "Cloning repos",
+            extraText1 = "Cloning repos",
+            extraText2 = { it.asPathString() },
+            data = pullRequests,
+        ) {
+            clone(it, sparseDef, settings)
+        }.associate { (pr: PullRequestWrapper, actions: List<Action>?) ->
+            val actionsList = actions.orEmpty()
+            val success = actionsList.isNotEmpty() && actionsList.last().how.exitCode == 0
+            val repo = pr.asSearchResult()
+            repo to CloneAttemptResult(repo = repo, branch = pr.fromBranch(), actions = actionsList, success = success)
         }
         filesOperator.refreshClones()
         reportState(state)
     }
 
-    private fun reportState(state: List<Pair<Any, List<Action>?>>) {
-        val badState: List<Pair<Any, List<Action>?>> = state.filter { it.second.orEmpty().lastOrNull()?.second?.exitCode != 0 }
+    private suspend fun clone(
+        pullRequest: PullRequestWrapper,
+        sparseDef: String?,
+        settings: MegaManipulatorSettings,
+    ): List<Action> {
+        val codeHostSettings: CodeHostSettings = settings.resolveSettings(pullRequest.searchHostName(), pullRequest.codeHostName())?.second
+            ?: return listOf(
+                Action(
+                    "Settings",
+                    ApplyOutput(
+                        dir = pullRequest.asPathString(),
+                        std = "No settings found for ${pullRequest.searchHostName()}/${pullRequest.codeHostName()}, most likely the key of the code host does not match the one returned by your search host!",
+                        exitCode = 1,
+                    )
+                )
+            )
+        val history = mutableListOf<Action>()
+        if (pullRequest.isFork()) {
+            // TODO: Solve this 😬
+            if (codeHostSettings.keepLocalRepos?.path != null) {
+                history.add(Action("Restore kept repo", ApplyOutput(dir = pullRequest.asPathString(), std = "Pull request clones from local keep repo is not yet supported, it quickly becomes complex when you factor in fork settings, and that those can be changed by you (the user) at any time..", exitCode = 1)))
+            }
+            history.addAll(
+                remoteCloneOperator.cloneRepos(
+                    pullRequest = pullRequest,
+                    settings = codeHostSettings,
+                    sparseDef = sparseDef
+                )
+            )
+            return history
+        }
+        val repo = pullRequest.asSearchResult()
+        val defaultBranch = prRouter.getRepo(repo)?.getDefaultBranch() ?: return listOf(Action("Resolve default branch", ApplyOutput(repo.asPathString(), "Could not resolve default branch name", 1)))
+
+        val copyIf = localCloneOperator.copyIf(codeHostSettings, repo, defaultBranch, pullRequest.fromBranch())
+        history.addAll(copyIf.actions)
+        if (!copyIf.success) {
+            history.addAll(
+                remoteCloneOperator.cloneRepos(
+                    pullRequest = pullRequest,
+                    settings = codeHostSettings,
+                    sparseDef = sparseDef
+                )
+            )
+        }
+        return history
+    }
+
+    private fun reportState(state: Map<SearchResult, CloneAttemptResult>) {
+        val attempt = CloneAttempt(results = state.values.toList())
+        megaManipulatorSettingsState.addCloneAttempt(attempt)
+        val badState: Map<SearchResult, CloneAttemptResult> = state.filter { !it.value.success }
         if (badState.isEmpty()) {
             notificationsOperator.show(
                 title = "Cloning done",
@@ -96,148 +221,19 @@ class CloneOperator @NonInjectable constructor(
                 type = INFORMATION,
             )
         } else {
-            val stateAsString = badState.joinToString(
+            val stateAsString = badState.toList().joinToString(
                 prefix = "<ul>",
                 separator = "<br>",
                 postfix = "</ul>"
-            ) { "<li>${it.first}${it.second?.lastOrNull()?.second?.let { "<br>output:'${it.std.replace("\n","<br>\n")}'" } ?: "..."}</li>" }
+            ) { "<li>${it.first.asPathString()}${it.second.actions.lastOrNull()?.how?.let { "<br>output:'${it.std.replace("\n", "<br>\n")}'" } ?: "..."}</li>" }
             notificationsOperator.show(
                 title = "Cloning done with failures",
                 body = "Failed cloning ${badState.size}/${state.size} repos. More info in IDE logs...<br>$stateAsString",
                 type = WARNING,
             )
-            val serializaleBadState: List<Pair<String, List<Action>?>> = badState.map { it.first.toString() to it.second }
-            val badStateString = SerializationHolder.objectMapper.writeValueAsString(serializaleBadState)
+            val serializableBadState: List<Pair<String, CloneAttemptResult>> = badState.map { it.key.asPathString() to it.value }
+            val badStateString = SerializationHolder.objectMapper.writeValueAsString(serializableBadState)
             System.err.println("Failed cloning ${badState.size}/${state.size} repos, these are the causes:\n$badStateString")
         }
-    }
-
-    fun clone(pullRequests: List<PullRequestWrapper>, sparseDef: String?) {
-        val settings = uiProtector.uiProtectedOperation("Load settings") { settingsFileOperator.readSettings() }
-        if (settings == null) {
-            reportState(listOf("Settings" to listOf("Load Settings" to ApplyOutput.dummy(std = "No settings found for project."))))
-        } else {
-            val state: List<Pair<PullRequestWrapper, List<Action>?>> =
-                uiProtector.mapConcurrentWithProgress(
-                    title = "Cloning repos",
-                    extraText1 = "Cloning repos",
-                    extraText2 = { it.asPathString() },
-                    data = pullRequests,
-                ) {
-                    cloneRepos(
-                        pullRequest = it,
-                        settings = settings,
-                        sparseDef = sparseDef
-                    )
-                }
-            filesOperator.refreshClones()
-            reportState(state)
-        }
-    }
-
-    suspend fun cloneRepos(pullRequest: PullRequestWrapper, settings: MegaManipulatorSettings, sparseDef: String?): List<Action> {
-        val basePath = project.basePath!!
-        val fullPath = "$basePath/clones/${pullRequest.asPathString()}"
-        val dir = File(fullPath)
-        val prSettings: CodeHostSettings =
-            settings.resolveSettings(pullRequest.searchHostName(), pullRequest.codeHostName())?.second
-                ?: return listOf(
-                    "Settings" to ApplyOutput.dummy(
-                        dir = pullRequest.asPathString(),
-                        std = "No settings found for ${pullRequest.searchHostName()}/${pullRequest.codeHostName()}, most likely the key of the code host does not match the one returned by your search host!"
-                    )
-                )
-        val badState: List<Action> =
-            clone(
-                dir = dir,
-                cloneUrl = pullRequest.cloneUrlFrom(prSettings.cloneType)!!,
-                defaultBranch = pullRequest.fromBranch(),
-                shallow = false,
-                sparseDef = sparseDef
-            )
-        if (badState.isOkay() && pullRequest.isFork()) {
-            localRepoOperator.promoteOriginToForkRemote(dir, pullRequest.cloneUrlTo(prSettings.cloneType)!!)
-        }
-        return badState
-    }
-
-    @SuppressWarnings("ReturnCount")
-    private suspend fun clone(
-        dir: File,
-        cloneUrl: String,
-        defaultBranch: String,
-        branch: String = defaultBranch,
-        shallow: Boolean,
-        sparseDef: String?,
-    ): List<Action> {
-        val actionTrace: MutableList<Action> = mutableListOf()
-        dir.mkdirs()
-        if (File(dir, ".git").exists()) {
-            actionTrace.add("Repo already cloned" to ApplyOutput.dummy(dir = dir.path, std = "Repo already cloned"))
-            return actionTrace
-        }
-        val cloneCommandsResult = cloneCommands(shallow, cloneUrl, defaultBranch, dir)
-        actionTrace.addAll(cloneCommandsResult)
-
-        if (actionTrace.isOkay()) {
-            actionTrace.addAll(pullCommands(dir, sparseDef, defaultBranch, shallow))
-        }
-
-        if (defaultBranch != branch && actionTrace.isOkay()) {
-            val p3 = processOperator.runCommandAsync(dir, listOf("git", "checkout", branch)).await()
-            actionTrace.add("Switch branch" to p3)
-            if (p3.exitCode != 0) {
-                val p4 = processOperator.runCommandAsync(dir, listOf("git", "checkout", "-b", branch)).await()
-                actionTrace.add("Create branch" to p4)
-            }
-        }
-        return actionTrace
-    }
-
-    private fun List<Action>.isOkay(): Boolean = isEmpty() || lastOrNull()?.second?.exitCode == 0
-
-    private suspend fun cloneCommands(shallow: Boolean, cloneUrl: String, defaultBranch: String, dir: File): List<Action> {
-        val actionTrace = mutableListOf<Action>()
-        val cloneActionName = if (shallow) "Shallow clone" else "Clone"
-
-        val cloneArgs = if (shallow) {
-            listOf("git", "clone", cloneUrl, "--depth", "1", "--no-checkout", "--branch", defaultBranch, dir.absolutePath)
-        } else {
-            listOf("git", "clone", cloneUrl, "--no-checkout", "--branch", defaultBranch, dir.absolutePath)
-        }
-        val p0 = processOperator.runCommandAsync(dir.parentFile, cloneArgs).await()
-        actionTrace.add(cloneActionName to p0)
-        return actionTrace
-    }
-
-    private suspend fun pullCommands(dir: File, sparseDef: String?, defaultBranch: String, shallow: Boolean): List<Action> {
-        val actionTrace = mutableListOf<Action>()
-        if (sparseDef != null) {
-            val p0 = processOperator.runCommandAsync(dir, listOf("git", "config", "core.sparseCheckout", "true")).await()
-            actionTrace.add("Config sparse checkout" to p0)
-            if (p0.exitCode == 0) {
-                try {
-                    val sparseFile = File(dir, ".git/info/sparse-checkout")
-                    sparseFile.writeText(sparseDef)
-                    actionTrace.add("Setup sparse checkout config" to ApplyOutput(dir = dir.absolutePath, std = "Setup successful", exitCode = 0))
-                } catch (e: Exception) {
-                    // e.printStackTrace()
-                    actionTrace.add("Setup sparse checkout config" to ApplyOutput(dir = dir.absolutePath, std = "Failed writing sparse config file\n${e.stackTraceToString()}", exitCode = 1))
-                }
-            }
-        }
-        if (actionTrace.isOkay()) {
-            val p1 = if (shallow) {
-                processOperator.runCommandAsync(dir, listOf("git", "fetch", "--depth", "1", "origin", defaultBranch)).await()
-            } else {
-                processOperator.runCommandAsync(dir, listOf("git", "fetch", "origin", defaultBranch)).await()
-            }
-            actionTrace.add("Fetch" to p1)
-            if (p1.exitCode == 0) {
-                val p2 = processOperator.runCommandAsync(dir, listOf("git", "checkout", defaultBranch)).await()
-                actionTrace.add("Checkout" to p2)
-            }
-        }
-        return actionTrace
     }
 }

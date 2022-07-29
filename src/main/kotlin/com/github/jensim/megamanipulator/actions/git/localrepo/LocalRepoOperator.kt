@@ -1,4 +1,4 @@
-package com.github.jensim.megamanipulator.actions.localrepo
+package com.github.jensim.megamanipulator.actions.git.localrepo
 
 import com.github.jensim.megamanipulator.actions.ProcessOperator
 import com.github.jensim.megamanipulator.actions.apply.ApplyOutput

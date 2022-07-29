@@ -3,6 +3,7 @@ package com.github.jensim.megamanipulator.toolswindow
 import com.github.jensim.megamanipulator.MyBundle
 import com.github.jensim.megamanipulator.actions.apply.ApplyWindow
 import com.github.jensim.megamanipulator.actions.forks.ForksWindow
+import com.github.jensim.megamanipulator.actions.git.CloneHistoryWindow
 import com.github.jensim.megamanipulator.actions.git.GitWindow
 import com.github.jensim.megamanipulator.actions.search.SearchWindow
 import com.github.jensim.megamanipulator.actions.vcs.PullRequestWindow
@@ -36,8 +37,9 @@ class MyToolWindowFactory : ToolWindowFactory, TabServiceListener {
         val tabs = listOf<Pair<TabKey, ToolWindowTab>>(
             TabKey.tabTitleSettings to SettingsWindow(project),
             TabKey.tabTitleSearch to SearchWindow(project),
-            TabKey.tabTitleApply to ApplyWindow(project),
+            TabKey.tabTitleCloneHistory to CloneHistoryWindow(project),
             TabKey.tabTitleClones to GitWindow(project),
+            TabKey.tabTitleApply to ApplyWindow(project),
             TabKey.tabTitlePRsManage to PullRequestWindow(project),
             TabKey.tabTitleForks to ForksWindow(project),
         )

@@ -54,6 +54,7 @@ dependencies {
     val kotlinVersion = "1.6.21"
     val kotlinCoroutinesVersion = "1.6.3"
     val graphql_kotlin_ktor_version = "5.5.0"
+    val jacksonDatabindVersion = "2.13.3"
 
     api(kotlin("stdlib-jdk8", kotlinVersion))
     api(kotlin("reflect", kotlinVersion))
@@ -65,7 +66,7 @@ dependencies {
     implementation("io.ktor:ktor-client-apache:$ktor_version")
     implementation("io.ktor:ktor-client-jackson:$ktor_version")
     implementation("io.ktor:ktor-client-logging:$ktor_version")
-    api("com.fasterxml.jackson.core:jackson-databind:2.13.3") // To override vulnerable version from ktor
+    api("com.fasterxml.jackson.datatype:jackson-datatype-jsr310:$jacksonDatabindVersion")
 
     api("org.eclipse.jgit:org.eclipse.jgit:6.2.0.202206071550-r")
     api("ch.qos.logback:logback-classic:1.2.11")

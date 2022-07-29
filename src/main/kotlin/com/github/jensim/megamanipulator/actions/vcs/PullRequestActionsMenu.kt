@@ -107,7 +107,9 @@ class PullRequestActionsMenu(
             addActionListener {
                 val prs = prProvider()
                 cloneDialogFactory.showCloneFromPrDialog(focusComponent) { sparseDef ->
-                    cloneOperator.clone(prs, sparseDef = sparseDef)
+                    uiProtector.uiProtectedOperation("Clone from PRs") {
+                        cloneOperator.clone(prs, sparseDef = sparseDef)
+                    }
                 }
             }
         }

@@ -6,8 +6,10 @@ import com.github.jensim.megamanipulator.actions.ProcessOperatorImpl
 import com.github.jensim.megamanipulator.actions.apply.ApplyOperator
 import com.github.jensim.megamanipulator.actions.git.GitUrlHelper
 import com.github.jensim.megamanipulator.actions.git.clone.CloneOperator
+import com.github.jensim.megamanipulator.actions.git.clone.LocalCloneOperator
+import com.github.jensim.megamanipulator.actions.git.clone.RemoteCloneOperator
 import com.github.jensim.megamanipulator.actions.git.commit.CommitOperator
-import com.github.jensim.megamanipulator.actions.localrepo.LocalRepoOperator
+import com.github.jensim.megamanipulator.actions.git.localrepo.LocalRepoOperator
 import com.github.jensim.megamanipulator.actions.vcs.PrRouter
 import com.github.jensim.megamanipulator.actions.vcs.bitbucketserver.BitbucketServerClient
 import com.github.jensim.megamanipulator.actions.vcs.githubcom.GithubComClient
@@ -15,6 +17,7 @@ import com.github.jensim.megamanipulator.actions.vcs.gitlab.GitLabClient
 import com.github.jensim.megamanipulator.files.FilesOperator
 import com.github.jensim.megamanipulator.http.HttpClientProvider
 import com.github.jensim.megamanipulator.project.ProjectOperator
+import com.github.jensim.megamanipulator.settings.MegaManipulatorSettingsState
 import com.github.jensim.megamanipulator.settings.SettingsFileOperator
 import com.github.jensim.megamanipulator.ui.DialogGenerator
 import com.github.jensim.megamanipulator.ui.TestUiProtector
@@ -106,19 +109,32 @@ open class TestApplicationWiring {
             notificationsOperator = notificationsOperator,
         )
     }
+    val localCloneOperator: LocalCloneOperator by lazy {
+        LocalCloneOperator(mockProject, processOperator)
+    }
+    val remoteCloneOperator: RemoteCloneOperator by lazy {
+        RemoteCloneOperator(
+            project = mockProject,
+            localRepoOperator = localRepoOperator,
+            processOperator = processOperator,
+        )
+    }
+    val megaManipulatorSettingsState: MegaManipulatorSettingsState by lazy { MegaManipulatorSettingsState() }
     val cloneOperator: CloneOperator by lazy {
         CloneOperator(
             project = mockProject,
+            remoteCloneOperator = remoteCloneOperator,
+            localCloneOperator = localCloneOperator,
+            settingsFileOperator = settingsFileOperator,
             filesOperator = filesOperator,
             prRouter = prRouter,
-            localRepoOperator = localRepoOperator,
-            processOperator = processOperator,
             notificationsOperator = notificationsOperator,
             uiProtector = uiProtector,
-            settingsFileOperator = settingsFileOperator,
             gitUrlHelper = gitUrlHelper,
+            megaManipulatorSettingsState = megaManipulatorSettingsState,
         )
     }
+
     val applyOperator: ApplyOperator by lazy {
         ApplyOperator(
             project = mockProject,
