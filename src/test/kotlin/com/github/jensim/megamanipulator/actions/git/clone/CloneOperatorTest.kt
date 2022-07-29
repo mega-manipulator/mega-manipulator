@@ -112,6 +112,9 @@ internal class CloneOperatorTest {
         coEvery {
             localCloneOperator.copyIf(codeHostSettings, repo, "main", "main")
         } returns CloneAttemptResult(repo, listOf(), false)
+        coEvery {
+            localCloneOperator.saveCopy(codeHostSettings, repo, "main")
+        } returns CloneAttemptResult(repo, emptyList(), true)
         coEvery { prRouter.getRepo(repo) } returns mockk {
             every { getDefaultBranch() } returns "main"
             every { getCloneUrl(HTTPS) } returns "https://example.com"
