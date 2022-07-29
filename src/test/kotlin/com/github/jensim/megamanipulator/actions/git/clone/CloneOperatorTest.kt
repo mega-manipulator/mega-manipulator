@@ -98,9 +98,9 @@ internal class CloneOperatorTest {
         verify { filesOperator.refreshClones() }
         verify {
             notificationsOperator.show(
-                "Cloning done",
-                "All 0 cloned successfully",
-                INFORMATION
+                title = "Cloning done",
+                body = "All 0 cloned successfully",
+                type = INFORMATION,
             )
         }
     }
@@ -108,8 +108,11 @@ internal class CloneOperatorTest {
     @Test
     fun `clone with search requests`() = runBlocking {
         // Given
-        val input = SearchResult(searchHostName = "search", codeHostName = "code", project = "project", repo = "repo")
-        coEvery { prRouter.getRepo(input) } returns mockk {
+        val repo = SearchResult(searchHostName = "search", codeHostName = "code", project = "project", repo = "repo")
+        coEvery {
+            localCloneOperator.copyIf(codeHostSettings, repo, "main", "main")
+        } returns CloneAttemptResult(repo, listOf(), false)
+        coEvery { prRouter.getRepo(repo) } returns mockk {
             every { getDefaultBranch() } returns "main"
             every { getCloneUrl(HTTPS) } returns "https://example.com"
         }
@@ -120,22 +123,22 @@ internal class CloneOperatorTest {
                 defaultBranch = "main",
                 branch = "main",
                 shallow = false,
-                sparseDef = null
+                sparseDef = null,
             )
         } returns listOf(
             Action("Cloning", ApplyOutput(dir = tempDir.absolutePath, std = "👍👌!!", 0))
         )
 
         // When
-        cloneOperator.clone(repos = setOf(input), branchName = "main", shallow = false, sparseDef = null)
+        cloneOperator.clone(repos = setOf(repo), branchName = "main", shallow = false, sparseDef = null)
 
         // Then
         verify { filesOperator.refreshClones() }
         verify {
             notificationsOperator.show(
-                "Cloning done",
-                "All 1 cloned successfully",
-                INFORMATION
+                title = "Cloning done",
+                body = "All 1 cloned successfully",
+                type = INFORMATION,
             )
         }
     }
