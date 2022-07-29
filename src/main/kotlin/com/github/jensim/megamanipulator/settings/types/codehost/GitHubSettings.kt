@@ -11,6 +11,8 @@ import com.github.jensim.megamanipulator.settings.types.HttpsOverride
 import com.github.jensim.megamanipulator.settings.types.KeepLocalRepos
 import com.github.jensim.megamanipulator.settings.types.codehost.CodeHostSettingsType.GITHUB
 import com.github.jensim.megamanipulator.settings.types.forkSettingDescription
+import jakarta.validation.constraints.Max
+import jakarta.validation.constraints.Min
 
 data class GitHubSettings(
     @JsonPropertyDescription("Override the default, strict https validation")
@@ -22,6 +24,10 @@ data class GitHubSettings(
     @JsonPropertyDescription("It's strongly recommended to use SSH clone type.")
     override val cloneType: CloneType = SSH,
     override val keepLocalRepos: KeepLocalRepos? = null,
+    @Min(0)
+    @Max(100_000)
+    @JsonPropertyDescription("When cloning a lot from GitHub, you may hit rate limits, sleeping can get you around that -.-'")
+    override val cloneSleepSeconds: Int = 0,
 ) : CodeHostSettings() {
 
     override val codeHostType: CodeHostSettingsType = GITHUB

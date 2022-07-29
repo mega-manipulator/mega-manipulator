@@ -88,6 +88,10 @@
                             }
                           }
                         },
+                        "cloneSleepSeconds" : {
+                          "type" : "integer",
+                          "required" : true
+                        },
                         "codeHostType" : {
                           "type" : "string",
                           "required" : true,
@@ -129,6 +133,11 @@
                         "keepLocalRepos" : {
                           "type" : "object",
                           "$ref" : "urn:jsonschema:com:github:jensim:megamanipulator:settings:types:KeepLocalRepos"
+                        },
+                        "cloneSleepSeconds" : {
+                          "type" : "integer",
+                          "required" : true,
+                          "description" : "When cloning a lot from GitHub, you may hit rate limits, sleeping can get you around that -.-'"
                         },
                         "codeHostType" : {
                           "type" : "string",
@@ -184,6 +193,10 @@
                         "keepLocalRepos" : {
                           "type" : "object",
                           "$ref" : "urn:jsonschema:com:github:jensim:megamanipulator:settings:types:KeepLocalRepos"
+                        },
+                        "cloneSleepSeconds" : {
+                          "type" : "integer",
+                          "required" : true
                         },
                         "codeHostType" : {
                           "type" : "string",

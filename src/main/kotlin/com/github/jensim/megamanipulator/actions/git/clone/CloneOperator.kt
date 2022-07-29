@@ -20,6 +20,7 @@ import com.intellij.notification.NotificationType.INFORMATION
 import com.intellij.notification.NotificationType.WARNING
 import com.intellij.openapi.project.Project
 import com.intellij.serviceContainer.NonInjectable
+import kotlinx.coroutines.delay
 import java.io.File
 
 class CloneOperator @NonInjectable constructor(
@@ -108,6 +109,10 @@ class CloneOperator @NonInjectable constructor(
         val copyIf = localCloneOperator.copyIf(codeSettings, repo, defaultBranch, branchName)
         history.addAll(copyIf.actions)
         if (!copyIf.success) {
+            if (codeSettings.cloneSleepSeconds > 0) {
+                delay(codeSettings.cloneSleepSeconds * 1000L)
+                history.add(Action("Sleep", ApplyOutput(repo.asPathString(),"Slept for ${codeSettings.cloneSleepSeconds} seconds", 0)))
+            }
             history.addAll(
                 remoteCloneOperator.clone(
                     dir = dir,

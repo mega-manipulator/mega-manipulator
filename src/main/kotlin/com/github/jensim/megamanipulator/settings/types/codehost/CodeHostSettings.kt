@@ -21,6 +21,7 @@ sealed class CodeHostSettings
     abstract val forkSetting: ForkSetting
     abstract val cloneType: CloneType
     abstract val keepLocalRepos: KeepLocalRepos?
+    open val cloneSleepSeconds: Int = 0
 
     internal fun validate() {
         validateBaseUrl(baseUrl)
