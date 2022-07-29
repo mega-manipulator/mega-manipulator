@@ -4,6 +4,7 @@
 
 ## [Unreleased]
 
+## [0.0.46]
 ### Added
 - Keep repos between clones  
 Keep and maintain repos in a user defined dir, restore clones from keep directory.  
@@ -11,13 +12,13 @@ This is intended to tackle code host clone throttling.
 
 ## [0.0.45]
 ### Added
-  - Support idea 2022.2
-  
-  ### Fix
-  - Update deprecated UI builders
-    - Token validation output now fits on screen
-  - The "Set branch button" in the "Clones window" now works as expected (inverted rex validation)
-  - Closing tabs in the Mega Manipulator tool window is now blocked
+- Support idea 2022.2
+
+### Fix
+- Update deprecated UI builders
+  - Token validation output now fits on screen
+- The "Set branch button" in the "Clones window" now works as expected (inverted rex validation)
+- Closing tabs in the Mega Manipulator tool window is now blocked
 
 ## [0.0.44]
 ### Added
