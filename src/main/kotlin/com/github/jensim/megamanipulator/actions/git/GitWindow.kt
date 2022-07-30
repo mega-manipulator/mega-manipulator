@@ -31,6 +31,7 @@ import com.intellij.ui.components.JBScrollPane
 import com.intellij.ui.components.JBTextArea
 import com.intellij.ui.dsl.builder.panel
 import com.intellij.ui.dsl.gridLayout.HorizontalAlign.RIGHT
+import com.intellij.util.ui.components.BorderLayoutPanel
 import java.awt.Color
 import java.awt.Dimension
 import java.awt.event.ActionEvent
@@ -64,21 +65,15 @@ class GitWindow(private val project: Project) : ToolWindowTab {
     private val repoList = JBList<DirResult>().apply {
         minimumSize = Dimension(250, 50)
     }
-    private val scrollRepos = JBScrollPane(repoList).apply {
-        preferredSize = Dimension(4000, 1000)
-    }
+    private val scrollRepos = JBScrollPane(repoList)
     private val stepList = JBList<StepResult>().apply {
         minimumSize = Dimension(150, 50)
     }
-    private val scrollSteps = JBScrollPane(stepList).apply {
-        preferredSize = Dimension(4000, 1000)
-    }
+    private val scrollSteps = JBScrollPane(stepList)
     private val outComeInfo = JBTextArea().apply {
         minimumSize = Dimension(250, 50)
     }
-    private val scrollOutcome = JBScrollPane(outComeInfo).apply {
-        preferredSize = Dimension(4000, 1000)
-    }
+    private val scrollOutcome = JBScrollPane(outComeInfo)
 
     private val splitRight = JBSplitter().apply {
         firstComponent = scrollSteps
@@ -96,7 +91,7 @@ class GitWindow(private val project: Project) : ToolWindowTab {
     private val btnCreatePRs = JButton("Create PRs")
     private val btnCleanLocalClones = JButton("Clean away local repos", AllIcons.Toolwindows.Problems)
 
-    override val content: JComponent = panel {
+    private val topContent: JComponent = panel {
         row {
             cell(btnListBranch)
             cell(btnSetBranch)
@@ -107,9 +102,10 @@ class GitWindow(private val project: Project) : ToolWindowTab {
             cell(OnboardingButton(project, TabKey.tabTitleClones, OnboardingId.CLONES_TAB))
                 .horizontalAlign(RIGHT)
         }
-        row {
-            cell(splitLeft)
-        }
+    }
+    override val content: JComponent = BorderLayoutPanel().apply {
+        addToTop(topContent)
+        addToCenter(splitLeft)
     }
 
     init {

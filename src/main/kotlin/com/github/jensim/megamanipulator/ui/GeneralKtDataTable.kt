@@ -1,11 +1,13 @@
 package com.github.jensim.megamanipulator.ui
 
 import com.intellij.ui.table.JBTable
+import org.slf4j.LoggerFactory
 import java.awt.Color
 import java.awt.Component
 import java.awt.Dimension
 import java.util.function.Predicate
 import javax.swing.JTable
+import javax.swing.ListSelectionModel
 import javax.swing.table.AbstractTableModel
 import javax.swing.table.DefaultTableCellRenderer
 import kotlin.reflect.KClass
@@ -16,15 +18,23 @@ class GeneralKtDataTable<T : Any>(
     type: KClass<T>,
     columns: List<Pair<ColumnHeader, (T) -> String>>,
     minSize: Dimension = Dimension(300, 100),
+    /**
+     * @see ListSelectionModel
+     */
+    selectionMode: Int? = null,
     colorizer: Predicate<T>? = null,
 ) : JBTable() {
 
+    private val logger = LoggerFactory.getLogger(javaClass)
     private val myModel = GeneralTableModel(type, columns)
     private val listeners = mutableListOf<() -> Unit>()
 
     init {
         model = myModel
         minimumSize = minSize
+        selectionMode?.let {
+            setSelectionMode(it)
+        }
         with(columnModel) {
             columnSelectionAllowed = false
             columns.forEachIndexed { idx, (header, _) ->
@@ -75,7 +85,17 @@ class GeneralKtDataTable<T : Any>(
         try {
             selectionModel.setSelectionInterval(0, 0)
         } catch (e: Exception) {
-            e.printStackTrace()
+            logger.warn("Unable to select first")
+        }
+    }
+
+    fun selectLast() {
+        try {
+            val indexLast = myModel.items.size - 1
+            if (indexLast < 0) return
+            selectionModel.setSelectionInterval(indexLast, indexLast)
+        } catch (e: Exception) {
+            logger.warn("Unable to select last")
         }
     }
 
@@ -98,6 +118,8 @@ class GeneralKtDataTable<T : Any>(
         private val type: KClass<T>,
         private val columns: List<Pair<ColumnHeader, (T) -> String>>,
     ) : AbstractTableModel() {
+
+        private val logger = LoggerFactory.getLogger(javaClass)
         // val columnAccessors: List<KProperty1<T, *>> by lazy { type.memberProperties.toList() }
 
         var items = emptyList<T>()
@@ -108,7 +130,7 @@ class GeneralKtDataTable<T : Any>(
         override fun getValueAt(rowIndex: Int, columnIndex: Int): Any? = try {
             columns[columnIndex].second(items[rowIndex])
         } catch (e: Exception) {
-            e.printStackTrace()
+            logger.warn("Unable to get value at row:$rowIndex, column:$columnIndex, for type:${type.simpleName}, column:${columns[columnIndex]}, number of items:${items.size}")
             null
         }
     }

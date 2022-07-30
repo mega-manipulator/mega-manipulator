@@ -21,7 +21,6 @@ import com.intellij.ui.components.JBTextArea
 import com.intellij.ui.dsl.builder.panel
 import com.intellij.ui.dsl.gridLayout.HorizontalAlign.RIGHT
 import com.intellij.util.ui.components.BorderLayoutPanel
-import java.awt.BorderLayout
 import java.awt.Dimension
 import java.io.File
 import javax.swing.JButton
@@ -51,10 +50,7 @@ class ApplyWindow(private val project: Project) : ToolWindowTab {
         secondComponent = scrollableDetails
     }
 
-    private val bigAreaPanel = BorderLayoutPanel().apply {
-        add(split, BorderLayout.CENTER)
-    }
-    override val content: DialogPanel = panel {
+    private val topContent: DialogPanel = panel {
         row {
             cell(applyButton)
             cell(openScriptButton)
@@ -62,9 +58,10 @@ class ApplyWindow(private val project: Project) : ToolWindowTab {
             cell(OnboardingButton(project, TabKey.tabTitleApply, OnboardingId.APPLY_TAB))
                 .horizontalAlign(RIGHT)
         }
-        row {
-            cell(bigAreaPanel)
-        }
+    }
+    override val content = BorderLayoutPanel().apply {
+        addToTop(topContent)
+        addToCenter(split)
     }
 
     init {

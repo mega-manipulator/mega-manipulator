@@ -19,6 +19,7 @@ import com.intellij.ui.components.JBTextArea
 import com.intellij.ui.components.JBTextField
 import com.intellij.ui.dsl.builder.panel
 import com.intellij.ui.dsl.gridLayout.HorizontalAlign.RIGHT
+import com.intellij.util.ui.components.BorderLayoutPanel
 import me.xdrop.fuzzywuzzy.FuzzySearch
 import org.slf4j.LoggerFactory
 import java.awt.Dimension
@@ -60,10 +61,9 @@ class PullRequestWindow(project: Project) : ToolWindowTab {
     private val split = JBSplitter(false, 0.7f).apply {
         firstComponent = prScroll
         secondComponent = peekScroll
-        preferredSize = Dimension(4000, 1000)
     }
 
-    override val content: JComponent = panel {
+    private val topContent: JComponent = panel {
         row {
             cell(codeHostSelect)
             cell(fetchPRsButton)
@@ -74,9 +74,10 @@ class PullRequestWindow(project: Project) : ToolWindowTab {
             cell(menuOpenButton)
                 .horizontalAlign(RIGHT)
         }
-        row {
-            cell(split)
-        }
+    }
+    override val content: JComponent = BorderLayoutPanel().apply {
+        addToTop(topContent)
+        addToCenter(split)
     }
 
     init {
