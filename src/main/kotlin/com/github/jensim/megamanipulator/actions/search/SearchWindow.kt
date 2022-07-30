@@ -28,6 +28,7 @@ import com.intellij.ui.components.JBTextField
 import com.intellij.ui.dsl.builder.panel
 import com.intellij.ui.dsl.gridLayout.HorizontalAlign.RIGHT
 import com.intellij.util.castSafelyTo
+import com.intellij.util.ui.components.BorderLayoutPanel
 import java.awt.Dimension
 import java.awt.event.KeyEvent
 import java.awt.event.KeyListener
@@ -65,10 +66,10 @@ class SearchWindow(
         ),
     )
     private val scroll = JBScrollPane(table).apply {
-        preferredSize = Dimension(10_000, 10_000)
+        preferredSize = Dimension(10_000, 1000)
     }
 
-    override val content = panel {
+    private val topContent = panel {
         row {
             cell(searchHostLink)
             cell(searchHostSelect)
@@ -79,9 +80,11 @@ class SearchWindow(
             cell(OnboardingButton(project, TabKey.tabTitleSearch, OnboardingId.SEARCH_TAB))
                 .horizontalAlign(RIGHT)
         }
-        row {
-            cell(scroll)
-        }
+    }
+
+    override val content = BorderLayoutPanel().apply {
+        addToCenter(scroll)
+        addToTop(topContent)
     }
 
     init {

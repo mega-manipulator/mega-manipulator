@@ -210,7 +210,7 @@ class CloneOperator @NonInjectable constructor(
         return history
     }
 
-    private fun reportState(state: Map<SearchResult, CloneAttemptResult>) {
+    fun reportState(state: Map<SearchResult, CloneAttemptResult>) {
         val attempt = CloneAttempt(results = state.values.toList())
         megaManipulatorSettingsState.addCloneAttempt(attempt)
         val badState: Map<SearchResult, CloneAttemptResult> = state.filter { !it.value.success }

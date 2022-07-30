@@ -20,7 +20,7 @@ import com.intellij.openapi.project.Project
 import com.intellij.ui.components.JBScrollPane
 import com.intellij.ui.dsl.builder.panel
 import com.intellij.ui.dsl.gridLayout.HorizontalAlign.RIGHT
-import java.awt.Dimension
+import com.intellij.util.ui.components.BorderLayoutPanel
 import javax.swing.JButton
 import javax.swing.JComponent
 
@@ -43,12 +43,10 @@ class ForksWindow(project: Project) : ToolWindowTab {
             "Repo" to { it.getRepo() },
         )
     )
-    private val scroll = JBScrollPane(staleForkTable).apply {
-        preferredSize = Dimension(10_000, 10_000)
-    }
+    private val scroll = JBScrollPane(staleForkTable)
     private val loadStaleForksButton = JButton("Load forks without OPEN PRs")
 
-    override val content: JComponent = panel {
+    private val topContent: JComponent = panel {
         row {
             cell(codeHostSelect)
             cell(loadStaleForksButton)
@@ -56,9 +54,11 @@ class ForksWindow(project: Project) : ToolWindowTab {
             cell(OnboardingButton(project, TabKey.tabTitleForks, OnboardingId.FORK_TAB))
                 .horizontalAlign(RIGHT)
         }
-        row {
-            cell(scroll)
-        }
+    }
+
+    override val content = BorderLayoutPanel().apply {
+        addToTop(topContent)
+        addToCenter(scroll)
     }
 
     init {
