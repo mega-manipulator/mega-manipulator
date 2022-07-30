@@ -3,6 +3,8 @@
 # mega-manipulator Changelog
 
 ## [Unreleased]
+
+## [0.0.47]
 ### Fixed
 - Settings loading fault tolerance
 - Broken scrolling in most tabs
