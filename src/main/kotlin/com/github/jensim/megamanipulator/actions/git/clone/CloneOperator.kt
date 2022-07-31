@@ -113,7 +113,16 @@ class CloneOperator @NonInjectable constructor(
         if (!copyIf.success) {
             if (codeSettings.cloneSleepSeconds > 0) {
                 delay(codeSettings.cloneSleepSeconds * 1000L)
-                history.add(Action("Sleep", ApplyOutput(repo.asPathString(), "Slept for ${codeSettings.cloneSleepSeconds} seconds", 0)))
+                history.add(
+                    Action(
+                        "Sleep",
+                        ApplyOutput(
+                            dir = repo.asPathString(),
+                            std = "Slept for ${codeSettings.cloneSleepSeconds} seconds",
+                            exitCode = 0,
+                        )
+                    )
+                )
             }
             history.addAll(
                 remoteCloneOperator.clone(
@@ -182,7 +191,16 @@ class CloneOperator @NonInjectable constructor(
         if (pullRequest.isFork()) {
             // TODO: Solve this 😬
             if (codeHostSettings.keepLocalRepos?.path != null) {
-                history.add(Action("Restore kept repo", ApplyOutput(dir = pullRequest.asPathString(), std = "Pull request clones from local keep repo is not yet supported, it quickly becomes complex when you factor in fork settings, and that those can be changed by you (the user) at any time..", exitCode = 1)))
+                history.add(
+                    Action(
+                        "Restore kept repo",
+                        ApplyOutput(
+                            dir = pullRequest.asPathString(),
+                            std = "Pull request clones from local keep repo is not yet supported, it quickly becomes complex when you factor in fork settings, and that those can be changed by you (the user) at any time..",
+                            exitCode = 1,
+                        )
+                    )
+                )
             }
             history.addAll(
                 remoteCloneOperator.cloneRepos(
@@ -194,7 +212,8 @@ class CloneOperator @NonInjectable constructor(
             return history
         }
         val repo = pullRequest.asSearchResult()
-        val defaultBranch = prRouter.getRepo(repo)?.getDefaultBranch() ?: return listOf(Action("Resolve default branch", ApplyOutput(repo.asPathString(), "Could not resolve default branch name", 1)))
+        val defaultBranch = prRouter.getRepo(repo)?.getDefaultBranch()
+            ?: return listOf(Action("Resolve default branch", ApplyOutput(repo.asPathString(), "Could not resolve default branch name", 1, "prRouter.getRepo(repo)?.getDefaultBranch()")))
 
         val copyIf = localCloneOperator.copyIf(codeHostSettings, repo, defaultBranch, pullRequest.fromBranch())
         history.addAll(copyIf.actions)

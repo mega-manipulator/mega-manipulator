@@ -100,10 +100,28 @@ class RemoteCloneOperator @NonInjectable constructor(
                 try {
                     val sparseFile = File(dir, ".git/info/sparse-checkout")
                     sparseFile.writeText(sparseDef)
-                    actionTrace.add(Action("Setup sparse checkout config", ApplyOutput(dir = dir.absolutePath, std = "Setup successful", exitCode = 0)))
+                    actionTrace.add(
+                        Action(
+                            "Setup sparse checkout config",
+                            ApplyOutput(
+                                dir = dir.absolutePath,
+                                std = "Setup successful",
+                                exitCode = 0,
+                            )
+                        )
+                    )
                 } catch (e: Exception) {
                     // e.printStackTrace()
-                    actionTrace.add(Action("Setup sparse checkout config", ApplyOutput(dir = dir.absolutePath, std = "Failed writing sparse config file\n${e.stackTraceToString()}", exitCode = 1)))
+                    actionTrace.add(
+                        Action(
+                            "Setup sparse checkout config",
+                            ApplyOutput(
+                                dir = dir.absolutePath,
+                                std = "Failed writing sparse config file\n${e.stackTraceToString()}",
+                                exitCode = 1,
+                            )
+                        )
+                    )
                 }
             }
         }

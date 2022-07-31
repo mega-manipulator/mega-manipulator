@@ -1,7 +1,9 @@
 #!/bin/bash
 
 # Really strict =)
-set -Eexuo pipefail
+set -Eeuo pipefail
+# Debug
+# set -x
 
 # Error context - borrowed from https://unix.stackexchange.com/a/522815/86300
 trap 'echo >&2 "Error - exited with status $? at line $LINENO:";

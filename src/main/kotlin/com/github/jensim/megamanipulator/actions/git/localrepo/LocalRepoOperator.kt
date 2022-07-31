@@ -7,6 +7,7 @@ import com.github.jensim.megamanipulator.project.lazyService
 import com.github.jensim.megamanipulator.ui.UiProtector
 import com.intellij.openapi.project.Project
 import com.intellij.serviceContainer.NonInjectable
+import org.eclipse.jgit.lib.Repository
 import org.eclipse.jgit.storage.file.FileRepositoryBuilder
 import java.io.File
 import java.nio.file.Files
@@ -100,16 +101,8 @@ class LocalRepoOperator @NonInjectable constructor(
         }
     }
 
-    fun hasFork(repoDir: File): Boolean {
-        val dir = File(repoDir, ".git")
-        return try {
-            FileRepositoryBuilder().apply {
-                gitDir = dir
-            }.build().remoteNames.contains("fork")
-        } catch (e: Exception) {
-            false
-        }
-    }
+    fun hasFork(repoDir: File): Boolean =
+        repo(repoDir)?.remoteNames?.contains("fork") ?: false
 
     suspend fun addForkRemote(repoDir: File, url: String): ApplyOutput {
         return processOperator.runCommandAsync(repoDir, listOf("git", "remote", "add", "fork", url)).await()
@@ -122,15 +115,15 @@ class LocalRepoOperator @NonInjectable constructor(
         ).map { it.first to it.second.await() }
     }
 
-    fun getBranch(repoDir: File): String? {
+    fun getBranch(repoDir: File): String? = repo(repoDir)?.branch
+
+    private fun repo(repoDir: File): Repository? = try {
         val dir = File(repoDir, ".git")
-        return try {
-            FileRepositoryBuilder().apply {
-                gitDir = dir
-            }.build().branch
-        } catch (e: Exception) {
-            null
-        }
+        FileRepositoryBuilder().apply {
+            gitDir = dir
+        }.build()
+    } catch (e: Exception) {
+        null
     }
 
     private fun isLikelyCloneDir(clonesPath: Path, evalPath: Path): Boolean {
