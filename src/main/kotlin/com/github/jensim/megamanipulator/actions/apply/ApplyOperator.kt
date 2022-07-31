@@ -35,7 +35,11 @@ class ApplyOperator @NonInjectable constructor(
         filesOperator.refreshConf()
         filesOperator.refreshClones()
         val scriptPath = settingsFileOperator.scriptFile.absolutePath
-        val scriptContent = File(scriptPath).readText()
+        val scriptContent = try {
+            File(scriptPath).readText()
+        } catch (e: Exception) {
+            null
+        }
         val settings = settingsFileOperator.readSettings()!!
         return uiProtector.mapConcurrentWithProgress(
             title = "Applying changes from script file",
