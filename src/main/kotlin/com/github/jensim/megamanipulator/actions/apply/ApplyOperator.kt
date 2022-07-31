@@ -35,6 +35,7 @@ class ApplyOperator @NonInjectable constructor(
         filesOperator.refreshConf()
         filesOperator.refreshClones()
         val scriptPath = settingsFileOperator.scriptFile.absolutePath
+        val scriptContent = File(scriptPath).readText()
         val settings = settingsFileOperator.readSettings()!!
         return uiProtector.mapConcurrentWithProgress(
             title = "Applying changes from script file",
@@ -44,7 +45,7 @@ class ApplyOperator @NonInjectable constructor(
             data = gitDirs,
         ) { dir ->
             processOperator.runCommandAsync(dir, listOf("/bin/bash", scriptPath)).await()
-        }.map { (dir, out) -> out ?: ApplyOutput.dummy(dir.path) }.also {
+        }.map { (dir, out) -> out?.copy(command = scriptContent) ?: ApplyOutput.dummy(dir = dir.path, command = scriptContent) }.also {
             filesOperator.refreshClones()
         }
     }

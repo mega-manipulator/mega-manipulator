@@ -33,7 +33,19 @@ class LocalCloneOperator @NonInjectable constructor(
     suspend fun copyIf(settings: CodeHostSettings, repo: SearchResult, defaultBranch: String, branch: String): CloneAttemptResult {
         val localRepoFile = File(project.basePath!!, "clones/${repo.asPathString()}/.git")
         if (localRepoFile.exists()) {
-            return CloneAttemptResult(actions = listOf(Action("Copy", ApplyOutput(std = "Repo exists already", dir = repo.asPathString(), exitCode = 1))), success = true, repo = repo, branch = branch)
+            return CloneAttemptResult(
+                actions = listOf(
+                    Action(
+                        "Copy",
+                        ApplyOutput(
+                            std = "Repo exists already",
+                            dir = repo.asPathString(),
+                            exitCode = 0,
+                        )
+                    )
+                ),
+                success = true, repo = repo, branch = branch
+            )
         }
 
         val keepRoot = settings.keepLocalRepos?.path ?: return CloneAttemptResult(actions = emptyList(), success = false, repo = repo, branch = branch)
@@ -46,18 +58,45 @@ class LocalCloneOperator @NonInjectable constructor(
             return try {
                 keepLocalRepoFile.copyRecursively(localRepoFile) { file, exception ->
                     val message = "File copy failed: '${file.path}', due to ${exception.message}"
-                    history.add(Action("File copy fail", ApplyOutput(std = message, dir = repo.asPathString(), exitCode = 1)))
+                    history.add(
+                        Action(
+                            "File copy fail",
+                            ApplyOutput(
+                                std = message,
+                                dir = repo.asPathString(),
+                                exitCode = 1,
+                            )
+                        )
+                    )
                     logger.warn(message)
                     SKIP
                 }
-                checkout(defaultBranch, branch, keepLocalRepoFile.parentFile, history)
-                history.add(Action("Restore saved repo", ApplyOutput(repo.asPathString(), "Done", 0)))
+                checkout(defaultBranch, branch, localRepoFile.parentFile, history)
+                history.add(
+                    Action(
+                        "Restore saved repo",
+                        ApplyOutput(
+                            dir = repo.asPathString(),
+                            std = "Done",
+                            exitCode = 0,
+                        )
+                    )
+                )
 
                 CloneAttemptResult(actions = history, success = true, repo = repo, branch = branch)
             } catch (e: Exception) {
                 val message = "Failed copying files from keep location due to ${e.message}"
                 logger.warn(message, e)
-                history.add(Action("Restore saved repo", ApplyOutput(repo.asPathString(), "$message, more info+stacktrace in logs", 0)))
+                history.add(
+                    Action(
+                        "Restore saved repo",
+                        ApplyOutput(
+                            dir = repo.asPathString(),
+                            std = "$message, more info+stacktrace in logs",
+                            exitCode = 0,
+                        )
+                    )
+                )
                 CloneAttemptResult(actions = history, success = false, repo = repo, branch = branch)
             }
         } else {
@@ -66,30 +105,27 @@ class LocalCloneOperator @NonInjectable constructor(
     }
 
     private suspend fun checkout(defaultBranch: String, branch: String, repo: File, history: MutableList<Action>) {
-        /*
-         * TODO:
-         *  * Delete local branch if exists..
-         *  * Handle PR clone, where branch should exist
-         */
         processOperator.runCommandAsync(repo, listOf("git", "checkout", "-f", defaultBranch)).await().let {
             history.add(Action("git checkout default branch '$defaultBranch'", it))
-            if (it.exitCode == 0) {
-                processOperator.runCommandAsync(repo, listOf("git", "reset", "--hard", "HEAD")).await().let {
-                    history.add(Action("git reset default branch '$defaultBranch'", it))
-                }
-            }
+        }
+        processOperator.runCommandAsync(repo, listOf("git", "reset", "--hard", "origin/$defaultBranch")).await().let {
+            history.add(Action("git reset", it))
         }
         if (defaultBranch != branch) {
             if (history.last().how.exitCode == 0) {
-                val p3 = processOperator.runCommandAsync(repo, listOf("git", "checkout", "-f", branch)).await()
-                history.add(Action("Switch branch", p3))
+                val p3 = processOperator.runCommandAsync(repo, listOf("git", "checkout", branch)).await()
+                history.add(Action("Switch branch '$branch'", p3))
                 if (p3.exitCode != 0) {
-                    val p4 = processOperator.runCommandAsync(repo, listOf("git", "checkout", "-f", "-b", branch)).await()
-                    history.add(Action("Create branch", p4))
-                } else {
-                    processOperator.runCommandAsync(repo, listOf("git", "reset", "--hard", "HEAD")).await().let {
-                        history.add(Action("git reset branch '$branch'", it))
-                    }
+                    val p4 = processOperator.runCommandAsync(repo, listOf("git", "checkout", "-b", branch, "--track", "origin/$branch")).await()
+                    history.add(Action("Create branch '$branch'", p4))
+                }
+            }
+        }
+        processOperator.runCommandAsync(repo, listOf("git", "reset", "--hard", "origin/$branch")).await().let {
+            history.add(Action("git reset to origin", it))
+            if (it.exitCode == 128) {
+                processOperator.runCommandAsync(repo, listOf("git", "reset", "--hard", branch)).await().let {
+                    history.add(Action("git reset", it))
                 }
             }
         }
@@ -120,7 +156,16 @@ class LocalCloneOperator @NonInjectable constructor(
             SKIP
         }
         File(keepLocalRepoFile, "info/sparse-checkout").delete().let { deletedSparse ->
-            history.add(Action("Delete sparse checkout settings", ApplyOutput(repo.asPathString(), "Deleted: $deletedSparse", 0)))
+            history.add(
+                Action(
+                    "Delete sparse checkout settings",
+                    ApplyOutput(
+                        dir = repo.asPathString(),
+                        std = "Deleted: $deletedSparse",
+                        exitCode = 0,
+                    )
+                )
+            )
         }
         processOperator.runCommandAsync(keepLocalRepoFile.parentFile, listOf("git", "config", "core.sparseCheckout", "false")).await().let {
             history.add(Action("disable sparseCheckout for local save", it))

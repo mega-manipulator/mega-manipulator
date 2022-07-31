@@ -6,14 +6,17 @@ data class ApplyOutput(
     val dir: String,
     val std: String,
     val exitCode: Int,
+    val command: String? = null,
 ) {
 
     companion object {
         fun dummy(
+            command: String? = null,
             dir: String = "",
             std: String = "",
             exitCode: Int = 1,
         ): ApplyOutput = ApplyOutput(
+            command = command,
             dir = dir,
             std = std,
             exitCode = exitCode,
@@ -30,7 +33,10 @@ data class ApplyOutput(
     override fun toString(): String = dir
     @JsonIgnore
     fun getFullDescription() = """DIR: $dir
-EXIT_CODE: $exitCode
+${command?.let {
+        """COMMAND: $it
+"""
+    } ?: ""}EXIT_CODE: $exitCode
 === OUTPUT ===
 $std"""
 }

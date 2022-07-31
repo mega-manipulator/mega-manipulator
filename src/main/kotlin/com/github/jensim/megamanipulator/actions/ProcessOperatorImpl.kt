@@ -23,6 +23,7 @@ class ProcessOperatorImpl(private val project: Project) : ProcessOperator {
         return proc.onExit().thenApply {
             pidSet.remove(it.pid())
             ApplyOutput(
+                command = command.joinToString(separator = " "),
                 std = it.inputStream.readAllBytes().decodeToString(),
                 exitCode = it.exitValue(),
                 dir = workingDir.trimProjectPath(project = project),

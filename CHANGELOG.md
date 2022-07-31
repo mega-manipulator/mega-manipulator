@@ -3,6 +3,11 @@
 # mega-manipulator Changelog
 
 ## [Unreleased]
+### Fix
+- Run the restore local repo in the correct directory
+
+### Changed
+- Support idea 2022.2 and 2022.3
 
 ## [0.0.47]
 ### Fixed
