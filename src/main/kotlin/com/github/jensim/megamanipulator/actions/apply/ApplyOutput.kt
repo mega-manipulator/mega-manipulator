@@ -33,8 +33,10 @@ data class ApplyOutput(
     override fun toString(): String = dir
     @JsonIgnore
     fun getFullDescription() = """DIR: $dir
-${command?.let { """COMMAND: $it
-""" }}EXIT_CODE: $exitCode
+${command?.let {
+        """COMMAND: $it
+"""
+    } ?: ""}EXIT_CODE: $exitCode
 === OUTPUT ===
 $std"""
 }
