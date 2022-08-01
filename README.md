@@ -1,6 +1,7 @@
 # mega-manipulator
 
 [![Build](https://github.com/mega-manipulator/mega-manipulator/workflows/Build/badge.svg)](https://github.com/mega-manipulator/mega-manipulator/actions/workflows/build.yml)
+![GitHub release (latest by date)](https://img.shields.io/github/v/release/mega-manipulator/mega-manipulator?label=GitHub%20Release&logo=GitHub)
 [![Version](https://img.shields.io/jetbrains/plugin/v/16396.svg)](https://plugins.jetbrains.com/plugin/16396)
 [![Downloads](https://img.shields.io/jetbrains/plugin/d/16396.svg)](https://plugins.jetbrains.com/plugin/16396)
 
