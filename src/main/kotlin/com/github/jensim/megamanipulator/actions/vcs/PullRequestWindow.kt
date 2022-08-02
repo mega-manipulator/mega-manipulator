@@ -82,8 +82,6 @@ class PullRequestWindow(project: Project) : ToolWindowTab {
 
     init {
         peekArea.text = ""
-        prScroll.preferredSize = Dimension(4000, 1000)
-        peekScroll.preferredSize = Dimension(4000, 1000)
 
         menuOpenButton.isEnabled = false
         menuOpenButton.addMouseListener(object : MouseListener {

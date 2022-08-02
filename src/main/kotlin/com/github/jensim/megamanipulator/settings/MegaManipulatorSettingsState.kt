@@ -1,5 +1,7 @@
 package com.github.jensim.megamanipulator.settings
 
+import com.github.jensim.megamanipulator.actions.apply.ApplyAttempt
+import com.github.jensim.megamanipulator.actions.apply.ApplyAttemptConverter
 import com.github.jensim.megamanipulator.actions.git.clone.CloneAttempt
 import com.github.jensim.megamanipulator.actions.git.clone.CloneAttemptConverter
 import com.github.jensim.megamanipulator.onboarding.OnboardingId
@@ -22,7 +24,8 @@ class MegaManipulatorSettingsState : PersistentStateComponent<MegaManipulatorSet
     var seenGlobalOnboarding: Boolean = false
     @OptionTag(converter = CloneAttemptConverter::class)
     var cloneHistory: MutableList<CloneAttempt>? = ArrayList()
-    // var applyHistory = mutableListOf<ApplyAttempt>()
+    @OptionTag(converter = ApplyAttemptConverter::class)
+    var applyHistory: MutableList<ApplyAttempt>? = ArrayList()
 
     fun seenOnBoarding(id: OnboardingId): Boolean = seenOnboarding[id] ?: false
     fun setOnBoardingSeen(id: OnboardingId) {
@@ -31,6 +34,10 @@ class MegaManipulatorSettingsState : PersistentStateComponent<MegaManipulatorSet
 
     fun addCloneAttempt(cloneAttempt: CloneAttempt) {
         cloneHistory = ArrayList(cloneHistory.orEmpty().takeLast(9) + cloneAttempt)
+    }
+
+    fun addApplyAttempt(applyAttempt: ApplyAttempt) {
+        applyHistory = ArrayList(applyHistory.orEmpty().takeLast(9) + applyAttempt)
     }
 
     fun resetPrefill() {
