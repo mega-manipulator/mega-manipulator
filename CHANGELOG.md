@@ -3,6 +3,8 @@
 # mega-manipulator Changelog
 
 ## [Unreleased]
+### Changed
+- Support idea 2022.1, 2022.2 and 2022.3
 
 ## [0.0.50]
 ### Added
