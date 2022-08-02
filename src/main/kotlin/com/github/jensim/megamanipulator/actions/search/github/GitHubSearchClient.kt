@@ -14,7 +14,6 @@ import com.intellij.util.queryParameters
 import io.ktor.client.HttpClient
 import io.ktor.client.request.accept
 import io.ktor.client.request.get
-import io.ktor.client.statement.HttpResponse
 import io.ktor.http.ContentType
 import org.slf4j.LoggerFactory
 import java.net.URI
@@ -69,7 +68,7 @@ class GitHubSearchClient @NonInjectable constructor(
         val accumulator = HashSet<SearchResult>()
         var page = 1
         while (true) {
-            val response = client.get<HttpResponse>("${settings.baseUrl}/search/$type?q=$q&page=$page") {
+            val response = client.get("${settings.baseUrl}/search/$type?q=$q&page=$page") {
                 accept(ContentType.Application.Json)
             }
             val searchResponse = response.unwrap<GithubSearchResponse<T>>()

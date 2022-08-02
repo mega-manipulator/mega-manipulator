@@ -9,17 +9,17 @@ fun properties(key: String) = project.findProperty(key).toString()
 plugins {
     id("java")
     // Kotlin support
-    kotlin("jvm") version "1.6.21"
-    kotlin("plugin.serialization") version "1.6.21"
+    kotlin("jvm") version "1.7.10"
+    kotlin("plugin.serialization") version "1.7.10"
     // gradle-intellij-plugin - read more: https://github.com/JetBrains/gradle-intellij-plugin
-    id("org.jetbrains.intellij") version "1.6.0"
+    id("org.jetbrains.intellij") version "1.7.0"
     // gradle-changelog-plugin - read more: https://github.com/JetBrains/gradle-changelog-plugin
     id("org.jetbrains.changelog") version "1.3.1"
 
     id("org.jlleitschuh.gradle.ktlint") version "10.3.0"
-    id("io.gitlab.arturbosch.detekt") version "1.20.0"
+    id("io.gitlab.arturbosch.detekt") version "1.21.0"
     id("com.github.ben-manes.versions") version "0.42.0"
-    id("com.expediagroup.graphql") version "6.0.0-alpha.5"
+    id("com.expediagroup.graphql") version "6.1.0"
     id("org.jetbrains.qodana") version "0.1.13"
 }
 
@@ -50,10 +50,10 @@ configure<org.jlleitschuh.gradle.ktlint.KtlintExtension> {
 }
 
 dependencies {
-    val ktor_version = "1.6.8"
-    val kotlinVersion = "1.6.21"
-    val kotlinCoroutinesVersion = "1.6.3"
-    val graphql_kotlin_ktor_version = "5.5.0"
+    val ktor_version = "2.0.3"
+    val kotlinVersion = "1.7.10"
+    val kotlinCoroutinesVersion = "1.6.4"
+    val graphql_kotlin_ktor_version = "6.1.0"
     val jacksonDatabindVersion = "2.13.3"
 
     api(kotlin("stdlib-jdk8", kotlinVersion))
@@ -64,7 +64,8 @@ dependencies {
 
     implementation("io.ktor:ktor-client:$ktor_version")
     implementation("io.ktor:ktor-client-apache:$ktor_version")
-    implementation("io.ktor:ktor-client-jackson:$ktor_version")
+    implementation("io.ktor:ktor-serialization-jackson:$ktor_version")
+    implementation("io.ktor:ktor-client-content-negotiation:$ktor_version")
     implementation("io.ktor:ktor-client-logging:$ktor_version")
     api("com.fasterxml.jackson.datatype:jackson-datatype-jsr310:$jacksonDatabindVersion")
 
@@ -81,13 +82,13 @@ dependencies {
     testImplementation("com.fasterxml.jackson.module:jackson-module-jsonSchema:2.13.3")
     testImplementation("org.skyscreamer:jsonassert:1.5.1")
     testImplementation("org.awaitility:awaitility:4.2.0")
-    testImplementation("io.mockk:mockk:1.12.1")
+    testImplementation("io.mockk:mockk:1.12.5")
     testImplementation("org.hamcrest:hamcrest:2.2")
     testImplementation("org.hamcrest:hamcrest-library:2.2")
-    testImplementation("org.junit.jupiter:junit-jupiter-api:5.8.2")
-    testImplementation("org.junit.jupiter:junit-jupiter-params:5.8.2")
+    testImplementation("org.junit.jupiter:junit-jupiter-api:5.9.0")
+    testImplementation("org.junit.jupiter:junit-jupiter-params:5.9.0")
 
-    testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:5.8.2")
+    testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:5.9.0")
 }
 
 // Configure Gradle IntelliJ Plugin - read more: https://github.com/JetBrains/gradle-intellij-plugin

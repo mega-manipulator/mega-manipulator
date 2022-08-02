@@ -15,7 +15,7 @@ import io.ktor.client.request.get
 import io.ktor.client.request.header
 import io.ktor.client.request.parameter
 import io.ktor.client.statement.HttpResponse
-import io.ktor.client.statement.readText
+import io.ktor.client.statement.bodyAsText
 import org.slf4j.LoggerFactory
 
 class HoundClient @NonInjectable constructor(
@@ -41,7 +41,7 @@ class HoundClient @NonInjectable constructor(
             parameter("i", "fosho")
             header("Accept", "application/json")
         }
-        val body: String = rawResp.readText()
+        val body: String = rawResp.bodyAsText()
         val searchResp: HoundSearchResults = objectMapper.readValue(body)
         return searchResp.Results.keys.mapNotNull { repos[it]?.url?.gitUrlToResult(searchHostName) }.toSet()
     }

@@ -12,7 +12,7 @@ import com.fasterxml.jackson.module.kotlin.KotlinModule
 
 object SerializationHolder {
 
-    fun new() = ObjectMapper().apply {
+    fun ObjectMapper.confCompact() {
         configure(FAIL_ON_UNKNOWN_PROPERTIES, false)
         configure(ACCEPT_EMPTY_STRING_AS_NULL_OBJECT, true)
         configure(ACCEPT_EMPTY_ARRAY_AS_NULL_OBJECT, true)
@@ -21,9 +21,16 @@ object SerializationHolder {
         registerModule(JavaTimeModule())
     }
 
-    val objectMapper = new()
-    val readable = new().apply {
+    fun ObjectMapper.confReadable() {
+        confCompact()
         configure(INDENT_OUTPUT, true)
         setDefaultPropertyInclusion(JsonInclude.Include.NON_DEFAULT)
+    }
+
+    val objectMapper = ObjectMapper().apply {
+        confCompact()
+    }
+    val readable = ObjectMapper().apply {
+        confReadable()
     }
 }
