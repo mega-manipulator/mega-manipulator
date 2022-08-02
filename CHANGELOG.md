@@ -3,6 +3,8 @@
 # mega-manipulator Changelog
 
 ## [Unreleased]
+
+## [0.0.49]
 ### Added
 - Apply history
 - Rerun scripted changes from history
@@ -10,7 +12,6 @@
 ## [0.0.48]
 ### Fix
 - Run the restore local repo in the correct directory
-
 
 ### Changed
 - Support idea 2022.2 and 2022.3
@@ -31,7 +32,6 @@ This is intended to tackle code host clone throttling.
 ### Added
 - Support idea 2022.2
 
-
 ### Fix
 - Update deprecated UI builders
   - Token validation output now fits on screen
@@ -43,10 +43,8 @@ This is intended to tackle code host clone throttling.
 - GitHub search
 - Setting to override http logging
 
-
 ### Improvement
 - Improve the informativeness of error outputs from the token validations
-
 
 ### Fix
 - Relaxed SSL settings got borked with CIO engine, revert to Apache engine
@@ -56,7 +54,6 @@ This is intended to tackle code host clone throttling.
 ### Changed
 - Breaking change to the json schema, in order to use jackson
 
-
 ### Fix
 - Fix the toolwindow initiation
 - Fix version f-up
@@ -65,10 +62,8 @@ This is intended to tackle code host clone throttling.
 ### Added
 - Verify with 2022.1
 
-
 ### Removed
 - Verify with 2021
-
 
 ### Changed
 - Upgraded versions
@@ -83,10 +78,8 @@ As it seemed to result in odd behaviours running the plugin with newer versions
 ### Added
 - Force push
 
-
 ### Fixed
 - Validation of branch renaming
-
 
 ### Security
 - Upgrade gradle version to 7.3
@@ -114,10 +107,8 @@ stdErr is joined with the stdOut since last
 - Sparse checkout from search and PR  
   And unison UI between the two
 
-
 ### Changed
 - Improving some look and feel
-
 
 ### Fixed
 - Able to navigate tabs with broken config
@@ -133,10 +124,8 @@ stdErr is joined with the stdOut since last
 ### Added
 - In the forks tab, show parent/origin-repo of forks (Github & Bitbucket)
 
-
 ### Changed
 - Created a general purpose table component for the Search, PR & Fork tabs
-
 
 ### Security
 - Upgrade dependency versions
@@ -147,10 +136,8 @@ stdErr is joined with the stdOut since last
 - Added onboarding to all tabs
 - Optional shallow clone
 
-
 ### Changed
 - Use plugin manifest for wiring
-
 
 ### Fixed
 - Persistence component now actually persists data between sessions
@@ -165,14 +152,12 @@ stdErr is joined with the stdOut since last
 - Onboarding for settings window
 - Remember search string
 
-
 ### Changed
 - New look and feel of dialogs
 
 ## [0.0.29]
 ### Added
 - approve, unapprove & merge for GitHub
-
 
 ### Removed
 - shallow clone feature, as it messes up the forked repo remotes integration
@@ -199,16 +184,13 @@ stdErr is joined with the stdOut since last
 - GitLab code host
 - HttpClient logging
 
-
 ### Changed
 - Use GraphQL lib for som gitlab interations and sourcegraph
 - Moved docs into the new namespace 'mega-manipulator'
 - Added a border to the html table on validate tokens
 
-
 ### Removed
 - Fork name prefix
-
 
 ### Fixed
 - Forks using https clone type
@@ -216,7 +198,6 @@ stdErr is joined with the stdOut since last
 ## [0.0.23]
 ### Added
 - Doc links
-
 
 ### Changed
 - Reorder search tab
@@ -236,10 +217,8 @@ stdErr is joined with the stdOut since last
 - .env-file support for local development
 - Integration test
 
-
 ### Changed
 - Application internal wiring rebuilt, to allow testing
-
 
 ### Fixed
 - Remove branches from GitHub
@@ -252,7 +231,6 @@ This will eliminate repos being listed twice
 ## [0.0.18]
 ### Added
 - Resizable split panes for clones, PRs, & apply
-
 
 ### Changed
 - Default select first option for
@@ -273,10 +251,8 @@ This will eliminate repos being listed twice
 ### Added
 - Open selected PRs in browser
 
-
 ### Removed
 - No longer support IntelliJ 2020.2
-
 
 ### Fixed
 - Fixed Deprecated api usage of NotificationGroup
@@ -289,11 +265,9 @@ This will eliminate repos being listed twice
 ### Added
 - Sonar reports and test coverage
 
-
 ### Changed
 - Re-patterned the entire source code, to enable unit testing
 - Upgrade gradle wrapper to version 7.0
-
 
 ### Fixed
 - Serialization of httpClient types
@@ -308,7 +282,6 @@ This will eliminate repos being listed twice
 ### Added
 - Added a json schema for the mega-manipulator.yml
 
-
 ### Changed
 - Added default settings for connecting to sourcegraph.com and github.com
 - Switched everything over to use kotlinx serialization from jackson
@@ -321,11 +294,9 @@ This will eliminate repos being listed twice
 ### Added
 - Stabilize how PRs from forks are cloned. It's important that they are set up in the same manner as when one clones the base repo and then set up the fork in the initial flow.
 
-
 ### Changed
 - Version bumps
 - `USERNAME_PASSWORD` login method was renamed `USERNAME_TOKEN`, to better imply recommended usage
-
 
 ### Removed
 - Removed the `TOKEN` login method
