@@ -5,15 +5,11 @@ import com.github.jensim.megamanipulator.onboarding.OnboardingId
 import com.github.jensim.megamanipulator.onboarding.OnboardingOperator
 import com.github.jensim.megamanipulator.project.MegaManipulatorUtil.isMM
 import com.github.jensim.megamanipulator.settings.MegaManipulatorSettingsState
-import com.github.jensim.megamanipulator.toolswindow.MyToolWindowFactory
+import com.github.jensim.megamanipulator.toolswindow.MegaManipulatorTabContentCreator
 import com.github.jensim.megamanipulator.ui.DialogGenerator
-import com.intellij.icons.AllIcons
 import com.intellij.openapi.components.service
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.startup.StartupActivity
-import com.intellij.openapi.wm.RegisterToolWindowTask
-import com.intellij.openapi.wm.ToolWindowAnchor
-import com.intellij.openapi.wm.ToolWindowManager
 import kotlinx.coroutines.runBlocking
 import org.slf4j.LoggerFactory
 import java.io.File
@@ -24,19 +20,8 @@ class OnStartListener : StartupActivity {
 
     override fun runActivity(project: Project) {
         if (isMM(project)) {
-            ToolWindowManager.getInstance(project).let {
-                val toolWindow = it.registerToolWindow(
-                    RegisterToolWindowTask(
-                        id = "Mega Manipulator",
-                        anchor = ToolWindowAnchor.BOTTOM,
-                        icon = AllIcons.General.Modified,
-                    )
-                )
-                val factory = MyToolWindowFactory()
-                factory.createToolWindowContent(project, toolWindow)
-                toolWindow.show()
-                it.getToolWindow("Project")?.show()
-            }
+            val factory: MegaManipulatorTabContentCreator = project.service()
+            factory.createContentMegaManipulator()
             val osProperty = System.getProperty("os.name").lowercase()
             if (osProperty.startsWith("darwin") || osProperty.startsWith("mac os x")) {
                 val output: List<String> = checkCommands(listOf("brew", "git", "find"), project.service())
@@ -69,6 +54,8 @@ class OnStartListener : StartupActivity {
                 }
             }
         } else {
+            val factory: MegaManipulatorTabContentCreator = project.service()
+            factory.createHelloContent()
             val settings: MegaManipulatorSettingsState = project.service()
             if (!settings.seenGlobalOnboarding) {
                 val onboardingOperator: OnboardingOperator = project.service()

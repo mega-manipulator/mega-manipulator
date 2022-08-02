@@ -2,6 +2,7 @@ package com.github.jensim.megamanipulator.actions.search.github
 
 import com.github.jensim.megamanipulator.actions.NotificationsOperator
 import com.github.jensim.megamanipulator.actions.search.SearchResult
+import com.github.jensim.megamanipulator.actions.vcs.githubcom.GitHubValidation
 import com.github.jensim.megamanipulator.http.HttpClientProvider
 import com.github.jensim.megamanipulator.http.unwrap
 import com.github.jensim.megamanipulator.project.lazyService
@@ -17,7 +18,6 @@ import io.ktor.client.statement.HttpResponse
 import io.ktor.http.ContentType
 import org.slf4j.LoggerFactory
 import java.net.URI
-import java.util.regex.Pattern
 
 class GitHubSearchClient @NonInjectable constructor(
     project: Project,
@@ -83,19 +83,11 @@ class GitHubSearchClient @NonInjectable constructor(
 
     suspend fun validateAccess(searchHost: String, settings: GithubSearchSettings): String = try {
         val client: HttpClient = httpClientProvider.getClient(searchHost, settings)
-        val response: HttpResponse = client.get("${settings.baseUrl}/repos/mega-manipulator/mega-manipulator")
-        val scopeString = response.headers["X-OAuth-Scopes"]
-        val scopes = scopeString.orEmpty().split(Pattern.compile(",")).map { it.trim() }
-        println(scopes)
-        val expected = listOf("repo", "delete_repo")
-        val missing = expected - scopes
-        val missingText = if (missing.isNotEmpty()) "<br>\nmissing scopes: $missing" else ""
-        val rateLimit = response.headers["X-RateLimit-Limit"].orEmpty()
-        val rateLimitText: String = if (rateLimit == "") "<br>\nNo rate limit header in response, bad token?" else if ((rateLimit.toIntOrNull() ?: 0) < 100) "\nRateLimit is low, token is probably not setup correctly" else ""
-        "${response.status.value}:${response.status.description}$missingText$rateLimitText"
+        GitHubValidation.validateAccess(settings.baseUrl, client)
     } catch (e: Exception) {
-        logger.error("Failed request", e)
-        "Client error: ${e.message}"
+        val msg = "Failed setting up client: ${e.message}"
+        logger.error(msg, e)
+        msg
     }
 
     private fun validateSearchString(search: String): Map<String, String>? {

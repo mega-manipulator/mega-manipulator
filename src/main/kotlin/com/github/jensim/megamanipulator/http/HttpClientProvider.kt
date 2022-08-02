@@ -144,7 +144,7 @@ class HttpClientProvider @NonInjectable constructor(
             USERNAME_TOKEN -> passwordsOperator.getPassword(username!!, baseUrl)
             JUST_TOKEN -> passwordsOperator.getPassword(username ?: "token", baseUrl)
             NONE -> ""
-        }!!
+        } ?: throw NullPointerException("Password not set")
     } catch (e: Exception) {
         notificationsOperator.show(
             title = "Password not set",
