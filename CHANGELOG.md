@@ -3,6 +3,10 @@
 # mega-manipulator Changelog
 
 ## [Unreleased]
+### Added
+- More descriptive validation, with better outputs
+- Do not use internal APIs for creating the ToolWindow
+- Open Mega Manipulator in any project if the user asks for it
 
 ## [0.0.49]
 ### Added

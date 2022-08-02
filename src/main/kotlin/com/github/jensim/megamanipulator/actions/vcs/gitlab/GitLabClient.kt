@@ -52,6 +52,8 @@ class GitLabClient @NonInjectable constructor(
     localRepoOperator: LocalRepoOperator?,
 ) {
 
+    private val logger = LoggerFactory.getLogger(javaClass)
+
     constructor(project: Project) : this(
         project = project,
         httpClientProvider = null,
@@ -132,8 +134,18 @@ class GitLabClient @NonInjectable constructor(
     }
 
     suspend fun validateAccess(searchHost: String, codeHost: String, settings: GitLabSettings): String {
-        val client = getClient(searchHost, codeHost, settings)
-        val user: GraphQLClientResponse<GetCurrentUser.Result> = client.execute(GetCurrentUser())
+        val client = try {
+            getClient(searchHost, codeHost, settings)
+        } catch (e: Exception) {
+            val msg = "Unable to setup http client: ${e.message}"
+            logger.warn(msg, e)
+            return msg
+        }
+        val user: GraphQLClientResponse<GetCurrentUser.Result> = try {
+            client.execute(GetCurrentUser())
+        } catch (e: Exception) {
+            return "Unable to perform GraphQL request"
+        }
         return when {
             !user.errors.isNullOrEmpty() -> {
                 log.warn("Error from gitlab {}", user.errors)

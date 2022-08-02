@@ -46,7 +46,7 @@ class BitbucketServerClient @NonInjectable constructor(
     private val httpClientProvider: HttpClientProvider by lazyService(project, httpClientProvider)
     private val localRepoOperator: LocalRepoOperator by lazyService(project, localRepoOperator)
 
-    private val log = LoggerFactory.getLogger(javaClass)
+    private val logger = LoggerFactory.getLogger(javaClass)
 
     private suspend fun getDefaultReviewers(
         client: HttpClient,
@@ -162,7 +162,7 @@ class BitbucketServerClient @NonInjectable constructor(
             setBody(request)
         }
         if (prResponse.status.value >= 300) {
-            log.error("Not OK response creating Pull Request")
+            logger.error("Not OK response creating Pull Request")
         }
         val prRaw: String = prResponse.bodyAsText()
         val pr: BitBucketPullRequest = objectMapper.readValue(prRaw)
@@ -225,7 +225,7 @@ class BitbucketServerClient @NonInjectable constructor(
                 }
                 response.unwrap()
             } catch (e: Exception) {
-                log.error("Failed fetching pull requests from bitbucket", e)
+                logger.error("Failed fetching pull requests from bitbucket", e)
                 break
             }
             page.message?.let {
@@ -269,7 +269,7 @@ class BitbucketServerClient @NonInjectable constructor(
                 setBody(emptyMap<String, String>())
             }
             if (response.status.value >= 300) {
-                log.error("Failed declining PullRequest ${response.bodyAsText()}")
+                logger.error("Failed declining PullRequest ${response.bodyAsText()}")
                 return PrActionStatus(false)
             }
             if (dropFork && pullRequest.isFork()) {
@@ -297,7 +297,7 @@ class BitbucketServerClient @NonInjectable constructor(
                 return PrActionStatus(true)
             }
         } catch (e: Exception) {
-            log.error("Failed declining PR", e)
+            logger.error("Failed declining PR", e)
             return PrActionStatus(false, e.message)
         }
     }
@@ -336,7 +336,7 @@ class BitbucketServerClient @NonInjectable constructor(
                 response.unwrap()
             }
         } catch (e: Exception) {
-            log.warn("Failed finding fork", e)
+            logger.warn("Failed finding fork", e)
             // Repo does not exist - lets fork
             null
         } ?: try {
@@ -347,7 +347,7 @@ class BitbucketServerClient @NonInjectable constructor(
             }
             response.unwrap()
         } catch (e: Throwable) {
-            log.error("Failed forking repo", e)
+            logger.error("Failed forking repo", e)
             throw e
         }
 
@@ -409,7 +409,7 @@ class BitbucketServerClient @NonInjectable constructor(
             }
         return if (response.status.value >= 300) {
             val msg = "Failed deleting private repo ${repo.asPathString()} due to: '${response.bodyAsText()}'"
-            log.error(msg)
+            logger.error(msg)
             PrActionStatus(success = false, msg = msg)
         } else {
             PrActionStatus(true)
@@ -426,7 +426,7 @@ class BitbucketServerClient @NonInjectable constructor(
             setBody(BitBucketComment(text = comment))
         }
         if (response.status.value >= 300) {
-            log.error("Failed commenting due to: '${response.bodyAsText()}'")
+            logger.error("Failed commenting due to: '${response.bodyAsText()}'")
         }
     }
 
@@ -438,8 +438,9 @@ class BitbucketServerClient @NonInjectable constructor(
         val desc = HttpStatusCode.fromValue(response.status.value).description
         "${response.status.value}:$desc"
     } catch (e: Exception) {
-        e.printStackTrace()
-        "Client error"
+        val msg = "Failed setting up client: ${e.message}"
+        logger.error(msg, e)
+        msg
     }
 
     suspend fun approvePr(pullRequest: BitBucketPullRequestWrapper, settings: BitBucketSettings): PrActionStatus {

@@ -16,11 +16,14 @@ import io.ktor.client.request.header
 import io.ktor.client.request.parameter
 import io.ktor.client.statement.HttpResponse
 import io.ktor.client.statement.readText
+import org.slf4j.LoggerFactory
 
 class HoundClient @NonInjectable constructor(
     project: Project,
     httpClientProvider: HttpClientProvider?,
 ) {
+
+    private val logger = LoggerFactory.getLogger(javaClass)
     constructor(project: Project) : this(project, null)
 
     private val httpClientProvider: HttpClientProvider by lazyService(project, httpClientProvider)
@@ -50,8 +53,9 @@ class HoundClient @NonInjectable constructor(
         }
         "${response.status.value}:${response.status.description}"
     } catch (e: Exception) {
-        e.printStackTrace()
-        "Client error"
+        val msg = "Client error: ${e.message}"
+        logger.error(msg, e)
+        msg
     }
 
     private fun String.gitUrlToResult(searchHost: String): SearchResult? = try {
@@ -77,7 +81,8 @@ class HoundClient @NonInjectable constructor(
             null
         }
     } catch (e: Exception) {
-        e.printStackTrace()
+        val msg = "Failed converting gitUrls to results"
+        logger.error(msg, e)
         null
     }
 }
