@@ -3,6 +3,8 @@
 # mega-manipulator Changelog
 
 ## [Unreleased]
+
+## [0.0.50]
 ### Added
 - More descriptive validation, with better outputs
 - Do not use internal APIs for creating the ToolWindow
