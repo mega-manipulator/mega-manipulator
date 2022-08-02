@@ -3,6 +3,9 @@
 # mega-manipulator Changelog
 
 ## [Unreleased]
+### Added
+- Apply history
+- Rerun scripted changes from history
 
 ## [0.0.48]
 ### Fix

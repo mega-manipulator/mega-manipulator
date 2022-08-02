@@ -65,7 +65,6 @@ class CloneHistoryWindow(val project: Project) : ToolWindowTab {
     private val actionText = JBTextArea().apply {
         isEditable = false
         minimumSize = Dimension(300, 200)
-        // preferredSize = Dimension(10_000, 10_000)
     }
     private val actionSplitter = JBSplitter(0.5f).apply {
         firstComponent = JBScrollPane(actionSelector)
@@ -75,7 +74,7 @@ class CloneHistoryWindow(val project: Project) : ToolWindowTab {
         firstComponent = JBScrollPane(resultSelector)
         secondComponent = actionSplitter
     }
-    private val attempSplitter = JBSplitter(0.25f).apply {
+    private val attemptSplitter = JBSplitter(0.25f).apply {
         firstComponent = JBScrollPane(attemptSelector)
         secondComponent = resultSplitter
     }
@@ -91,15 +90,15 @@ class CloneHistoryWindow(val project: Project) : ToolWindowTab {
 
     override val content = BorderLayoutPanel().apply {
         addToTop(topContent)
-        addToCenter(attempSplitter)
+        addToCenter(attemptSplitter)
     }
 
     init {
         attemptSelector.apply {
-            this.preferredSize = Dimension(10_000, 10_000)
             this.addListSelectionListener {
                 val selected = attemptSelector.selectedValuesList
                 val results: List<CloneAttemptResult> = selected.firstOrNull()?.results ?: emptyList()
+                resultSelector.clearSelection()
                 resultSelector.setListData(results)
                 resultSelector.selectLast()
                 retryFailedButton.isEnabled = false
@@ -112,10 +111,10 @@ class CloneHistoryWindow(val project: Project) : ToolWindowTab {
             }
         }
         resultSelector.apply {
-            this.preferredSize = Dimension(10_000, 10_000)
             this.addListSelectionListener {
                 val selected = resultSelector.selectedValuesList
                 val actions = selected.firstOrNull()?.actions ?: emptyList()
+                actionSelector.clearSelection()
                 actionSelector.setListData(actions)
                 actionSelector.selectLast()
 
@@ -127,7 +126,6 @@ class CloneHistoryWindow(val project: Project) : ToolWindowTab {
             }
         }
         actionSelector.apply {
-            this.preferredSize = Dimension(10_000, 10_000)
             this.addListSelectionListener {
                 updateTextField()
             }

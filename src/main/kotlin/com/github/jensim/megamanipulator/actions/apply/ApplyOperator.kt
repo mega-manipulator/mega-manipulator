@@ -27,11 +27,11 @@ class ApplyOperator @NonInjectable constructor(
     private val localRepoOperator: LocalRepoOperator by lazyService(project, localRepoOperator)
     private val uiProtector: UiProtector by lazyService(project, uiProtector)
 
-    fun apply(): List<ApplyOutput> {
+    fun apply(dirs: List<File>? = null): List<ApplyOutput> {
         if (!settingsFileOperator.scriptFile.exists()) {
             return emptyList()
         }
-        val gitDirs: List<File> = localRepoOperator.getLocalRepoFiles()
+        val gitDirs: List<File> = dirs ?: localRepoOperator.getLocalRepoFiles()
         filesOperator.refreshConf()
         filesOperator.refreshClones()
         val scriptPath = settingsFileOperator.scriptFile.absolutePath
