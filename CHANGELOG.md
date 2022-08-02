@@ -6,6 +6,9 @@
 ### Changed
 - Support idea 2022.1, 2022.2 and 2022.3
 
+### Security
+- Upgrade versions of ktor, graphql, kotlin etc
+
 ## [0.0.50]
 ### Added
 - More descriptive validation, with better outputs
