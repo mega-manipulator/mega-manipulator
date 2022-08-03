@@ -7,6 +7,8 @@ import com.github.jensim.megamanipulator.actions.vcs.GithubComPullRequestWrapper
 import com.github.jensim.megamanipulator.actions.vcs.GithubComRepoWrapping
 import com.github.jensim.megamanipulator.actions.vcs.PrActionStatus
 import com.github.jensim.megamanipulator.http.HttpClientProvider
+import com.github.jensim.megamanipulator.http.bodyAsText
+import com.github.jensim.megamanipulator.http.setBody
 import com.github.jensim.megamanipulator.http.unwrap
 import com.github.jensim.megamanipulator.project.lazyService
 import com.github.jensim.megamanipulator.settings.SerializationHolder.objectMapper
@@ -21,9 +23,7 @@ import io.ktor.client.request.get
 import io.ktor.client.request.patch
 import io.ktor.client.request.post
 import io.ktor.client.request.put
-import io.ktor.client.request.setBody
 import io.ktor.client.statement.HttpResponse
-import io.ktor.client.statement.bodyAsText
 import io.ktor.http.ContentType
 import io.ktor.http.contentType
 import kotlinx.coroutines.Deferred
@@ -76,8 +76,8 @@ class GithubComClient @NonInjectable constructor(
         val fork: Pair<String, String>? = localRepoOperator.getForkProject(repo)
         val localBranch: String = localRepoOperator.getBranch(repo)!!
         val headProject = fork?.first ?: repo.project
-        val ghRepo: GithubComRepo = client.get("${settings.baseUrl}/repos/${repo.project}/${repo.repo}").unwrap()
-        val response = client.post("${settings.baseUrl}/repos/${repo.project}/${repo.repo}/pulls") {
+        val ghRepo: GithubComRepo = client.get<HttpResponse>("${settings.baseUrl}/repos/${repo.project}/${repo.repo}").unwrap()
+        val response = client.post<HttpResponse>("${settings.baseUrl}/repos/${repo.project}/${repo.repo}/pulls") {
             contentType(ContentType.Application.Json)
             accept(ContentType.Application.Json)
             setBody(
@@ -106,7 +106,7 @@ class GithubComClient @NonInjectable constructor(
         // According to github docs, the fork process can take up to 5 minutes
         // https://docs.github.com/en/rest/reference/repos#create-a-fork
         val ghrepo: GithubComRepo? = try {
-            val tmpRepo: GithubComRepo = client.get("${settings.baseUrl}/repos/${settings.username}/${repo.repo}").unwrap()
+            val tmpRepo: GithubComRepo = client.get<HttpResponse>("${settings.baseUrl}/repos/${settings.username}/${repo.repo}").unwrap()
             if (tmpRepo.fork && tmpRepo.parent?.owner?.login == repo.project) tmpRepo else null
         } catch (e: Exception) {
             null
@@ -114,7 +114,7 @@ class GithubComClient @NonInjectable constructor(
         // Recover or create fork
         return if (ghrepo == null) {
             // TODO fix fork repo name
-            val previewRepo: GithubComRepo = client.post("${settings.baseUrl}/repos/${repo.project}/${repo.repo}/forks") {
+            val previewRepo: GithubComRepo = client.post<HttpResponse>("${settings.baseUrl}/repos/${repo.project}/${repo.repo}/forks") {
                 setBody(emptyMap<String, Any>())
                 accept(ContentType.Application.Json)
                 contentType(ContentType.Application.Json)
@@ -164,7 +164,7 @@ class GithubComClient @NonInjectable constructor(
             var page = 1
             var found = 0L
             while (true) {
-                val result: GithubComSearchResult<GithubComIssue> = client.get("${settings.baseUrl}/search/issues?per_page=100&page=${page++}&q=type%3Apr${state}$role").unwrap()
+                val result: GithubComSearchResult<GithubComIssue> = client.get<HttpResponse>("${settings.baseUrl}/search/issues?per_page=100&page=${page++}&q=type%3Apr${state}$role").unwrap()
                 result.items.forEach { emit(it) }
                 if (result.items.isEmpty()) break
                 found += result.total_count
@@ -203,7 +203,7 @@ class GithubComClient @NonInjectable constructor(
             if (pullRequest.pullRequest.head?.repo != null) {
                 if (dropFork && pullRequest.pullRequest.head.repo.fork && pullRequest.pullRequest.head.repo.id != pullRequest.pullRequest.base?.repo?.id) {
                     if (pullRequest.pullRequest.head.repo.open_issues_count == 0L && pullRequest.pullRequest.head.repo.owner.login == settings.username) {
-                        client.delete("${settings.baseUrl}/repos/${settings.username}/${pullRequest.pullRequest.head.repo.name}").let {
+                        client.delete<HttpResponse>("${settings.baseUrl}/repos/${settings.username}/${pullRequest.pullRequest.head.repo.name}").let {
                             if (it.status.value >= 300) {
                                 return PrActionStatus(false, "Failed dropFork due to ${it.bodyAsText()}")
                             }
@@ -211,7 +211,7 @@ class GithubComClient @NonInjectable constructor(
                     }
                 } else if (dropBranch && pullRequest.pullRequest.head.repo.id == pullRequest.pullRequest.base?.repo?.id) {
                     // https://docs.github.com/en/rest/reference/git#delete-a-reference
-                    client.delete("${settings.baseUrl}/repos/${pullRequest.pullRequest.head.repo.owner.login}/${pullRequest.pullRequest.head.repo.name}/git/refs/heads/${pullRequest.pullRequest.head.ref}").let {
+                    client.delete<HttpResponse>("${settings.baseUrl}/repos/${pullRequest.pullRequest.head.repo.owner.login}/${pullRequest.pullRequest.head.repo.name}/git/refs/heads/${pullRequest.pullRequest.head.ref}").let {
                         if (it.status.value >= 300) {
                             return PrActionStatus(false, "Failed dropBranch due to ${it.bodyAsText()}")
                         }
@@ -252,7 +252,7 @@ class GithubComClient @NonInjectable constructor(
 
     suspend fun deletePrivateRepo(fork: GithubComRepoWrapping, settings: GitHubSettings) {
         val client: HttpClient = httpClientProvider.getClient(fork.getSearchHost(), fork.getCodeHost(), settings)
-        client.delete("${settings.baseUrl}/repos/${settings.username}/${fork.repo.name}")
+        client.delete<HttpResponse>("${settings.baseUrl}/repos/${settings.username}/${fork.repo.name}")
     }
 
     suspend fun getRepo(searchResult: SearchResult, settings: GitHubSettings): GithubComRepoWrapping {
@@ -267,7 +267,7 @@ class GithubComClient @NonInjectable constructor(
         // https://docs.github.com/en/rest/reference/pulls#comments
         // https://docs.github.com/en/rest/reference/issues#create-an-issue-comment
         val client: HttpClient = httpClientProvider.getClient(pullRequest.searchHost, pullRequest.codeHost, settings)
-        client.post(pullRequest.pullRequest.comments_url) {
+        client.post<HttpResponse>(pullRequest.pullRequest.comments_url) {
             contentType(ContentType.Application.Json)
             setBody(mapOf("body" to comment))
         }

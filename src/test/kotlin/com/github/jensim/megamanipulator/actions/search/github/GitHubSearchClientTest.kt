@@ -3,12 +3,12 @@ package com.github.jensim.megamanipulator.actions.search.github
 import com.github.jensim.megamanipulator.actions.NotificationsOperator
 import com.github.jensim.megamanipulator.actions.search.SearchResult
 import com.github.jensim.megamanipulator.http.HttpClientProvider
-import com.github.jensim.megamanipulator.settings.SerializationHolder.confReadable
+import com.github.jensim.megamanipulator.settings.SerializationHolder
 import com.github.jensim.megamanipulator.settings.types.searchhost.GithubSearchSettings
 import io.ktor.client.HttpClient
 import io.ktor.client.engine.apache.Apache
-import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
-import io.ktor.serialization.jackson.jackson
+import io.ktor.client.features.json.JacksonSerializer
+import io.ktor.client.features.json.JsonFeature
 import io.mockk.every
 import io.mockk.mockk
 import kotlinx.coroutines.runBlocking
@@ -35,11 +35,14 @@ class GitHubSearchClientTest {
     @ParameterizedTest
     fun search(search: String) = runBlocking {
         every { clientProviderMockk.getClient(any(), any()) } returns HttpClient(Apache) {
-            install(ContentNegotiation) {
+            install(JsonFeature) {
+                this.serializer = JacksonSerializer(jackson = SerializationHolder.readable)
+            }
+            /*install(ContentNegotiation) {
                 jackson {
                     confReadable()
                 }
-            }
+            }*/
         }
         val response: Set<SearchResult> = client.search("Blaha", GithubSearchSettings("jensim"), search)
 
