@@ -9,7 +9,7 @@ fun properties(key: String) = project.findProperty(key).toString()
 plugins {
     id("java")
     // Kotlin support
-    kotlin("jvm") version "1.7.10"
+    kotlin("jvm") version "1.6.21"
     // gradle-intellij-plugin - read more: https://github.com/JetBrains/gradle-intellij-plugin
     id("org.jetbrains.intellij") version "1.7.0"
     // gradle-changelog-plugin - read more: https://github.com/JetBrains/gradle-changelog-plugin
@@ -18,7 +18,7 @@ plugins {
     id("org.jlleitschuh.gradle.ktlint") version "10.3.0"
     id("io.gitlab.arturbosch.detekt") version "1.21.0"
     id("com.github.ben-manes.versions") version "0.42.0"
-    id("com.expediagroup.graphql") version "5.5.0"
+    id("com.expediagroup.graphql") version "6.1.0"
     id("org.jetbrains.qodana") version "0.1.13"
 }
 
@@ -49,13 +49,13 @@ configure<org.jlleitschuh.gradle.ktlint.KtlintExtension> {
 }
 
 dependencies {
-    val kotlinVersion = "1.7.10"
+    val kotlinVersion = "1.6.21"
     val jacksonDatabindVersion = "2.13.3"
 
     // These three are old, but work together -.-'
-    val ktor_version = "1.6.8"
-    val kotlinCoroutinesVersion = "1.5.2"
-    val graphql_kotlin_ktor_version = "5.5.0"
+    val ktor_version = "2.0.3"
+    val kotlinCoroutinesVersion = "1.6.4"
+    val graphql_kotlin_ktor_version = "6.1.0"
 
     implementation(enforcedPlatform(kotlin("bom", kotlinVersion)))
     implementation(enforcedPlatform("org.jetbrains.kotlinx:kotlinx-coroutines-bom:$kotlinCoroutinesVersion"))
@@ -71,9 +71,9 @@ dependencies {
     implementation("io.ktor:ktor-client")
     implementation("commons-codec:commons-codec:1.15") // Fix transitive vulnerability in apache client
     implementation("io.ktor:ktor-client-apache")
-    implementation("io.ktor:ktor-client-jackson:$ktor_version") // Old
-    // implementation("io.ktor:ktor-serialization-jackson") // new
-    // implementation("io.ktor:ktor-client-content-negotiation") // new
+    // implementation("io.ktor:ktor-client-jackson:$ktor_version") // Old
+    implementation("io.ktor:ktor-serialization-jackson") // new
+    implementation("io.ktor:ktor-client-content-negotiation") // new
     implementation("io.ktor:ktor-client-logging")
     implementation("com.fasterxml.jackson.datatype:jackson-datatype-jsr310:$jacksonDatabindVersion")
 

@@ -3,6 +3,7 @@ package com.github.jensim.megamanipulator.actions.search.github
 import com.github.jensim.megamanipulator.actions.NotificationsOperator
 import com.github.jensim.megamanipulator.actions.search.SearchResult
 import com.github.jensim.megamanipulator.actions.vcs.githubcom.GitHubValidation
+import com.github.jensim.megamanipulator.actions.vcs.githubcom.GitHubValidation.delayIfRateLimit
 import com.github.jensim.megamanipulator.http.HttpClientProvider
 import com.github.jensim.megamanipulator.http.unwrap
 import com.github.jensim.megamanipulator.project.lazyService
@@ -69,9 +70,10 @@ class GitHubSearchClient @NonInjectable constructor(
         val accumulator = HashSet<SearchResult>()
         var page = 1
         while (true) {
-            val response = client.get<HttpResponse>("${settings.baseUrl}/search/$type?q=$q&page=$page") {
+            val response: HttpResponse = client.get("${settings.baseUrl}/search/$type?q=$q&page=$page") {
                 accept(ContentType.Application.Json)
             }
+            if (gottaRetry(response)) continue
             val searchResponse = response.unwrap<GithubSearchResponse<T>>()
             val items = searchResponse.items.orEmpty().map { transformResult(it) }.toSet()
             accumulator.addAll(items)
@@ -79,6 +81,12 @@ class GitHubSearchClient @NonInjectable constructor(
             page += 1
         }
         return accumulator
+    }
+
+    private suspend fun gottaRetry(response: HttpResponse): Boolean {
+        return delayIfRateLimit(response) { sleep ->
+            notificationsOperator.show("Search Rate limit hit", "Will reset in ${sleep / 1000} seconds")
+        }
     }
 
     suspend fun validateAccess(searchHost: String, settings: GithubSearchSettings): String = try {

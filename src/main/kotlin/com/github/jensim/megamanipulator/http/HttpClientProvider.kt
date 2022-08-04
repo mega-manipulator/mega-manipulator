@@ -2,7 +2,7 @@ package com.github.jensim.megamanipulator.http
 
 import com.github.jensim.megamanipulator.actions.NotificationsOperator
 import com.github.jensim.megamanipulator.project.lazyService
-import com.github.jensim.megamanipulator.settings.SerializationHolder
+import com.github.jensim.megamanipulator.settings.SerializationHolder.confCompact
 import com.github.jensim.megamanipulator.settings.SettingsFileOperator
 import com.github.jensim.megamanipulator.settings.passwords.PasswordsOperator
 import com.github.jensim.megamanipulator.settings.types.AuthMethod
@@ -20,23 +20,22 @@ import com.intellij.openapi.project.Project
 import com.intellij.serviceContainer.NonInjectable
 import io.ktor.client.HttpClient
 import io.ktor.client.HttpClientConfig
-import io.ktor.client.call.receive
+import io.ktor.client.call.body
 import io.ktor.client.engine.apache.Apache
 import io.ktor.client.engine.apache.ApacheEngineConfig
-import io.ktor.client.features.HttpTimeout
-import io.ktor.client.features.defaultRequest
-import io.ktor.client.features.json.JacksonSerializer
-import io.ktor.client.features.json.JsonFeature
-import io.ktor.client.features.logging.DEFAULT
-import io.ktor.client.features.logging.LogLevel
-import io.ktor.client.features.logging.Logging
-import io.ktor.client.request.HttpRequestBuilder
+import io.ktor.client.plugins.HttpTimeout
+import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
+import io.ktor.client.plugins.defaultRequest
+import io.ktor.client.plugins.logging.DEFAULT
+import io.ktor.client.plugins.logging.LogLevel
+import io.ktor.client.plugins.logging.Logging
 import io.ktor.client.request.header
 import io.ktor.client.request.headers
 import io.ktor.client.statement.HttpResponse
-import io.ktor.client.statement.readText
+import io.ktor.client.statement.bodyAsText
 import io.ktor.client.statement.request
 import io.ktor.http.isSuccess
+import io.ktor.serialization.jackson.jackson
 import org.apache.http.conn.ssl.NoopHostnameVerifier
 import org.apache.http.conn.ssl.TrustSelfSignedStrategy
 import org.apache.http.conn.ssl.TrustStrategy
@@ -79,11 +78,13 @@ class HttpClientProvider @NonInjectable constructor(
         httpLoggingLevel: HttpLoggingLevel,
         installs: HttpClientConfig<ApacheEngineConfig>.() -> Unit,
     ): HttpClient = HttpClient(Apache) {
-        install(JsonFeature) {
-            this.serializer = JacksonSerializer(jackson = SerializationHolder.objectMapper)
+        install(ContentNegotiation) {
+            jackson {
+                confCompact()
+            }
         }
         install(Logging) {
-            logger = io.ktor.client.features.logging.Logger.DEFAULT
+            logger = io.ktor.client.plugins.logging.Logger.DEFAULT
             level = httpLoggingLevel.toKtorLevel()
         }
         installs()
@@ -188,15 +189,10 @@ class HttpClientProvider @NonInjectable constructor(
 
 suspend inline fun <reified T> HttpResponse.unwrap(): T {
     if (status.isSuccess()) {
-        // return body()
-        return receive()
+        return body()
+        // return receive()
     } else {
         val body: String = bodyAsText()
         throw RuntimeException("Response status ${status.value} from ${request.url} with message: $body")
     }
-}
-
-suspend fun HttpResponse.bodyAsText() = this.readText()
-inline fun <reified T : Any> HttpRequestBuilder.setBody(t: T) {
-    this.body = t
 }

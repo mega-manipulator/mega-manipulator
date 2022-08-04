@@ -3,11 +3,14 @@
 # mega-manipulator Changelog
 
 ## [Unreleased]
+### Improvement
+- Handle short rate limits in github api with delay and retry
+
 ### Changed
 - Support idea 2022.1, 2022.2 and 2022.3
 
 ### Security
-- Upgrade versions of ktor, graphql, kotlin etc
+- Upgrade kotlin version, etc
 
 ## [0.0.50]
 ### Added
