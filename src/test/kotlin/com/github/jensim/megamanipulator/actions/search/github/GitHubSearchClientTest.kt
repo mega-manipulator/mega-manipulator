@@ -6,8 +6,10 @@ import com.github.jensim.megamanipulator.http.HttpClientProvider
 import com.github.jensim.megamanipulator.settings.types.searchhost.GithubSearchSettings
 import com.github.jensim.megamanipulator.test.wiring.EnvUserSettingsSetup
 import com.github.jensim.megamanipulator.test.wiring.TestApplicationWiring
+import io.mockk.Called
 import io.mockk.every
 import io.mockk.mockk
+import io.mockk.verify
 import kotlinx.coroutines.runBlocking
 import org.hamcrest.MatcherAssert.assertThat
 import org.hamcrest.Matchers.equalTo
@@ -38,6 +40,7 @@ class GitHubSearchClientTest {
     fun search(search: String) = runBlocking {
         val response: Set<SearchResult> = client.search(EnvUserSettingsSetup.sourcegraphName, GithubSearchSettings("jensim"), search)
 
+        verify { notificationsOperatorMockk wasNot Called }
         assertThat(response, hasItem(SearchResult("mega-manipulator", "mega-manipulator.github.io", "github.com", EnvUserSettingsSetup.sourcegraphName)))
     }
 

@@ -53,7 +53,7 @@ class GitHubSearchClient @NonInjectable constructor(
                 }
             }
         } catch (e: Exception) {
-            val message = "Failed searching Github for '$search'"
+            val message = "Failed searching Github for '$search', ${e.message}"
             logger.error(message, e)
             notificationsOperator.show("Failed GitHub search", message, WARNING)
             return emptySet()

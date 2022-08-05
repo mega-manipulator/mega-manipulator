@@ -3,10 +3,8 @@ package com.github.jensim.megamanipulator.test.wiring
 import com.github.jensim.megamanipulator.actions.search.SearchResult
 import com.github.jensim.megamanipulator.settings.passwords.PasswordsOperator
 import com.github.jensim.megamanipulator.settings.types.CloneType
-import com.github.jensim.megamanipulator.settings.types.CloneType.HTTPS
 import com.github.jensim.megamanipulator.settings.types.ForkSetting
-import com.github.jensim.megamanipulator.settings.types.ForkSetting.LAZY_FORK
-import com.github.jensim.megamanipulator.settings.types.HttpsOverride.ALLOW_ANYTHING
+import com.github.jensim.megamanipulator.settings.types.HttpsOverride
 import com.github.jensim.megamanipulator.settings.types.MegaManipulatorSettings
 import com.github.jensim.megamanipulator.settings.types.codehost.BitBucketSettings
 import com.github.jensim.megamanipulator.settings.types.codehost.CodeHostSettingsGroup
@@ -16,9 +14,6 @@ import com.github.jensim.megamanipulator.settings.types.searchhost.GithubSearchS
 import com.github.jensim.megamanipulator.settings.types.searchhost.SearchHostSettingsGroup
 import com.github.jensim.megamanipulator.settings.types.searchhost.SourceGraphSettings
 import com.github.jensim.megamanipulator.test.EnvHelper
-import com.github.jensim.megamanipulator.test.EnvHelper.EnvProperty.BITBUCKET_SERVER_BASEURL
-import com.github.jensim.megamanipulator.test.EnvHelper.EnvProperty.BITBUCKET_SERVER_USER
-import com.github.jensim.megamanipulator.test.EnvHelper.EnvProperty.GITHUB_USERNAME
 import com.github.jensim.megamanipulator.test.Login
 import com.github.jensim.megamanipulator.test.Password
 import com.github.jensim.megamanipulator.test.TestPasswordOperator
@@ -103,9 +98,9 @@ object EnvUserSettingsSetup {
         ).verifyUnset("GitHub")
         githubName to CodeHostSettingsGroup(
             gitHub = GitHubSettings(
-                username = helper.resolve(GITHUB_USERNAME)!!,
-                forkSetting = LAZY_FORK,
-                cloneType = HTTPS,
+                username = helper.resolve(EnvHelper.EnvProperty.GITHUB_USERNAME)!!,
+                forkSetting = ForkSetting.LAZY_FORK,
+                cloneType = CloneType.HTTPS,
             )
         )
     }
@@ -120,11 +115,11 @@ object EnvUserSettingsSetup {
             ).verifyUnset("BitBucket")
             "bitbucket_server" to CodeHostSettingsGroup(
                 bitBucket = BitBucketSettings(
-                    baseUrl = helper.resolve(BITBUCKET_SERVER_BASEURL)!!,
-                    httpsOverride = ALLOW_ANYTHING,
-                    username = helper.resolve(BITBUCKET_SERVER_USER)!!,
-                    forkSetting = LAZY_FORK,
-                    cloneType = HTTPS,
+                    baseUrl = helper.resolve(EnvHelper.EnvProperty.BITBUCKET_SERVER_BASEURL)!!,
+                    httpsOverride = HttpsOverride.ALLOW_ANYTHING,
+                    username = helper.resolve(EnvHelper.EnvProperty.BITBUCKET_SERVER_USER)!!,
+                    forkSetting = ForkSetting.LAZY_FORK,
+                    cloneType = CloneType.HTTPS,
                 )
             )
         } catch (e: MissingPropertyException) {
@@ -161,7 +156,8 @@ object EnvUserSettingsSetup {
     }
     val githubSearchSettings: GithubSearchSettings by lazy {
         GithubSearchSettings(
-            username = helper.resolve(GITHUB_USERNAME)!!,
+            username = helper.resolve(EnvHelper.EnvProperty.GITHUB_USERNAME)!!,
+            cloneType = CloneType.HTTPS,
         )
     }
     val settings: MegaManipulatorSettings by lazy {
