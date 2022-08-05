@@ -71,7 +71,7 @@ class GitLabClient @NonInjectable constructor(
 
     private fun getClient(searchHost: String, codeHost: String, settings: GitLabSettings) = GraphQLKtorClient(
         url = URL("${settings.baseUrl}/api/graphql"),
-        httpClient = httpClientProvider.getClient(searchHost, codeHost, settings),
+        httpClient = httpClientProvider.getClient(searchHost, codeHost, settings, null),
         serializer = graphQlSerializer,
     )
 
