@@ -10,8 +10,9 @@ import org.slf4j.LoggerFactory
 
 class EnvUserSettingsSetupTest {
 
+    private val logger = LoggerFactory.getLogger(javaClass)
+
     companion object {
-        private val logger = LoggerFactory.getLogger(javaClass)
 
         @JvmStatic
         val searchResults: Array<SearchResult> = EnvUserSettingsSetup.searchResults

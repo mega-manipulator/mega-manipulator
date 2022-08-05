@@ -1,7 +1,6 @@
 package com.github.jensim.megamanipulator.actions.search.github
 
 import com.github.jensim.megamanipulator.actions.search.SearchResult
-import com.github.jensim.megamanipulator.settings.types.searchhost.GithubSearchSettings
 import com.github.jensim.megamanipulator.test.wiring.EnvUserSettingsSetup
 import com.github.jensim.megamanipulator.test.wiring.TestApplicationWiring
 import io.mockk.Called
@@ -29,7 +28,7 @@ class GitHubSearchClientTest {
     )
     @ParameterizedTest
     fun search(search: String) = runBlocking {
-        val response: Set<SearchResult> = client.search(EnvUserSettingsSetup.sourcegraphName, GithubSearchSettings("jensim"), search)
+        val response: Set<SearchResult> = client.search(EnvUserSettingsSetup.sourcegraphName, EnvUserSettingsSetup.githubSearchSettings, search)
 
         verify { wiring.notificationsOperator wasNot Called }
         assertThat(response, hasItem(SearchResult("mega-manipulator", "mega-manipulator.github.io", "github.com", EnvUserSettingsSetup.sourcegraphName)))
@@ -37,7 +36,7 @@ class GitHubSearchClientTest {
 
     @Test
     internal fun `validate access`() = runBlocking {
-        val access = client.validateAccess(EnvUserSettingsSetup.sourcegraphName, GithubSearchSettings("jensim"))
+        val access = client.validateAccess(EnvUserSettingsSetup.sourcegraphName, EnvUserSettingsSetup.githubSearchSettings)
 
         assertThat(access, equalTo("200:OK"))
     }

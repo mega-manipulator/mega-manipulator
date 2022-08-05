@@ -160,6 +160,7 @@ object EnvUserSettingsSetup {
         GithubSearchSettings(
             username = helper.resolve(EnvHelper.EnvProperty.GITHUB_USERNAME)!!,
             cloneType = CloneType.HTTPS,
+            forkSetting = ForkSetting.LAZY_FORK,
         )
     }
     val settings: MegaManipulatorSettings by lazy {
