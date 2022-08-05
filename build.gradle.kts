@@ -9,9 +9,9 @@ fun properties(key: String) = project.findProperty(key).toString()
 plugins {
     id("java")
     // Kotlin support
-    kotlin("jvm") version "1.6.21"
+    kotlin("jvm") version "1.7.10"
     // gradle-intellij-plugin - read more: https://github.com/JetBrains/gradle-intellij-plugin
-    id("org.jetbrains.intellij") version "1.7.0"
+    id("org.jetbrains.intellij") version "1.8.0"
     // gradle-changelog-plugin - read more: https://github.com/JetBrains/gradle-changelog-plugin
     id("org.jetbrains.changelog") version "1.3.1"
 
@@ -49,17 +49,17 @@ configure<org.jlleitschuh.gradle.ktlint.KtlintExtension> {
 }
 
 dependencies {
-    val kotlinVersion = "1.6.21"
+    val kotlinVersion = "1.7.10"
     val jacksonDatabindVersion = "2.13.3"
 
     // These three are old, but work together -.-'
-    val ktor_version = "2.0.3"
+    val ktorVersion = "2.0.3"
     val kotlinCoroutinesVersion = "1.6.4"
-    val graphql_kotlin_ktor_version = "6.1.0"
+    val graphqlKotlinKtorVersion = "6.1.0"
 
     implementation(enforcedPlatform(kotlin("bom", kotlinVersion)))
     implementation(enforcedPlatform("org.jetbrains.kotlinx:kotlinx-coroutines-bom:$kotlinCoroutinesVersion"))
-    implementation(enforcedPlatform("io.ktor:ktor-bom:$ktor_version"))
+    implementation(enforcedPlatform("io.ktor:ktor-bom:$ktorVersion"))
 
     implementation(kotlin("stdlib-jdk8"))
     implementation(kotlin("reflect"))
@@ -80,11 +80,11 @@ dependencies {
     implementation("org.eclipse.jgit:org.eclipse.jgit:6.2.0.202206071550-r")
     implementation("ch.qos.logback:logback-classic:1.2.11")
     implementation("me.xdrop:fuzzywuzzy:1.4.0")
-    implementation("com.expediagroup:graphql-kotlin-ktor-client:$graphql_kotlin_ktor_version") {
+    implementation("com.expediagroup:graphql-kotlin-ktor-client:$graphqlKotlinKtorVersion") {
         exclude("com.expediagroup:graphql-kotlin-client-serialization")
         exclude("org.jetbrains.kotlinx:kotlinx-serialization-json")
     }
-    implementation("com.expediagroup:graphql-kotlin-client-jackson:$graphql_kotlin_ktor_version")
+    implementation("com.expediagroup:graphql-kotlin-client-jackson:$graphqlKotlinKtorVersion")
     implementation("jakarta.validation:jakarta.validation-api:3.0.2")
 
     // Test deps
