@@ -1,5 +1,6 @@
 package com.github.jensim.megamanipulator.http
 
+import com.fasterxml.jackson.databind.ObjectMapper
 import com.github.jensim.megamanipulator.actions.NotificationsOperator
 import com.github.jensim.megamanipulator.project.lazyService
 import com.github.jensim.megamanipulator.settings.SerializationHolder.confCompact
@@ -76,11 +77,14 @@ class HttpClientProvider @NonInjectable constructor(
 
     private fun bakeClient(
         httpLoggingLevel: HttpLoggingLevel,
+        objectMapperConfig: (ObjectMapper.() -> ObjectMapper)?,
         installs: HttpClientConfig<ApacheEngineConfig>.() -> Unit,
     ): HttpClient = HttpClient(Apache) {
-        install(ContentNegotiation) {
-            jackson {
-                confCompact()
+        objectMapperConfig?.let {
+            install(ContentNegotiation) {
+                jackson {
+                    it()
+                }
             }
         }
         install(Logging) {
@@ -119,25 +123,27 @@ class HttpClientProvider @NonInjectable constructor(
     fun getClient(
         searchHostName: String,
         searchHostSettings: SearchHostSettings,
+        objectMapperConfig: (ObjectMapper.() -> ObjectMapper)? = { confCompact() },
     ): HttpClient {
         val settings = settingsFileOperator.readSettings()
         val httpLoggingLevel = settings?.httpLoggingLevel.orDefault()
         val httpsOverride: HttpsOverride? = settings?.resolveHttpsOverride(searchHostName)
         val password: String = getPassword(searchHostSettings.authMethod, searchHostSettings.baseUrl, searchHostSettings.username)
-        return getClient(httpLoggingLevel, httpsOverride, searchHostSettings, password)
+        return getClient(httpLoggingLevel, httpsOverride, objectMapperConfig, searchHostSettings, password)
     }
 
     fun getClient(
         searchHostName: String,
         codeHostName: String,
         codeHostSettings: CodeHostSettings,
+        objectMapperConfig: (ObjectMapper.() -> ObjectMapper)? = { confCompact() },
     ): HttpClient {
         val settings = settingsFileOperator.readSettings()
         val httpLoggingLevel = settings?.httpLoggingLevel.orDefault()
         val httpsOverride: HttpsOverride? =
             settings?.resolveHttpsOverride(searchHostName, codeHostName)
         val password: String = getPassword(codeHostSettings.authMethod, codeHostSettings.baseUrl, codeHostSettings.username ?: "token")
-        return getClient(httpLoggingLevel, httpsOverride, codeHostSettings, password)
+        return getClient(httpLoggingLevel, httpsOverride, objectMapperConfig, codeHostSettings, password)
     }
 
     private fun getPassword(authMethod: AuthMethod, baseUrl: String, username: String?) = try {
@@ -158,10 +164,11 @@ class HttpClientProvider @NonInjectable constructor(
     fun getClient(
         httpLoggingLevel: HttpLoggingLevel,
         httpsOverride: HttpsOverride?,
+        objectMapperConfig: (ObjectMapper.() -> ObjectMapper)? = { confCompact() },
         auth: HostWithAuth,
         password: String,
     ): HttpClient {
-        return bakeClient(httpLoggingLevel) {
+        return bakeClient(httpLoggingLevel, objectMapperConfig) {
             install(HttpTimeout) {
                 connectTimeoutMillis = 1_000
                 requestTimeoutMillis = 60_000

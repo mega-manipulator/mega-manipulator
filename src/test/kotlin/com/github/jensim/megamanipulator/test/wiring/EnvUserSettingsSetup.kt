@@ -144,7 +144,7 @@ object EnvUserSettingsSetup {
             null
         }
     }
-    private val sourceGraphSettings: SourceGraphSettings by lazy {
+    val sourceGraphSettings: SourceGraphSettings by lazy {
         SourceGraphSettings(
             baseUrl = "https://sourcegraph.com",
             codeHostSettings = codeHostSettings,
