@@ -12,6 +12,7 @@ import com.github.jensim.megamanipulator.settings.types.codehost.BitBucketSettin
 import com.github.jensim.megamanipulator.settings.types.codehost.CodeHostSettingsGroup
 import com.github.jensim.megamanipulator.settings.types.codehost.GitHubSettings
 import com.github.jensim.megamanipulator.settings.types.codehost.GitLabSettings
+import com.github.jensim.megamanipulator.settings.types.searchhost.GithubSearchSettings
 import com.github.jensim.megamanipulator.settings.types.searchhost.SearchHostSettingsGroup
 import com.github.jensim.megamanipulator.settings.types.searchhost.SourceGraphSettings
 import com.github.jensim.megamanipulator.test.EnvHelper
@@ -29,6 +30,8 @@ object EnvUserSettingsSetup {
     private val log = LoggerFactory.getLogger(javaClass)
 
     const val sourcegraphName = "sourcegraph.com"
+    const val githubName = "github.com"
+
     val helper = EnvHelper()
 
     val passwordsOperator: PasswordsOperator by lazy {
@@ -54,7 +57,13 @@ object EnvUserSettingsSetup {
         listOfNotNull(
             SearchResult(
                 searchHostName = sourcegraphName,
-                codeHostName = githubSettings.first,
+                codeHostName = githubName,
+                project = helper.resolve(EnvHelper.EnvProperty.GITHUB_PROJECT)!!,
+                repo = helper.resolve(EnvHelper.EnvProperty.GITHUB_REPO)!!,
+            ),
+            SearchResult(
+                searchHostName = githubName,
+                codeHostName = githubName,
                 project = helper.resolve(EnvHelper.EnvProperty.GITHUB_PROJECT)!!,
                 repo = helper.resolve(EnvHelper.EnvProperty.GITHUB_REPO)!!,
             ),
@@ -92,7 +101,7 @@ object EnvUserSettingsSetup {
             EnvHelper.EnvProperty.GITHUB_REPO,
             EnvHelper.EnvProperty.GITHUB_PROJECT,
         ).verifyUnset("GitHub")
-        "github.com" to CodeHostSettingsGroup(
+        githubName to CodeHostSettingsGroup(
             gitHub = GitHubSettings(
                 username = helper.resolve(GITHUB_USERNAME)!!,
                 forkSetting = LAZY_FORK,
@@ -150,11 +159,17 @@ object EnvUserSettingsSetup {
             codeHostSettings = codeHostSettings,
         )
     }
+    val githubSearchSettings: GithubSearchSettings by lazy {
+        GithubSearchSettings(
+            username = helper.resolve(GITHUB_USERNAME)!!,
+        )
+    }
     val settings: MegaManipulatorSettings by lazy {
         MegaManipulatorSettings(
             concurrency = 1,
             searchHostSettings = mapOf(
-                sourcegraphName to SearchHostSettingsGroup(sourceGraph = sourceGraphSettings)
+                sourcegraphName to SearchHostSettingsGroup(sourceGraph = sourceGraphSettings),
+                githubName to SearchHostSettingsGroup(gitHub = githubSearchSettings),
             )
         )
     }
