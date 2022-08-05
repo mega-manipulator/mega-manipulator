@@ -27,10 +27,8 @@ import io.mockk.every
 import io.mockk.mockk
 import java.io.File
 import java.nio.file.Path
-import kotlin.io.path.ExperimentalPathApi
 import kotlin.io.path.createTempDirectory
 
-@ExperimentalPathApi
 open class TestApplicationWiring {
 
     open val envHelper = EnvUserSettingsSetup.helper

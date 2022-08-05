@@ -36,7 +36,7 @@ class IntegrationTest {
     companion object {
 
         @JvmStatic
-        val searchResults: Array<SearchResult> = EnvUserSettingsSetup.searchResults.toTypedArray()
+        val searchResults: Array<SearchResult> = EnvUserSettingsSetup.searchResults
     }
 
     private val wiring = TestApplicationWiring()

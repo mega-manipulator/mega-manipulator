@@ -53,7 +53,7 @@ object EnvUserSettingsSetup {
         }
     }
 
-    val searchResults: List<SearchResult> by lazy {
+    val searchResults: Array<SearchResult> by lazy {
         listOfNotNull(
             SearchResult(
                 searchHostName = sourcegraphName,
@@ -83,7 +83,7 @@ object EnvUserSettingsSetup {
                     repo = helper.resolve(EnvHelper.EnvProperty.GITLAB_PROJECT)!!
                 )
             },
-        )
+        ).toTypedArray()
     }
 
     private val codeHostSettings: Map<String, CodeHostSettingsGroup> by lazy {
