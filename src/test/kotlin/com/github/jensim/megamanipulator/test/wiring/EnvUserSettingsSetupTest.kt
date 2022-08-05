@@ -6,10 +6,12 @@ import org.junit.jupiter.api.Assertions.fail
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.MethodSource
+import org.slf4j.LoggerFactory
 
 class EnvUserSettingsSetupTest {
 
     companion object {
+        private val logger = LoggerFactory.getLogger(javaClass)
 
         @JvmStatic
         val searchResults: Array<SearchResult> = EnvUserSettingsSetup.searchResults
@@ -27,6 +29,7 @@ class EnvUserSettingsSetupTest {
         (codeSettings.username ?: fail("Username not present for code host in test settings ${result.searchHostName}/${result.codeHostName}")).let {
             wiring.passwordsOperator.getPassword(it, codeSettings.baseUrl)
                 ?: fail("Failed to resolve search host password for $it@${codeSettings.baseUrl}")
+            logger.info("Password verified for $it@${codeSettings.baseUrl}")
         }
     }
 
