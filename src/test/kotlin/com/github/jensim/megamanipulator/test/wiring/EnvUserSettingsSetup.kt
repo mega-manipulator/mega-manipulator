@@ -151,6 +151,7 @@ object EnvUserSettingsSetup {
     }
     val sourceGraphSettings: SourceGraphSettings by lazy {
         SourceGraphSettings(
+            username = helper.resolve(EnvHelper.EnvProperty.SRC_COM_USERNAME)!!,
             baseUrl = "https://sourcegraph.com",
             codeHostSettings = codeHostSettings,
         )

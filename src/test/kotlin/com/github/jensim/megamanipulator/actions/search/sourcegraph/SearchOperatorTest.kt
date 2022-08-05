@@ -12,7 +12,6 @@ import com.github.jensim.megamanipulator.settings.types.codehost.GitHubSettings
 import com.github.jensim.megamanipulator.settings.types.searchhost.SearchHostSettingsGroup
 import com.github.jensim.megamanipulator.settings.types.searchhost.SourceGraphSettings
 import com.github.jensim.megamanipulator.test.EnvHelper
-import com.github.jensim.megamanipulator.test.EnvHelper.EnvProperty.SRC_COM_USERNAME
 import com.intellij.openapi.project.Project
 import io.mockk.coEvery
 import io.mockk.coVerify
@@ -46,10 +45,11 @@ class SearchOperatorTest {
     private val codeHostName = "github.com"
     private val sourceGraphSettings = SourceGraphSettings(
         baseUrl = "https://sourcegraph.com",
+        username = envHelper.resolve(EnvHelper.EnvProperty.SRC_COM_USERNAME)!!,
         codeHostSettings = mapOf(
             codeHostName to CodeHostSettingsGroup(
                 gitHub = GitHubSettings(
-                    username = envHelper.resolve(SRC_COM_USERNAME)!!,
+                    username = envHelper.resolve(EnvHelper.EnvProperty.GITHUB_USERNAME)!!,
                     forkSetting = PLAIN_BRANCH,
                 )
             )
