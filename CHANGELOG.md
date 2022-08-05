@@ -3,6 +3,8 @@
 # mega-manipulator Changelog
 
 ## [Unreleased]
+
+## [0.0.51]
 ### Improvement
 - Handle short rate limits in github api with delay and retry
 
@@ -10,7 +12,7 @@
 - Support idea 2022.1, 2022.2 and 2022.3
 
 ### Fix
-- Username/Password login for SourceGraph was broken, and used to send "token" as username
+- Username/Password login for SourceGraph was broken, and used to send token as username
 - Test usernames might have been a bit mixed up
 
 ### Security
