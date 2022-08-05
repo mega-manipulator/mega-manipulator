@@ -22,8 +22,6 @@ import com.github.jensim.megamanipulator.graphql.generated.gitlab.GetForkRepos
 import com.github.jensim.megamanipulator.graphql.generated.gitlab.SingleRepoQuery
 import com.github.jensim.megamanipulator.graphql.generated.gitlab.enums.MergeRequestState
 import com.github.jensim.megamanipulator.http.HttpClientProvider
-import com.github.jensim.megamanipulator.http.bodyAsText
-import com.github.jensim.megamanipulator.http.setBody
 import com.github.jensim.megamanipulator.project.lazyService
 import com.github.jensim.megamanipulator.settings.SerializationHolder.objectMapper
 import com.github.jensim.megamanipulator.settings.types.codehost.GitLabSettings
@@ -36,7 +34,9 @@ import io.ktor.client.request.delete
 import io.ktor.client.request.get
 import io.ktor.client.request.post
 import io.ktor.client.request.put
+import io.ktor.client.request.setBody
 import io.ktor.client.statement.HttpResponse
+import io.ktor.client.statement.bodyAsText
 import io.ktor.http.ContentType
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.contentType
@@ -71,7 +71,7 @@ class GitLabClient @NonInjectable constructor(
 
     private fun getClient(searchHost: String, codeHost: String, settings: GitLabSettings) = GraphQLKtorClient(
         url = URL("${settings.baseUrl}/api/graphql"),
-        httpClient = httpClientProvider.getClient(searchHost, codeHost, settings),
+        httpClient = httpClientProvider.getClient(searchHost, codeHost, settings, null),
         serializer = graphQlSerializer,
     )
 
@@ -83,7 +83,7 @@ class GitLabClient @NonInjectable constructor(
     ): GitLabRepoWrapping {
         // https://docs.gitlab.com/ee/api/projects.html#get-single-project
         // GET /api/v4/projects/:id
-        val response = client.get<HttpResponse>("${settings.baseUrl}/api/v4/projects/$projectId") {
+        val response = client.get("${settings.baseUrl}/api/v4/projects/$projectId") {
             accept(ContentType.Application.Json)
         }
         if (response.status.value >= 300) {
@@ -124,7 +124,7 @@ class GitLabClient @NonInjectable constructor(
         )
         val iid = pullRequest.mergeRequestIid
         val response =
-            client.post<HttpResponse>("${settings.baseUrl}/api/v4/projects/${pullRequest.targetProjectId}/merge_requests/$iid/notes") {
+            client.post("${settings.baseUrl}/api/v4/projects/${pullRequest.targetProjectId}/merge_requests/$iid/notes") {
                 contentType(ContentType.Application.Json)
                 setBody(mapOf("body" to comment))
             }
@@ -241,7 +241,7 @@ class GitLabClient @NonInjectable constructor(
             codeHostName = pullRequest.codeHostName(),
             codeHostSettings = settings
         )
-        val response = client.delete<HttpResponse>("${settings.baseUrl}/api/v4/projects/${pullRequest.targetProjectId}/merge_requests/${pullRequest.mergeRequestIid}")
+        val response = client.delete("${settings.baseUrl}/api/v4/projects/${pullRequest.targetProjectId}/merge_requests/${pullRequest.mergeRequestIid}")
 
         return if (response.status.value >= 300) {
             val msg = "Failed deleting merge request '${response.bodyAsText()}'"
@@ -420,7 +420,7 @@ class GitLabClient @NonInjectable constructor(
         }
         val groupRepo: GitLabRepoWrapping = getRepo(searchResult = repo, settings = settings)
         val client: HttpClient = httpClientProvider.getClient(repo.searchHostName, repo.codeHostName, settings)
-        val response = client.post<HttpResponse>("${settings.baseUrl}/api/v4/projects/${groupRepo.projectId}/fork") {
+        val response = client.post("${settings.baseUrl}/api/v4/projects/${groupRepo.projectId}/fork") {
             contentType(ContentType.Application.Json)
             accept(ContentType.Application.Json)
             setBody(mapOf<String, String>())

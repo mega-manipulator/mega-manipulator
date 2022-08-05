@@ -2,7 +2,7 @@ package com.github.jensim.megamanipulator.settings
 
 import com.fasterxml.jackson.module.jsonSchema.JsonSchema
 import com.fasterxml.jackson.module.jsonSchema.JsonSchemaGenerator
-import com.github.jensim.megamanipulator.settings.types.HttpsOverride.ALLOW_ANYTHING
+import com.github.jensim.megamanipulator.settings.types.HttpsOverride
 import com.github.jensim.megamanipulator.settings.types.MegaManipulatorSettings
 import com.github.jensim.megamanipulator.settings.types.codehost.BitBucketSettings
 import com.github.jensim.megamanipulator.settings.types.codehost.CodeHostSettingsGroup
@@ -30,6 +30,7 @@ class SettingsFileOperatorTest {
             ),
             "sourcegraph_com" to SearchHostSettingsGroup(
                 sourceGraph = SourceGraphSettings(
+                    username = "jensim",
                     baseUrl = "https://sourcegraph.com",
                     codeHostSettings = mapOf(
                         "github.com" to CodeHostSettingsGroup(
@@ -42,8 +43,9 @@ class SettingsFileOperatorTest {
             ),
             "private_sourcegraph" to SearchHostSettingsGroup(
                 sourceGraph = SourceGraphSettings(
+                    username = "jensim",
                     baseUrl = "http://localhost:7080",
-                    httpsOverride = ALLOW_ANYTHING,
+                    httpsOverride = HttpsOverride.ALLOW_ANYTHING,
                     codeHostSettings = mapOf(
                         "github.com" to CodeHostSettingsGroup(
                             gitHub = GitHubSettings(
@@ -53,7 +55,7 @@ class SettingsFileOperatorTest {
                         "bitbucket" to CodeHostSettingsGroup(
                             bitBucket = BitBucketSettings(
                                 baseUrl = "http://localhost:7081",
-                                httpsOverride = ALLOW_ANYTHING,
+                                httpsOverride = HttpsOverride.ALLOW_ANYTHING,
                                 username = "jensim",
                             )
                         ),
@@ -89,6 +91,7 @@ class SettingsFileOperatorTest {
                 searchHostSettings = mapOf(
                     "sg" to SearchHostSettingsGroup(
                         sourceGraph = SourceGraphSettings(
+                            username = "jensim",
                             baseUrl = "https://sourcegraph.example.com",
                             httpsOverride = null,
                             codeHostSettings = mapOf()

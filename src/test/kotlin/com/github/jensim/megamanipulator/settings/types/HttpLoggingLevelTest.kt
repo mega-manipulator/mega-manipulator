@@ -1,6 +1,6 @@
 package com.github.jensim.megamanipulator.settings.types
 
-import io.ktor.client.features.logging.LogLevel
+import io.ktor.client.plugins.logging.LogLevel
 import org.hamcrest.MatcherAssert.assertThat
 import org.hamcrest.Matchers.equalTo
 import org.junit.jupiter.api.Test

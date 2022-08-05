@@ -25,9 +25,9 @@ The names in this map is used to connect with the naming used on the search host
     )
     override val codeHostSettings: Map<String, CodeHostSettingsGroup>,
     override val authMethod: AuthMethod = JUST_TOKEN,
+    override val username: String,
 ) : SearchHostSettings() {
 
-    override val username: String = "token"
     @JsonIgnore
     override val docLinkHref: String = "https://mega-manipulator.github.io/docs/Search%20hosts/sourcegraph"
 

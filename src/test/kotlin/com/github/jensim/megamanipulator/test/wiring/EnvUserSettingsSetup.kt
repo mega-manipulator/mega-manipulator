@@ -3,21 +3,17 @@ package com.github.jensim.megamanipulator.test.wiring
 import com.github.jensim.megamanipulator.actions.search.SearchResult
 import com.github.jensim.megamanipulator.settings.passwords.PasswordsOperator
 import com.github.jensim.megamanipulator.settings.types.CloneType
-import com.github.jensim.megamanipulator.settings.types.CloneType.HTTPS
 import com.github.jensim.megamanipulator.settings.types.ForkSetting
-import com.github.jensim.megamanipulator.settings.types.ForkSetting.LAZY_FORK
-import com.github.jensim.megamanipulator.settings.types.HttpsOverride.ALLOW_ANYTHING
+import com.github.jensim.megamanipulator.settings.types.HttpsOverride
 import com.github.jensim.megamanipulator.settings.types.MegaManipulatorSettings
 import com.github.jensim.megamanipulator.settings.types.codehost.BitBucketSettings
 import com.github.jensim.megamanipulator.settings.types.codehost.CodeHostSettingsGroup
 import com.github.jensim.megamanipulator.settings.types.codehost.GitHubSettings
 import com.github.jensim.megamanipulator.settings.types.codehost.GitLabSettings
+import com.github.jensim.megamanipulator.settings.types.searchhost.GithubSearchSettings
 import com.github.jensim.megamanipulator.settings.types.searchhost.SearchHostSettingsGroup
 import com.github.jensim.megamanipulator.settings.types.searchhost.SourceGraphSettings
 import com.github.jensim.megamanipulator.test.EnvHelper
-import com.github.jensim.megamanipulator.test.EnvHelper.EnvProperty.BITBUCKET_SERVER_BASEURL
-import com.github.jensim.megamanipulator.test.EnvHelper.EnvProperty.BITBUCKET_SERVER_USER
-import com.github.jensim.megamanipulator.test.EnvHelper.EnvProperty.GITHUB_USERNAME
 import com.github.jensim.megamanipulator.test.Login
 import com.github.jensim.megamanipulator.test.Password
 import com.github.jensim.megamanipulator.test.TestPasswordOperator
@@ -29,15 +25,18 @@ object EnvUserSettingsSetup {
     private val log = LoggerFactory.getLogger(javaClass)
 
     const val sourcegraphName = "sourcegraph.com"
+    const val githubName = "github.com"
+
     val helper = EnvHelper()
 
     val passwordsOperator: PasswordsOperator by lazy {
         val sourceGraphLogin: Pair<Login, Password> = sourceGraphSettings.username to sourceGraphSettings.baseUrl to helper.resolve(EnvHelper.EnvProperty.SRC_COM_ACCESS_TOKEN)!!
+        val gitHubSearchLogin: Pair<Login, Password> = githubSearchSettings.username to githubSearchSettings.baseUrl to helper.resolve(EnvHelper.EnvProperty.GITHUB_TOKEN)!!
         val githubLogin: Pair<Login, Password>? = toLoginAndPass(githubSettings, EnvHelper.EnvProperty.GITHUB_TOKEN)
         val gitLabLogin: Pair<Login, Password>? = toLoginAndPass(gitlabSettings, EnvHelper.EnvProperty.GITLAB_TOKEN)
         val bitBucketLogin: Pair<Login, Password>? = toLoginAndPass(bitbucketSettings, EnvHelper.EnvProperty.BITBUCKET_SERVER_TOKEN)
         TestPasswordOperator(
-            listOfNotNull(sourceGraphLogin, githubLogin, gitLabLogin, bitBucketLogin).toMap()
+            listOfNotNull(sourceGraphLogin, gitHubSearchLogin, githubLogin, gitLabLogin, bitBucketLogin).toMap()
         )
     }
 
@@ -50,11 +49,17 @@ object EnvUserSettingsSetup {
         }
     }
 
-    val searchResults: List<SearchResult> by lazy {
+    val searchResults: Array<SearchResult> by lazy {
         listOfNotNull(
             SearchResult(
                 searchHostName = sourcegraphName,
-                codeHostName = githubSettings.first,
+                codeHostName = githubName,
+                project = helper.resolve(EnvHelper.EnvProperty.GITHUB_PROJECT)!!,
+                repo = helper.resolve(EnvHelper.EnvProperty.GITHUB_REPO)!!,
+            ),
+            SearchResult(
+                searchHostName = githubName,
+                codeHostName = githubName,
                 project = helper.resolve(EnvHelper.EnvProperty.GITHUB_PROJECT)!!,
                 repo = helper.resolve(EnvHelper.EnvProperty.GITHUB_REPO)!!,
             ),
@@ -74,7 +79,7 @@ object EnvUserSettingsSetup {
                     repo = helper.resolve(EnvHelper.EnvProperty.GITLAB_PROJECT)!!
                 )
             },
-        )
+        ).toTypedArray()
     }
 
     private val codeHostSettings: Map<String, CodeHostSettingsGroup> by lazy {
@@ -92,11 +97,11 @@ object EnvUserSettingsSetup {
             EnvHelper.EnvProperty.GITHUB_REPO,
             EnvHelper.EnvProperty.GITHUB_PROJECT,
         ).verifyUnset("GitHub")
-        "github.com" to CodeHostSettingsGroup(
+        githubName to CodeHostSettingsGroup(
             gitHub = GitHubSettings(
-                username = helper.resolve(GITHUB_USERNAME)!!,
-                forkSetting = LAZY_FORK,
-                cloneType = HTTPS,
+                username = helper.resolve(EnvHelper.EnvProperty.GITHUB_USERNAME)!!,
+                forkSetting = ForkSetting.LAZY_FORK,
+                cloneType = CloneType.HTTPS,
             )
         )
     }
@@ -111,11 +116,11 @@ object EnvUserSettingsSetup {
             ).verifyUnset("BitBucket")
             "bitbucket_server" to CodeHostSettingsGroup(
                 bitBucket = BitBucketSettings(
-                    baseUrl = helper.resolve(BITBUCKET_SERVER_BASEURL)!!,
-                    httpsOverride = ALLOW_ANYTHING,
-                    username = helper.resolve(BITBUCKET_SERVER_USER)!!,
-                    forkSetting = LAZY_FORK,
-                    cloneType = HTTPS,
+                    baseUrl = helper.resolve(EnvHelper.EnvProperty.BITBUCKET_SERVER_BASEURL)!!,
+                    httpsOverride = HttpsOverride.ALLOW_ANYTHING,
+                    username = helper.resolve(EnvHelper.EnvProperty.BITBUCKET_SERVER_USER)!!,
+                    forkSetting = ForkSetting.LAZY_FORK,
+                    cloneType = CloneType.HTTPS,
                 )
             )
         } catch (e: MissingPropertyException) {
@@ -144,17 +149,26 @@ object EnvUserSettingsSetup {
             null
         }
     }
-    private val sourceGraphSettings: SourceGraphSettings by lazy {
+    val sourceGraphSettings: SourceGraphSettings by lazy {
         SourceGraphSettings(
+            username = helper.resolve(EnvHelper.EnvProperty.SRC_COM_USERNAME)!!,
             baseUrl = "https://sourcegraph.com",
             codeHostSettings = codeHostSettings,
+        )
+    }
+    val githubSearchSettings: GithubSearchSettings by lazy {
+        GithubSearchSettings(
+            username = helper.resolve(EnvHelper.EnvProperty.GITHUB_USERNAME)!!,
+            cloneType = CloneType.HTTPS,
+            forkSetting = ForkSetting.LAZY_FORK,
         )
     }
     val settings: MegaManipulatorSettings by lazy {
         MegaManipulatorSettings(
             concurrency = 1,
             searchHostSettings = mapOf(
-                sourcegraphName to SearchHostSettingsGroup(sourceGraph = sourceGraphSettings)
+                sourcegraphName to SearchHostSettingsGroup(sourceGraph = sourceGraphSettings),
+                githubName to SearchHostSettingsGroup(gitHub = githubSearchSettings),
             )
         )
     }

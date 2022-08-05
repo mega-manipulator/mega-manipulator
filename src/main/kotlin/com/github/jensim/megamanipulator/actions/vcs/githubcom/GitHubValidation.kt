@@ -3,8 +3,11 @@ package com.github.jensim.megamanipulator.actions.vcs.githubcom
 import io.ktor.client.HttpClient
 import io.ktor.client.request.get
 import io.ktor.client.statement.HttpResponse
+import io.ktor.http.isSuccess
+import kotlinx.coroutines.delay
 import org.slf4j.LoggerFactory
 import java.util.regex.Pattern
+import kotlin.math.max
 
 object GitHubValidation {
 
@@ -24,5 +27,29 @@ object GitHubValidation {
     } catch (e: Exception) {
         logger.error("Failed request", e)
         "Client error: ${e.message}"
+    }
+
+    /**
+     * Returns true if and when it's okay to keep on going
+     */
+    suspend fun delayIfRateLimit(
+        response: HttpResponse,
+        maxSleep: Long = 70_000L,
+        preSleepAction: (sleep: Long) -> Unit
+    ): Boolean {
+        if (response.status.isSuccess()) {
+            return false
+        } else {
+            if (response.headers["X-RateLimit-Remaining"] == "0") {
+                val reset = response.headers["X-RateLimit-Reset"]?.toIntOrNull() ?: return false
+                val sleep = System.currentTimeMillis() - reset
+                if (sleep > -1000 && sleep < maxSleep) {
+                    preSleepAction(sleep)
+                    delay(max(0L, sleep))
+                    return true
+                }
+            }
+        }
+        return false
     }
 }

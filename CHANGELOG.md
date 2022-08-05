@@ -3,6 +3,18 @@
 # mega-manipulator Changelog
 
 ## [Unreleased]
+### Improvement
+- Handle short rate limits in github api with delay and retry
+
+### Changed
+- Support idea 2022.1, 2022.2 and 2022.3
+
+### Fix
+- Username/Password login for SourceGraph was broken, and used to send "token" as username
+- Test usernames might have been a bit mixed up
+
+### Security
+- Upgrade kotlin, ktor, graphQL versions, etc
 
 ## [0.0.50]
 ### Added

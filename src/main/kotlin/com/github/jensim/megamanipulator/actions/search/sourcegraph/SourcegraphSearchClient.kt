@@ -3,15 +3,16 @@ package com.github.jensim.megamanipulator.actions.search.sourcegraph
 import com.expediagroup.graphql.client.jackson.GraphQLClientJacksonSerializer
 import com.expediagroup.graphql.client.ktor.GraphQLKtorClient
 import com.expediagroup.graphql.client.types.GraphQLClientResponse
+import com.fasterxml.jackson.databind.ObjectMapper
 import com.github.jensim.megamanipulator.actions.NotificationsOperator
 import com.github.jensim.megamanipulator.actions.search.SearchResult
 import com.github.jensim.megamanipulator.graphql.generated.sourcegraph.Search
-import com.github.jensim.megamanipulator.graphql.generated.sourcegraph.Search.Result
 import com.github.jensim.megamanipulator.graphql.generated.sourcegraph.search.CommitSearchResult
 import com.github.jensim.megamanipulator.graphql.generated.sourcegraph.search.FileMatch
 import com.github.jensim.megamanipulator.graphql.generated.sourcegraph.search.Repository2
 import com.github.jensim.megamanipulator.http.HttpClientProvider
 import com.github.jensim.megamanipulator.project.lazyService
+import com.github.jensim.megamanipulator.settings.SerializationHolder.confCompact
 import com.github.jensim.megamanipulator.settings.types.searchhost.SourceGraphSettings
 import com.intellij.notification.NotificationType.ERROR
 import com.intellij.notification.NotificationType.WARNING
@@ -36,7 +37,8 @@ class SourcegraphSearchClient @NonInjectable constructor(
     private val httpClientProvider: HttpClientProvider by lazyService(project, httpClientProvider)
     private val notificationsOperator: NotificationsOperator by lazyService(project, notificationsOperator)
 
-    private val graphQLClientJacksonSerializer = GraphQLClientJacksonSerializer()
+    private val objectMapper = ObjectMapper().confCompact()
+    private val graphQLClientJacksonSerializer = GraphQLClientJacksonSerializer(mapper = objectMapper)
     private val log = LoggerFactory.getLogger(this.javaClass)
 
     suspend fun search(searchHostName: String, settings: SourceGraphSettings, search: String): Set<SearchResult> {
@@ -84,9 +86,12 @@ class SourcegraphSearchClient @NonInjectable constructor(
         return client.execute(search)
     }
 
-    private fun getClient(searchHost: String, settings: SourceGraphSettings) = GraphQLKtorClient(
+    private fun getClient(
+        searchHost: String,
+        settings: SourceGraphSettings,
+    ) = GraphQLKtorClient(
         url = URL("${settings.baseUrl}/.api/graphql"),
-        httpClient = httpClientProvider.getClient(searchHost, settings),
+        httpClient = httpClientProvider.getClient(searchHost, settings, null),
         serializer = graphQLClientJacksonSerializer,
     )
 
@@ -101,7 +106,7 @@ class SourcegraphSearchClient @NonInjectable constructor(
 
     suspend fun validateToken(searchHostName: String, settings: SourceGraphSettings): String = try {
         val searchString = "count:1 timeout:10s f"
-        val response: GraphQLClientResponse<Result> = rawSearch(searchHostName, settings, searchString)
+        val response: GraphQLClientResponse<Search.Result> = rawSearch(searchHostName, settings, searchString)
         when {
             !response.errors.isNullOrEmpty() -> {
                 log.warn("Errors from SourceGraph GraphQL response {}", response.errors)

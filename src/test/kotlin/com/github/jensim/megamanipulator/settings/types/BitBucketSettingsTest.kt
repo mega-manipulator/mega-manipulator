@@ -7,7 +7,7 @@ import org.junit.jupiter.api.Test
 internal class BitBucketSettingsTest {
 
     @Test
-    internal fun name() {
+    internal fun `test getAuthHeaderValue`() {
         // given
         val settings = BitBucketSettings(
             baseUrl = "https://foo.bar",

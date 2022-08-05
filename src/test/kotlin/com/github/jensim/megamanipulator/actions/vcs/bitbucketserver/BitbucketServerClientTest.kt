@@ -12,9 +12,6 @@ import com.github.jensim.megamanipulator.settings.types.codehost.CodeHostSetting
 import com.github.jensim.megamanipulator.settings.types.searchhost.SearchHostSettingsGroup
 import com.github.jensim.megamanipulator.settings.types.searchhost.SourceGraphSettings
 import com.github.jensim.megamanipulator.test.EnvHelper
-import com.github.jensim.megamanipulator.test.EnvHelper.EnvProperty.BITBUCKET_SERVER_BASEURL
-import com.github.jensim.megamanipulator.test.EnvHelper.EnvProperty.BITBUCKET_SERVER_TOKEN
-import com.github.jensim.megamanipulator.test.EnvHelper.EnvProperty.BITBUCKET_SERVER_USER
 import com.github.jensim.megamanipulator.test.TestPasswordOperator
 import com.intellij.openapi.project.Project
 import io.mockk.every
@@ -34,25 +31,26 @@ internal class BitbucketServerClientTest {
 
         @JvmStatic
         fun enabled(): Boolean = try {
-            envHelper.resolve(BITBUCKET_SERVER_BASEURL) != null
+            envHelper.resolve(EnvHelper.EnvProperty.BITBUCKET_SERVER_BASEURL) != null
         } catch (e: NullPointerException) {
             false
         }
     }
 
     private val bitBucketSettings = BitBucketSettings(
-        username = envHelper.resolve(BITBUCKET_SERVER_USER)!!,
+        username = envHelper.resolve(EnvHelper.EnvProperty.BITBUCKET_SERVER_USER)!!,
         forkSetting = PLAIN_BRANCH,
-        baseUrl = envHelper.resolve(BITBUCKET_SERVER_BASEURL)!!,
+        baseUrl = envHelper.resolve(EnvHelper.EnvProperty.BITBUCKET_SERVER_BASEURL)!!,
         cloneType = HTTPS,
     )
-    private val password = envHelper.resolve(BITBUCKET_SERVER_TOKEN)!!
+    private val password = envHelper.resolve(EnvHelper.EnvProperty.BITBUCKET_SERVER_TOKEN)!!
     private val codeHost = "bitbucket_server"
     private val searchHost = "sourcegraph.com"
     private val settings = MegaManipulatorSettings(
         searchHostSettings = mapOf(
             searchHost to SearchHostSettingsGroup(
                 sourceGraph = SourceGraphSettings(
+                    username = envHelper.resolve(EnvHelper.EnvProperty.SRC_COM_USERNAME)!!,
                     baseUrl = "https://sourcegraph.com",
                     codeHostSettings = mapOf(codeHost to CodeHostSettingsGroup(bitBucket = bitBucketSettings))
                 )

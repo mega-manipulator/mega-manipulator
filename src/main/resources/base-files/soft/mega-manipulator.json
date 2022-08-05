@@ -9,6 +9,7 @@
     },
     "sourcegraph_com" : {
       "sourceGraph" : {
+        "username": "jensim",
         "codeHostSettings" : {
           "github.com" : {
             "gitHub" : {
@@ -20,6 +21,7 @@
     },
     "private_sourcegraph" : {
       "sourceGraph" : {
+        "username": "jensim",
         "baseUrl" : "http://localhost:7080",
         "httpsOverride": "ALLOW_ANYTHING",
         "codeHostSettings" : {

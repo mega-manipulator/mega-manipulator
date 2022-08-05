@@ -16,8 +16,6 @@ import com.github.jensim.megamanipulator.settings.types.codehost.GitHubSettings
 import com.github.jensim.megamanipulator.settings.types.searchhost.SearchHostSettingsGroup
 import com.github.jensim.megamanipulator.settings.types.searchhost.SourceGraphSettings
 import com.github.jensim.megamanipulator.test.EnvHelper
-import com.github.jensim.megamanipulator.test.EnvHelper.EnvProperty.GITHUB_TOKEN
-import com.github.jensim.megamanipulator.test.EnvHelper.EnvProperty.GITHUB_USERNAME
 import com.github.jensim.megamanipulator.test.KotlinMatcher.kMatch
 import com.github.jensim.megamanipulator.test.TestPasswordOperator
 import com.intellij.openapi.project.Project
@@ -38,17 +36,18 @@ class GithubComClientTest {
     private val project: Project = mockk()
     private val envHelper = EnvHelper()
     private val githubSettings = GitHubSettings(
-        username = envHelper.resolve(GITHUB_USERNAME)!!,
+        username = envHelper.resolve(EnvHelper.EnvProperty.GITHUB_USERNAME)!!,
         forkSetting = PLAIN_BRANCH,
         cloneType = HTTPS,
     )
-    private val password = envHelper.resolve(GITHUB_TOKEN)!!
+    private val password = envHelper.resolve(EnvHelper.EnvProperty.GITHUB_TOKEN)!!
     private val codeHost = "github.com"
     private val searchHost = "sourcegraph.com"
     private val settings = MegaManipulatorSettings(
         searchHostSettings = mapOf(
             searchHost to SearchHostSettingsGroup(
                 sourceGraph = SourceGraphSettings(
+                    username = envHelper.resolve(EnvHelper.EnvProperty.SRC_COM_USERNAME)!!,
                     baseUrl = "https://sourcegraph.com",
                     codeHostSettings = mapOf(codeHost to CodeHostSettingsGroup(gitHub = githubSettings))
                 )
