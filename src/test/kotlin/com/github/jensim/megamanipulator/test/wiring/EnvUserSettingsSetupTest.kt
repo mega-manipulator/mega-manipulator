@@ -1,7 +1,9 @@
 package com.github.jensim.megamanipulator.test.wiring
 
 import com.github.jensim.megamanipulator.actions.search.SearchResult
+import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.Assertions.fail
+import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.MethodSource
 
@@ -26,5 +28,15 @@ class EnvUserSettingsSetupTest {
             wiring.passwordsOperator.getPassword(it, codeSettings.baseUrl)
                 ?: fail("Failed to resolve search host password for $it@${codeSettings.baseUrl}")
         }
+    }
+
+    @Test
+    internal fun `verify github dot com is in the list`() {
+        Assertions.assertTrue(
+            searchResults.any {
+                it.codeHostName == EnvUserSettingsSetup.githubName && it.searchHostName == EnvUserSettingsSetup.githubName
+            },
+            "${EnvUserSettingsSetup.githubName} has got to be present as a search+code-host combo in this test. Otherwise we cannot verify the password properly in the password test."
+        )
     }
 }

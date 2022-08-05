@@ -31,11 +31,12 @@ object EnvUserSettingsSetup {
 
     val passwordsOperator: PasswordsOperator by lazy {
         val sourceGraphLogin: Pair<Login, Password> = sourceGraphSettings.username to sourceGraphSettings.baseUrl to helper.resolve(EnvHelper.EnvProperty.SRC_COM_ACCESS_TOKEN)!!
+        val gitHubSearchLogin: Pair<Login, Password> = githubSearchSettings.username to githubSearchSettings.baseUrl to helper.resolve(EnvHelper.EnvProperty.GITHUB_TOKEN)!!
         val githubLogin: Pair<Login, Password>? = toLoginAndPass(githubSettings, EnvHelper.EnvProperty.GITHUB_TOKEN)
         val gitLabLogin: Pair<Login, Password>? = toLoginAndPass(gitlabSettings, EnvHelper.EnvProperty.GITLAB_TOKEN)
         val bitBucketLogin: Pair<Login, Password>? = toLoginAndPass(bitbucketSettings, EnvHelper.EnvProperty.BITBUCKET_SERVER_TOKEN)
         TestPasswordOperator(
-            listOfNotNull(sourceGraphLogin, githubLogin, gitLabLogin, bitBucketLogin).toMap()
+            listOfNotNull(sourceGraphLogin, gitHubSearchLogin, githubLogin, gitLabLogin, bitBucketLogin).toMap()
         )
     }
 

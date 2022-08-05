@@ -8,12 +8,9 @@ import org.hamcrest.MatcherAssert.assertThat
 import org.hamcrest.Matchers.equalTo
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
-import kotlin.io.path.ExperimentalPathApi
 
-@ExperimentalPathApi
 internal class SourcegraphSearchClientTest {
 
-    private val codeHostName = "github.com"
     private val wiring = TestApplicationWiring()
 
     private val sourcegraphSearchClient = SourcegraphSearchClient(
@@ -30,7 +27,7 @@ internal class SourcegraphSearchClientTest {
             sourcegraphSearchClient.search(
                 searchHostName = EnvUserSettingsSetup.sourcegraphName,
                 settings = EnvUserSettingsSetup.sourceGraphSettings,
-                search = "repo:$codeHostName/$project/$repo$ file:.go$ foo"
+                search = "repo:${EnvUserSettingsSetup.githubName}/$project/$repo$ file:.go$ foo"
             )
         }
 
@@ -39,7 +36,7 @@ internal class SourcegraphSearchClientTest {
             setOf(
                 SearchResult(
                     searchHostName = EnvUserSettingsSetup.sourcegraphName,
-                    codeHostName = codeHostName,
+                    codeHostName = EnvUserSettingsSetup.githubName,
                     project = project,
                     repo = repo,
                 )

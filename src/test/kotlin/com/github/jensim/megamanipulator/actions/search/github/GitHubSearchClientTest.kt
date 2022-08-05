@@ -1,13 +1,10 @@
 package com.github.jensim.megamanipulator.actions.search.github
 
-import com.github.jensim.megamanipulator.actions.NotificationsOperator
 import com.github.jensim.megamanipulator.actions.search.SearchResult
-import com.github.jensim.megamanipulator.http.HttpClientProvider
 import com.github.jensim.megamanipulator.settings.types.searchhost.GithubSearchSettings
 import com.github.jensim.megamanipulator.test.wiring.EnvUserSettingsSetup
 import com.github.jensim.megamanipulator.test.wiring.TestApplicationWiring
 import io.mockk.Called
-import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
 import kotlinx.coroutines.runBlocking
@@ -17,17 +14,11 @@ import org.hamcrest.Matchers.hasItem
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.ValueSource
-import kotlin.io.path.ExperimentalPathApi
 
-@ExperimentalPathApi
 class GitHubSearchClientTest {
 
     private val wiring = TestApplicationWiring()
-    private val clientProvider: HttpClientProvider = wiring.httpClientProvider
-    private val notificationsOperatorMockk: NotificationsOperator = mockk {
-        every { show(any(), any(), any()) } returns Unit
-    }
-    private val client = GitHubSearchClient(mockk(), clientProvider, notificationsOperatorMockk)
+    private val client = GitHubSearchClient(mockk(), wiring.httpClientProvider, wiring.notificationsOperator)
 
     @ValueSource(
         strings = [
@@ -40,7 +31,7 @@ class GitHubSearchClientTest {
     fun search(search: String) = runBlocking {
         val response: Set<SearchResult> = client.search(EnvUserSettingsSetup.sourcegraphName, GithubSearchSettings("jensim"), search)
 
-        verify { notificationsOperatorMockk wasNot Called }
+        verify { wiring.notificationsOperator wasNot Called }
         assertThat(response, hasItem(SearchResult("mega-manipulator", "mega-manipulator.github.io", "github.com", EnvUserSettingsSetup.sourcegraphName)))
     }
 
