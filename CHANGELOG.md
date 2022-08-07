@@ -3,6 +3,11 @@
 # mega-manipulator Changelog
 
 ## [Unreleased]
+### Improvement
+- Table sorting added
+
+### Fixed
+- Highlight colors for tables used to be unpredictable
 
 ## [0.0.51]
 ### Improvement

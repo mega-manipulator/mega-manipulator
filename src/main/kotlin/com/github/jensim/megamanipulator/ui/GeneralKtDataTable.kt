@@ -6,10 +6,10 @@ import java.awt.Color
 import java.awt.Component
 import java.awt.Dimension
 import java.util.function.Predicate
-import javax.swing.JTable
 import javax.swing.ListSelectionModel
 import javax.swing.table.AbstractTableModel
-import javax.swing.table.DefaultTableCellRenderer
+import javax.swing.table.TableCellRenderer
+import javax.swing.table.TableRowSorter
 import kotlin.reflect.KClass
 
 typealias ColumnHeader = String
@@ -17,21 +17,26 @@ typealias ColumnHeader = String
 class GeneralKtDataTable<T : Any>(
     type: KClass<T>,
     columns: List<Pair<ColumnHeader, (T) -> String>>,
+    autoRowSorter: Boolean = true,
     minSize: Dimension = Dimension(300, 100),
     /**
      * @see ListSelectionModel
      */
     selectionMode: Int? = null,
-    colorizer: Predicate<T>? = null,
+    private val colorizer: Predicate<T>? = null,
 ) : JBTable() {
 
     private val logger = LoggerFactory.getLogger(javaClass)
-    private val myModel = GeneralTableModel(type, columns)
+    private val myModel = GeneralTableModel<T>(type, columns)
     private val listeners = mutableListOf<() -> Unit>()
+    private val myRowSorter = TableRowSorter<GeneralTableModel<T>>(myModel)
 
     init {
-        model = myModel
-        minimumSize = minSize
+        this.model = myModel
+        if (autoRowSorter) {
+            this.rowSorter = myRowSorter
+        }
+        this.minimumSize = minSize
         selectionMode?.let {
             setSelectionMode(it)
         }
@@ -48,32 +53,35 @@ class GeneralKtDataTable<T : Any>(
             listeners.forEach {
                 try {
                     it()
-                } catch (e: Exception) {
-                    e.printStackTrace()
+                } catch (e: Throwable) {
+                    logger.error("An exception escaped from a list selection listener :-O !!! ", e)
                 }
             }
         }
-        colorizer?.let { colorizer ->
-            val selectedProblemColor = Color.RED
-            val notSelectedProblemColor = selectedProblemColor.darker()
-            setDefaultRenderer(
-                Any::class.java,
-                object : DefaultTableCellRenderer() {
-                    override fun getTableCellRendererComponent(table: JTable, value: Any?, isSelected: Boolean, hasFocus: Boolean, row: Int, column: Int): Component {
-                        super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column)
-                        try {
-                            val rowItem = myModel.items[row]
-                            if (colorizer.test(rowItem)) {
-                                background = if (isSelected) selectedProblemColor else notSelectedProblemColor
-                            }
-                        } catch (e: Exception) {
-                            e.printStackTrace()
-                        }
-                        return this
-                    }
+    }
+
+    private val selectedProblemColor = Color.RED
+    private val notSelectedProblemColor = selectedProblemColor.darker()
+    override fun prepareRenderer(renderer: TableCellRenderer, row: Int, column: Int): Component {
+        val c = super.prepareRenderer(renderer, row, column)
+        if (colorizer != null) {
+            val rowItem = myModel.items[row]
+            if (colorizer.test(rowItem)) {
+                if (isRowSelected(row)) {
+                    selectionBackground
+                    c.background = selectedProblemColor
+                } else {
+                    c.background = notSelectedProblemColor
                 }
-            )
+            } else {
+                if (isRowSelected(row)) {
+                    c.background = selectionBackground
+                } else {
+                    c.background = background
+                }
+            }
         }
+        return c
     }
 
     fun setListData(items: List<T>) {
