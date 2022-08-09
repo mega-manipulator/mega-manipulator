@@ -3,6 +3,8 @@
 # mega-manipulator Changelog
 
 ## [Unreleased]
+
+## [0.0.53]
 ### Improvement
 - Simplify the settings tab
 
