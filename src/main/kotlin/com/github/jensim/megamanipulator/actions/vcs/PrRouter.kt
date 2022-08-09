@@ -169,10 +169,10 @@ class PrRouter @NonInjectable constructor(
         }
     }
 
-    suspend fun validateAccess(): Map<String, Deferred<String>> = withContext(coroutineCntx) {
+    suspend fun validateAccess(): Map<Pair<String, String>, Deferred<String?>> = withContext(coroutineCntx) {
         settingsFileOperator.readSettings()?.searchHostSettings.orEmpty().flatMap { search ->
             search.value.value().codeHostSettings.map { code ->
-                "${search.key}/${code.key}" to async {
+                search.key to code.key to async {
                     when (val settings = code.value.value()) {
                         is BitBucketSettings -> bitbucketServerClient.validateAccess(search.key, code.key, settings)
                         is GitHubSettings -> githubComClient.validateAccess(search.key, code.key, settings)

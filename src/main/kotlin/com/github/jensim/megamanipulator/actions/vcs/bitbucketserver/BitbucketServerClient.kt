@@ -28,6 +28,7 @@ import io.ktor.client.statement.bodyAsText
 import io.ktor.http.ContentType
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.contentType
+import io.ktor.http.isSuccess
 import org.slf4j.LoggerFactory
 
 @SuppressWarnings("TooManyFunctions")
@@ -430,13 +431,17 @@ class BitbucketServerClient @NonInjectable constructor(
         }
     }
 
-    suspend fun validateAccess(searchHost: String, codeHost: String, settings: BitBucketSettings): String = try {
+    suspend fun validateAccess(searchHost: String, codeHost: String, settings: BitBucketSettings): String? = try {
         val client: HttpClient = httpClientProvider.getClient(searchHost, codeHost, settings)
         val response: HttpResponse = client.get("${settings.baseUrl}/rest/api/1.0/inbox/pull-requests/count") {
             accept(ContentType.Application.Json)
         }
-        val desc = HttpStatusCode.fromValue(response.status.value).description
-        "${response.status.value}:$desc"
+        if (response.status.isSuccess()) {
+            null
+        } else {
+            val desc = HttpStatusCode.fromValue(response.status.value).description
+            "${response.status.value}:$desc"
+        }
     } catch (e: Exception) {
         val msg = "Failed setting up client: ${e.message}"
         logger.error(msg, e)

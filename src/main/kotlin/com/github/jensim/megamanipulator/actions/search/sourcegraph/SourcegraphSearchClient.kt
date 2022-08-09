@@ -104,7 +104,7 @@ class SourcegraphSearchClient @NonInjectable constructor(
         }
     }
 
-    suspend fun validateToken(searchHostName: String, settings: SourceGraphSettings): String = try {
+    suspend fun validateToken(searchHostName: String, settings: SourceGraphSettings): String? = try {
         val searchString = "count:1 timeout:10s f"
         val response: GraphQLClientResponse<Search.Result> = rawSearch(searchHostName, settings, searchString)
         when {
@@ -112,7 +112,7 @@ class SourcegraphSearchClient @NonInjectable constructor(
                 log.warn("Errors from SourceGraph GraphQL response {}", response.errors)
                 "ERRORS: ${response.errors}"
             }
-            response.data?.search?.results?.results?.size == 1 -> "OK"
+            response.data?.search?.results?.results?.size == 1 -> null
             response.data?.search?.results?.results?.size == 0 -> "Zero hits for '$searchString', if you have no code indexed that could be the problem"
             (response.data?.search?.results?.results?.size ?: 0) > 1 -> "Too many results returned in test query"
             else -> {

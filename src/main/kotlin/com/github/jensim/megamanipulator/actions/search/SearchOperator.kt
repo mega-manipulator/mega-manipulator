@@ -45,9 +45,9 @@ class SearchOperator @NonInjectable constructor(
         }
     }
 
-    suspend fun validateTokens(): Map<String, Deferred<String>> =
+    suspend fun validateTokens(): Map<Pair<String, String?>, Deferred<String?>> =
         settingsFileOperator.readSettings()?.searchHostSettings.orEmpty().map { (name, settingsGroup) ->
-            name to scope.async {
+            name to null to scope.async {
                 when (settingsGroup.value()) {
                     is SourceGraphSettings -> sourcegraphSearchClient.validateToken(name, settingsGroup.sourceGraph!!)
                     is HoundSettings -> houndClient.validate(name, settingsGroup.hound!!)

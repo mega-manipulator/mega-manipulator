@@ -273,7 +273,7 @@ class GithubComClient @NonInjectable constructor(
         }
     }
 
-    suspend fun validateAccess(searchHost: String, codeHost: String, settings: GitHubSettings): String = try {
+    suspend fun validateAccess(searchHost: String, codeHost: String, settings: GitHubSettings): String? = try {
         val client: HttpClient = httpClientProvider.getClient(searchHost, codeHost, settings)
         GitHubValidation.validateAccess(settings.baseUrl, client)
     } catch (e: Exception) {

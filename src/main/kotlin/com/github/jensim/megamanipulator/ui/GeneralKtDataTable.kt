@@ -31,6 +31,8 @@ class GeneralKtDataTable<T : Any>(
     private val listeners = mutableListOf<() -> Unit>()
     private val myRowSorter = TableRowSorter<GeneralTableModel<T>>(myModel)
 
+    val items: List<T> get() = myModel.items
+
     init {
         this.model = myModel
         if (autoRowSorter) {

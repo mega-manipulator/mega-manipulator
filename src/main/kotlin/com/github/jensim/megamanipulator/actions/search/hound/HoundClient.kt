@@ -16,6 +16,7 @@ import io.ktor.client.request.header
 import io.ktor.client.request.parameter
 import io.ktor.client.statement.HttpResponse
 import io.ktor.client.statement.bodyAsText
+import io.ktor.http.isSuccess
 import org.slf4j.LoggerFactory
 
 class HoundClient @NonInjectable constructor(
@@ -46,12 +47,16 @@ class HoundClient @NonInjectable constructor(
         return searchResp.Results.keys.mapNotNull { repos[it]?.url?.gitUrlToResult(searchHostName) }.toSet()
     }
 
-    suspend fun validate(searchHostName: String, settings: HoundSettings): String = try {
+    suspend fun validate(searchHostName: String, settings: HoundSettings): String? = try {
         val client = httpClientProvider.getClient(searchHostName, settings)
         val response: HttpResponse = client.get("${settings.baseUrl}/api/v1/repos") {
             header("Accept", "application/json")
         }
-        "${response.status.value}:${response.status.description}"
+        if (response.status.isSuccess()) {
+            null
+        } else {
+            "${response.status.value}:${response.status.description}"
+        }
     } catch (e: Exception) {
         val msg = "Client error: ${e.message}"
         logger.error(msg, e)

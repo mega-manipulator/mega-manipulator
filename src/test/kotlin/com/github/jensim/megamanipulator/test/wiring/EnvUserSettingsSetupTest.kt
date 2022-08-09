@@ -27,11 +27,9 @@ class EnvUserSettingsSetupTest {
             ?: fail("Failed to resolve settings for $result")
         wiring.passwordsOperator.getPassword(searchSettings.username, searchSettings.baseUrl)
             ?: fail("Failed to resolve search host password for ${searchSettings.username}@${searchSettings.baseUrl}")
-        (codeSettings.username ?: fail("Username not present for code host in test settings ${result.searchHostName}/${result.codeHostName}")).let {
-            wiring.passwordsOperator.getPassword(it, codeSettings.baseUrl)
-                ?: fail("Failed to resolve search host password for $it@${codeSettings.baseUrl}")
-            logger.info("Password verified for $it@${codeSettings.baseUrl}")
-        }
+        wiring.passwordsOperator.getPassword(codeSettings.username, codeSettings.baseUrl)
+            ?: fail("Failed to resolve search host password for ${codeSettings.username}@${codeSettings.baseUrl}")
+        logger.info("Password verified for ${codeSettings.username}@${codeSettings.baseUrl}")
     }
 
     @Test

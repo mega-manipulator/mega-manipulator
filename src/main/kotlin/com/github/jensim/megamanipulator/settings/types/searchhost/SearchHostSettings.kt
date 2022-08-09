@@ -8,10 +8,7 @@ import com.github.jensim.megamanipulator.settings.types.codehost.CodeHostSetting
 sealed class SearchHostSettings : HostWithAuth {
 
     abstract val docLinkHref: String
-
     abstract val authMethod: AuthMethod
-    abstract val username: String
-    abstract val baseUrl: String
     abstract val httpsOverride: HttpsOverride?
     abstract val codeHostSettings: Map<String, CodeHostSettingsGroup>
 }

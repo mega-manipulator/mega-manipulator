@@ -124,7 +124,7 @@ class GithubComClientTest {
 
     @Test
     internal fun `validate access token`() {
-        val result: String = runBlocking {
+        val result: String? = runBlocking {
             client.validateAccess(
                 searchHost = searchHost,
                 codeHost = codeHost,
