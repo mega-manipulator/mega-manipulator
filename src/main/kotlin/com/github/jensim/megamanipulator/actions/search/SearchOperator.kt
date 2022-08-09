@@ -3,6 +3,7 @@ package com.github.jensim.megamanipulator.actions.search
 import com.github.jensim.megamanipulator.actions.search.github.GitHubSearchClient
 import com.github.jensim.megamanipulator.actions.search.hound.HoundClient
 import com.github.jensim.megamanipulator.actions.search.sourcegraph.SourcegraphSearchClient
+import com.github.jensim.megamanipulator.http.HttpAccessValidator
 import com.github.jensim.megamanipulator.project.CoroutinesHolder.scope
 import com.github.jensim.megamanipulator.project.lazyService
 import com.github.jensim.megamanipulator.settings.SettingsFileOperator
@@ -21,7 +22,7 @@ class SearchOperator @NonInjectable constructor(
     sourcegraphSearchClient: SourcegraphSearchClient?,
     houndClient: HoundClient?,
     gitHubSearchClient: GitHubSearchClient?,
-) {
+) : HttpAccessValidator {
     constructor(project: Project) : this(
         project = project,
         settingsFileOperator = null,
@@ -45,7 +46,7 @@ class SearchOperator @NonInjectable constructor(
         }
     }
 
-    suspend fun validateTokens(): Map<Pair<String, String?>, Deferred<String?>> =
+    override suspend fun validateTokens(): Map<Pair<String, String?>, Deferred<String?>> =
         settingsFileOperator.readSettings()?.searchHostSettings.orEmpty().map { (name, settingsGroup) ->
             name to null to scope.async {
                 when (settingsGroup.value()) {

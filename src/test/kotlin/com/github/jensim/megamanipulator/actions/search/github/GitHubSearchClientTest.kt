@@ -8,11 +8,12 @@ import io.mockk.mockk
 import io.mockk.verify
 import kotlinx.coroutines.runBlocking
 import org.hamcrest.MatcherAssert.assertThat
-import org.hamcrest.Matchers.equalTo
 import org.hamcrest.Matchers.hasItem
+import org.hamcrest.Matchers.nullValue
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.ValueSource
+import org.hamcrest.Matchers.`is` as Is
 
 class GitHubSearchClientTest {
 
@@ -38,6 +39,6 @@ class GitHubSearchClientTest {
     internal fun `validate access`() = runBlocking {
         val access = client.validateAccess(EnvUserSettingsSetup.sourcegraphName, EnvUserSettingsSetup.githubSearchSettings)
 
-        assertThat(access, equalTo("200:OK"))
+        assertThat(access, Is(nullValue()))
     }
 }

@@ -5,6 +5,7 @@ import com.github.jensim.megamanipulator.actions.search.SearchResult
 import com.github.jensim.megamanipulator.actions.vcs.bitbucketserver.BitbucketServerClient
 import com.github.jensim.megamanipulator.actions.vcs.githubcom.GithubComClient
 import com.github.jensim.megamanipulator.actions.vcs.gitlab.GitLabClient
+import com.github.jensim.megamanipulator.http.HttpAccessValidator
 import com.github.jensim.megamanipulator.project.lazyService
 import com.github.jensim.megamanipulator.settings.SettingsFileOperator
 import com.github.jensim.megamanipulator.settings.types.codehost.BitBucketSettings
@@ -30,7 +31,7 @@ class PrRouter @NonInjectable constructor(
     githubComClient: GithubComClient?,
     gitLabClient: GitLabClient?,
     notificationsOperator: NotificationsOperator?,
-) {
+) : HttpAccessValidator {
 
     constructor(project: Project) : this(
         project = project,
@@ -169,7 +170,7 @@ class PrRouter @NonInjectable constructor(
         }
     }
 
-    suspend fun validateAccess(): Map<Pair<String, String>, Deferred<String?>> = withContext(coroutineCntx) {
+    override suspend fun validateTokens(): Map<Pair<String, String?>, Deferred<String?>> = withContext(coroutineCntx) {
         settingsFileOperator.readSettings()?.searchHostSettings.orEmpty().flatMap { search ->
             search.value.value().codeHostSettings.map { code ->
                 search.key to code.key to async {
