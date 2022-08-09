@@ -180,7 +180,7 @@ class SettingsWindow(project: Project) : ToolWindowTab {
         }
         validateTokensButton.addActionListener {
             uiProtector.uiProtectedOperation("Validating tokens") {
-                val deferredTokens: Map<Pair<String, String?>, Deferred<String?>> = searchOperator.validateTokens() + prRouter.validateAccess()
+                val deferredTokens: Map<Pair<String, String?>, Deferred<String?>> = searchOperator.validateTokens() + prRouter.validateTokens()
                 val tokens: Map<Pair<String, String?>, String?> = deferredTokens.mapValues {
                     try {
                         it.value.await()
