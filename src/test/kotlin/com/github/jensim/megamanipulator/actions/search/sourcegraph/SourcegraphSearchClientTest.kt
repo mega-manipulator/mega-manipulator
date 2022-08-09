@@ -5,9 +5,10 @@ import com.github.jensim.megamanipulator.test.wiring.EnvUserSettingsSetup
 import com.github.jensim.megamanipulator.test.wiring.TestApplicationWiring
 import kotlinx.coroutines.runBlocking
 import org.hamcrest.MatcherAssert.assertThat
-import org.hamcrest.Matchers.equalTo
+import org.hamcrest.Matchers.nullValue
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
+import org.hamcrest.Matchers.`is` as Is
 
 internal class SourcegraphSearchClientTest {
 
@@ -50,6 +51,6 @@ internal class SourcegraphSearchClientTest {
             sourcegraphSearchClient.validateToken(EnvUserSettingsSetup.sourcegraphName, EnvUserSettingsSetup.sourceGraphSettings)
         }
 
-        assertThat(result, equalTo("OK"))
+        assertThat(result, Is(nullValue()))
     }
 }

@@ -89,7 +89,7 @@ class GitHubSearchClient @NonInjectable constructor(
         }
     }
 
-    suspend fun validateAccess(searchHost: String, settings: GithubSearchSettings): String = try {
+    suspend fun validateAccess(searchHost: String, settings: GithubSearchSettings): String? = try {
         val client: HttpClient = httpClientProvider.getClient(searchHost, settings)
         GitHubValidation.validateAccess(settings.baseUrl, client)
     } catch (e: Exception) {

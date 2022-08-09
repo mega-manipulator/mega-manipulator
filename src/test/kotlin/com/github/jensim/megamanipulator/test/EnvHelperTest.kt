@@ -14,7 +14,7 @@ class EnvHelperTest {
         val file = File(".env-example")
         val prop = Properties()
         FileInputStream(file).use { prop.load(it) }
-        val fileKeys: Set<String> = prop.keys as Set<String>
+        val fileKeys: Set<String> = prop.keys.map { it.toString() }.toSet()
         val enumKeys: Set<String> = EnvProperty.values().map { it.name }.toSet()
         assertEquals(fileKeys, enumKeys)
     }

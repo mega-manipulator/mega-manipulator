@@ -7,6 +7,7 @@ import com.intellij.notification.NotificationType.WARNING
 import com.intellij.openapi.fileEditor.FileDocumentManager
 import com.intellij.openapi.project.Project
 import com.intellij.serviceContainer.NonInjectable
+import org.slf4j.LoggerFactory
 import java.io.File
 import java.util.concurrent.atomic.AtomicLong
 import java.util.concurrent.atomic.AtomicReference
@@ -18,6 +19,8 @@ class SettingsFileOperator @NonInjectable constructor(
     private val scriptFileName: String = "config/mega-manipulator.bash",
     notificationsOperator: NotificationsOperator?,
 ) {
+
+    private val logger = LoggerFactory.getLogger(javaClass)
 
     constructor(project: Project) : this(project = project, notificationsOperator = null)
 
@@ -31,10 +34,12 @@ class SettingsFileOperator @NonInjectable constructor(
     val scriptFile: File
         get() = File(project.basePath!!, scriptFileName)
 
-    private val okValidationText = "Settings are valid"
+    val okValidationText = "Settings are valid"
     private val privateValidationText = AtomicReference("Settings are not yet validated")
     val validationText: String
         get() = privateValidationText.acquire
+    val validationIsOkay: Boolean
+        get() = validationText == okValidationText
 
     internal fun readSettings(): MegaManipulatorSettings? {
         if (System.currentTimeMillis() - lastPeek.get() < 250) {
@@ -44,7 +49,7 @@ class SettingsFileOperator @NonInjectable constructor(
             try {
                 FileDocumentManager.getInstance().saveAllDocuments()
             } catch (e: Exception) {
-                // e.printStackTrace()
+                logger.error("Failed saving documents", e)
             }
             if (lastUpdated.get() == settingsFile.lastModified()) {
                 lastPeek.set(System.currentTimeMillis())
@@ -60,7 +65,7 @@ class SettingsFileOperator @NonInjectable constructor(
                 privateValidationText.set(okValidationText)
             }
         } catch (e: Exception) {
-            e.printStackTrace()
+            logger.error("Failed reading settings file", e)
             privateValidationText.set(e.message)
             notificationsOperator.show(
                 title = "Failed settings validation",

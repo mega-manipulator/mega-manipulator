@@ -19,8 +19,6 @@ import io.mockk.junit5.MockKExtension
 import io.mockk.mockk
 import io.mockk.verify
 import kotlinx.coroutines.CompletableDeferred
-import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.async
 import kotlinx.coroutines.runBlocking
 import org.hamcrest.MatcherAssert.assertThat
 import org.hamcrest.Matchers.equalTo
@@ -82,8 +80,7 @@ class RemoteCloneOperatorTest {
     @Test
     fun `clone with search requests`() = runBlocking {
         // Given
-        val input = SearchResult(searchHostName = "search", codeHostName = "code", project = "project", repo = "repo")
-        coEvery { processOperator.runCommandAsync(any(), any()) } returns GlobalScope.async { ApplyOutput.dummy(exitCode = 0) }
+        coEvery { processOperator.runCommandAsync(any(), any()) } returns CompletableDeferred(ApplyOutput.dummy(exitCode = 0))
 
         // When
         val result: List<Action> = remoteCloneOperator.clone(dir = tempDir, cloneUrl = "foo", defaultBranch = "main", shallow = false, sparseDef = null)
