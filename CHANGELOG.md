@@ -7,6 +7,9 @@
 - Configurable http concurrency for GitHub Code host to tackle slow loading of PRs and also the over-concurrent http requests for fetching forks
 - Fetch pull requests from a specific project or repo (GitHub & GitLab)
 
+### Improvement
+- Prefill stuff in the pull request load popup
+
 ## [0.0.53]
 ### Improvement
 - Simplify the settings tab

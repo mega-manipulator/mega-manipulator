@@ -27,7 +27,7 @@ class PullRequestLoaderDialogGenerator(
     private val stateSelector = ComboBox<String>()
     private val roleSelector = ComboBox<String>()
 
-    private val limitField = JBTextField("100")
+    private val limitField = JBTextField(4)
     private val btnYes = JButton("Load")
     private val btnNo = JButton("Cancel")
     private val magicNull = "*"
@@ -54,7 +54,18 @@ class PullRequestLoaderDialogGenerator(
     ) {
         try {
             type.prStates.forEach { stateSelector.addItem(it ?: magicNull) }
+            prefillStringSuggestionOperator.getPrefills(PrefillString.PR_SEARCH_STATE).firstOrNull { prefill ->
+                type.prStates.any { (it ?: magicNull) == prefill }
+            }?.let {
+                stateSelector.selectedItem = it
+            }
             type.prRoles.forEach { roleSelector.addItem(it ?: magicNull) }
+            prefillStringSuggestionOperator.getPrefills(PrefillString.PR_SEARCH_ROLE).firstOrNull { prefill ->
+                type.prRoles.any { (it ?: magicNull) == prefill }
+            }?.let {
+                roleSelector.selectedItem = it
+            }
+            limitField.text = "${prefillStringSuggestionOperator.getPrefill(PrefillString.PR_SEARCH_LIMIT)?.toIntOrNull() ?: 10}"
 
             val content = com.intellij.ui.dsl.builder.panel {
                 addProjectRepoInput(type)
@@ -83,18 +94,23 @@ class PullRequestLoaderDialogGenerator(
             btnYes.addActionListener {
                 val text = limitField.text
                 try {
-                    val limit = text.toInt()
+                    val limit: Int = text.toInt()
+                    val state: String? = stateSelector.item.toNullable()
+                    val role: String? = roleSelector.item.toNullable()
+                    val project: String? = projectInput.text.ifBlank { null }?.trim()
+                    val repo: String? = repoInput.text.ifBlank { null }?.trim()
                     onYes(
-                        stateSelector.item.toNullable(),
-                        roleSelector.item.toNullable(),
+                        state,
+                        role,
                         limit,
-                        projectInput.text.ifBlank { null }?.trim()?.also {
-                            prefillStringSuggestionOperator.addPrefill(PrefillString.PR_SEARCH_PROJECT, it)
-                        },
-                        repoInput.text.ifBlank { null }?.trim()?.also {
-                            prefillStringSuggestionOperator.addPrefill(PrefillString.PR_SEARCH_REPO, it)
-                        },
+                        project,
+                        repo,
                     )
+                    prefillStringSuggestionOperator.addPrefill(PrefillString.PR_SEARCH_LIMIT, limitField.text)
+                    prefillStringSuggestionOperator.addPrefill(PrefillString.PR_SEARCH_STATE, state ?: magicNull)
+                    prefillStringSuggestionOperator.addPrefill(PrefillString.PR_SEARCH_ROLE, role ?: magicNull)
+                    prefillStringSuggestionOperator.addPrefill(PrefillString.PR_SEARCH_PROJECT, project ?: "")
+                    prefillStringSuggestionOperator.addPrefill(PrefillString.PR_SEARCH_REPO, repo ?: "")
                 } catch (e: NumberFormatException) {
                     logger.warn("Not a valid number '$text'")
                 }

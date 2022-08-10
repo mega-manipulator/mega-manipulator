@@ -165,8 +165,8 @@ class GithubComClient @NonInjectable constructor(
         // https://docs.github.com/en/search-github/searching-on-github/searching-issues-and-pull-requests
         val role: String = role?.let { "+$role%3A${settings.username}" } ?: ""
         val state: String = state?.let { "+state%3A$state" } ?: ""
-        val owner: String = project?.let { "+user%3A$project" } ?: ""
-        val repo: String = repo?.let { "+repo%3A$repo" } ?: ""
+
+        val repoOwner: String = if (project != null && repo != null) { "+repo%3A$project/$repo" } else if (project == null && repo == null) { "" } else if (project != null && repo == null) { "+user%3A$project" } else if (project == null && repo != null) { throw IllegalArgumentException("Project cannot be undefined if repo is defined") } else { "" }
 
         val client: HttpClient = httpClientProvider.getClient(searchHost, codeHost, settings)
         val seq: Flow<GithubComIssue> = flow {
@@ -174,7 +174,7 @@ class GithubComClient @NonInjectable constructor(
             var found = 0L
             val perPage = min(100, limit)
             while (true) {
-                val result: GithubComSearchResult<GithubComIssue> = client.get("${settings.baseUrl}/search/issues?per_page=$perPage&page=${page++}&q=type%3Apr${state}$role$owner$repo").unwrap()
+                val result: GithubComSearchResult<GithubComIssue> = client.get("${settings.baseUrl}/search/issues?per_page=$perPage&page=${page++}&q=type%3Apr${state}$role$repoOwner").unwrap()
                 result.items.forEach { emit(it) }
                 if (result.items.isEmpty()) break
                 found += result.total_count

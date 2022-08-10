@@ -57,7 +57,7 @@ class SettingsWindow(project: Project) : ToolWindowTab {
     private data class ConfigHostHolder(
         val hostType: HostType,
         val authMethod: AuthMethod,
-        val baseUri: String,
+        val baseUrl: String,
         val username: String,
         val searchHost: String,
         val codeHost: String? = null,
@@ -130,7 +130,7 @@ class SettingsWindow(project: Project) : ToolWindowTab {
                 ConfigHostHolder(
                     hostType = HostType.ERROR,
                     authMethod = AuthMethod.NONE,
-                    baseUri = "?",
+                    baseUrl = "?",
                     username = "?",
                     searchHost = "*",
                     codeHost = "*",
@@ -142,7 +142,6 @@ class SettingsWindow(project: Project) : ToolWindowTab {
             hostConfigSelect.selectedValuesList.firstOrNull()?.let { conf: ConfigHostHolder ->
                 if (conf.hostType != HostType.ERROR) {
                     setPassword(conf)
-                    refresh()
                 }
             }
         }
@@ -268,8 +267,12 @@ class SettingsWindow(project: Project) : ToolWindowTab {
         }
     }
 
-    private fun setPassword(conf: ConfigHostHolder) =
-        passwordsOperator.promptForPassword(focusComponent = hostConfigSelect, username = conf.username, baseUrl = conf.baseUri)
+    private fun setPassword(conf: ConfigHostHolder) {
+        passwordsOperator.promptForPassword(focusComponent = hostConfigSelect, username = conf.username, baseUrl = conf.baseUrl)
+        if (conf.validationResult == passwordNotSetString) {
+            conf.validationResult = initialValidationText(conf)
+        }
+    }
 
     override fun refresh() {
         onboardingOperator.registerTarget(OnboardingId.SETTINGS_TAB, content)
@@ -291,7 +294,7 @@ class SettingsWindow(project: Project) : ToolWindowTab {
                     ConfigHostHolder(
                         hostType = HostType.SEARCH,
                         authMethod = group.value().authMethod,
-                        baseUri = group.value().baseUrl,
+                        baseUrl = group.value().baseUrl,
                         username = group.value().username,
                         searchHost = searchHostName,
                         validationResult = initialValidationText(group.value()),
@@ -301,7 +304,7 @@ class SettingsWindow(project: Project) : ToolWindowTab {
                         ConfigHostHolder(
                             hostType = HostType.CODE,
                             authMethod = codeHostSettingsGroup.value().authMethod,
-                            baseUri = codeHostSettingsGroup.value().baseUrl,
+                            baseUrl = codeHostSettingsGroup.value().baseUrl,
                             username = codeHostSettingsGroup.value().username ?: "token",
                             searchHost = searchHostName,
                             codeHost = codeHostName,
@@ -317,7 +320,7 @@ class SettingsWindow(project: Project) : ToolWindowTab {
                     ConfigHostHolder(
                         hostType = HostType.ERROR,
                         authMethod = AuthMethod.NONE,
-                        baseUri = "error",
+                        baseUrl = "error",
                         username = "error",
                         searchHost = "*",
                         codeHost = "*",
@@ -329,11 +332,14 @@ class SettingsWindow(project: Project) : ToolWindowTab {
         onboardingOperator.display(OnboardingId.WELCOME)
     }
 
-    private fun initialValidationText(hostWithAuth: HostWithAuth?): String = if (hostWithAuth == null) {
+    private val passwordNotSetString = "Password is not set, CLICK HERE to set it"
+    private fun initialValidationText(configHostHolder: ConfigHostHolder): String = initialValidationText(configHostHolder.username, configHostHolder.baseUrl)
+    private fun initialValidationText(hostWithAuth: HostWithAuth?): String = initialValidationText(hostWithAuth?.username, hostWithAuth?.baseUrl)
+    private fun initialValidationText(username: String?, baseUrl: String?): String = if (username == null || baseUrl == null) {
         "Unable to resolve settings"
-    } else if (passwordsOperator.isPasswordSet(hostWithAuth.username, hostWithAuth.baseUrl)) {
+    } else if (passwordsOperator.isPasswordSet(username, baseUrl)) {
         "Click the validate tokens button to validate"
     } else {
-        "Password is not set, CLICK HERE to set it"
+        passwordNotSetString
     }
 }

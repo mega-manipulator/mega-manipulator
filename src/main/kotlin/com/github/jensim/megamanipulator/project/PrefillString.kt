@@ -32,4 +32,13 @@ enum class PrefillString(val fallback: PrefillString? = null, val default: Strin
     PR_SEARCH_REPO(
         maxHistory = 10,
     ),
+    PR_SEARCH_STATE(
+        maxHistory = 10,
+    ),
+    PR_SEARCH_ROLE(
+        maxHistory = 10,
+    ),
+    PR_SEARCH_LIMIT(
+        maxHistory = 1,
+    ),
 }
