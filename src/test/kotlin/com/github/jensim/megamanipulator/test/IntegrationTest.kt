@@ -143,7 +143,7 @@ class IntegrationTest {
                         limit = 1000,
                         role = settings.codeHostType.prRoleAuthor,
                         state = settings.codeHostType.prStateOpen,
-                        project = newPr.project(),
+                        project = null,
                         repo = null,
                     )
                 }?.firstOrNull { it.title() == newTitle }
