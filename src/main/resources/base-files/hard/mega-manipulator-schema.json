@@ -139,6 +139,9 @@
                           "required" : true,
                           "description" : "When cloning a lot from GitHub, you may hit rate limits, sleeping can get you around that -.-'"
                         },
+                        "httpConcurrency" : {
+                          "type" : "integer"
+                        },
                         "codeHostType" : {
                           "type" : "string",
                           "required" : true,
@@ -281,6 +284,9 @@
               "keepLocalRepos" : {
                 "type" : "object",
                 "$ref" : "urn:jsonschema:com:github:jensim:megamanipulator:settings:types:KeepLocalRepos"
+              },
+              "httpConcurrency" : {
+                "type" : "integer"
               },
               "docLinkHref" : {
                 "type" : "string",

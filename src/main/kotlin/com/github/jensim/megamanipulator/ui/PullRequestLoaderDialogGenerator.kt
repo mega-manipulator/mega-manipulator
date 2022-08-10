@@ -1,25 +1,38 @@
 package com.github.jensim.megamanipulator.ui
 
+import com.github.jensim.megamanipulator.project.PrefillString
+import com.github.jensim.megamanipulator.project.PrefillStringSuggestionOperator
 import com.github.jensim.megamanipulator.settings.types.codehost.CodeHostSettingsType
+import com.intellij.openapi.components.service
+import com.intellij.openapi.project.Project
 import com.intellij.openapi.ui.ComboBox
 import com.intellij.openapi.ui.popup.Balloon
 import com.intellij.openapi.ui.popup.JBPopupFactory
 import com.intellij.ui.awt.RelativePoint
 import com.intellij.ui.components.JBTextField
+import com.intellij.ui.dsl.builder.Panel
+import org.slf4j.LoggerFactory
 import javax.swing.InputVerifier
 import javax.swing.JButton
 import javax.swing.JComponent
 
-object PullRequestLoaderDialogGenerator {
+class PullRequestLoaderDialogGenerator(
+    private val project: Project,
+) {
 
+    private val logger = LoggerFactory.getLogger(javaClass)
+
+    private val projectInput = JBTextField(30)
+    private val repoInput = JBTextField(30)
     private val stateSelector = ComboBox<String>()
     private val roleSelector = ComboBox<String>()
 
     private val limitField = JBTextField("100")
-    private var lastUsedType: CodeHostSettingsType? = null
     private val btnYes = JButton("Load")
     private val btnNo = JButton("Cancel")
-    private const val MAGIC_NULL = "*"
+    private val magicNull = "*"
+
+    private val prefillStringSuggestionOperator: PrefillStringSuggestionOperator by lazy { project.service() }
 
     init {
         limitField.inputVerifier = object : InputVerifier() {
@@ -34,43 +47,31 @@ object PullRequestLoaderDialogGenerator {
         }
     }
 
-    fun generateDialog(focus: JComponent, type: CodeHostSettingsType, onYes: (state: String?, role: String?, limit: Int) -> Unit) {
+    fun generateDialog(
+        focus: JComponent,
+        type: CodeHostSettingsType,
+        onYes: (state: String?, role: String?, limit: Int, project: String?, repo: String?) -> Unit
+    ) {
         try {
-            if (type != lastUsedType) {
-                stateSelector.removeAllItems()
-                type.prStates.forEach { stateSelector.addItem(it ?: MAGIC_NULL) }
-                roleSelector.removeAllItems()
-                type.prRoles.forEach { roleSelector.addItem(it ?: MAGIC_NULL) }
-                lastUsedType = type
-            }
+            type.prStates.forEach { stateSelector.addItem(it ?: magicNull) }
+            type.prRoles.forEach { roleSelector.addItem(it ?: magicNull) }
 
             val content = com.intellij.ui.dsl.builder.panel {
+                addProjectRepoInput(type)
                 row {
-                    cell(
-                        com.intellij.ui.dsl.builder.panel {
-                            group("Pull request state") {
-                                row { cell(stateSelector) }
-                            }
-                        }
-                    )
+                    groupPanel("Pull request state") {
+                        cell(stateSelector)
+                    }
                 }
                 row {
-                    cell(
-                        com.intellij.ui.dsl.builder.panel {
-                            group("Pull request role") {
-                                row { cell(roleSelector) }
-                            }
-                        }
-                    )
+                    groupPanel("Pull request role") {
+                        cell(roleSelector)
+                    }
                 }
                 row {
-                    cell(
-                        com.intellij.ui.dsl.builder.panel {
-                            group("Limit") {
-                                row { cell(limitField) }
-                            }
-                        }
-                    )
+                    groupPanel("Limit") {
+                        cell(limitField)
+                    }
                 }
                 row {
                     cell(btnYes); cell(btnNo)
@@ -82,37 +83,64 @@ object PullRequestLoaderDialogGenerator {
             btnYes.addActionListener {
                 val text = limitField.text
                 try {
-                    clearListeners()
                     val limit = text.toInt()
-                    onYes(stateSelector.item.toNullable(), roleSelector.item.toNullable(), limit)
+                    onYes(
+                        stateSelector.item.toNullable(),
+                        roleSelector.item.toNullable(),
+                        limit,
+                        projectInput.text.ifBlank { null }?.trim()?.also {
+                            prefillStringSuggestionOperator.addPrefill(PrefillString.PR_SEARCH_PROJECT, it)
+                        },
+                        repoInput.text.ifBlank { null }?.trim()?.also {
+                            prefillStringSuggestionOperator.addPrefill(PrefillString.PR_SEARCH_REPO, it)
+                        },
+                    )
                 } catch (e: NumberFormatException) {
-                    println("Not a valid number '$text'")
+                    logger.warn("Not a valid number '$text'")
                 }
                 popup.hide()
             }
             btnNo.addActionListener {
-                clearListeners()
                 popup.hide()
             }
             val location: RelativePoint = popupFactory.guessBestPopupLocation(focus)
 
             popup.show(location, Balloon.Position.above)
         } catch (e: Exception) {
-            e.printStackTrace()
+            logger.error("Failed setting up the Pull Request loader dialog", e)
         }
     }
 
-    private fun clearListeners() {
-        btnYes.actionListeners.forEach {
-            btnYes.removeActionListener(it)
+    private fun Panel.addProjectRepoInput(type: CodeHostSettingsType) {
+        if (type == CodeHostSettingsType.GITHUB) {
+            projectInput.text = prefillStringSuggestionOperator.getPrefill(PrefillString.PR_SEARCH_PROJECT)
+            repoInput.text = prefillStringSuggestionOperator.getPrefill(PrefillString.PR_SEARCH_REPO)
+            addProjectRepoInput("User / Org", "Repo")
+        } else if (type == CodeHostSettingsType.GITLAB) {
+            projectInput.text = prefillStringSuggestionOperator.getPrefill(PrefillString.PR_SEARCH_PROJECT)
+            addProjectRepoInput("Group", null)
         }
-        btnNo.actionListeners.forEach {
-            btnNo.removeActionListener(it)
+    }
+
+    private fun Panel.addProjectRepoInput(projectNaming: String, repoNaming: String?) {
+        row {
+            groupPanel(projectNaming) {
+                cell(projectInput)
+                cell(PrefillHistoryButton(project, PrefillString.PR_SEARCH_PROJECT, projectInput) { projectInput.text = it })
+            }
+        }
+        if (repoNaming != null) {
+            row {
+                groupPanel(repoNaming) {
+                    cell(repoInput)
+                    cell(PrefillHistoryButton(project, PrefillString.PR_SEARCH_REPO, repoInput) { repoInput.text = it })
+                }
+            }
         }
     }
 
     private fun String.toNullable(): String? = when (this) {
-        MAGIC_NULL -> null
+        magicNull -> null
         else -> this
     }
 }

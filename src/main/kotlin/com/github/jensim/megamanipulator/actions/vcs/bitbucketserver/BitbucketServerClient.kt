@@ -212,8 +212,13 @@ class BitbucketServerClient @NonInjectable constructor(
         limit: Int,
         state: String?,
         role: String?,
+        project: String?,
+        repo: String?,
     ): List<PullRequestWrapper> {
         // https://docs.atlassian.com/bitbucket-server/rest/5.7.0/bitbucket-rest.html#idm45568367094208
+        if (!project.isNullOrBlank() || repo.isNullOrBlank()) {
+            throw IllegalArgumentException("BitBucket project/repo filtering is not implemented") // TODO
+        }
         val state: String = state?.let { "&state=$state" } ?: ""
         val role: String = role?.let { "&role=$role" } ?: ""
         val client: HttpClient = httpClientProvider.getClient(searchHostName, codeHostName, settings)

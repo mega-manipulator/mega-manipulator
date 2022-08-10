@@ -142,7 +142,9 @@ class IntegrationTest {
                         codeHost = newPr.codeHostName(),
                         limit = 1000,
                         role = settings.codeHostType.prRoleAuthor,
-                        state = settings.codeHostType.prStateOpen
+                        state = settings.codeHostType.prStateOpen,
+                        project = newPr.project(),
+                        repo = newPr.baseRepo(),
                     )
                 }?.firstOrNull { it.title() == newTitle }
             }) { it != null }!!

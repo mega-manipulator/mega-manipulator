@@ -1,5 +1,6 @@
 package com.github.jensim.megamanipulator.actions.vcs
 
+import com.github.jensim.megamanipulator.actions.NotificationsOperator
 import com.github.jensim.megamanipulator.onboarding.OnboardingButton
 import com.github.jensim.megamanipulator.onboarding.OnboardingId
 import com.github.jensim.megamanipulator.onboarding.OnboardingOperator
@@ -11,6 +12,7 @@ import com.github.jensim.megamanipulator.ui.CodeHostSelector
 import com.github.jensim.megamanipulator.ui.GeneralKtDataTable
 import com.github.jensim.megamanipulator.ui.PullRequestLoaderDialogGenerator
 import com.github.jensim.megamanipulator.ui.UiProtector
+import com.intellij.notification.NotificationType.ERROR
 import com.intellij.openapi.components.service
 import com.intellij.openapi.project.Project
 import com.intellij.ui.JBSplitter
@@ -30,14 +32,15 @@ import javax.swing.JComponent
 import javax.swing.event.DocumentEvent
 import javax.swing.event.DocumentListener
 
-class PullRequestWindow(project: Project) : ToolWindowTab {
+class PullRequestWindow(private val project: Project) : ToolWindowTab {
 
     private val prRouter: PrRouter by lazy { project.service() }
     private val uiProtector: UiProtector by lazy { project.service() }
     private val settingsFileOperator: SettingsFileOperator by lazy { project.service() }
     private val onboardingOperator: OnboardingOperator by lazy { project.service() }
+    private val notificationsOperator: NotificationsOperator by lazy { project.service() }
 
-    private val log = LoggerFactory.getLogger(javaClass)
+    private val logger = LoggerFactory.getLogger(javaClass)
 
     private val filterField = JBTextField(50)
     private val pullRequests: MutableList<PullRequestWrapper> = mutableListOf()
@@ -153,14 +156,21 @@ class PullRequestWindow(project: Project) : ToolWindowTab {
         (codeHostSelect.selectedItem)?.let { selected: CodeHostSelector.CodeHostSelect ->
             settingsFileOperator.readSettings()?.let {
                 it.resolveSettings(selected.searchHostName, selected.codeHostName)?.let { (_, settings) ->
-                    PullRequestLoaderDialogGenerator.generateDialog(
+                    PullRequestLoaderDialogGenerator(project).generateDialog(
                         focus = fetchPRsButton,
                         type = settings.codeHostType,
-                    ) { state: String?, role: String?, limit: Int ->
+                    ) { state: String?, role: String?, limit: Int, project: String?, repo: String? ->
                         prTable.setListData(emptyList())
                         filterField.text = ""
                         val prs: List<PullRequestWrapper>? = uiProtector.uiProtectedOperation("Fetching PRs") {
-                            prRouter.getAllPrs(searchHost = selected.searchHostName, codeHost = selected.codeHostName, role = role, state = state, limit = limit)
+                            try {
+                                prRouter.getAllPrs(searchHost = selected.searchHostName, codeHost = selected.codeHostName, role = role, state = state, limit = limit, project = project, repo = repo)
+                            } catch (e: Exception) {
+                                val msg = "Failed fetching PRs"
+                                logger.error(msg, e)
+                                notificationsOperator.show(msg, "${e.javaClass.simpleName}\n${e.message}\nMore info in IDE logs", ERROR)
+                                null
+                            }
                         }
                         setPrs(prs)
                     }
@@ -170,7 +180,7 @@ class PullRequestWindow(project: Project) : ToolWindowTab {
     }
 
     private fun setPrs(prs: List<PullRequestWrapper>?) {
-        log.info("Setting prs, new count is ${prs?.size}")
+        logger.info("Setting prs, new count is ${prs?.size}")
         pullRequests.clear()
         prs?.let { pullRequests.addAll(it) }
         val filtered = updateFilteredPrs()

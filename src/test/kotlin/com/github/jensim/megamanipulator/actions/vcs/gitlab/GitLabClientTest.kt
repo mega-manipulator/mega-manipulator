@@ -23,6 +23,7 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.condition.EnabledIf
 import org.junit.jupiter.api.fail
 import kotlin.io.path.ExperimentalPathApi
+import org.hamcrest.Matchers.`is` as Is
 
 @ExperimentalPathApi
 @EnabledIf("com.github.jensim.megamanipulator.actions.vcs.gitlab.GitLabClientTest#enabled", disabledReason = "We don't have a CI installation of bitbucket server")
@@ -78,7 +79,7 @@ internal class GitLabClientTest {
         // given
 
         // when
-        val result: String = runBlocking {
+        val result: String? = runBlocking {
             wiring.gitLabClient.validateAccess(
                 searchHost = EnvUserSettingsSetup.sourcegraphName,
                 codeHost = EnvUserSettingsSetup.gitlabSettings?.first!!,
@@ -87,7 +88,7 @@ internal class GitLabClientTest {
         }
 
         // then
-        assertThat(result, equalTo("OK"))
+        assertThat(result, Is(nullValue()))
     }
 
     @Test
@@ -103,6 +104,8 @@ internal class GitLabClientTest {
                 limit = 10,
                 state = GITLAB.prStateOpen,
                 role = GITLAB.prRoleAuthor,
+                project = null,
+                repo = null,
             )
         }
 
@@ -123,6 +126,8 @@ internal class GitLabClientTest {
                 limit = 10,
                 state = GITLAB.prStateOpen,
                 role = GITLAB.prRoleAssignee,
+                project = null,
+                repo = null,
             )
         }
 

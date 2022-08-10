@@ -28,6 +28,7 @@ data class GitHubSettings(
     @Max(100_000)
     @JsonPropertyDescription("When cloning a lot from GitHub, you may hit rate limits, sleeping can get you around that -.-'")
     override val cloneSleepSeconds: Int = 0,
+    val httpConcurrency: Int? = null,
 ) : CodeHostSettings() {
 
     override val codeHostType: CodeHostSettingsType = GITHUB

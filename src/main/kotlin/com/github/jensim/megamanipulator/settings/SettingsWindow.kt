@@ -120,6 +120,7 @@ class SettingsWindow(project: Project) : ToolWindowTab {
     }
 
     override val content: JComponent = BorderLayoutPanel()
+        // .addToTop(JBLabel("Click the "))
         .addToLeft(confButtonsPanel)
         .addToCenter(JBScrollPane(hostConfigSelect))
 
@@ -333,6 +334,6 @@ class SettingsWindow(project: Project) : ToolWindowTab {
     } else if (passwordsOperator.isPasswordSet(hostWithAuth.username, hostWithAuth.baseUrl)) {
         "Click the validate tokens button to validate"
     } else {
-        "Password is not set."
+        "Password is not set, CLICK HERE to set it"
     }
 }

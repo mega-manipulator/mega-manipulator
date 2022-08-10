@@ -90,6 +90,8 @@ class GithubComClientTest {
                 limit = 10,
                 state = CodeHostSettingsType.GITHUB.prStateOpen,
                 role = githubSettings.codeHostType.prRoleAuthor,
+                project = null,
+                repo = null,
             )
         }
 

@@ -17,7 +17,8 @@ data class GithubSearchSettings(
     val forkSetting: ForkSetting = PLAIN_BRANCH,
     @JsonPropertyDescription("It's strongly recommended to use SSH clone type.")
     val cloneType: CloneType = SSH,
-    val keepLocalRepos: KeepLocalRepos? = null
+    val keepLocalRepos: KeepLocalRepos? = null,
+    val httpConcurrency: Int? = null
 ) : SearchHostSettings() {
     override val docLinkHref: String = "https://mega-manipulator.github.io/docs/Search%20hosts/github"
     override val authMethod = JUST_TOKEN
@@ -30,6 +31,7 @@ data class GithubSearchSettings(
                 forkSetting = forkSetting,
                 cloneType = cloneType,
                 keepLocalRepos = keepLocalRepos,
+                httpConcurrency = httpConcurrency,
             )
         )
     )

@@ -1,6 +1,6 @@
-query ($cursor: String, $state: MergeRequestState, $projectPath:String) {
-  currentUser {
-    assignedMergeRequests(after: $cursor, state: $state, projectPath: $projectPath) {
+query ($cursor: String, $state: MergeRequestState, $fullPath: ID!) {
+  group(fullPath: $fullPath) {
+    mergeRequests(after: $cursor, state: $state) {
       count
       pageInfo {
         hasNextPage

@@ -8,6 +8,7 @@ import com.github.jensim.megamanipulator.actions.git.localrepo.LocalRepoOperator
 import com.github.jensim.megamanipulator.actions.search.SearchResult
 import com.github.jensim.megamanipulator.actions.vcs.GitLabApiRepoWrapping
 import com.github.jensim.megamanipulator.actions.vcs.GitLabAssignedMergeRequestListItemWrapper
+import com.github.jensim.megamanipulator.actions.vcs.GitLabAuthoredMergeRequestListItemWrapper
 import com.github.jensim.megamanipulator.actions.vcs.GitLabMergeRequestApiWrapper
 import com.github.jensim.megamanipulator.actions.vcs.GitLabMergeRequestListItemWrapper
 import com.github.jensim.megamanipulator.actions.vcs.GitLabMergeRequestWrapper
@@ -19,8 +20,10 @@ import com.github.jensim.megamanipulator.graphql.generated.gitlab.GetAuthoredPul
 import com.github.jensim.megamanipulator.graphql.generated.gitlab.GetAuthoredPullRequests.Result
 import com.github.jensim.megamanipulator.graphql.generated.gitlab.GetCurrentUser
 import com.github.jensim.megamanipulator.graphql.generated.gitlab.GetForkRepos
+import com.github.jensim.megamanipulator.graphql.generated.gitlab.GetPullRequests
 import com.github.jensim.megamanipulator.graphql.generated.gitlab.SingleRepoQuery
 import com.github.jensim.megamanipulator.graphql.generated.gitlab.enums.MergeRequestState
+import com.github.jensim.megamanipulator.graphql.generated.gitlab.getauthoredpullrequests.MergeRequest
 import com.github.jensim.megamanipulator.http.HttpClientProvider
 import com.github.jensim.megamanipulator.project.lazyService
 import com.github.jensim.megamanipulator.settings.SerializationHolder.objectMapper
@@ -133,7 +136,7 @@ class GitLabClient @NonInjectable constructor(
         }
     }
 
-    suspend fun validateAccess(searchHost: String, codeHost: String, settings: GitLabSettings): String {
+    suspend fun validateAccess(searchHost: String, codeHost: String, settings: GitLabSettings): String? {
         val client = try {
             getClient(searchHost, codeHost, settings)
         } catch (e: Exception) {
@@ -151,7 +154,7 @@ class GitLabClient @NonInjectable constructor(
                 log.warn("Error from gitlab {}", user.errors)
                 "ERROR"
             }
-            user.data?.currentUser?.username?.isBlank() == false -> "OK"
+            user.data?.currentUser?.username?.isBlank() == false -> null
             else -> "NO USER DATA"
         }
     }
@@ -278,26 +281,35 @@ class GitLabClient @NonInjectable constructor(
         codeHost: String,
         settings: GitLabSettings,
         limit: Int,
-        role: String,
-        state: String,
-    ): List<GitLabMergeRequestWrapper> = when (role) {
-        "assignee" -> getAllReviewPrs(searchHost = searchHost, codeHost = codeHost, settings = settings, state = state, limit = limit)
-        "author" -> getAllAuthorPrs(searchHost = searchHost, codeHost = codeHost, settings = settings, state = state, limit = limit)
-        else -> throw IllegalArgumentException("Role '$role' is not recognized")
+        role: String?,
+        state: String?,
+        project: String?,
+        repo: String?,
+    ): List<GitLabMergeRequestWrapper> {
+        if (repo != null) {
+            throw IllegalArgumentException("Unable to filter on repo")
+        }
+        return when (role) {
+            null -> getAllPrs(searchHost = searchHost, codeHost = codeHost, settings = settings, state = state, limit = limit, repoPath = project)
+            "assignee" -> getAllReviewPrs(searchHost = searchHost, codeHost = codeHost, settings = settings, state = state, limit = limit, repoPath = project)
+            "author" -> getAllAuthorPrs(searchHost = searchHost, codeHost = codeHost, settings = settings, state = state, limit = limit, repoPath = project)
+            else -> throw IllegalArgumentException("Role '$role' is not recognized")
+        }
     }
 
     private suspend fun getAllReviewPrs(
         searchHost: String,
         codeHost: String,
         settings: GitLabSettings,
-        state: String,
+        state: String?,
         limit: Int,
+        repoPath: String?,
     ): List<GitLabAssignedMergeRequestListItemWrapper> {
         val client: GraphQLKtorClient = getClient(searchHost, codeHost, settings)
         val accumulator: MutableList<GitLabAssignedMergeRequestListItemWrapper> = ArrayList()
         var lastCursor: String? = null
         while (accumulator.size < limit) {
-            val vars = GetAssignedPullRequests.Variables(cursor = lastCursor, state = MergeRequestState.valueOf(state))
+            val vars = GetAssignedPullRequests.Variables(cursor = lastCursor, state = state?.let { MergeRequestState.valueOf(it) }, projectPath = repoPath)
             val resp: GraphQLClientResponse<GetAssignedPullRequests.Result> =
                 client.execute(GetAssignedPullRequests(vars))
             when {
@@ -307,20 +319,20 @@ class GitLabClient @NonInjectable constructor(
                 }
                 !resp.data?.currentUser?.assignedMergeRequests?.nodes.isNullOrEmpty() ->
                     resp.data?.currentUser?.assignedMergeRequests?.nodes?.mapNotNull {
-                        it?.let {
-                            val raw = objectMapper.writeValueAsString(it)
+                        it?.let { mergeRequest: com.github.jensim.megamanipulator.graphql.generated.gitlab.getassignedpullrequests.MergeRequest ->
+                            val raw = objectMapper.writeValueAsString(mergeRequest)
                             accumulator.add(
                                 GitLabAssignedMergeRequestListItemWrapper(
                                     searchHost = searchHost,
                                     codeHost = codeHost,
-                                    mergeRequest = it,
+                                    mergeRequest = mergeRequest,
                                     raw = raw
                                 )
                             )
                         }
                     }
                 else -> {
-                    log.warn("This must have been a ")
+                    log.warn("No merge requests in response")
                     break
                 }
             }
@@ -339,15 +351,15 @@ class GitLabClient @NonInjectable constructor(
         searchHost: String,
         codeHost: String,
         settings: GitLabSettings,
-        state: String,
+        state: String?,
         limit: Int,
-    ): List<GitLabMergeRequestListItemWrapper> {
+        repoPath: String?,
+    ): List<GitLabAuthoredMergeRequestListItemWrapper> {
         val client: GraphQLKtorClient = getClient(searchHost, codeHost, settings)
-        val accumulator: MutableList<GitLabMergeRequestListItemWrapper> = ArrayList()
+        val accumulator: MutableList<GitLabAuthoredMergeRequestListItemWrapper> = ArrayList()
         var lastCursor: String? = null
         while (accumulator.size < limit) {
-
-            val vars = GetAuthoredPullRequests.Variables(cursor = lastCursor, state = MergeRequestState.valueOf(state))
+            val vars = GetAuthoredPullRequests.Variables(cursor = lastCursor, state = state?.let { MergeRequestState.valueOf(it) }, projectPath = repoPath)
             val resp: GraphQLClientResponse<Result> = client.execute(GetAuthoredPullRequests(vars))
             when {
                 !resp.errors.isNullOrEmpty() -> {
@@ -356,6 +368,58 @@ class GitLabClient @NonInjectable constructor(
                 }
                 !resp.data?.currentUser?.authoredMergeRequests?.nodes.isNullOrEmpty() ->
                     resp.data?.currentUser?.authoredMergeRequests?.nodes?.mapNotNull {
+                        it?.let { mergeRequest: MergeRequest ->
+                            val raw = objectMapper.writeValueAsString(mergeRequest)
+                            accumulator.add(
+                                GitLabAuthoredMergeRequestListItemWrapper(
+                                    searchHost = searchHost,
+                                    codeHost = codeHost,
+                                    mergeRequest = mergeRequest,
+                                    raw = raw
+                                )
+                            )
+                        }
+                    }
+                else -> {
+                    log.warn("No merge requests in response")
+                    break
+                }
+            }
+            if (resp.data?.currentUser?.authoredMergeRequests?.pageInfo?.hasNextPage == true &&
+                resp.data?.currentUser?.authoredMergeRequests?.pageInfo?.endCursor != null
+            ) {
+                lastCursor = resp.data?.currentUser?.authoredMergeRequests?.pageInfo?.endCursor
+            } else {
+                break
+            }
+        }
+        return accumulator
+    }
+
+    private suspend fun getAllPrs(
+        searchHost: String,
+        codeHost: String,
+        settings: GitLabSettings,
+        state: String?,
+        limit: Int,
+        repoPath: String?,
+    ): List<GitLabMergeRequestListItemWrapper> {
+        if (repoPath.isNullOrBlank()) {
+            throw IllegalArgumentException("Repo path is required when fetching '*' Merge requests ")
+        }
+        val client: GraphQLKtorClient = getClient(searchHost, codeHost, settings)
+        val accumulator: MutableList<GitLabMergeRequestListItemWrapper> = ArrayList()
+        var lastCursor: String? = null
+        while (accumulator.size < limit) {
+            val vars = GetPullRequests.Variables(cursor = lastCursor, state = state?.let { MergeRequestState.valueOf(it) }, fullPath = repoPath)
+            val resp: GraphQLClientResponse<GetPullRequests.Result> = client.execute(GetPullRequests(vars))
+            when {
+                !resp.errors.isNullOrEmpty() -> {
+                    log.warn("Error received from gitlab {}", resp.errors)
+                    break
+                }
+                !resp.data?.group?.mergeRequests?.nodes.isNullOrEmpty() ->
+                    resp.data?.group?.mergeRequests?.nodes?.mapNotNull {
                         it?.let {
                             val raw = objectMapper.writeValueAsString(it)
                             accumulator.add(
@@ -369,14 +433,14 @@ class GitLabClient @NonInjectable constructor(
                         }
                     }
                 else -> {
-                    log.warn("This must have been a ")
+                    log.warn("Something's wrong! No merge requests")
                     break
                 }
             }
-            if (resp.data?.currentUser?.authoredMergeRequests?.pageInfo?.hasNextPage == true &&
-                resp.data?.currentUser?.authoredMergeRequests?.pageInfo?.endCursor != null
+            if (resp.data?.group?.mergeRequests?.pageInfo?.hasNextPage == true &&
+                resp.data?.group?.mergeRequests?.pageInfo?.endCursor != null
             ) {
-                lastCursor = resp.data?.currentUser?.authoredMergeRequests?.pageInfo?.endCursor
+                lastCursor = resp.data?.group?.mergeRequests?.pageInfo?.endCursor
             } else {
                 break
             }
@@ -392,8 +456,7 @@ class GitLabClient @NonInjectable constructor(
     ): PrActionStatus {
         // https://docs.gitlab.com/ee/api/merge_requests.html#update-mr
         // PUT /api/v4/projects/:id/merge_requests/:merge_request_iid
-        val client: HttpClient =
-            httpClientProvider.getClient(pullRequest.searchHostName(), pullRequest.codeHostName(), settings)
+        val client: HttpClient = httpClientProvider.getClient(pullRequest.searchHostName(), pullRequest.codeHostName(), settings)
         val projectId = pullRequest.targetProjectId
         val mergeRequestIid = pullRequest.mergeRequestIid
         val response: HttpResponse =
@@ -490,7 +553,7 @@ class GitLabClient @NonInjectable constructor(
     }
 
     @Suppress("FunctionOnlyReturningConstant")
-    fun addDefaultReviewers(settings: GitLabSettings, pullRequest: GitLabMergeRequestListItemWrapper): PrActionStatus {
+    fun addDefaultReviewers(settings: GitLabSettings, pullRequest: GitLabAuthoredMergeRequestListItemWrapper): PrActionStatus {
         return PrActionStatus(false, msg = "Not implemented, may never be..")
     }
 
