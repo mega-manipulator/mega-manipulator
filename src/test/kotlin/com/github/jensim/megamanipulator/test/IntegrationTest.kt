@@ -144,7 +144,7 @@ class IntegrationTest {
                         role = settings.codeHostType.prRoleAuthor,
                         state = settings.codeHostType.prStateOpen,
                         project = newPr.project(),
-                        repo = newPr.baseRepo(),
+                        repo = null,
                     )
                 }?.firstOrNull { it.title() == newTitle }
             }) { it != null }!!
