@@ -9,6 +9,10 @@
 
 ### Improvement
 - Prefill stuff in the pull request load popup
+- Password prompt updates status of password without refresh
+
+### Fix
+- Table select events only trigger once now
 
 ## [0.0.53]
 ### Improvement

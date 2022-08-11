@@ -8,14 +8,25 @@ class PrefillStringSuggestionOperator(project: Project) {
 
     private val megaManipulatorSettingsState: MegaManipulatorSettingsState by lazy { project.service() }
 
+    /**
+     * Returns a list of previously added prefills.
+     * The first entry in the list is the most recent addition.
+     *
+     * First it will try with the given PrefillString, then the fallback, and last the default.
+     * The three are mutually exclusive, and will not be concatenated into one list.
+     */
     fun getPrefills(prefillString: PrefillString): List<String> = (
         megaManipulatorSettingsState.let { state ->
-            state.prefillStrings[prefillString] ?: prefillString.fallback?.let {
-                state.prefillStrings[it]
+            state.prefillStrings[prefillString] ?: prefillString.fallback?.let { prefillFallback ->
+                state.prefillStrings[prefillFallback]
             }
         } ?: listOf(prefillString.default)
-        ).filterNotNull()
+        ).filterNotNull().reversed()
 
+    /**
+     * Returns the most recently added prefill.
+     * First it will try with the given PrefillString, then the fallback, and last the default
+     */
     fun getPrefill(prefillString: PrefillString): String? {
         val prefill = megaManipulatorSettingsState.let { state ->
             state.prefillStrings[prefillString]?.lastOrNull() ?: prefillString.fallback

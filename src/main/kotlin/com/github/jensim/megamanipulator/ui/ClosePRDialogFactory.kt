@@ -51,6 +51,7 @@ object ClosePRDialogFactory {
             }
             val location = popupFactory.guessBestPopupLocation(relativeComponent)
             balloon.show(location, Balloon.Position.above)
+            balloon.setDefaultButton(panel, cancelBtn)
         } catch (e: Exception) {
             e.printStackTrace()
         }

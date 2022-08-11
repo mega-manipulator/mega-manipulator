@@ -166,7 +166,7 @@ class GithubComClient @NonInjectable constructor(
         val role: String = role?.let { "+$role%3A${settings.username}" } ?: ""
         val state: String = state?.let { "+state%3A$state" } ?: ""
 
-        val repoOwner: String = if (project != null && repo != null) { "+repo%3A$project/$repo" } else if (project == null && repo == null) { "" } else if (project != null && repo == null) { "+user%3A$project" } else if (project == null && repo != null) { throw IllegalArgumentException("Project cannot be undefined if repo is defined") } else { "" }
+        val repoOwner: String = if (project != null && repo != null) { "+repo%3A$project/$repo" } else if (project == null && repo == null) { "" } else if (project != null) { "+user%3A$project" } else { throw IllegalArgumentException("Project cannot be undefined if repo is defined") }
 
         val client: HttpClient = httpClientProvider.getClient(searchHost, codeHost, settings)
         val seq: Flow<GithubComIssue> = flow {

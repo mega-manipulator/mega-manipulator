@@ -5,9 +5,11 @@ import org.slf4j.LoggerFactory
 import java.awt.Color
 import java.awt.Component
 import java.awt.Dimension
+import java.awt.event.MouseEvent
+import java.awt.event.MouseListener
 import java.util.function.Predicate
 import javax.swing.ListSelectionModel
-import javax.swing.table.AbstractTableModel
+import javax.swing.table.DefaultTableModel
 import javax.swing.table.TableCellRenderer
 import javax.swing.table.TableRowSorter
 import kotlin.reflect.KClass
@@ -28,8 +30,13 @@ class GeneralKtDataTable<T : Any>(
 
     private val logger = LoggerFactory.getLogger(javaClass)
     private val myModel = GeneralTableModel<T>(type, columns)
-    private val listeners = mutableListOf<() -> Unit>()
+    private val selectListeners = mutableListOf<() -> Unit>()
+    private val clickListeners = mutableListOf<(T) -> Unit>()
     private val myRowSorter = TableRowSorter<GeneralTableModel<T>>(myModel)
+
+    override fun getModel(): GeneralTableModel<T> {
+        return myModel
+    }
 
     val items: List<T> get() = myModel.items
 
@@ -52,14 +59,35 @@ class GeneralKtDataTable<T : Any>(
             }
         }
         getSelectionModel().addListSelectionListener {
-            listeners.forEach {
-                try {
-                    it()
-                } catch (e: Throwable) {
-                    logger.error("An exception escaped from a list selection listener :-O !!! ", e)
+            if (!it.valueIsAdjusting) {
+                selectListeners.forEach {
+                    try {
+                        it()
+                    } catch (e: Throwable) {
+                        logger.error("An exception escaped from a list selection listener :-O !!! ", e)
+                    }
                 }
             }
         }
+        addMouseListener(object : MouseListener {
+            override fun mouseClicked(e: MouseEvent?) {
+                if (clickListeners.isEmpty()) return
+                if (e?.point == null) return
+                val row = rowAtPoint(e.point)
+                if (row < 0) return
+                val col = columnAtPoint(e.point)
+                if (col < 0) return
+                if (items.size > row) {
+                    items[row].let { item ->
+                        clickListeners.forEach { listener -> listener(item) }
+                    }
+                }
+            }
+            override fun mousePressed(e: MouseEvent?) = Unit
+            override fun mouseReleased(e: MouseEvent?) = Unit
+            override fun mouseEntered(e: MouseEvent?) = Unit
+            override fun mouseExited(e: MouseEvent?) = Unit
+        })
     }
 
     private val selectedProblemColor = Color.RED
@@ -86,6 +114,10 @@ class GeneralKtDataTable<T : Any>(
         return c
     }
 
+    fun addClickListener(listener: (T) -> Unit) {
+        clickListeners.add(listener)
+    }
+
     fun setListData(items: List<T>) {
         myModel.items = items
         resizeAndRepaint()
@@ -110,7 +142,7 @@ class GeneralKtDataTable<T : Any>(
     }
 
     fun addListSelectionListener(listener: () -> Unit) {
-        listeners.add(listener)
+        selectListeners.add(listener)
     }
 
     val selectedValuesList: List<T>
@@ -124,20 +156,20 @@ class GeneralKtDataTable<T : Any>(
             }.filterNotNull()
         }
 
-    private class GeneralTableModel<T : Any>(
+    class GeneralTableModel<T : Any>(
         private val type: KClass<T>,
         private val columns: List<Pair<ColumnHeader, (T) -> String>>,
-    ) : AbstractTableModel() {
+    ) : DefaultTableModel() {
 
         private val logger = LoggerFactory.getLogger(javaClass)
         // val columnAccessors: List<KProperty1<T, *>> by lazy { type.memberProperties.toList() }
 
-        var items = emptyList<T>()
+        var items: List<T> = emptyList()
 
-        override fun getRowCount(): Int = items.size
+        override fun getRowCount(): Int = items?.size ?: 0 // Throws NullPointers during initiation 🤔
         override fun getColumnCount(): Int = columns.size
 
-        override fun getValueAt(rowIndex: Int, columnIndex: Int): Any? = try {
+        override fun getValueAt(rowIndex: Int, columnIndex: Int): String? = try {
             columns[columnIndex].second(items[rowIndex])
         } catch (e: Exception) {
             logger.warn("Unable to get value at row:$rowIndex, column:$columnIndex, for type:${type.simpleName}, column:${columns[columnIndex]}, number of items:${items.size}")

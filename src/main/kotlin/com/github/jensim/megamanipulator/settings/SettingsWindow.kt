@@ -21,6 +21,7 @@ import com.intellij.openapi.fileEditor.FileEditorManager
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.openapi.vfs.VirtualFileManager
+import com.intellij.ui.components.JBLabel
 import com.intellij.ui.components.JBScrollPane
 import com.intellij.ui.dsl.builder.panel
 import com.intellij.util.ui.components.BorderLayoutPanel
@@ -88,39 +89,37 @@ class SettingsWindow(project: Project) : ToolWindowTab {
         it.validationResult != null
     }
     private val confButtonsPanel = panel {
-        group("Config") {
-            row {
-                scrollCell(
-                    com.intellij.ui.dsl.builder.panel {
-                        row {
-                            cell(openConfigButton)
-                        }
-                        row {
-                            cell(validateConfigButton)
-                        }
-                        row {
-                            cell(validateTokensButton)
-                        }
-                        row {
-                            cell(toggleClonesButton)
-                        }
-                        row {
-                            cell(docsButton)
-                        }
-                        row {
-                            cell(resetOnboardingButton)
-                        }
-                        row {
-                            cell(resetPrefillButton)
-                        }
+        row {
+            scrollCell(
+                com.intellij.ui.dsl.builder.panel {
+                    row {
+                        cell(openConfigButton)
                     }
-                )
-            }
+                    row {
+                        cell(validateConfigButton)
+                    }
+                    row {
+                        cell(validateTokensButton)
+                    }
+                    row {
+                        cell(toggleClonesButton)
+                    }
+                    row {
+                        cell(docsButton)
+                    }
+                    row {
+                        cell(resetOnboardingButton)
+                    }
+                    row {
+                        cell(resetPrefillButton)
+                    }
+                }
+            )
         }
     }
 
     override val content: JComponent = BorderLayoutPanel()
-        // .addToTop(JBLabel("Click the "))
+        .addToTop(BorderLayoutPanel().addToCenter(JBLabel("Set/unset passwords by selecting a config node in the table")))
         .addToLeft(confButtonsPanel)
         .addToCenter(JBScrollPane(hostConfigSelect))
 
@@ -138,11 +137,9 @@ class SettingsWindow(project: Project) : ToolWindowTab {
                 )
             )
         )
-        hostConfigSelect.addListSelectionListener {
-            hostConfigSelect.selectedValuesList.firstOrNull()?.let { conf: ConfigHostHolder ->
-                if (conf.hostType != HostType.ERROR) {
-                    setPassword(conf)
-                }
+        hostConfigSelect.addClickListener { conf ->
+            if (conf.hostType != HostType.ERROR) {
+                setPassword(conf)
             }
         }
         validateConfigButton.toolTipText = """
@@ -268,9 +265,9 @@ class SettingsWindow(project: Project) : ToolWindowTab {
     }
 
     private fun setPassword(conf: ConfigHostHolder) {
-        passwordsOperator.promptForPassword(focusComponent = hostConfigSelect, username = conf.username, baseUrl = conf.baseUrl)
-        if (conf.validationResult == passwordNotSetString) {
+        passwordsOperator.promptForPassword(focusComponent = hostConfigSelect, authMethod = conf.authMethod, username = conf.username, baseUrl = conf.baseUrl) {
             conf.validationResult = initialValidationText(conf)
+            hostConfigSelect.model.fireTableDataChanged()
         }
     }
 

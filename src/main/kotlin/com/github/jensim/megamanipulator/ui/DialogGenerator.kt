@@ -52,7 +52,7 @@ class DialogGenerator(private val project: Project) {
                     cell(noBtn)
                 }
             }
-            val popup = popupFactory.createDialogBalloonBuilder(panel, title)
+            val popup: Balloon = popupFactory.createDialogBalloonBuilder(panel, title)
                 .setHideOnClickOutside(true)
                 .createBalloon()
             yesBtn.addActionListener {
@@ -73,6 +73,7 @@ class DialogGenerator(private val project: Project) {
                     popup.show(location, position)
                 }
             }
+            popup.setDefaultButton(panel, yesBtn)
             yesBtn.requestFocus(true)
         } catch (e: Exception) {
             e.printStackTrace()
@@ -166,6 +167,7 @@ class DialogGenerator(private val project: Project) {
             val location: RelativePoint = popupFactory.guessBestPopupLocation(focusComponent)
 
             popup.show(location, position)
+            popup.setDefaultButton(panel, btnYes)
             field.requestFocus(true)
         } catch (e: Exception) {
             e.printStackTrace()
