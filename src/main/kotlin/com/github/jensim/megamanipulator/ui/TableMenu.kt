@@ -13,44 +13,52 @@ class TableMenu<T>(
     private val menus: List<MenuItem<T>>
 ) {
 
-    fun show(mouseEvent: MouseEvent, items: List<T>) {
-        show(Point(mouseEvent.x, mouseEvent.y), items)
+    fun show(mouseEvent: MouseEvent, t: T) {
+        show(Point(mouseEvent.x, mouseEvent.y), t)
     }
 
-    fun show(point: Point, items: List<T>) {
+    fun show(point: Point, t: T) {
         val menu = JBPopupMenu()
-        menus.forEach { menu.add(it.toMenu(items)) }
+        menus.forEach { menu.add(it.toMenu(t)) }
         menu.autoscrolls = true
         menu.isVisible = true
         menu.show(component, point.x, point.y)
     }
 
-    class MenuItem<T>(
-        private val headerer: (List<T>) -> String,
-        private val appendFilteredItemCountSuffix: Boolean = false,
+    class MenuItem<T> private constructor(
+        private val header: String?,
+        private val headerer: ((T) -> String)?,
         private val filter: Predicate<T> = Predicate { true },
         private val onClick: (T) -> Unit,
     ) {
+
+        constructor(
+            header: String,
+            filter: Predicate<T> = Predicate { true },
+            onClick: (T) -> Unit,
+        ) : this(header, null, filter, onClick)
+
+        constructor(
+            header: (T) -> String,
+            filter: Predicate<T> = Predicate { true },
+            onClick: (T) -> Unit,
+        ) : this(null, header, filter, onClick)
 
         companion object {
             private val logger = LoggerFactory.getLogger(MenuItem::class.java)
         }
 
-        fun toMenu(items: List<T>): JBMenuItem {
-            val filtered = items.filter { filter.test(it) }
-            val baseHeader = headerer(items)
-            val header = if (appendFilteredItemCountSuffix) appendCountSuffix(filtered.size, items.size, baseHeader) else baseHeader
+        fun toMenu(t: T): JBMenuItem {
+            val header = header ?: headerer!!(t)
             val menu = JBMenuItem(header)
-            if (filtered.isEmpty()) {
+            if (!filter.test(t)) {
                 menu.isEnabled = false
             } else {
                 menu.addActionListener {
-                    filtered.forEach {
-                        try {
-                            onClick(it)
-                        } catch (e: Exception) {
-                            logger.error("Something went wrong in menu action execution", e)
-                        }
+                    try {
+                        onClick(t)
+                    } catch (e: Exception) {
+                        logger.error("Something went wrong in menu action execution", e)
                     }
                 }
             }

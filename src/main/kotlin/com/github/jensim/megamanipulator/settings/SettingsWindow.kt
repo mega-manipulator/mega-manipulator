@@ -140,7 +140,7 @@ class SettingsWindow(project: Project) : ToolWindowTab {
         hostConfigSelect.addClickListener { mouseEvent, conf ->
             if (SwingUtilities.isRightMouseButton(mouseEvent)) {
                 if (conf.hostType != HostType.ERROR) {
-                    tableMenu.show(mouseEvent, listOf(conf))
+                    tableMenu.show(mouseEvent, conf)
                 }
             }
         }
