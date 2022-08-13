@@ -8,6 +8,8 @@ import com.github.jensim.megamanipulator.toolswindow.TabKey
 import com.github.jensim.megamanipulator.toolswindow.ToolWindowTab
 import com.github.jensim.megamanipulator.ui.DialogGenerator
 import com.github.jensim.megamanipulator.ui.GeneralKtDataTable
+import com.github.jensim.megamanipulator.ui.TableMenu
+import com.github.jensim.megamanipulator.ui.TableMenu.MenuItem
 import com.intellij.icons.AllIcons
 import com.intellij.openapi.components.service
 import com.intellij.openapi.fileEditor.FileDocumentManager
@@ -26,6 +28,7 @@ import org.slf4j.LoggerFactory
 import java.io.File
 import javax.swing.JButton
 import javax.swing.ListSelectionModel
+import javax.swing.SwingUtilities
 
 class ApplyWindow(private val project: Project) : ToolWindowTab {
 
@@ -41,22 +44,45 @@ class ApplyWindow(private val project: Project) : ToolWindowTab {
         selectionMode = ListSelectionModel.SINGLE_SELECTION,
         columns = listOf("Attempt" to { it.time.toString() }),
     ) { it.result.isEmpty() || it.result.any { it.exitCode != 0 } }
+    private val attemptMenu = TableMenu<List<File>>(attemptList, listOf(
+        MenuItem(header = { "Retry failed (${it.size})" }, filter = {it.isNotEmpty()}) {
+            dialogGenerator.showConfirm(
+                title = "Rerun failed (${it.size})?",
+                message = "Rerun failed in selected attempt?",
+                focusComponent = attemptList
+            ) {
+                preApply()
+                val results = applyOperator.apply(it)
+                postApply(results)
+            }
+        }
+    ))
     private val resultList = GeneralKtDataTable(
         type = ApplyOutput::class,
         selectionMode = ListSelectionModel.MULTIPLE_INTERVAL_SELECTION,
         columns = listOf(
             "Repo" to { it.dir },
-            // "Exit code" to { it.exitCode.toString() },
-            // "Output (last line)" to { it.lastLine },
         )
     ) { it.exitCode != 0 }
+    private val resultMenu = TableMenu<List<File>>(resultList, listOf(
+        MenuItem(header = { "Rerun selected (${it.size})" }, filter = {it.isNotEmpty()}) { selected ->
+            dialogGenerator.showConfirm(
+                title = "Rerun selected (${selected.size})?",
+                message = "Rerun script for selected repos?",
+                focusComponent = resultList
+            ) {
+                preApply()
+                val results = applyOperator.apply(selected)
+                postApply(results)
+            }
+        }
+    ))
+
     private val scrollableResult = JBScrollPane(resultList)
     private val details = JBTextArea()
     private val scrollableDetails = JBScrollPane(details)
     private val applyButton = JButton("Apply", AllIcons.Toolwindows.ToolWindowProblems)
     private val openScriptButton = JButton("Open script")
-    private val rerunSelectedButton = JButton("Rerun selected repos")
-    private val rerunFailedButton = JButton("Rerun failed")
     private val splitRight = JBSplitter(0.5f).apply {
         firstComponent = scrollableResult
         secondComponent = scrollableDetails
@@ -70,8 +96,6 @@ class ApplyWindow(private val project: Project) : ToolWindowTab {
         row {
             cell(applyButton)
             cell(openScriptButton)
-            cell(rerunFailedButton)
-            cell(rerunSelectedButton)
 
             cell(OnboardingButton(project, TabKey.tabTitleApply, OnboardingId.APPLY_TAB))
                 .horizontalAlign(RIGHT)
@@ -102,48 +126,6 @@ class ApplyWindow(private val project: Project) : ToolWindowTab {
                 content.repaint()
             }
         }
-        rerunSelectedButton.apply {
-            toolTipText = "Rerun selected repos with the new script content (NOT THE OLD)"
-            isEnabled = false
-            addActionListener {
-                val selected = resultList.selectedValuesList
-                    .map { File(project.basePath, it.dir) }
-                if (selected.isNotEmpty()) {
-                    dialogGenerator.showConfirm(
-                        title = "Rerun selected (${selected.size})?",
-                        message = "Rerun script for selected repos?",
-                        focusComponent = rerunSelectedButton
-                    ) {
-                        preApply()
-                        val results = applyOperator.apply(selected)
-                        postApply(results)
-                    }
-                }
-            }
-        }
-        rerunFailedButton.apply {
-            toolTipText = "Rerun failed in selected attempt with the new script content (NOT THE OLD)"
-            isEnabled = false
-            addActionListener {
-                val attempts = attemptList.selectedValuesList
-                if (attempts.size == 1) {
-                    val failed = attempts[0].result.filter { it.exitCode != 0 }
-                        .map { File(project.basePath, it.dir) }
-                    if (failed.isNotEmpty()) {
-                        dialogGenerator.showConfirm(
-                            title = "Rerun failed (${failed.size})?",
-                            message = "Rerun failed in selected attempt?",
-                            focusComponent = rerunSelectedButton
-                        ) {
-                            preApply()
-                            val results = applyOperator.apply(failed)
-                            postApply(results)
-                        }
-                    }
-                }
-            }
-        }
-
         openScriptButton.addActionListener {
             VirtualFileManager.getInstance().let {
                 it.findFileByNioPath(File("${project.basePath}/config/mega-manipulator.bash").toPath())
@@ -155,25 +137,37 @@ class ApplyWindow(private val project: Project) : ToolWindowTab {
 
         attemptList.apply {
             addListSelectionListener {
-                rerunFailedButton.isEnabled = false
                 resultList.clearSelection()
                 resultList.setListData(emptyList())
                 attemptList.selectedValuesList.firstOrNull()?.let { attempt ->
                     resultList.setListData(attempt.result)
                     resultList.selectFirst()
-                    if (attempt.result.any { it.exitCode != 0 }) {
-                        rerunFailedButton.isEnabled = true
-                    }
+                }
+            }
+            addClickListener { mouseEvent, _: ApplyAttempt? ->
+                if (SwingUtilities.isRightMouseButton(mouseEvent)) {
+                    val attempts = attemptList.selectedValuesList
+                    val failed = attempts.firstOrNull()?.result?.filter { it.exitCode != 0 }
+                        ?.map { File(project.basePath, it.dir) }.orEmpty()
+                    attemptMenu.show(mouseEvent, failed)
                 }
             }
         }
-        resultList.addListSelectionListener {
-            val selected: List<ApplyOutput> = resultList.selectedValuesList
-            rerunSelectedButton.isEnabled = selected.isNotEmpty()
-            if (selected.size == 1) {
-                details.text = selected.first().getFullDescription()
-            } else {
-                details.text = ""
+        resultList.apply {
+            addListSelectionListener {
+                val selected: List<ApplyOutput> = resultList.selectedValuesList
+                if (selected.size == 1) {
+                    details.text = selected.firstOrNull()?.getFullDescription() ?: ""
+                } else {
+                    details.text = ""
+                }
+            }
+            addClickListener { mouseEvent, _:ApplyOutput? ->
+                if(SwingUtilities.isRightMouseButton(mouseEvent)){
+                    val selected = resultList.selectedValuesList
+                        .map { File(project.basePath, it.dir) }
+                    resultMenu.show(mouseEvent, selected)
+                }
             }
         }
     }

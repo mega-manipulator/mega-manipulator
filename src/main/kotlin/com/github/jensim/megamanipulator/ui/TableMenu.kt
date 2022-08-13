@@ -8,7 +8,7 @@ import java.awt.event.MouseEvent
 import java.util.function.Predicate
 import javax.swing.JComponent
 
-class TableMenu<T>(
+open class TableMenu<T>(
     private val component: JComponent,
     private val menus: List<MenuItem<T>>
 ) {

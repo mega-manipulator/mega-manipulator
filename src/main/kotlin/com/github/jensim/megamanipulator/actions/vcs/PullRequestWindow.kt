@@ -25,10 +25,9 @@ import com.intellij.util.ui.components.BorderLayoutPanel
 import me.xdrop.fuzzywuzzy.FuzzySearch
 import org.slf4j.LoggerFactory
 import java.awt.Dimension
-import java.awt.event.MouseEvent
-import java.awt.event.MouseListener
 import javax.swing.JButton
 import javax.swing.JComponent
+import javax.swing.SwingUtilities
 import javax.swing.event.DocumentEvent
 import javax.swing.event.DocumentListener
 
@@ -58,7 +57,6 @@ class PullRequestWindow(private val project: Project) : ToolWindowTab {
     private val prScroll = JBScrollPane(prTable)
     private val peekArea = JBTextArea()
     private val peekScroll = JBScrollPane(peekArea)
-    private val menuOpenButton = JButton("Actions")
     private val fetchPRsButton = JButton("Fetch PRs")
 
     private val split = JBSplitter(false, 0.7f).apply {
@@ -74,8 +72,6 @@ class PullRequestWindow(private val project: Project) : ToolWindowTab {
             cell(filterField)
             cell(OnboardingButton(project, TabKey.tabTitlePRsManage, OnboardingId.PR_TAB))
                 .horizontalAlign(RIGHT)
-            cell(menuOpenButton)
-                .horizontalAlign(RIGHT)
         }
     }
     override val content: JComponent = BorderLayoutPanel().apply {
@@ -85,23 +81,16 @@ class PullRequestWindow(private val project: Project) : ToolWindowTab {
 
     init {
         peekArea.text = ""
-
-        menuOpenButton.isEnabled = false
-        menuOpenButton.addMouseListener(object : MouseListener {
-            override fun mouseClicked(e: MouseEvent) {
+        prTable.addClickListener { e, _: PullRequestWrapper? ->
+            if(SwingUtilities.isRightMouseButton(e)) {
                 val pullRequestActionsMenu = PullRequestActionsMenu(
                     project = project,
-                    focusComponent = menuOpenButton,
+                    focusComponent = prTable,
                     prProvider = { prTable.selectedValuesList }
                 )
-                pullRequestActionsMenu.show(menuOpenButton, e.x, e.y)
+                pullRequestActionsMenu.show(prTable, e.x, e.y)
             }
-
-            override fun mousePressed(e: MouseEvent?) = Unit
-            override fun mouseReleased(e: MouseEvent?) = Unit
-            override fun mouseEntered(e: MouseEvent?) = Unit
-            override fun mouseExited(e: MouseEvent?) = Unit
-        })
+        }
 
         filterField.minimumSize = Dimension(200, 30)
         filterField.document.addDocumentListener(object : DocumentListener {
@@ -119,13 +108,11 @@ class PullRequestWindow(private val project: Project) : ToolWindowTab {
         })
 
         prTable.addListSelectionListener {
-            menuOpenButton.isEnabled = false
             val selected: List<PullRequestWrapper> = prTable.selectedValuesList
             if (selected.isNotEmpty()) {
                 if (selected.size == 1) {
                     peekArea.text = SerializationHolder.objectMapper.writeValueAsString(selected.first())
                 }
-                menuOpenButton.isEnabled = true
             } else {
                 peekArea.text = ""
             }
@@ -148,7 +135,7 @@ class PullRequestWindow(private val project: Project) : ToolWindowTab {
         onboardingOperator.registerTarget(OnboardingId.PR_LIST_FILTER_FIELD, filterField)
         onboardingOperator.registerTarget(OnboardingId.PR_FETCH_AUTHOR_PR_BUTTON, fetchPRsButton)
         onboardingOperator.registerTarget(OnboardingId.PR_CODE_HOST_SELECT, codeHostSelect)
-        onboardingOperator.registerTarget(OnboardingId.PR_ACTIONS_BUTTON, menuOpenButton)
+        onboardingOperator.registerTarget(OnboardingId.PR_ACTIONS, prTable)
         onboardingOperator.registerTarget(OnboardingId.PR_ACTIONS_RESULT_AREA, split)
     }
 

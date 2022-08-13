@@ -10,6 +10,7 @@
 ### Improvement
 - Prefill stuff in the pull request load popup
 - Password prompt updates status of password without refresh
+- Use right-click context menu to interact with tables rather than a truck-load of buttons everywhere
 
 ### Fix
 - Table select events only trigger once now

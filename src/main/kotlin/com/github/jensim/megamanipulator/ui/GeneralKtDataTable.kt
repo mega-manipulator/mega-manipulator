@@ -31,7 +31,7 @@ class GeneralKtDataTable<T : Any>(
     private val logger = LoggerFactory.getLogger(javaClass)
     private val myModel = GeneralTableModel<T>(type, columns)
     private val selectListeners = mutableListOf<() -> Unit>()
-    private val clickListeners = mutableListOf<(MouseEvent, T) -> Unit>()
+    private val clickListeners = mutableListOf<(MouseEvent, T?) -> Unit>()
     private val myRowSorter = TableRowSorter<GeneralTableModel<T>>(myModel)
 
     override fun getModel(): GeneralTableModel<T> {
@@ -73,7 +73,7 @@ class GeneralKtDataTable<T : Any>(
             override fun mouseClicked(e: MouseEvent?) {
                 if (clickListeners.isEmpty()) return
                 e?.let { mouseEvent ->
-                    mouseEvent.toItem()?.let { item ->
+                    mouseEvent.toItem().let { item ->
                             clickListeners.forEach { listener -> listener(mouseEvent, item) }
                     }
                 }
@@ -122,7 +122,7 @@ class GeneralKtDataTable<T : Any>(
         return c
     }
 
-    fun addClickListener(listener: (MouseEvent, T) -> Unit) {
+    fun addClickListener(listener: (MouseEvent, T?) -> Unit) {
         clickListeners.add(listener)
     }
 
