@@ -7,12 +7,12 @@ import com.github.jensim.megamanipulator.ui.CloneDialogFactory
 import com.github.jensim.megamanipulator.ui.ClosePRDialogFactory
 import com.github.jensim.megamanipulator.ui.DialogGenerator
 import com.github.jensim.megamanipulator.ui.EditPullRequestDialog
+import com.github.jensim.megamanipulator.ui.TableMenu
+import com.github.jensim.megamanipulator.ui.TableMenu.MenuItem
 import com.github.jensim.megamanipulator.ui.UiProtector
 import com.intellij.notification.NotificationType
 import com.intellij.openapi.components.service
 import com.intellij.openapi.project.Project
-import com.intellij.openapi.ui.JBMenuItem
-import com.intellij.openapi.ui.JBPopupMenu
 import com.intellij.openapi.ui.popup.Balloon
 import com.intellij.ui.components.JBTextArea
 import org.slf4j.LoggerFactory
@@ -23,8 +23,7 @@ import javax.swing.JComponent
 class PullRequestActionsMenu(
     project: Project,
     private val focusComponent: JComponent,
-    private val prProvider: () -> List<PullRequestWrapper>,
-) : JBPopupMenu() {
+) {
 
     private val prRouter: PrRouter by lazy { project.service() }
     private val notificationsOperator: NotificationsOperator by lazy { project.service() }
@@ -33,16 +32,16 @@ class PullRequestActionsMenu(
     private val cloneDialogFactory: CloneDialogFactory by lazy { project.service() }
     private val dialogGenerator: DialogGenerator by lazy { project.service() }
 
-    private val log = LoggerFactory.getLogger(javaClass)
+    private val logger = LoggerFactory.getLogger(javaClass)
 
-    init {
-        val declineMenuItem = JBMenuItem("Decline PRs").apply {
-            addActionListener { _ ->
+    val menu = TableMenu<List<PullRequestWrapper>>(focusComponent,
+        menus = listOf(
+            MenuItem({ "Decline PRs (${it.size})" },filter = {it.isNotEmpty()}) { prs ->
                 ClosePRDialogFactory.openCommitDialog(relativeComponent = focusComponent) { removeBranches, removeStaleForks ->
                     uiProtector.mapConcurrentWithProgress(
                         title = "Declining prs",
                         extraText2 = { "${it.codeHostName()}/${it.project()}/${it.baseRepo()} ${it.fromBranch()}" },
-                        data = prProvider(),
+                        data = prs,
                     ) { pullRequest: PullRequestWrapper ->
                         prRouter.closePr(
                             dropFork = removeStaleForks,
@@ -51,16 +50,12 @@ class PullRequestActionsMenu(
                         )
                     }
                 }
-            }
-        }
-        val alterMenuItem = JBMenuItem("Reword PRs").apply {
-            addActionListener {
-                val prs = prProvider()
+            },
+
+            MenuItem({ "Reword PRs (${it.size})" }, filter = { it.isNotEmpty() }) { prs ->
                 if (prs.isEmpty()) {
                     notificationsOperator.show(
-                        "No PRs selected",
-                        "Please select at least one PR to use this",
-                        NotificationType.WARNING
+                        "No PRs selected", "Please select at least one PR to use this", NotificationType.WARNING
                     )
                 } else {
                     EditPullRequestDialog(
@@ -68,55 +63,41 @@ class PullRequestActionsMenu(
                         project = project,
                     ).show(focusComponent) { title, description ->
 
-                        prFeedback(
-                            "rewordPRs",
-                            uiProtector.mapConcurrentWithProgress(
-                                title = "Reword PRs",
-                                extraText1 = "Setting new title and body for Pull requests",
-                                extraText2 = { "${it.codeHostName()}/${it.project()}/${it.baseRepo()} ${it.fromBranch()}" },
-                                data = prs,
-                            ) { pr ->
-                                prRouter.updatePr(title, description, pr)
-                            }
-                        )
+                        prFeedback("rewordPRs", uiProtector.mapConcurrentWithProgress(
+                            title = "Reword PRs",
+                            extraText1 = "Setting new title and body for Pull requests",
+                            extraText2 = { "${it.codeHostName()}/${it.project()}/${it.baseRepo()} ${it.fromBranch()}" },
+                            data = prs,
+                        ) { pr ->
+                            prRouter.updatePr(title, description, pr)
+                        })
                     }
                 }
-            }
-        }
-        val defaultReviewersMenuItem = JBMenuItem("Add default reviewers").apply {
-            addActionListener { _ ->
+            },
+            MenuItem({ "Add default reviewers (${it.size})" },filter = {it.isNotEmpty()}) { prs ->
                 dialogGenerator.showConfirm(
                     title = "Add default reviewers",
                     message = "Add default reviewers",
                     focusComponent = focusComponent,
                 ) {
-                    prFeedback(
-                        "setDefaultReviewers",
-                        uiProtector.mapConcurrentWithProgress(
-                            title = "Add default reviewers",
-                            extraText2 = { "${it.codeHostName()}/${it.project()}/${it.baseRepo()} ${it.fromBranch()}" },
-                            data = prProvider(),
-                        ) { pr ->
-                            prRouter.addDefaultReviewers(pr)
-                        }
-                    )
+                    prFeedback("setDefaultReviewers", uiProtector.mapConcurrentWithProgress(
+                        title = "Add default reviewers",
+                        extraText2 = { "${it.codeHostName()}/${it.project()}/${it.baseRepo()} ${it.fromBranch()}" },
+                        data = prs,
+                    ) { pr ->
+                        prRouter.addDefaultReviewers(pr)
+                    })
                 }
-            }
-        }
-        val cloneMenuItem = JBMenuItem("Clone PRs").apply {
-            addActionListener {
-                val prs = prProvider()
+            },
+            MenuItem({ "Clone PRs (${it.size})" },filter = {it.isNotEmpty()}) { prs ->
                 cloneDialogFactory.showCloneFromPrDialog(focusComponent) { sparseDef ->
                     uiProtector.uiProtectedOperation("Clone from PRs") {
                         cloneOperator.clone(prs, sparseDef = sparseDef)
                     }
                 }
-            }
-        }
-        val openInBrowserMenuItem = JBMenuItem("Open in browser").apply {
-            addActionListener {
+            },
+            MenuItem({ "Open in browser (${it.size})" }, filter = { isBrowsingAllowed() && it.isNotEmpty() }) { prs ->
                 val failed = mutableMapOf<PullRequestWrapper, String>()
-                val prs = prProvider()
                 prs.forEach { prWrapper ->
                     val browseUrl = prWrapper.browseUrl()
                     if (browseUrl == null) {
@@ -130,111 +111,73 @@ class PullRequestActionsMenu(
                     }
                 }
                 if (failed.isNotEmpty()) {
-                    val failMsg = failed.map { (k, v) -> "${k.project()}/${k.baseRepo()} ${k.title().take(10)} :: $v" }
-                        .joinToString("\n")
+                    val failMsg = failed.map { (k, v) -> "${k.project()}/${k.baseRepo()} ${k.title().take(10)} :: $v" }.joinToString("\n")
                     notificationsOperator.show(
-                        title = "Failed opening ${failed.size}/${prs.size} pull requests",
-                        body = failMsg,
-                        type = NotificationType.ERROR
+                        title = "Failed opening ${failed.size}/${prs.size} pull requests", body = failMsg, type = NotificationType.ERROR
                     )
                 }
-            }
-        }
 
-        val commentMenuItem = JBMenuItem("Add comment").apply {
-            addActionListener {
-                val prs = prProvider()
+            },
+            MenuItem({ "Add comment (${it.size})" }, filter = { it.isNotEmpty() }) { prs ->
                 if (prs.isNotEmpty()) {
                     dialogGenerator.askForInput(
-                        title = "Comment selected pull requests",
-                        message = "Comment",
-                        field = JBTextArea(8, 80),
-                        focusComponent = focusComponent,
-                        position = Balloon.Position.atLeft,
-                        prefill = PrefillString.COMMENT
+                        title = "Comment selected pull requests", message = "Comment", field = JBTextArea(8, 80), focusComponent = focusComponent, position = Balloon.Position.atLeft, prefill = PrefillString.COMMENT
                     ) { comment ->
                         uiProtector.mapConcurrentWithProgress(
-                            title = "Add comments",
-                            data = prs
+                            title = "Add comments", data = prs
                         ) {
                             prRouter.commentPR(comment, it)
                         }
                     }
                 }
-            }
-        }
-        val approveMenuItem = JBMenuItem("Mark Approved").apply {
-            addActionListener { _ ->
+
+            },
+            MenuItem({ "Mark Approved (${it.size})" }, filter = { it.isNotEmpty() }) { prs ->
                 dialogGenerator.showConfirm(
                     title = "Mark Approved",
                     message = "Mark the selected pull requests as Approved",
                     focusComponent = focusComponent,
                 ) {
-                    prFeedback(
-                        "setStatus(approved)",
-                        uiProtector.mapConcurrentWithProgress(title = "Mark Approved", data = prProvider()) {
-                            prRouter.approvePr(it)
-                        }
-                    )
+                    prFeedback("setStatus(approved)", uiProtector.mapConcurrentWithProgress(title = "Mark Approved", data = prs) {
+                        prRouter.approvePr(it)
+                    })
                 }
-            }
-        }
-        val needsWorkMenuItem = JBMenuItem("Mark Needs work").apply {
-            addActionListener {
+
+            },
+            MenuItem({ "Mark Needs work (${it.size})" }, filter = { it.isNotEmpty() }) { prs ->
                 dialogGenerator.showConfirm(
                     title = "Mark Needs work",
                     message = "Mark the selected pull requests as Needs work",
                     focusComponent = focusComponent,
                 ) {
-                    prFeedback(
-                        "setStatus(needsWork)",
-                        uiProtector.mapConcurrentWithProgress(title = "Mark Needs work", data = prProvider()) {
-                            prRouter.disapprovePr(it)
-                        }
-                    )
+                    prFeedback("setStatus(needsWork)", uiProtector.mapConcurrentWithProgress(title = "Mark Needs work", data = prs) {
+                        prRouter.disapprovePr(it)
+                    })
                 }
-            }
-        }
-        val mergeMenuItem = JBMenuItem("Merge").apply {
-            addActionListener {
+
+            },
+            MenuItem({ "Merge (${it.size})" }, filter = { it.isNotEmpty() }) { prs ->
                 dialogGenerator.showConfirm(
                     title = "Merge",
                     message = "Merge the selected pull requests",
                     focusComponent = focusComponent,
                 ) {
-                    prFeedback(
-                        "merge",
-                        uiProtector.mapConcurrentWithProgress(title = "Merge", data = prProvider()) {
-                            prRouter.mergePr(it)
-                        }
-                    )
+                    prFeedback("merge", uiProtector.mapConcurrentWithProgress(title = "Merge", data = prs) {
+                        prRouter.mergePr(it)
+                    })
                 }
-            }
-        }
-
-        add(declineMenuItem)
-        add(alterMenuItem)
-        add(defaultReviewersMenuItem)
-        add(cloneMenuItem)
-        if (isBrowsingAllowed()) {
-            add(openInBrowserMenuItem)
-        }
-        add(commentMenuItem)
-        add(approveMenuItem)
-        add(needsWorkMenuItem)
-        add(mergeMenuItem)
-    }
+            },
+            )
+    )
 
     private fun prFeedback(action: String, list: List<Pair<PullRequestWrapper, PrActionStatus?>>) {
         val failed = list.filter { it.second?.success != true }.map {
             it.first.asPathString() to (it.second?.msg ?: "<NO_INFO>")
         }
         if (failed.isNotEmpty()) {
-            log.error("${failed.size}/${list.size} failed. ${failed.joinToString()}")
+            logger.error("${failed.size}/${list.size} failed. ${failed.joinToString()}")
             notificationsOperator.show(
-                title = "${failed.size}/${list.size} $action failed",
-                body = "Check log for more info",
-                type = NotificationType.WARNING
+                title = "${failed.size}/${list.size} $action failed", body = "Check log for more info", type = NotificationType.WARNING
             )
         }
     }

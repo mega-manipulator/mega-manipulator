@@ -54,6 +54,10 @@ class PullRequestWindow(private val project: Project) : ToolWindowTab {
             "Author" to { it.author() ?: "?" },
         )
     )
+    private val pullRequestActionsMenu = PullRequestActionsMenu(
+        project = project,
+        focusComponent = prTable,
+    )
     private val prScroll = JBScrollPane(prTable)
     private val peekArea = JBTextArea()
     private val peekScroll = JBScrollPane(peekArea)
@@ -83,12 +87,7 @@ class PullRequestWindow(private val project: Project) : ToolWindowTab {
         peekArea.text = ""
         prTable.addClickListener { e, _: PullRequestWrapper? ->
             if(SwingUtilities.isRightMouseButton(e)) {
-                val pullRequestActionsMenu = PullRequestActionsMenu(
-                    project = project,
-                    focusComponent = prTable,
-                    prProvider = { prTable.selectedValuesList }
-                )
-                pullRequestActionsMenu.show(prTable, e.x, e.y)
+                pullRequestActionsMenu.menu.show(e, prTable.selectedValuesList)
             }
         }
 
