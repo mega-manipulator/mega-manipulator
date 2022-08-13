@@ -14,6 +14,8 @@ import com.github.jensim.megamanipulator.settings.types.searchhost.SearchHostSet
 import com.github.jensim.megamanipulator.toolswindow.ToolWindowTab
 import com.github.jensim.megamanipulator.ui.DialogGenerator
 import com.github.jensim.megamanipulator.ui.GeneralKtDataTable
+import com.github.jensim.megamanipulator.ui.TableMenu
+import com.github.jensim.megamanipulator.ui.TableMenu.MenuItem
 import com.github.jensim.megamanipulator.ui.UiProtector
 import com.intellij.icons.AllIcons
 import com.intellij.openapi.components.service
@@ -21,17 +23,20 @@ import com.intellij.openapi.fileEditor.FileEditorManager
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.openapi.vfs.VirtualFileManager
-import com.intellij.ui.components.JBLabel
 import com.intellij.ui.components.JBScrollPane
 import com.intellij.ui.dsl.builder.panel
+import com.intellij.ui.dsl.gridLayout.HorizontalAlign
 import com.intellij.util.ui.components.BorderLayoutPanel
 import com.jetbrains.rd.util.firstOrNull
 import kotlinx.coroutines.Deferred
 import org.slf4j.LoggerFactory
 import java.io.File
+import javax.swing.BoxLayout
 import javax.swing.JButton
 import javax.swing.JComponent
+import javax.swing.JPanel
 import javax.swing.ListSelectionModel
+import javax.swing.SwingUtilities
 
 @SuppressWarnings("LongParameterList")
 class SettingsWindow(project: Project) : ToolWindowTab {
@@ -88,42 +93,37 @@ class SettingsWindow(project: Project) : ToolWindowTab {
     ) {
         it.validationResult != null
     }
-    private val confButtonsPanel = panel {
-        row {
-            scrollCell(
-                com.intellij.ui.dsl.builder.panel {
-                    row {
-                        cell(openConfigButton)
-                    }
-                    row {
-                        cell(validateConfigButton)
-                    }
-                    row {
-                        cell(validateTokensButton)
-                    }
-                    row {
-                        cell(toggleClonesButton)
-                    }
-                    row {
-                        cell(docsButton)
-                    }
-                    row {
-                        cell(resetOnboardingButton)
-                    }
-                    row {
-                        cell(resetPrefillButton)
-                    }
-                }
-            )
-        }
-    }
+    private val tableMenu = TableMenu<ConfigHostHolder>(
+        hostConfigSelect,
+        listOf(
+            MenuItem({ "Set/Unset password" }) { setPassword(it) }
+        )
+    )
+    private val buttonsPanel = JPanel()
 
     override val content: JComponent = BorderLayoutPanel()
-        .addToTop(BorderLayoutPanel().addToCenter(JBLabel("Set/unset passwords by selecting a config node in the table")))
-        .addToLeft(confButtonsPanel)
+        .addToTop(
+            panel {
+                row {
+                    label("<html>Set/unset passwords by <u>right-clicking</u> a config node in the table</html>")
+                        .horizontalAlign(HorizontalAlign.CENTER)
+                }
+            }
+        )
+        .addToLeft(JBScrollPane(buttonsPanel))
         .addToCenter(JBScrollPane(hostConfigSelect))
 
     init {
+        buttonsPanel.apply {
+            layout = BoxLayout(buttonsPanel, BoxLayout.Y_AXIS)
+            add(openConfigButton)
+            add(validateConfigButton)
+            add(validateTokensButton)
+            add(toggleClonesButton)
+            add(docsButton)
+            add(resetOnboardingButton)
+            add(resetPrefillButton)
+        }
         hostConfigSelect.setListData(
             listOf(
                 ConfigHostHolder(
@@ -137,9 +137,11 @@ class SettingsWindow(project: Project) : ToolWindowTab {
                 )
             )
         )
-        hostConfigSelect.addClickListener { conf ->
-            if (conf.hostType != HostType.ERROR) {
-                setPassword(conf)
+        hostConfigSelect.addClickListener { mouseEvent, conf ->
+            if (SwingUtilities.isRightMouseButton(mouseEvent)) {
+                if (conf.hostType != HostType.ERROR) {
+                    tableMenu.show(mouseEvent, listOf(conf))
+                }
             }
         }
         validateConfigButton.toolTipText = """

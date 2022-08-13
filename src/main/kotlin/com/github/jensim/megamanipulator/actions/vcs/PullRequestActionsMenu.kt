@@ -11,20 +11,20 @@ import com.github.jensim.megamanipulator.ui.UiProtector
 import com.intellij.notification.NotificationType
 import com.intellij.openapi.components.service
 import com.intellij.openapi.project.Project
+import com.intellij.openapi.ui.JBMenuItem
+import com.intellij.openapi.ui.JBPopupMenu
 import com.intellij.openapi.ui.popup.Balloon
 import com.intellij.ui.components.JBTextArea
 import org.slf4j.LoggerFactory
 import java.awt.Desktop
 import javax.swing.JComponent
-import javax.swing.JMenuItem
-import javax.swing.JPopupMenu
 
 @SuppressWarnings("LongParameterList", "ConstructorParameterNaming")
 class PullRequestActionsMenu(
     project: Project,
     private val focusComponent: JComponent,
     private val prProvider: () -> List<PullRequestWrapper>,
-) : JPopupMenu() {
+) : JBPopupMenu() {
 
     private val prRouter: PrRouter by lazy { project.service() }
     private val notificationsOperator: NotificationsOperator by lazy { project.service() }
@@ -36,7 +36,7 @@ class PullRequestActionsMenu(
     private val log = LoggerFactory.getLogger(javaClass)
 
     init {
-        val declineMenuItem = JMenuItem("Decline PRs").apply {
+        val declineMenuItem = JBMenuItem("Decline PRs").apply {
             addActionListener { _ ->
                 ClosePRDialogFactory.openCommitDialog(relativeComponent = focusComponent) { removeBranches, removeStaleForks ->
                     uiProtector.mapConcurrentWithProgress(
@@ -53,7 +53,7 @@ class PullRequestActionsMenu(
                 }
             }
         }
-        val alterMenuItem = JMenuItem("Reword PRs").apply {
+        val alterMenuItem = JBMenuItem("Reword PRs").apply {
             addActionListener {
                 val prs = prProvider()
                 if (prs.isEmpty()) {
@@ -83,7 +83,7 @@ class PullRequestActionsMenu(
                 }
             }
         }
-        val defaultReviewersMenuItem = JMenuItem("Add default reviewers").apply {
+        val defaultReviewersMenuItem = JBMenuItem("Add default reviewers").apply {
             addActionListener { _ ->
                 dialogGenerator.showConfirm(
                     title = "Add default reviewers",
@@ -103,7 +103,7 @@ class PullRequestActionsMenu(
                 }
             }
         }
-        val cloneMenuItem = JMenuItem("Clone PRs").apply {
+        val cloneMenuItem = JBMenuItem("Clone PRs").apply {
             addActionListener {
                 val prs = prProvider()
                 cloneDialogFactory.showCloneFromPrDialog(focusComponent) { sparseDef ->
@@ -113,7 +113,7 @@ class PullRequestActionsMenu(
                 }
             }
         }
-        val openInBrowserMenuItem = JMenuItem("Open in browser").apply {
+        val openInBrowserMenuItem = JBMenuItem("Open in browser").apply {
             addActionListener {
                 val failed = mutableMapOf<PullRequestWrapper, String>()
                 val prs = prProvider()
@@ -141,7 +141,7 @@ class PullRequestActionsMenu(
             }
         }
 
-        val commentMenuItem = JMenuItem("Add comment").apply {
+        val commentMenuItem = JBMenuItem("Add comment").apply {
             addActionListener {
                 val prs = prProvider()
                 if (prs.isNotEmpty()) {
@@ -163,7 +163,7 @@ class PullRequestActionsMenu(
                 }
             }
         }
-        val approveMenuItem = JMenuItem("Mark Approved").apply {
+        val approveMenuItem = JBMenuItem("Mark Approved").apply {
             addActionListener { _ ->
                 dialogGenerator.showConfirm(
                     title = "Mark Approved",
@@ -179,7 +179,7 @@ class PullRequestActionsMenu(
                 }
             }
         }
-        val needsWorkMenuItem = JMenuItem("Mark Needs work").apply {
+        val needsWorkMenuItem = JBMenuItem("Mark Needs work").apply {
             addActionListener {
                 dialogGenerator.showConfirm(
                     title = "Mark Needs work",
@@ -195,7 +195,7 @@ class PullRequestActionsMenu(
                 }
             }
         }
-        val mergeMenuItem = JMenuItem("Merge").apply {
+        val mergeMenuItem = JBMenuItem("Merge").apply {
             addActionListener {
                 dialogGenerator.showConfirm(
                     title = "Merge",

@@ -31,7 +31,7 @@ class GeneralKtDataTable<T : Any>(
     private val logger = LoggerFactory.getLogger(javaClass)
     private val myModel = GeneralTableModel<T>(type, columns)
     private val selectListeners = mutableListOf<() -> Unit>()
-    private val clickListeners = mutableListOf<(T) -> Unit>()
+    private val clickListeners = mutableListOf<(MouseEvent, T) -> Unit>()
     private val myRowSorter = TableRowSorter<GeneralTableModel<T>>(myModel)
 
     override fun getModel(): GeneralTableModel<T> {
@@ -72,14 +72,9 @@ class GeneralKtDataTable<T : Any>(
         addMouseListener(object : MouseListener {
             override fun mouseClicked(e: MouseEvent?) {
                 if (clickListeners.isEmpty()) return
-                if (e?.point == null) return
-                val row = rowAtPoint(e.point)
-                if (row < 0) return
-                val col = columnAtPoint(e.point)
-                if (col < 0) return
-                if (items.size > row) {
-                    items[row].let { item ->
-                        clickListeners.forEach { listener -> listener(item) }
+                e?.let { mouseEvent ->
+                    mouseEvent.toItem()?.let { item ->
+                            clickListeners.forEach { listener -> listener(mouseEvent, item) }
                     }
                 }
             }
@@ -88,6 +83,19 @@ class GeneralKtDataTable<T : Any>(
             override fun mouseEntered(e: MouseEvent?) = Unit
             override fun mouseExited(e: MouseEvent?) = Unit
         })
+    }
+
+    private fun MouseEvent?.toItem(): T? {
+        if (this == null) return null
+        val row = rowAtPoint(point)
+        if (row < 0) return null
+        val col = columnAtPoint(point)
+        if (col < 0) return null
+        return if (items.size > row) {
+            items[row]
+        } else {
+            null
+        }
     }
 
     private val selectedProblemColor = Color.RED
@@ -114,7 +122,7 @@ class GeneralKtDataTable<T : Any>(
         return c
     }
 
-    fun addClickListener(listener: (T) -> Unit) {
+    fun addClickListener(listener: (MouseEvent, T) -> Unit) {
         clickListeners.add(listener)
     }
 
@@ -166,6 +174,10 @@ class GeneralKtDataTable<T : Any>(
 
         var items: List<T> = emptyList()
 
+        override fun isCellEditable(row: Int, column: Int): Boolean {
+            return false
+        }
+
         override fun getRowCount(): Int = items?.size ?: 0 // Throws NullPointers during initiation 🤔
         override fun getColumnCount(): Int = columns.size
 
@@ -176,4 +188,9 @@ class GeneralKtDataTable<T : Any>(
             null
         }
     }
+
+    data class TableMenu<T>(
+        val header: String,
+        val action: (T) -> Unit,
+    )
 }
