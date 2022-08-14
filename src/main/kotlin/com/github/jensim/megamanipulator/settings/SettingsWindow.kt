@@ -270,7 +270,7 @@ class SettingsWindow(project: Project) : ToolWindowTab {
     private fun setPassword(conf: ConfigHostHolder) {
         passwordsOperator.promptForPassword(focusComponent = hostConfigSelect, authMethod = conf.authMethod, username = conf.username, baseUrl = conf.baseUrl) {
             hostConfigSelect.items.forEach { otherConf ->
-                if(otherConf !== conf && otherConf.validationResult == passwordNotSetString){
+                if (otherConf !== conf && otherConf.validationResult == passwordNotSetString) {
                     otherConf.validationResult = initialValidationText(otherConf)
                 }
             }

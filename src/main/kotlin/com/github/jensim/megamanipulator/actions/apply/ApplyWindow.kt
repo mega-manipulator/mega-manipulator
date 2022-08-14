@@ -44,19 +44,22 @@ class ApplyWindow(private val project: Project) : ToolWindowTab {
         selectionMode = ListSelectionModel.SINGLE_SELECTION,
         columns = listOf("Attempt" to { it.time.toString() }),
     ) { it.result.isEmpty() || it.result.any { it.exitCode != 0 } }
-    private val attemptMenu = TableMenu<List<File>>(attemptList, listOf(
-        MenuItem(header = { "Retry failed (${it.size})" }, isEnabled = {it.isNotEmpty()}) {
-            dialogGenerator.showConfirm(
-                title = "Rerun failed (${it.size})?",
-                message = "Rerun failed in selected attempt?",
-                focusComponent = attemptList
-            ) {
-                preApply()
-                val results = applyOperator.apply(it)
-                postApply(results)
+    private val attemptMenu = TableMenu<List<File>>(
+        attemptList,
+        listOf(
+            MenuItem(header = { "Retry failed (${it.size})" }, isEnabled = { it.isNotEmpty() }) {
+                dialogGenerator.showConfirm(
+                    title = "Rerun failed (${it.size})?",
+                    message = "Rerun failed in selected attempt?",
+                    focusComponent = attemptList
+                ) {
+                    preApply()
+                    val results = applyOperator.apply(it)
+                    postApply(results)
+                }
             }
-        }
-    ))
+        )
+    )
     private val resultList = GeneralKtDataTable(
         type = ApplyOutput::class,
         selectionMode = ListSelectionModel.MULTIPLE_INTERVAL_SELECTION,
@@ -64,19 +67,22 @@ class ApplyWindow(private val project: Project) : ToolWindowTab {
             "Repo" to { it.dir },
         )
     ) { it.exitCode != 0 }
-    private val resultMenu = TableMenu<List<File>>(resultList, listOf(
-        MenuItem(header = { "Rerun selected (${it.size})" }, isEnabled = {it.isNotEmpty()}) { selected ->
-            dialogGenerator.showConfirm(
-                title = "Rerun selected (${selected.size})?",
-                message = "Rerun script for selected repos?",
-                focusComponent = resultList
-            ) {
-                preApply()
-                val results = applyOperator.apply(selected)
-                postApply(results)
+    private val resultMenu = TableMenu<List<File>>(
+        resultList,
+        listOf(
+            MenuItem(header = { "Rerun selected (${it.size})" }, isEnabled = { it.isNotEmpty() }) { selected ->
+                dialogGenerator.showConfirm(
+                    title = "Rerun selected (${selected.size})?",
+                    message = "Rerun script for selected repos?",
+                    focusComponent = resultList
+                ) {
+                    preApply()
+                    val results = applyOperator.apply(selected)
+                    postApply(results)
+                }
             }
-        }
-    ))
+        )
+    )
 
     private val scrollableResult = JBScrollPane(resultList)
     private val details = JBTextArea()
@@ -162,8 +168,8 @@ class ApplyWindow(private val project: Project) : ToolWindowTab {
                     details.text = ""
                 }
             }
-            addClickListener { mouseEvent, _:ApplyOutput? ->
-                if(SwingUtilities.isRightMouseButton(mouseEvent)){
+            addClickListener { mouseEvent, _: ApplyOutput? ->
+                if (SwingUtilities.isRightMouseButton(mouseEvent)) {
                     val selected = resultList.selectedValuesList
                         .map { File(project.basePath, it.dir) }
                     resultMenu.show(mouseEvent, selected)

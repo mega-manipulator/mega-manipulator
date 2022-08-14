@@ -61,10 +61,10 @@ class CommitOperator @NonInjectable constructor(
         val codeHostSettings: CodeHostSettings = settings.resolveSettings(dir)!!.second
         if (localRepoOperator.hasFork(dir) || codeHostSettings.forkSetting == ForkSetting.PLAIN_BRANCH) {
             localRepoOperator.push(dir, force)
-                .also { output -> log += StepResult("push", output )}
+                .also { output -> log += StepResult("push", output) }
         } else if (codeHostSettings.forkSetting == ForkSetting.LAZY_FORK) {
             val pushResult = localRepoOperator.push(dir, force)
-                .also { output -> log += StepResult("push", output )}
+                .also { output -> log += StepResult("push", output) }
             if (pushResult.exitCode != 0) {
                 log += forkAndPush(dir, force)
             }

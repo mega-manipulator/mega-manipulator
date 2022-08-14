@@ -74,7 +74,7 @@ class GeneralKtDataTable<T : Any>(
                 if (clickListeners.isEmpty()) return
                 e?.let { mouseEvent ->
                     mouseEvent.toItem().let { item ->
-                            clickListeners.forEach { listener -> listener(mouseEvent, item) }
+                        clickListeners.forEach { listener -> listener(mouseEvent, item) }
                     }
                 }
             }

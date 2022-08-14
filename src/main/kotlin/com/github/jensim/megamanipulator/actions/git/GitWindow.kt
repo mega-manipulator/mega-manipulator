@@ -62,13 +62,18 @@ class GitWindow(private val project: Project) : ToolWindowTab {
     private val commitDialogFactory: CommitDialogFactory by lazy { project.service() }
     private val pushDialogFactory: PushDialogFactory by lazy { project.service() }
 
-    private val repoList = GeneralKtDataTable(type = DirResult::class, columns = listOf(
-        "Repo" to { it.dir }
-    ), selectionMode = ListSelectionModel.MULTIPLE_INTERVAL_SELECTION) {
+    private val repoList = GeneralKtDataTable(
+        type = DirResult::class,
+        columns = listOf(
+            "Repo" to { it.dir }
+        ),
+        selectionMode = ListSelectionModel.MULTIPLE_INTERVAL_SELECTION
+    ) {
         it.steps.any { it.result.exitCode != 0 }
     }
     private val repoMenu = TableMenu<List<DirResult>?>(
-        repoList, listOf(
+        repoList,
+        listOf(
             MenuItem("List branches") {
                 if (it == null) {
                     refresh()
@@ -100,7 +105,7 @@ class GitWindow(private val project: Project) : ToolWindowTab {
                     }
                 }
             },
-            MenuItem({ "Commit & Push (${it?.size ?: 0})" }, isEnabled = {!it.isNullOrEmpty()}) {
+            MenuItem({ "Commit & Push (${it?.size ?: 0})" }, isEnabled = { !it.isNullOrEmpty() }) {
                 val dirs = it?.map { File(project.basePath, it.dir) } ?: return@MenuItem
                 commitDialogFactory.openCommitDialog(
                     focusComponent = repoList,
@@ -140,7 +145,7 @@ class GitWindow(private val project: Project) : ToolWindowTab {
                     repoList.setListData(result.toList())
                 }
             },
-            MenuItem({ "Create PRs (${it?.size ?: 0})" }, isEnabled = {!it.isNullOrEmpty()}) {
+            MenuItem({ "Create PRs (${it?.size ?: 0})" }, isEnabled = { !it.isNullOrEmpty() }) {
                 val dirs = it?.map { File(project.basePath, it.dir) } ?: return@MenuItem
                 CreatePullRequestDialog(
                     project = project

@@ -14,7 +14,6 @@ import com.github.jensim.megamanipulator.ui.TableMenu
 import com.github.jensim.megamanipulator.ui.TableMenu.MenuItem
 import com.github.jensim.megamanipulator.ui.UiProtector
 import com.intellij.notification.NotificationType.ERROR
-import com.intellij.notification.NotificationType.WARNING
 import com.intellij.openapi.components.service
 import com.intellij.openapi.project.Project
 import com.intellij.ui.JBSplitter
@@ -37,8 +36,6 @@ class CloneHistoryWindow(val project: Project) : ToolWindowTab {
     private val notificationsOperator: NotificationsOperator by lazy { project.service() }
     private val dialogGenerator: DialogGenerator by lazy { project.service() }
 
-    // private val retrySelectedButton = JButton("Retry selected")
-    // private val retryFailedButton = JButton("Retry failed")
     private val attemptSelector = GeneralKtDataTable(
         type = CloneAttempt::class,
         columns = listOf("Time" to { it.time.toString() }),
@@ -46,15 +43,23 @@ class CloneHistoryWindow(val project: Project) : ToolWindowTab {
         minSize = Dimension(500, 200),
         selectionMode = ListSelectionModel.SINGLE_SELECTION,
     )
-    private val attemptMenu = TableMenu<CloneAttempt>(attemptSelector, listOf(
-        MenuItem(
-            header = { if ( it.results.any { !it.success }) "Retry failed" else "Nothing to retry" },
-            isEnabled = {  it.results.any { !it.success }}) {
-            dialogGenerator.showConfirm("Retry?", "Retry failed clones (${it.results.count { !it.success }}/${it.results.size})?", attemptSelector) {
-                retryClone( it.results.filter { !it.success })
+    private val attemptMenu = TableMenu<CloneAttempt?>(
+        attemptSelector,
+        listOf(
+            MenuItem(
+                header = { if (it?.results?.any { !it.success } == true) "Retry failed" else "Nothing to retry" },
+                isEnabled = { it?.results?.any { !it.success } == true }
+            ) {
+                dialogGenerator.showConfirm(
+                    title = "Retry?",
+                    message = "Retry failed clones (${it?.results?.count { !it.success } ?: 0}/${it?.results?.size ?: 0})?",
+                    focusComponent = attemptSelector
+                ) {
+                    retryClone(it?.results?.filter { !it.success }.orEmpty())
+                }
             }
-        }
-    ))
+        )
+    )
     private val resultSelector = GeneralKtDataTable(
         type = CloneAttemptResult::class,
         columns = listOf("Repo" to { it.repo.asPathString() }),
@@ -62,13 +67,19 @@ class CloneHistoryWindow(val project: Project) : ToolWindowTab {
         minSize = Dimension(300, 200),
         selectionMode = ListSelectionModel.MULTIPLE_INTERVAL_SELECTION,
     )
-    private val resultMenu = TableMenu<List<CloneAttemptResult>>(resultSelector, listOf(
-        MenuItem({ if(it.isEmpty()) "Nothing selected" else "Retry" }, isEnabled = {true}) {
-            dialogGenerator.showConfirm("Retry?", "Retry the selected repos (${it.size})?", resultSelector) {
-                retryClone(it)
+    private val resultMenu = TableMenu<List<CloneAttemptResult>>(
+        resultSelector,
+        listOf(
+            MenuItem(
+                header = { if (it.isEmpty()) "Nothing selected" else "Retry" },
+                isEnabled = { it.isNotEmpty() }
+            ) {
+                dialogGenerator.showConfirm("Retry?", "Retry the selected repos (${it.size})?", resultSelector) {
+                    retryClone(it)
+                }
             }
-        }
-    ))
+        )
+    )
     private val actionSelector = GeneralKtDataTable(
         type = Action::class,
         columns = listOf("Action" to { it.what }),
@@ -110,11 +121,7 @@ class CloneHistoryWindow(val project: Project) : ToolWindowTab {
             this.addClickListener { mouseEvent, _ ->
                 if (SwingUtilities.isRightMouseButton(mouseEvent)) {
                     val selected = attemptSelector.selectedValuesList.firstOrNull()
-                    if (selected?.results.isNullOrEmpty()) {
-                        notificationsOperator.show("No attempt selected", "Unable to clone, please select one attempt", WARNING)
-                    } else {
-                        attemptMenu.show(mouseEvent, selected!!)
-                    }
+                    attemptMenu.show(mouseEvent, selected)
                 }
             }
         }
@@ -130,11 +137,7 @@ class CloneHistoryWindow(val project: Project) : ToolWindowTab {
             this.addClickListener { mouseEvent, _ ->
                 if (SwingUtilities.isRightMouseButton(mouseEvent)) {
                     val selected = resultSelector.selectedValuesList
-                    if (selected.isEmpty()) {
-                        notificationsOperator.show("No results selected", "Unable to clone, please select at least one result", WARNING)
-                    } else {
-                        resultMenu.show(mouseEvent, selected)
-                    }
+                    resultMenu.show(mouseEvent, selected)
                 }
             }
         }

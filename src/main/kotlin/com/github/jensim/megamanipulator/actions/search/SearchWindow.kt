@@ -18,6 +18,8 @@ import com.github.jensim.megamanipulator.ui.CloneDialogFactory
 import com.github.jensim.megamanipulator.ui.GeneralKtDataTable
 import com.github.jensim.megamanipulator.ui.GeneralListCellRenderer.addCellRenderer
 import com.github.jensim.megamanipulator.ui.PrefillHistoryButton
+import com.github.jensim.megamanipulator.ui.TableMenu
+import com.github.jensim.megamanipulator.ui.TableMenu.MenuItem
 import com.github.jensim.megamanipulator.ui.UiProtector
 import com.intellij.icons.AllIcons
 import com.intellij.openapi.components.service
@@ -33,6 +35,7 @@ import java.awt.Dimension
 import java.awt.event.KeyEvent
 import java.awt.event.KeyListener
 import javax.swing.JButton
+import javax.swing.SwingUtilities
 
 class SearchWindow(
     private val project: Project
@@ -64,6 +67,14 @@ class SearchWindow(
             "Project" to { it.project },
             "Repo" to { it.repo },
         ),
+    )
+    private val tableMenu = TableMenu<Set<SearchResult>>(
+        table,
+        listOf(
+            MenuItem(header = { "Clone selected (${it.size})" }, isEnabled = { it.isNotEmpty() }) {
+                cloneSelected(it)
+            }
+        )
     )
     private val scroll = JBScrollPane(table).apply {
         preferredSize = Dimension(10_000, 1000)
@@ -101,8 +112,15 @@ class SearchWindow(
         }
         searchHostLink.preferredSize = Dimension(30, 30)
         cloneButton.isEnabled = false
-        table.addListSelectionListener {
-            cloneButton.isEnabled = table.selectedValuesList.isNotEmpty()
+        table.apply {
+            addListSelectionListener {
+                cloneButton.isEnabled = table.selectedValuesList.isNotEmpty()
+            }
+            addClickListener { mouseEvent, _ ->
+                if (SwingUtilities.isRightMouseButton(mouseEvent)) {
+                    tableMenu.show(mouseEvent, table.selectedValuesList.toSet())
+                }
+            }
         }
         searchField.addKeyListener(object : KeyListener {
             override fun keyTyped(e: KeyEvent?) {
@@ -118,14 +136,17 @@ class SearchWindow(
             search()
         }
         cloneButton.addActionListener {
-            val selected = table.selectedValuesList.toSet()
-            if (selected.isNotEmpty()) {
-                cloneDialogFactory.showCloneDialog(cloneButton) { branch: String, shallow: Boolean, sparseDef: String? ->
-                    cloneOperator.clone(repos = selected, branchName = branch, shallow = shallow, sparseDef = sparseDef)
-                    tabSelectorService.selectTab(tabTitleCloneHistory)
-                    table.clearSelection()
-                    prefillOperator.addPrefill(PrefillString.BRANCH, branch)
-                }
+            cloneSelected(table.selectedValuesList.toSet())
+        }
+    }
+
+    private fun cloneSelected(selected: Set<SearchResult>) {
+        if (selected.isNotEmpty()) {
+            cloneDialogFactory.showCloneDialog(cloneButton) { branch: String, shallow: Boolean, sparseDef: String? ->
+                cloneOperator.clone(repos = selected, branchName = branch, shallow = shallow, sparseDef = sparseDef)
+                tabSelectorService.selectTab(tabTitleCloneHistory)
+                table.clearSelection()
+                prefillOperator.addPrefill(PrefillString.BRANCH, branch)
             }
         }
     }

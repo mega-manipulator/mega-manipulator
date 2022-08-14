@@ -34,9 +34,10 @@ class PullRequestActionsMenu(
 
     private val logger = LoggerFactory.getLogger(javaClass)
 
-    val menu = TableMenu<List<PullRequestWrapper>>(focusComponent,
+    val menu = TableMenu<List<PullRequestWrapper>>(
+        focusComponent,
         menus = listOf(
-            MenuItem({ "Decline PRs (${it.size})" },isEnabled = {it.isNotEmpty()}) { prs ->
+            MenuItem({ "Decline PRs (${it.size})" }, isEnabled = { it.isNotEmpty() }) { prs ->
                 ClosePRDialogFactory.openCommitDialog(relativeComponent = focusComponent) { removeBranches, removeStaleForks ->
                     uiProtector.mapConcurrentWithProgress(
                         title = "Declining prs",
@@ -63,33 +64,39 @@ class PullRequestActionsMenu(
                         project = project,
                     ).show(focusComponent) { title, description ->
 
-                        prFeedback("rewordPRs", uiProtector.mapConcurrentWithProgress(
-                            title = "Reword PRs",
-                            extraText1 = "Setting new title and body for Pull requests",
-                            extraText2 = { "${it.codeHostName()}/${it.project()}/${it.baseRepo()} ${it.fromBranch()}" },
-                            data = prs,
-                        ) { pr ->
-                            prRouter.updatePr(title, description, pr)
-                        })
+                        prFeedback(
+                            "rewordPRs",
+                            uiProtector.mapConcurrentWithProgress(
+                                title = "Reword PRs",
+                                extraText1 = "Setting new title and body for Pull requests",
+                                extraText2 = { "${it.codeHostName()}/${it.project()}/${it.baseRepo()} ${it.fromBranch()}" },
+                                data = prs,
+                            ) { pr ->
+                                prRouter.updatePr(title, description, pr)
+                            }
+                        )
                     }
                 }
             },
-            MenuItem({ "Add default reviewers (${it.size})" },isEnabled = {it.isNotEmpty()}) { prs ->
+            MenuItem({ "Add default reviewers (${it.size})" }, isEnabled = { it.isNotEmpty() }) { prs ->
                 dialogGenerator.showConfirm(
                     title = "Add default reviewers",
                     message = "Add default reviewers",
                     focusComponent = focusComponent,
                 ) {
-                    prFeedback("setDefaultReviewers", uiProtector.mapConcurrentWithProgress(
-                        title = "Add default reviewers",
-                        extraText2 = { "${it.codeHostName()}/${it.project()}/${it.baseRepo()} ${it.fromBranch()}" },
-                        data = prs,
-                    ) { pr ->
-                        prRouter.addDefaultReviewers(pr)
-                    })
+                    prFeedback(
+                        "setDefaultReviewers",
+                        uiProtector.mapConcurrentWithProgress(
+                            title = "Add default reviewers",
+                            extraText2 = { "${it.codeHostName()}/${it.project()}/${it.baseRepo()} ${it.fromBranch()}" },
+                            data = prs,
+                        ) { pr ->
+                            prRouter.addDefaultReviewers(pr)
+                        }
+                    )
                 }
             },
-            MenuItem({ "Clone PRs (${it.size})" },isEnabled = {it.isNotEmpty()}) { prs ->
+            MenuItem({ "Clone PRs (${it.size})" }, isEnabled = { it.isNotEmpty() }) { prs ->
                 cloneDialogFactory.showCloneFromPrDialog(focusComponent) { sparseDef ->
                     uiProtector.uiProtectedOperation("Clone from PRs") {
                         cloneOperator.clone(prs, sparseDef = sparseDef)
@@ -116,7 +123,6 @@ class PullRequestActionsMenu(
                         title = "Failed opening ${failed.size}/${prs.size} pull requests", body = failMsg, type = NotificationType.ERROR
                     )
                 }
-
             },
             MenuItem({ "Add comment (${it.size})" }, isEnabled = { it.isNotEmpty() }) { prs ->
                 if (prs.isNotEmpty()) {
@@ -130,7 +136,6 @@ class PullRequestActionsMenu(
                         }
                     }
                 }
-
             },
             MenuItem({ "Mark Approved (${it.size})" }, isEnabled = { it.isNotEmpty() }) { prs ->
                 dialogGenerator.showConfirm(
@@ -138,11 +143,13 @@ class PullRequestActionsMenu(
                     message = "Mark the selected pull requests as Approved",
                     focusComponent = focusComponent,
                 ) {
-                    prFeedback("setStatus(approved)", uiProtector.mapConcurrentWithProgress(title = "Mark Approved", data = prs) {
-                        prRouter.approvePr(it)
-                    })
+                    prFeedback(
+                        "setStatus(approved)",
+                        uiProtector.mapConcurrentWithProgress(title = "Mark Approved", data = prs) {
+                            prRouter.approvePr(it)
+                        }
+                    )
                 }
-
             },
             MenuItem({ "Mark Needs work (${it.size})" }, isEnabled = { it.isNotEmpty() }) { prs ->
                 dialogGenerator.showConfirm(
@@ -150,11 +157,13 @@ class PullRequestActionsMenu(
                     message = "Mark the selected pull requests as Needs work",
                     focusComponent = focusComponent,
                 ) {
-                    prFeedback("setStatus(needsWork)", uiProtector.mapConcurrentWithProgress(title = "Mark Needs work", data = prs) {
-                        prRouter.disapprovePr(it)
-                    })
+                    prFeedback(
+                        "setStatus(needsWork)",
+                        uiProtector.mapConcurrentWithProgress(title = "Mark Needs work", data = prs) {
+                            prRouter.disapprovePr(it)
+                        }
+                    )
                 }
-
             },
             MenuItem({ "Merge (${it.size})" }, isEnabled = { it.isNotEmpty() }) { prs ->
                 dialogGenerator.showConfirm(
@@ -162,12 +171,15 @@ class PullRequestActionsMenu(
                     message = "Merge the selected pull requests",
                     focusComponent = focusComponent,
                 ) {
-                    prFeedback("merge", uiProtector.mapConcurrentWithProgress(title = "Merge", data = prs) {
-                        prRouter.mergePr(it)
-                    })
+                    prFeedback(
+                        "merge",
+                        uiProtector.mapConcurrentWithProgress(title = "Merge", data = prs) {
+                            prRouter.mergePr(it)
+                        }
+                    )
                 }
             },
-            )
+        )
     )
 
     private fun prFeedback(action: String, list: List<Pair<PullRequestWrapper, PrActionStatus?>>) {

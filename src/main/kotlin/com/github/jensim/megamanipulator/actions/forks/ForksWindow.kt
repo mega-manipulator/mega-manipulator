@@ -12,6 +12,8 @@ import com.github.jensim.megamanipulator.toolswindow.ToolWindowTab
 import com.github.jensim.megamanipulator.ui.CodeHostSelector
 import com.github.jensim.megamanipulator.ui.DialogGenerator
 import com.github.jensim.megamanipulator.ui.GeneralKtDataTable
+import com.github.jensim.megamanipulator.ui.TableMenu
+import com.github.jensim.megamanipulator.ui.TableMenu.MenuItem
 import com.github.jensim.megamanipulator.ui.UiProtector
 import com.intellij.icons.AllIcons
 import com.intellij.notification.NotificationType
@@ -23,6 +25,7 @@ import com.intellij.ui.dsl.gridLayout.HorizontalAlign.RIGHT
 import com.intellij.util.ui.components.BorderLayoutPanel
 import javax.swing.JButton
 import javax.swing.JComponent
+import javax.swing.SwingUtilities
 
 class ForksWindow(project: Project) : ToolWindowTab {
 
@@ -41,6 +44,17 @@ class ForksWindow(project: Project) : ToolWindowTab {
             "BaseProject" to { it.getForkOriginProject() ?: "?" },
             "Project" to { it.getProject() },
             "Repo" to { it.getRepo() },
+        )
+    )
+    private val contextMenu = TableMenu<List<RepoWrapper>>(
+        staleForkTable,
+        menus = listOf(
+            MenuItem("Load forks without OPEN PRs") {
+                load()
+            },
+            MenuItem({ "Delete selected forks (${it.size})" }, { it.isNotEmpty() }) { _ ->
+                deleteSelected()
+            },
         )
     )
     private val scroll = JBScrollPane(staleForkTable)
@@ -65,23 +79,7 @@ class ForksWindow(project: Project) : ToolWindowTab {
         deleteButton.isEnabled = false
         deleteButton.apply {
             addActionListener {
-                dialogGenerator.showConfirm(
-                    title = "Delete selected forks?",
-                    message = """
-                    Are you sure?
-                    Really, really, sure?
-                    """.trimIndent(),
-                    focusComponent = deleteButton
-                ) {
-                    uiProtector.mapConcurrentWithProgress(
-                        title = "Delete forks",
-                        extraText2 = { it.asPathString() },
-                        data = staleForkTable.selectedValuesList,
-                    ) { fork ->
-                        prRouter.deletePrivateRepo(fork)
-                    }
-                    load()
-                }
+                deleteSelected()
             }
         }
         loadStaleForksButton.addActionListener {
@@ -93,6 +91,31 @@ class ForksWindow(project: Project) : ToolWindowTab {
         }
         val hasSelection = codeHostSelect.selectedItem != null
         loadStaleForksButton.isEnabled = hasSelection
+        staleForkTable.addClickListener { mouseEvent, _ ->
+            if (SwingUtilities.isRightMouseButton(mouseEvent)) {
+                contextMenu.show(mouseEvent, staleForkTable.selectedValuesList)
+            }
+        }
+    }
+
+    private fun deleteSelected() {
+        dialogGenerator.showConfirm(
+            title = "Delete selected forks?",
+            message = """
+            Are you sure?
+            Really, really, sure?
+            """.trimIndent(),
+            focusComponent = deleteButton
+        ) {
+            uiProtector.mapConcurrentWithProgress(
+                title = "Delete forks",
+                extraText2 = { it.asPathString() },
+                data = staleForkTable.selectedValuesList,
+            ) { fork ->
+                prRouter.deletePrivateRepo(fork)
+            }
+            load()
+        }
     }
 
     private fun load() {

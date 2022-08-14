@@ -219,7 +219,8 @@ class LocalRepoOperatorTest {
             listOf(
                 File(tempDir, "clones/projectGit1/depth1/depth2/depth3"),
                 File(tempDir, "clones/projectGit2/depth1/depth2/depth3"),
-            ), "test"
+            ),
+            "test"
         )
         val response = processOperator.runCommandAsync(
             File(tempDir, "clones/projectGit1/depth1/depth2/depth3"),

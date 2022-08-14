@@ -86,7 +86,7 @@ class PullRequestWindow(private val project: Project) : ToolWindowTab {
     init {
         peekArea.text = ""
         prTable.addClickListener { e, _: PullRequestWrapper? ->
-            if(SwingUtilities.isRightMouseButton(e)) {
+            if (SwingUtilities.isRightMouseButton(e)) {
                 pullRequestActionsMenu.menu.show(e, prTable.selectedValuesList)
             }
         }
