@@ -3,6 +3,8 @@
 # mega-manipulator Changelog
 
 ## [Unreleased]
+
+## [0.0.54]
 ### Added
 - Configurable http concurrency for GitHub Code host to tackle slow loading of PRs and also the over-concurrent http requests for fetching forks
 - Fetch pull requests from a specific project or repo (GitHub & GitLab)
