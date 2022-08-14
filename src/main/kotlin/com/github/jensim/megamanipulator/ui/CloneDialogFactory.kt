@@ -68,6 +68,7 @@ class CloneDialogFactory(
                 popup.hide()
             }
             popup.show(location, Balloon.Position.above)
+            popup.setDefaultButton(ui.panel, ui.cloneButton)
         } catch (e: Exception) {
             e.printStackTrace()
         }

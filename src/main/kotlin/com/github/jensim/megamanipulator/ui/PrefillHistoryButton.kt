@@ -30,7 +30,7 @@ class PrefillHistoryButton(
         addMouseListener(object : MouseListener {
             override fun mouseClicked(e: MouseEvent?) {
                 try {
-                    val prefills: List<String> = prefillStringSuggestionOperator.getPrefills(prefillString).reversed()
+                    val prefills: List<String> = prefillStringSuggestionOperator.getPrefills(prefillString)
 
                     val popupFactory: JBPopupFactory = JBPopupFactory.getInstance()
                     val step = MyStep(prefills, action)

@@ -3,6 +3,17 @@
 # mega-manipulator Changelog
 
 ## [Unreleased]
+### Added
+- Configurable http concurrency for GitHub Code host to tackle slow loading of PRs and also the over-concurrent http requests for fetching forks
+- Fetch pull requests from a specific project or repo (GitHub & GitLab)
+
+### Improvement
+- Prefill stuff in the pull request load popup
+- Password prompt updates status of password without refresh
+- Use right-click context menu to interact with tables rather than a truck-load of buttons everywhere
+
+### Fix
+- Table select events only trigger once now
 
 ## [0.0.53]
 ### Improvement

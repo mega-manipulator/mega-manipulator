@@ -130,6 +130,11 @@ class MegaManipulatorTabContentCreator(
         } catch (e: Exception) {
             logger.error("Was unable to open the Mega Manipulator tab", e)
         }
+        try {
+            tabs.find { it.first == TabKey.tabTitleSettings }?.second?.refresh()
+        } catch (e: Exception) {
+            logger.warn("Was unable to refresh the settings page")
+        }
     }
 
     override fun tabSelectionRequested(tabKey: TabKey) {

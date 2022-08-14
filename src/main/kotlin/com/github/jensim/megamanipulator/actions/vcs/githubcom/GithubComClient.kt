@@ -8,6 +8,7 @@ import com.github.jensim.megamanipulator.actions.vcs.GithubComRepoWrapping
 import com.github.jensim.megamanipulator.actions.vcs.PrActionStatus
 import com.github.jensim.megamanipulator.http.HttpClientProvider
 import com.github.jensim.megamanipulator.http.unwrap
+import com.github.jensim.megamanipulator.project.CoroutinesHolder
 import com.github.jensim.megamanipulator.project.lazyService
 import com.github.jensim.megamanipulator.settings.SerializationHolder.objectMapper
 import com.github.jensim.megamanipulator.settings.types.CloneType
@@ -26,6 +27,7 @@ import io.ktor.client.statement.HttpResponse
 import io.ktor.client.statement.bodyAsText
 import io.ktor.http.ContentType
 import io.ktor.http.contentType
+import kotlinx.coroutines.CoroutineStart.LAZY
 import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -40,6 +42,7 @@ import kotlinx.coroutines.withContext
 import org.slf4j.LoggerFactory
 import java.util.concurrent.atomic.AtomicInteger
 import kotlin.coroutines.CoroutineContext
+import kotlin.math.min
 
 @SuppressWarnings("TooManyFunctions", "ReturnCount")
 class GithubComClient @NonInjectable constructor(
@@ -156,33 +159,47 @@ class GithubComClient @NonInjectable constructor(
         limit: Int,
         state: String?,
         role: String?,
+        project: String?,
+        repo: String?,
     ): List<GithubComPullRequestWrapper> {
+        // https://docs.github.com/en/search-github/searching-on-github/searching-issues-and-pull-requests
         val role: String = role?.let { "+$role%3A${settings.username}" } ?: ""
         val state: String = state?.let { "+state%3A$state" } ?: ""
+
+        val repoOwner: String = if (project != null && repo != null) { "+repo%3A$project/$repo" } else if (project == null && repo == null) { "" } else if (project != null) { "+user%3A$project" } else { throw IllegalArgumentException("Project cannot be undefined if repo is defined") }
+
         val client: HttpClient = httpClientProvider.getClient(searchHost, codeHost, settings)
         val seq: Flow<GithubComIssue> = flow {
             var page = 1
             var found = 0L
+            val perPage = min(100, limit)
             while (true) {
-                val result: GithubComSearchResult<GithubComIssue> = client.get("${settings.baseUrl}/search/issues?per_page=100&page=${page++}&q=type%3Apr${state}$role").unwrap()
+                val result: GithubComSearchResult<GithubComIssue> = client.get("${settings.baseUrl}/search/issues?per_page=$perPage&page=${page++}&q=type%3Apr${state}$role$repoOwner").unwrap()
                 result.items.forEach { emit(it) }
                 if (result.items.isEmpty()) break
                 found += result.total_count
                 if (found > limit) break
             }
         }
-        return seq.toList().toList()
+
+        return seq.toList()
             .mapNotNull { it.pull_request?.url }
-            .map {
-                val response: HttpResponse = client.get(it)
-                val prString = response.bodyAsText()
-                val pr: GithubComPullRequest = objectMapper.readValue(prString)
-                GithubComPullRequestWrapper(
-                    searchHost = searchHost,
-                    codeHost = codeHost,
-                    pullRequest = pr,
-                    raw = prString,
-                )
+            .chunked(settings.httpConcurrency ?: 1)
+            .flatMap { chunk ->
+                val futures = chunk.map {
+                    CoroutinesHolder.scope.async {
+                        val response: HttpResponse = client.get(it)
+                        val prString = response.bodyAsText()
+                        val pr: GithubComPullRequest = objectMapper.readValue(prString)
+                        GithubComPullRequestWrapper(
+                            searchHost = searchHost,
+                            codeHost = codeHost,
+                            pullRequest = pr,
+                            raw = prString,
+                        )
+                    }
+                }
+                futures.awaitAll()
             }
     }
 
@@ -234,14 +251,21 @@ class GithubComClient @NonInjectable constructor(
             while (true) {
                 val response: HttpResponse = client.get("${settings.baseUrl}/users/${settings.username}/repos?page=${pageCount.getAndIncrement()}")
                 val page: List<GithubComRepo> = response.unwrap()
-                val asyncList: List<Deferred<GithubComRepo>> = page.filter { it.fork }
-                    .map {
-                        async {
-                            val response: HttpResponse = client.get("${settings.baseUrl}/repos/${settings.username}/${it.name}")
-                            response.unwrap()
+                val asyncList: Sequence<List<Deferred<GithubComRepo>>> = page.asSequence()
+                    .filter { it.fork }
+                    .chunked(settings.httpConcurrency ?: 1)
+                    .map { chunk: List<GithubComRepo> ->
+                        chunk.map {
+                            CoroutinesHolder.scope.async(start = LAZY) {
+                                client.get("${settings.baseUrl}/repos/${settings.username}/${it.name}").unwrap()
+                            }
                         }
                     }
-                asyncList.awaitAll().forEach { emit(it) }
+                asyncList.forEach { chunk ->
+                    chunk.awaitAll().forEach { repo ->
+                        emit(repo)
+                    }
+                }
                 if (page.isEmpty()) break
             }
         }

@@ -4,6 +4,7 @@ import com.fasterxml.jackson.core.type.TypeReference
 import com.github.jensim.megamanipulator.actions.NotificationsOperator
 import com.github.jensim.megamanipulator.project.lazyService
 import com.github.jensim.megamanipulator.settings.SerializationHolder.objectMapper
+import com.github.jensim.megamanipulator.settings.types.AuthMethod
 import com.github.jensim.megamanipulator.ui.PasswordDialogFactory
 import com.intellij.credentialStore.CredentialAttributes
 import com.intellij.credentialStore.Credentials
@@ -12,6 +13,7 @@ import com.intellij.notification.NotificationType
 import com.intellij.openapi.project.Project
 import com.intellij.remoteServer.util.CloudConfigurationUtil.createCredentialAttributes
 import com.intellij.serviceContainer.NonInjectable
+import org.slf4j.LoggerFactory
 import java.util.concurrent.ConcurrentHashMap
 import javax.annotation.concurrent.NotThreadSafe
 import javax.swing.JComponent
@@ -29,6 +31,7 @@ class IntelliJPasswordsOperator @NonInjectable constructor(
 
     constructor(project: Project) : this(project, null)
 
+    private val logger = LoggerFactory.getLogger(javaClass)
     private val notificationsOperator: NotificationsOperator by lazyService(project, notificationsOperator)
 
     private val serviceUsername: String by lazy { System.getProperty("user.name") ?: service }
@@ -37,11 +40,20 @@ class IntelliJPasswordsOperator @NonInjectable constructor(
     private fun usernameToKey(username: String, baseUrl: String) = "${username}___$baseUrl"
 
     @SuppressWarnings(value = ["ComplexCondition"])
-    override fun promptForPassword(focusComponent: JComponent, username: String, baseUrl: String) {
+    override fun promptForPassword(focusComponent: JComponent, authMethod: AuthMethod, username: String, baseUrl: String, callback: () -> Unit) {
 
-        PasswordDialogFactory.askForPassword(focusComponent, username, baseUrl) { password ->
+        PasswordDialogFactory.askForPassword(focusComponent, authMethod, username, baseUrl) { password ->
             if (password.isNotBlank()) {
                 setPassword(username, password, baseUrl)
+            } else {
+                deletePassword(username, baseUrl)
+            }
+            try {
+                callback()
+            } catch (e: Exception) {
+                val msg = "Something went wrong in the callback after setting password"
+                logger.error(msg, e)
+                notificationsOperator.show(msg, "See IDE logs for more details", NotificationType.ERROR)
             }
         }
     }
@@ -51,18 +63,8 @@ class IntelliJPasswordsOperator @NonInjectable constructor(
             passwordSetMap.computeIfAbsent(userKey) { getPassword(username, baseUrl) != null }
         }
 
-    fun deletePasswords(username: String, baseUrl: String) {
-        val unambiguousUsername = "${serviceUsername}___${username}___$baseUrl"
-        val credentialAttributes: CredentialAttributes? = createCredentialAttributes(service, unambiguousUsername)
-        if (credentialAttributes == null) {
-            notificationsOperator.show(
-                title = "Failed deleting password",
-                body = "Could not create CredentialAttributes",
-                type = NotificationType.WARNING
-            )
-        } else {
-            PasswordSafe.instance.set(credentialAttributes, null)
-        }
+    private fun deletePassword(username: String, baseUrl: String) {
+        setPassword(username, null, baseUrl)
     }
 
     override fun getPassword(username: String, baseUrl: String): String? {
@@ -86,11 +88,11 @@ class IntelliJPasswordsOperator @NonInjectable constructor(
         }
     }
 
-    private fun setPassword(username: String, password: String, baseUrl: String) {
+    private fun setPassword(username: String, password: String?, baseUrl: String) {
         setPassword(usernameToKey(username, baseUrl), password)
     }
 
-    private fun setPassword(usernameKey: String, password: String) {
+    private fun setPassword(usernameKey: String, password: String?) {
         val credentialAttributes: CredentialAttributes? = createCredentialAttributes(service, serviceUsername)
         if (credentialAttributes == null) {
             notificationsOperator.show(

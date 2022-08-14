@@ -2,6 +2,7 @@ package com.github.jensim.megamanipulator.actions.git.commit
 
 import com.github.jensim.megamanipulator.actions.ProcessOperator
 import com.github.jensim.megamanipulator.actions.apply.ApplyOutput
+import com.github.jensim.megamanipulator.actions.apply.StepResult
 import com.github.jensim.megamanipulator.actions.git.GitUrlHelper
 import com.github.jensim.megamanipulator.actions.git.localrepo.LocalRepoOperator
 import com.github.jensim.megamanipulator.actions.search.SearchResult
@@ -34,19 +35,19 @@ class CommitOperator @NonInjectable constructor(
     private val gitUrlHelper: GitUrlHelper by lazyService(project = project, gitUrlHelper)
 
     suspend fun commitProcess(
-        it: File,
-        result: ConcurrentHashMap<String, MutableList<Pair<String, ApplyOutput>>>,
+        repoDir: File,
+        result: ConcurrentHashMap<String, MutableList<StepResult>>,
         commitMessage: String,
         push: Boolean,
         force: Boolean,
         settings: MegaManipulatorSettings,
     ) {
-        processOperator.runCommandAsync(it, listOf("git", "add", "--all")).await()
-        val log = result.computeIfAbsent(it.path) { ArrayList() }
-        val commit = processOperator.runCommandAsync(it, listOf("git", "commit", "-m", commitMessage)).await()
-            .also { output -> log += "commit" to output }
+        processOperator.runCommandAsync(repoDir, listOf("git", "add", "--all")).await()
+        val log = result.computeIfAbsent(repoDir.path) { ArrayList() }
+        val commit = processOperator.runCommandAsync(repoDir, listOf("git", "commit", "-m", commitMessage)).await()
+            .also { output -> log += StepResult("commit", output) }
         if (push && commit.exitCode == 0) {
-            log += push(settings, it, force)
+            log += push(settings, repoDir, force)
         }
     }
 
@@ -55,15 +56,15 @@ class CommitOperator @NonInjectable constructor(
         dir: File,
         force: Boolean,
 
-    ): List<Pair<String, ApplyOutput>> {
-        val log = mutableListOf<Pair<String, ApplyOutput>>()
+    ): List<StepResult> {
+        val log = mutableListOf<StepResult>()
         val codeHostSettings: CodeHostSettings = settings.resolveSettings(dir)!!.second
         if (localRepoOperator.hasFork(dir) || codeHostSettings.forkSetting == ForkSetting.PLAIN_BRANCH) {
             localRepoOperator.push(dir, force)
-                .also { output -> log += "push" to output }
+                .also { output -> log += StepResult("push", output) }
         } else if (codeHostSettings.forkSetting == ForkSetting.LAZY_FORK) {
             val pushResult = localRepoOperator.push(dir, force)
-                .also { output -> log += "push" to output }
+                .also { output -> log += StepResult("push", output) }
             if (pushResult.exitCode != 0) {
                 log += forkAndPush(dir, force)
             }
@@ -73,24 +74,24 @@ class CommitOperator @NonInjectable constructor(
         return log
     }
 
-    private suspend fun forkAndPush(dir: File, force: Boolean): List<Pair<String, ApplyOutput>> {
-        val log = mutableListOf<Pair<String, ApplyOutput>>()
+    private suspend fun forkAndPush(dir: File, force: Boolean): List<StepResult> {
+        val log = mutableListOf<StepResult>()
         val repo = SearchResult.fromPath(dir)
         val cloneUrl = prRouter.createFork(repo)
         if (cloneUrl != null) {
-            log += "fork" to ApplyOutput.dummy(dir = dir.path, std = "Created or found fork", exitCode = 0)
+            log += StepResult("fork", ApplyOutput.dummy(dir = dir.path, std = "Created or found fork", exitCode = 0))
             val settings = settingsFileOperator.readSettings()?.resolveSettings(dir)?.second
             if (settings == null) {
-                log += "settings" to ApplyOutput.dummy(std = "No settings for ${repo.asPathString()}")
+                log += StepResult("settings", ApplyOutput.dummy(std = "No settings for ${repo.asPathString()}"))
             } else {
                 val actualGitUrl = gitUrlHelper.buildCloneUrl(settings, cloneUrl)
-                val fork = localRepoOperator.addForkRemote(dir, actualGitUrl).also { output -> log += "fork" to output }
+                val fork = localRepoOperator.addForkRemote(dir, actualGitUrl).also { output -> log += StepResult("fork", output) }
                 if (fork.exitCode == 0) {
-                    localRepoOperator.push(dir, force).also { output -> log += "push" to output }
+                    localRepoOperator.push(dir, force).also { output -> log += StepResult("push", output) }
                 }
             }
         } else {
-            log += "fork" to ApplyOutput.dummy(dir = dir.path, std = "Failed creating or finding fork", exitCode = 1)
+            log += StepResult("fork", ApplyOutput.dummy(dir = dir.path, std = "Failed creating or finding fork", exitCode = 1))
         }
         return log
     }

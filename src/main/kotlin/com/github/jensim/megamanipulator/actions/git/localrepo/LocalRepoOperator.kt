@@ -42,7 +42,7 @@ class LocalRepoOperator @NonInjectable constructor(
             .collect(Collectors.toList())
     }
 
-    fun getLocalRepos(): List<SearchResult> = getLocalRepoFiles().map {
+    fun getLocalRepos(files: List<File>? = null): List<SearchResult> = (files ?: getLocalRepoFiles()).map {
         SearchResult(
             repo = it.name,
             project = it.parentFile.name,
@@ -51,8 +51,8 @@ class LocalRepoOperator @NonInjectable constructor(
         )
     }
 
-    fun switchBranch(branch: String) {
-        val localRepoFiles = getLocalRepoFiles()
+    fun switchBranch(repos: List<File>, branch: String) {
+        val localRepoFiles = repos
         uiProtector.mapConcurrentWithProgress(title = "Checkout branch $branch", data = localRepoFiles) { dir ->
             switchBranch(dir, branch)
         }

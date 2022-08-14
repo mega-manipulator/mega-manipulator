@@ -74,7 +74,7 @@ class PrRouter @NonInjectable constructor(
         return when {
             settings is BitBucketSettings && pullRequest is BitBucketPullRequestWrapper -> bitbucketServerClient.addDefaultReviewers(settings, pullRequest)
             settings is GitHubSettings && pullRequest is GithubComPullRequestWrapper -> githubComClient.addDefaultReviewers(settings, pullRequest)
-            settings is GitLabSettings && pullRequest is GitLabMergeRequestListItemWrapper -> gitLabClient.addDefaultReviewers(settings, pullRequest)
+            settings is GitLabSettings && pullRequest is GitLabAuthoredMergeRequestListItemWrapper -> gitLabClient.addDefaultReviewers(settings, pullRequest)
             else -> PrActionStatus(success = false, msg = "Unable to match config correctly")
         }
     }
@@ -107,12 +107,12 @@ class PrRouter @NonInjectable constructor(
         }
     }
 
-    suspend fun getAllPrs(searchHost: String, codeHost: String, limit: Int, role: String?, state: String?): List<PullRequestWrapper>? {
+    suspend fun getAllPrs(searchHost: String, codeHost: String, limit: Int, role: String?, state: String?, project: String?, repo: String?): List<PullRequestWrapper>? {
         return resolve(searchHost, codeHost)?.let {
             when (it) {
-                is BitBucketSettings -> bitbucketServerClient.getAllPrs(searchHostName = searchHost, codeHostName = codeHost, settings = it, state = state, role = role, limit = limit)
-                is GitHubSettings -> githubComClient.getAllPrs(searchHost = searchHost, codeHost = codeHost, settings = it, state = state, role = role, limit = limit)
-                is GitLabSettings -> gitLabClient.getAllPrs(searchHost = searchHost, codeHost = codeHost, settings = it, role = role!!, state = state!!, limit = limit)
+                is BitBucketSettings -> bitbucketServerClient.getAllPrs(searchHostName = searchHost, codeHostName = codeHost, settings = it, state = state, role = role, limit = limit, project = project, repo = repo)
+                is GitHubSettings -> githubComClient.getAllPrs(searchHost = searchHost, codeHost = codeHost, settings = it, state = state, role = role, limit = limit, project = project, repo = repo)
+                is GitLabSettings -> gitLabClient.getAllPrs(searchHost = searchHost, codeHost = codeHost, settings = it, role = role, state = state!!, limit = limit, project = project, repo = repo)
             }
         }
     }

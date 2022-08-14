@@ -28,7 +28,7 @@ enum class CodeHostSettingsType(
     GITLAB(
         prRoleAuthor = "author",
         prRoleAssignee = "assignee",
-        prRoles = setOf("assignee", "author"),
+        prRoles = setOf("assignee", "author", null),
         prStateOpen = OPENED.name,
         prStates = (MergeRequestState.values().toSet() - __UNKNOWN_VALUE).map { it.name }.toSet(),
     );

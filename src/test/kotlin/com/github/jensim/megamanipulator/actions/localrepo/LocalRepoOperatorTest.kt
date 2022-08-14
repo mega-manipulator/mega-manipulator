@@ -215,7 +215,13 @@ class LocalRepoOperatorTest {
     @Test
     fun `switch branch`() = runBlocking {
         createGitProjects()
-        localRepoOperator.switchBranch("test")
+        localRepoOperator.switchBranch(
+            listOf(
+                File(tempDir, "clones/projectGit1/depth1/depth2/depth3"),
+                File(tempDir, "clones/projectGit2/depth1/depth2/depth3"),
+            ),
+            "test"
+        )
         val response = processOperator.runCommandAsync(
             File(tempDir, "clones/projectGit1/depth1/depth2/depth3"),
             listOf("git", "status")

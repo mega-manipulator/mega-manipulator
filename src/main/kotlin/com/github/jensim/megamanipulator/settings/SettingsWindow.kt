@@ -14,6 +14,8 @@ import com.github.jensim.megamanipulator.settings.types.searchhost.SearchHostSet
 import com.github.jensim.megamanipulator.toolswindow.ToolWindowTab
 import com.github.jensim.megamanipulator.ui.DialogGenerator
 import com.github.jensim.megamanipulator.ui.GeneralKtDataTable
+import com.github.jensim.megamanipulator.ui.TableMenu
+import com.github.jensim.megamanipulator.ui.TableMenu.MenuItem
 import com.github.jensim.megamanipulator.ui.UiProtector
 import com.intellij.icons.AllIcons
 import com.intellij.openapi.components.service
@@ -23,14 +25,18 @@ import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.openapi.vfs.VirtualFileManager
 import com.intellij.ui.components.JBScrollPane
 import com.intellij.ui.dsl.builder.panel
+import com.intellij.ui.dsl.gridLayout.HorizontalAlign
 import com.intellij.util.ui.components.BorderLayoutPanel
 import com.jetbrains.rd.util.firstOrNull
 import kotlinx.coroutines.Deferred
 import org.slf4j.LoggerFactory
 import java.io.File
+import javax.swing.BoxLayout
 import javax.swing.JButton
 import javax.swing.JComponent
+import javax.swing.JPanel
 import javax.swing.ListSelectionModel
+import javax.swing.SwingUtilities
 
 @SuppressWarnings("LongParameterList")
 class SettingsWindow(project: Project) : ToolWindowTab {
@@ -57,7 +63,7 @@ class SettingsWindow(project: Project) : ToolWindowTab {
     private data class ConfigHostHolder(
         val hostType: HostType,
         val authMethod: AuthMethod,
-        val baseUri: String,
+        val baseUrl: String,
         val username: String,
         val searchHost: String,
         val codeHost: String? = null,
@@ -87,49 +93,46 @@ class SettingsWindow(project: Project) : ToolWindowTab {
     ) {
         it.validationResult != null
     }
-    private val confButtonsPanel = panel {
-        group("Config") {
-            row {
-                scrollCell(
-                    com.intellij.ui.dsl.builder.panel {
-                        row {
-                            cell(openConfigButton)
-                        }
-                        row {
-                            cell(validateConfigButton)
-                        }
-                        row {
-                            cell(validateTokensButton)
-                        }
-                        row {
-                            cell(toggleClonesButton)
-                        }
-                        row {
-                            cell(docsButton)
-                        }
-                        row {
-                            cell(resetOnboardingButton)
-                        }
-                        row {
-                            cell(resetPrefillButton)
-                        }
-                    }
-                )
-            }
-        }
-    }
+    private val tableMenu = TableMenu<ConfigHostHolder?>(
+        hostConfigSelect,
+        listOf(
+            MenuItem(
+                header = { "Set/Unset password" },
+                isEnabled = { it != null && it.hostType != HostType.ERROR }
+            ) { it?.let { setPassword(it) } }
+        )
+    )
+    private val buttonsPanel = JPanel()
 
     override val content: JComponent = BorderLayoutPanel()
-        .addToLeft(confButtonsPanel)
+        .addToTop(
+            panel {
+                row {
+                    label("<html>Set/unset passwords by <u>right-clicking</u> a config node in the table</html>")
+                        .horizontalAlign(HorizontalAlign.CENTER)
+                }
+            }
+        )
+        .addToLeft(JBScrollPane(buttonsPanel))
         .addToCenter(JBScrollPane(hostConfigSelect))
 
     init {
+        buttonsPanel.apply {
+            layout = BoxLayout(buttonsPanel, BoxLayout.Y_AXIS)
+            add(openConfigButton)
+            add(validateConfigButton)
+            add(validateTokensButton)
+            add(toggleClonesButton)
+            add(docsButton)
+            add(resetOnboardingButton)
+            add(resetPrefillButton)
+        }
         hostConfigSelect.setListData(
             listOf(
                 ConfigHostHolder(
                     hostType = HostType.ERROR,
                     authMethod = AuthMethod.NONE,
-                    baseUri = "?",
+                    baseUrl = "?",
                     username = "?",
                     searchHost = "*",
                     codeHost = "*",
@@ -137,12 +140,9 @@ class SettingsWindow(project: Project) : ToolWindowTab {
                 )
             )
         )
-        hostConfigSelect.addListSelectionListener {
-            hostConfigSelect.selectedValuesList.firstOrNull()?.let { conf: ConfigHostHolder ->
-                if (conf.hostType != HostType.ERROR) {
-                    setPassword(conf)
-                    refresh()
-                }
+        hostConfigSelect.addClickListener { mouseEvent, conf: ConfigHostHolder? ->
+            if (SwingUtilities.isRightMouseButton(mouseEvent)) {
+                tableMenu.show(mouseEvent, conf)
             }
         }
         validateConfigButton.toolTipText = """
@@ -267,8 +267,17 @@ class SettingsWindow(project: Project) : ToolWindowTab {
         }
     }
 
-    private fun setPassword(conf: ConfigHostHolder) =
-        passwordsOperator.promptForPassword(focusComponent = hostConfigSelect, username = conf.username, baseUrl = conf.baseUri)
+    private fun setPassword(conf: ConfigHostHolder) {
+        passwordsOperator.promptForPassword(focusComponent = hostConfigSelect, authMethod = conf.authMethod, username = conf.username, baseUrl = conf.baseUrl) {
+            hostConfigSelect.items.forEach { otherConf ->
+                if (otherConf !== conf && otherConf.validationResult == passwordNotSetString) {
+                    otherConf.validationResult = initialValidationText(otherConf)
+                }
+            }
+            hostConfigSelect.model.fireTableDataChanged()
+            conf.validationResult = initialValidationText(conf)
+        }
+    }
 
     override fun refresh() {
         onboardingOperator.registerTarget(OnboardingId.SETTINGS_TAB, content)
@@ -290,7 +299,7 @@ class SettingsWindow(project: Project) : ToolWindowTab {
                     ConfigHostHolder(
                         hostType = HostType.SEARCH,
                         authMethod = group.value().authMethod,
-                        baseUri = group.value().baseUrl,
+                        baseUrl = group.value().baseUrl,
                         username = group.value().username,
                         searchHost = searchHostName,
                         validationResult = initialValidationText(group.value()),
@@ -300,7 +309,7 @@ class SettingsWindow(project: Project) : ToolWindowTab {
                         ConfigHostHolder(
                             hostType = HostType.CODE,
                             authMethod = codeHostSettingsGroup.value().authMethod,
-                            baseUri = codeHostSettingsGroup.value().baseUrl,
+                            baseUrl = codeHostSettingsGroup.value().baseUrl,
                             username = codeHostSettingsGroup.value().username ?: "token",
                             searchHost = searchHostName,
                             codeHost = codeHostName,
@@ -316,7 +325,7 @@ class SettingsWindow(project: Project) : ToolWindowTab {
                     ConfigHostHolder(
                         hostType = HostType.ERROR,
                         authMethod = AuthMethod.NONE,
-                        baseUri = "error",
+                        baseUrl = "error",
                         username = "error",
                         searchHost = "*",
                         codeHost = "*",
@@ -328,11 +337,14 @@ class SettingsWindow(project: Project) : ToolWindowTab {
         onboardingOperator.display(OnboardingId.WELCOME)
     }
 
-    private fun initialValidationText(hostWithAuth: HostWithAuth?): String = if (hostWithAuth == null) {
+    private val passwordNotSetString = "Password is not set, CLICK HERE to set it"
+    private fun initialValidationText(configHostHolder: ConfigHostHolder): String = initialValidationText(configHostHolder.username, configHostHolder.baseUrl)
+    private fun initialValidationText(hostWithAuth: HostWithAuth?): String = initialValidationText(hostWithAuth?.username, hostWithAuth?.baseUrl)
+    private fun initialValidationText(username: String?, baseUrl: String?): String = if (username == null || baseUrl == null) {
         "Unable to resolve settings"
-    } else if (passwordsOperator.isPasswordSet(hostWithAuth.username, hostWithAuth.baseUrl)) {
+    } else if (passwordsOperator.isPasswordSet(username, baseUrl)) {
         "Click the validate tokens button to validate"
     } else {
-        "Password is not set."
+        passwordNotSetString
     }
 }

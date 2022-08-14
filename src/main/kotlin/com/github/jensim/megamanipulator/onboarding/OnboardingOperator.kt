@@ -3,6 +3,7 @@ package com.github.jensim.megamanipulator.onboarding
 import com.github.jensim.megamanipulator.settings.MegaManipulatorSettingsState
 import com.github.jensim.megamanipulator.toolswindow.TabKey
 import com.github.jensim.megamanipulator.toolswindow.TabSelectorService
+import com.github.jensim.megamanipulator.ui.setDefaultButton
 import com.intellij.openapi.components.service
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.ui.popup.Balloon
@@ -11,6 +12,7 @@ import com.intellij.openapi.wm.WindowManager
 import com.intellij.ui.awt.RelativePoint
 import com.intellij.ui.components.JBLabel
 import com.intellij.ui.dsl.builder.panel
+import org.slf4j.LoggerFactory
 import java.util.EnumMap
 import javax.swing.JButton
 import javax.swing.JComponent
@@ -18,6 +20,7 @@ import javax.swing.JLayeredPane
 
 class OnboardingOperator(private val project: Project) {
 
+    private val logger = LoggerFactory.getLogger(javaClass)
     private val tabSelectorService: TabSelectorService by lazy { project.service() }
     private val state: MegaManipulatorSettingsState by lazy { project.service() }
 
@@ -45,7 +48,7 @@ class OnboardingOperator(private val project: Project) {
         val popupFactory: JBPopupFactory = try {
             JBPopupFactory.getInstance()
         } catch (e: Exception) {
-            e.printStackTrace()
+            logger.error("Could not get the popup factory", e)
             return
         }
 
@@ -65,12 +68,8 @@ class OnboardingOperator(private val project: Project) {
         val balloon = popupFactory.createDialogBalloonBuilder(panel, id.title)
             .createBalloon()
 
-        val pane = getWindowComponent2()
         closeButton.addActionListener {
             balloon.hide(true)
-            pane?.let {
-                it.rootPane.defaultButton = null
-            }
             extraOkAction()
             state.setOnBoardingSeen(id)
             id.next?.let { next ->
@@ -91,19 +90,20 @@ class OnboardingOperator(private val project: Project) {
         if (popupLocation != null) {
             balloon.show(popupLocation, Balloon.Position.above)
         } else {
-            pane?.let {
+            getWindowComponent2()?.let {
                 balloon.showInCenterOf(it)
             }
         }
-        pane?.rootPane?.defaultButton = closeButton
+        balloon.setDefaultButton(panel, closeButton)
         closeButton.requestFocus()
     }
 
     private fun String.convertMultiLineToHtml() = "<html>${replace("\n", "<br>\n")}</html>"
 
     private fun getWindowComponent2(): JLayeredPane? = try {
-        WindowManager.getInstance().getFrame(project)?.layeredPane
+        WindowManager.getInstance()?.getFrame(project)?.layeredPane
     } catch (e: Exception) {
+        logger.warn("Was unable to get the active project frame from the windowManager. The onboarding popup will not appear.")
         null
     }
 }

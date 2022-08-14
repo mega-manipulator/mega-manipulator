@@ -6,6 +6,7 @@ data class GitLabMergeRequest(
     val iid: Long, // ": 1,
     val project_id: Long, // ": 3,
     val title: String, // ": "test1",
+    val author: GitLabAuthor?,
     val description: String, // ": "fixed login page css paddings",
     val state: String, // ": "merged",
     val target_branch: String, // ": "master",
@@ -13,4 +14,9 @@ data class GitLabMergeRequest(
     val source_project_id: Long, // ": 2,
     val target_project_id: Long, // ": 3,
     val web_url: String, // ": "http://gitlab.example.com/my-group/my-project/merge_requests/1",
+)
+
+data class GitLabAuthor(
+    val username: String?,
+    val name: String?,
 )

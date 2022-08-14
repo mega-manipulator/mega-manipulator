@@ -1,5 +1,6 @@
 package com.github.jensim.megamanipulator.actions.vcs
 
+import com.github.jensim.megamanipulator.actions.NotificationsOperator
 import com.github.jensim.megamanipulator.onboarding.OnboardingButton
 import com.github.jensim.megamanipulator.onboarding.OnboardingId
 import com.github.jensim.megamanipulator.onboarding.OnboardingOperator
@@ -11,6 +12,7 @@ import com.github.jensim.megamanipulator.ui.CodeHostSelector
 import com.github.jensim.megamanipulator.ui.GeneralKtDataTable
 import com.github.jensim.megamanipulator.ui.PullRequestLoaderDialogGenerator
 import com.github.jensim.megamanipulator.ui.UiProtector
+import com.intellij.notification.NotificationType.ERROR
 import com.intellij.openapi.components.service
 import com.intellij.openapi.project.Project
 import com.intellij.ui.JBSplitter
@@ -23,21 +25,21 @@ import com.intellij.util.ui.components.BorderLayoutPanel
 import me.xdrop.fuzzywuzzy.FuzzySearch
 import org.slf4j.LoggerFactory
 import java.awt.Dimension
-import java.awt.event.MouseEvent
-import java.awt.event.MouseListener
 import javax.swing.JButton
 import javax.swing.JComponent
+import javax.swing.SwingUtilities
 import javax.swing.event.DocumentEvent
 import javax.swing.event.DocumentListener
 
-class PullRequestWindow(project: Project) : ToolWindowTab {
+class PullRequestWindow(private val project: Project) : ToolWindowTab {
 
     private val prRouter: PrRouter by lazy { project.service() }
     private val uiProtector: UiProtector by lazy { project.service() }
     private val settingsFileOperator: SettingsFileOperator by lazy { project.service() }
     private val onboardingOperator: OnboardingOperator by lazy { project.service() }
+    private val notificationsOperator: NotificationsOperator by lazy { project.service() }
 
-    private val log = LoggerFactory.getLogger(javaClass)
+    private val logger = LoggerFactory.getLogger(javaClass)
 
     private val filterField = JBTextField(50)
     private val pullRequests: MutableList<PullRequestWrapper> = mutableListOf()
@@ -52,10 +54,13 @@ class PullRequestWindow(project: Project) : ToolWindowTab {
             "Author" to { it.author() ?: "?" },
         )
     )
+    private val pullRequestActionsMenu = PullRequestActionsMenu(
+        project = project,
+        focusComponent = prTable,
+    )
     private val prScroll = JBScrollPane(prTable)
     private val peekArea = JBTextArea()
     private val peekScroll = JBScrollPane(peekArea)
-    private val menuOpenButton = JButton("Actions")
     private val fetchPRsButton = JButton("Fetch PRs")
 
     private val split = JBSplitter(false, 0.7f).apply {
@@ -71,8 +76,6 @@ class PullRequestWindow(project: Project) : ToolWindowTab {
             cell(filterField)
             cell(OnboardingButton(project, TabKey.tabTitlePRsManage, OnboardingId.PR_TAB))
                 .horizontalAlign(RIGHT)
-            cell(menuOpenButton)
-                .horizontalAlign(RIGHT)
         }
     }
     override val content: JComponent = BorderLayoutPanel().apply {
@@ -82,23 +85,11 @@ class PullRequestWindow(project: Project) : ToolWindowTab {
 
     init {
         peekArea.text = ""
-
-        menuOpenButton.isEnabled = false
-        menuOpenButton.addMouseListener(object : MouseListener {
-            override fun mouseClicked(e: MouseEvent) {
-                val pullRequestActionsMenu = PullRequestActionsMenu(
-                    project = project,
-                    focusComponent = menuOpenButton,
-                    prProvider = { prTable.selectedValuesList }
-                )
-                pullRequestActionsMenu.show(menuOpenButton, e.x, e.y)
+        prTable.addClickListener { e, _: PullRequestWrapper? ->
+            if (SwingUtilities.isRightMouseButton(e)) {
+                pullRequestActionsMenu.menu.show(e, prTable.selectedValuesList)
             }
-
-            override fun mousePressed(e: MouseEvent?) = Unit
-            override fun mouseReleased(e: MouseEvent?) = Unit
-            override fun mouseEntered(e: MouseEvent?) = Unit
-            override fun mouseExited(e: MouseEvent?) = Unit
-        })
+        }
 
         filterField.minimumSize = Dimension(200, 30)
         filterField.document.addDocumentListener(object : DocumentListener {
@@ -116,13 +107,11 @@ class PullRequestWindow(project: Project) : ToolWindowTab {
         })
 
         prTable.addListSelectionListener {
-            menuOpenButton.isEnabled = false
             val selected: List<PullRequestWrapper> = prTable.selectedValuesList
             if (selected.isNotEmpty()) {
                 if (selected.size == 1) {
                     peekArea.text = SerializationHolder.objectMapper.writeValueAsString(selected.first())
                 }
-                menuOpenButton.isEnabled = true
             } else {
                 peekArea.text = ""
             }
@@ -145,7 +134,7 @@ class PullRequestWindow(project: Project) : ToolWindowTab {
         onboardingOperator.registerTarget(OnboardingId.PR_LIST_FILTER_FIELD, filterField)
         onboardingOperator.registerTarget(OnboardingId.PR_FETCH_AUTHOR_PR_BUTTON, fetchPRsButton)
         onboardingOperator.registerTarget(OnboardingId.PR_CODE_HOST_SELECT, codeHostSelect)
-        onboardingOperator.registerTarget(OnboardingId.PR_ACTIONS_BUTTON, menuOpenButton)
+        onboardingOperator.registerTarget(OnboardingId.PR_ACTIONS, prTable)
         onboardingOperator.registerTarget(OnboardingId.PR_ACTIONS_RESULT_AREA, split)
     }
 
@@ -153,14 +142,21 @@ class PullRequestWindow(project: Project) : ToolWindowTab {
         (codeHostSelect.selectedItem)?.let { selected: CodeHostSelector.CodeHostSelect ->
             settingsFileOperator.readSettings()?.let {
                 it.resolveSettings(selected.searchHostName, selected.codeHostName)?.let { (_, settings) ->
-                    PullRequestLoaderDialogGenerator.generateDialog(
+                    PullRequestLoaderDialogGenerator(project).generateDialog(
                         focus = fetchPRsButton,
                         type = settings.codeHostType,
-                    ) { state: String?, role: String?, limit: Int ->
+                    ) { state: String?, role: String?, limit: Int, project: String?, repo: String? ->
                         prTable.setListData(emptyList())
                         filterField.text = ""
                         val prs: List<PullRequestWrapper>? = uiProtector.uiProtectedOperation("Fetching PRs") {
-                            prRouter.getAllPrs(searchHost = selected.searchHostName, codeHost = selected.codeHostName, role = role, state = state, limit = limit)
+                            try {
+                                prRouter.getAllPrs(searchHost = selected.searchHostName, codeHost = selected.codeHostName, role = role, state = state, limit = limit, project = project, repo = repo)
+                            } catch (e: Exception) {
+                                val msg = "Failed fetching PRs"
+                                logger.error(msg, e)
+                                notificationsOperator.show(msg, "${e.javaClass.simpleName}\n${e.message}\nMore info in IDE logs", ERROR)
+                                null
+                            }
                         }
                         setPrs(prs)
                     }
@@ -170,7 +166,7 @@ class PullRequestWindow(project: Project) : ToolWindowTab {
     }
 
     private fun setPrs(prs: List<PullRequestWrapper>?) {
-        log.info("Setting prs, new count is ${prs?.size}")
+        logger.info("Setting prs, new count is ${prs?.size}")
         pullRequests.clear()
         prs?.let { pullRequests.addAll(it) }
         val filtered = updateFilteredPrs()

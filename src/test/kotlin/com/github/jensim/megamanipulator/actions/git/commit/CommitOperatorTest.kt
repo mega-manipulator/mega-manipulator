@@ -2,6 +2,7 @@ package com.github.jensim.megamanipulator.actions.git.commit
 
 import com.github.jensim.megamanipulator.actions.ProcessOperator
 import com.github.jensim.megamanipulator.actions.apply.ApplyOutput
+import com.github.jensim.megamanipulator.actions.apply.StepResult
 import com.github.jensim.megamanipulator.actions.git.GitUrlHelper
 import com.github.jensim.megamanipulator.actions.git.localrepo.LocalRepoOperator
 import com.github.jensim.megamanipulator.actions.search.SearchResult
@@ -92,12 +93,12 @@ class CommitOperatorTest {
         every { processOperator.runCommandAsync(file, any()) } returns CompletableDeferred(successOutput)
         every { localRepoOperator.hasFork(file) } returns false
         coEvery { localRepoOperator.push(file, false) } returnsMany listOf(successOutput)
-        val result = ConcurrentHashMap<String, MutableList<Pair<String, ApplyOutput>>>()
+        val result = ConcurrentHashMap<String, MutableList<StepResult>>()
 
         runBlocking { commitOperator.commitProcess(file, result, commitMessage, push, false, settings) }
 
         assertThat(result.size, equalTo(1))
-        val nextElement: MutableList<Pair<String, ApplyOutput>> = result.elements().nextElement()
+        val nextElement: MutableList<StepResult> = result.elements().nextElement()
         assertNotNull(nextElement)
         val (action, applyOutput) = nextElement.last()
         assertThat(action, equalTo(if (push) "push" else "commit"))
@@ -115,8 +116,8 @@ class CommitOperatorTest {
         every { localRepoOperator.getLocalRepoFiles() } returns listOf(file)
         every { processOperator.runCommandAsync(file, any()) } returns CompletableDeferred(successOutput)
 
-        val result = ConcurrentHashMap<String, MutableList<Pair<String, ApplyOutput>>>()
-        commitOperator.commitProcess(file, result, commitMessage, false, false, settings)
+        val result = ConcurrentHashMap<String, MutableList<StepResult>>()
+        commitOperator.commitProcess(repoDir = file, result = result, commitMessage = commitMessage, push = false, force = false, settings = settings)
 
         verify { localRepoOperator wasNot Called }
         verify(exactly = 2) { processOperator.runCommandAsync(file, any()) }
@@ -140,8 +141,8 @@ class CommitOperatorTest {
         every { localRepoOperator.hasFork(file) } returns true
         coEvery { localRepoOperator.push(file, false) } returns successOutput
 
-        val result = ConcurrentHashMap<String, MutableList<Pair<String, ApplyOutput>>>()
-        commitOperator.commitProcess(file, result, commitMessage, true, false, settings)
+        val result = ConcurrentHashMap<String, MutableList<StepResult>>()
+        commitOperator.commitProcess(repoDir = file, result = result, commitMessage = commitMessage, push = true, force = false, settings = settings)
 
         verify(exactly = 2) { processOperator.runCommandAsync(file, any()) }
         coVerify { localRepoOperator.push(file, false) }
@@ -173,8 +174,8 @@ class CommitOperatorTest {
         coEvery { prRouter.createFork(capture(searchResultSlot)) } returns "clonedUrl"
         coEvery { localRepoOperator.addForkRemote(file, "clonedUrl") } returns successOutput
 
-        val result = ConcurrentHashMap<String, MutableList<Pair<String, ApplyOutput>>>()
-        commitOperator.commitProcess(file, result, commitMessage, true, false, settings)
+        val result = ConcurrentHashMap<String, MutableList<StepResult>>()
+        commitOperator.commitProcess(repoDir = file, result = result, commitMessage = commitMessage, push = true, force = false, settings = settings)
 
         verify(exactly = 2) { processOperator.runCommandAsync(file, any()) }
         coVerify { prRouter.createFork(searchResultSlot.captured) }
@@ -211,12 +212,12 @@ class CommitOperatorTest {
         coEvery { localRepoOperator.push(file, false) } returns successOutput
         coEvery { prRouter.createFork(capture(searchResultSlot)) } returns "clonedUrl"
         coEvery { localRepoOperator.addForkRemote(file, "clonedUrl") } returns successOutput
-        val resultAggregate = ConcurrentHashMap<String, MutableList<Pair<String, ApplyOutput>>>()
+        val resultAggregate = ConcurrentHashMap<String, MutableList<StepResult>>()
 
         // when
         runBlocking {
             commitOperator.commitProcess(
-                it = file,
+                repoDir = file,
                 result = resultAggregate,
                 commitMessage = commitMessage,
                 push = true,
@@ -262,10 +263,10 @@ class CommitOperatorTest {
         every { processOperator.runCommandAsync(file, any()) } returns CompletableDeferred(successOutput)
 
         // when
-        val result: List<Pair<String, ApplyOutput>> = runBlocking { commitOperator.push(settings, file, false) }
+        val result: List<StepResult> = runBlocking { commitOperator.push(settings, file, false) }
 
         // then
-        assertThat(result.lastOrNull()?.second?.exitCode, equalTo(0))
+        assertThat(result.lastOrNull()?.result?.exitCode, equalTo(0))
         coVerify { localRepoOperator.push(file, false) }
     }
 }

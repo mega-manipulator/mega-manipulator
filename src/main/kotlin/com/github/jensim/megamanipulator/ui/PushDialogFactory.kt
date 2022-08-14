@@ -45,5 +45,6 @@ class PushDialogFactory {
         }
         val location = popupFactory.guessBestPopupLocation(focusComponent)
         balloon.show(location, Balloon.Position.above)
+        balloon.setDefaultButton(panel, okBtn)
     }
 }

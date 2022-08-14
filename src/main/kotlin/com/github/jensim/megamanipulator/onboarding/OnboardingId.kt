@@ -51,9 +51,10 @@ enum class OnboardingId(
         next = FORK_TAB,
         tab = TabKey.tabTitlePRsManage,
     ),
-    PR_ACTIONS_BUTTON(
+    PR_ACTIONS(
         text = """<html>
             <h3>Apply actions to selected Pull Requests</h3>
+            <p>Make a selection int the table, then right click</p>
             <ul>
                 <li>Decline PRs</li>
                 <li>Reword PRs</li>
@@ -73,7 +74,7 @@ enum class OnboardingId(
     ),
     PR_LIST_FILTER_FIELD(
         text = "Filter the fetched PRs",
-        next = PR_ACTIONS_BUTTON,
+        next = PR_ACTIONS,
         tab = TabKey.tabTitlePRsManage,
     ),
     PR_FETCH_AUTHOR_PR_BUTTON(
@@ -119,19 +120,19 @@ enum class OnboardingId(
         next = CLONES_LIST_REPOS,
         tab = TabKey.tabTitleClones,
     ),
-    CLONES_PR_BUTTON(
+    CLONES_PR_ACTION(
         text = "Draft new PRs for clones",
         next = CLONES_CLEAN_REPOS,
         tab = TabKey.tabTitleClones,
     ),
-    CLONES_PUSH_BUTTON(
+    CLONES_PUSH_ACTION(
         text = "Just push",
-        next = CLONES_PR_BUTTON,
+        next = CLONES_PR_ACTION,
         tab = TabKey.tabTitleClones,
     ),
-    CLONES_COMMIT_PUSH_BUTTON(
+    CLONES_COMMIT_PUSH_ACTION(
         text = "Commit and push (optional)",
-        next = CLONES_PUSH_BUTTON,
+        next = CLONES_PUSH_ACTION,
         tab = TabKey.tabTitleClones,
     ),
     CLONES_LIST_BRANCH(
@@ -139,7 +140,7 @@ enum class OnboardingId(
             Refresh the list of local clones.
             List the git log, branches and remotes.
         """.trimIndent(),
-        next = CLONES_COMMIT_PUSH_BUTTON,
+        next = CLONES_COMMIT_PUSH_ACTION,
         tab = TabKey.tabTitleClones,
     ),
     CLONES_TAB(

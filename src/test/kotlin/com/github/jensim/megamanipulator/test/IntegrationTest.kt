@@ -1,6 +1,7 @@
 package com.github.jensim.megamanipulator.test
 
 import com.github.jensim.megamanipulator.actions.apply.ApplyOutput
+import com.github.jensim.megamanipulator.actions.apply.StepResult
 import com.github.jensim.megamanipulator.actions.search.SearchResult
 import com.github.jensim.megamanipulator.actions.vcs.PrActionStatus
 import com.github.jensim.megamanipulator.actions.vcs.PullRequestWrapper
@@ -64,7 +65,7 @@ class IntegrationTest {
 
         // branch
         val branch = "integration_test/${UUID.randomUUID()}"
-        wiring.localRepoOperator.switchBranch(branch)
+        wiring.localRepoOperator.switchBranch(listOf(repoDir), branch)
 
         // apply
         val confDir = File(wiring.tempDir, "config")
@@ -85,10 +86,10 @@ class IntegrationTest {
 
         // commit
         val commitMessage = "Integration test of branch $branch"
-        val commitResults = ConcurrentHashMap<String, MutableList<Pair<String, ApplyOutput>>>()
+        val commitResults = ConcurrentHashMap<String, MutableList<StepResult>>()
         runBlocking {
             wiring.commitOperator.commitProcess(
-                it = repoDir,
+                repoDir = repoDir,
                 result = commitResults,
                 commitMessage = commitMessage,
                 push = true,
@@ -97,10 +98,10 @@ class IntegrationTest {
             )
         }
         assertThat(commitResults.keys, hasSize(1))
-        val commitResult: List<Pair<String, ApplyOutput>> = commitResults.values.first()
-        val exitCode: Int = commitResult.last().second.exitCode
+        val commitResult: List<StepResult> = commitResults.values.first()
+        val exitCode: Int = commitResult.last().result.exitCode
         assertThat(
-            "Of all the steps ${commitResult.map { it.first }}, the last exit code was not zero for ${commitResult.last().first}\n${commitResult.last().second.getFullDescription()}",
+            "Of all the steps ${commitResult.map { it.step }}, the last exit code was not zero for ${commitResult.last().step}\n${commitResult.last().result.getFullDescription()}",
             exitCode,
             equalTo(0)
         )
@@ -142,7 +143,9 @@ class IntegrationTest {
                         codeHost = newPr.codeHostName(),
                         limit = 1000,
                         role = settings.codeHostType.prRoleAuthor,
-                        state = settings.codeHostType.prStateOpen
+                        state = settings.codeHostType.prStateOpen,
+                        project = null,
+                        repo = null,
                     )
                 }?.firstOrNull { it.title() == newTitle }
             }) { it != null }!!
