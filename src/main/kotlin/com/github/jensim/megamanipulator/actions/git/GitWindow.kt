@@ -76,7 +76,7 @@ class GitWindow(private val project: Project) : ToolWindowTab {
                     refresh(it.map { File(project.basePath, it.dir) })
                 }
             },
-            MenuItem({ "Set branch (${it?.size ?: 0})" }, filter = { !it.isNullOrEmpty() }) { selected ->
+            MenuItem({ "Set branch (${it?.size ?: 0})" }, isEnabled = { !it.isNullOrEmpty() }) { selected ->
                 val repos = selected?.map { File(project.basePath, it.dir) } ?: return@MenuItem
                 dialogGenerator.askForInput(
                     title = "Select branch name",
@@ -100,7 +100,7 @@ class GitWindow(private val project: Project) : ToolWindowTab {
                     }
                 }
             },
-            MenuItem({ "Commit & Push (${it?.size ?: 0})" }, filter = {!it.isNullOrEmpty()}) {
+            MenuItem({ "Commit & Push (${it?.size ?: 0})" }, isEnabled = {!it.isNullOrEmpty()}) {
                 val dirs = it?.map { File(project.basePath, it.dir) } ?: return@MenuItem
                 commitDialogFactory.openCommitDialog(
                     focusComponent = repoList,
@@ -119,7 +119,7 @@ class GitWindow(private val project: Project) : ToolWindowTab {
                     repoList.setListData(result.map { DirResult(it.key, it.value) })
                 }
             },
-            MenuItem({ "Push (${it?.size ?: 0})" }, filter = { !it.isNullOrEmpty() }) {
+            MenuItem({ "Push (${it?.size ?: 0})" }, isEnabled = { !it.isNullOrEmpty() }) {
                 val dirs = it?.map { File(project.basePath, it.dir) } ?: return@MenuItem
                 pushDialogFactory.openPushDialog(
                     focusComponent = repoList,
@@ -140,7 +140,7 @@ class GitWindow(private val project: Project) : ToolWindowTab {
                     repoList.setListData(result.toList())
                 }
             },
-            MenuItem({ "Create PRs (${it?.size ?: 0})" }, filter = {!it.isNullOrEmpty()}) {
+            MenuItem({ "Create PRs (${it?.size ?: 0})" }, isEnabled = {!it.isNullOrEmpty()}) {
                 val dirs = it?.map { File(project.basePath, it.dir) } ?: return@MenuItem
                 CreatePullRequestDialog(
                     project = project

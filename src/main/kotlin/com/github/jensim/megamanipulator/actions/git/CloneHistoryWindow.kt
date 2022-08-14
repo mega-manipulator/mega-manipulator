@@ -49,7 +49,7 @@ class CloneHistoryWindow(val project: Project) : ToolWindowTab {
     private val attemptMenu = TableMenu<CloneAttempt>(attemptSelector, listOf(
         MenuItem(
             header = { if ( it.results.any { !it.success }) "Retry failed" else "Nothing to retry" },
-            filter = {  it.results.any { !it.success }}) {
+            isEnabled = {  it.results.any { !it.success }}) {
             dialogGenerator.showConfirm("Retry?", "Retry failed clones (${it.results.count { !it.success }}/${it.results.size})?", attemptSelector) {
                 retryClone( it.results.filter { !it.success })
             }
@@ -63,7 +63,7 @@ class CloneHistoryWindow(val project: Project) : ToolWindowTab {
         selectionMode = ListSelectionModel.MULTIPLE_INTERVAL_SELECTION,
     )
     private val resultMenu = TableMenu<List<CloneAttemptResult>>(resultSelector, listOf(
-        MenuItem({ if(it.isEmpty()) "Nothing selected" else "Retry" }, filter = {true}) {
+        MenuItem({ if(it.isEmpty()) "Nothing selected" else "Retry" }, isEnabled = {true}) {
             dialogGenerator.showConfirm("Retry?", "Retry the selected repos (${it.size})?", resultSelector) {
                 retryClone(it)
             }

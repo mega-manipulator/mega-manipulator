@@ -93,10 +93,13 @@ class SettingsWindow(project: Project) : ToolWindowTab {
     ) {
         it.validationResult != null
     }
-    private val tableMenu = TableMenu<ConfigHostHolder>(
+    private val tableMenu = TableMenu<ConfigHostHolder?>(
         hostConfigSelect,
         listOf(
-            MenuItem({ "Set/Unset password" }) { setPassword(it) }
+            MenuItem(
+                header = { "Set/Unset password" },
+                isEnabled = { it != null && it.hostType != HostType.ERROR }
+            ) { it?.let { setPassword(it) } }
         )
     )
     private val buttonsPanel = JPanel()
@@ -137,11 +140,9 @@ class SettingsWindow(project: Project) : ToolWindowTab {
                 )
             )
         )
-        hostConfigSelect.addClickListener { mouseEvent, conf ->
+        hostConfigSelect.addClickListener { mouseEvent, conf: ConfigHostHolder? ->
             if (SwingUtilities.isRightMouseButton(mouseEvent)) {
-                if (conf.hostType != HostType.ERROR) {
-                    tableMenu.show(mouseEvent, conf)
-                }
+                tableMenu.show(mouseEvent, conf)
             }
         }
         validateConfigButton.toolTipText = """

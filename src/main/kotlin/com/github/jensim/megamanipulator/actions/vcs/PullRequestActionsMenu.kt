@@ -36,7 +36,7 @@ class PullRequestActionsMenu(
 
     val menu = TableMenu<List<PullRequestWrapper>>(focusComponent,
         menus = listOf(
-            MenuItem({ "Decline PRs (${it.size})" },filter = {it.isNotEmpty()}) { prs ->
+            MenuItem({ "Decline PRs (${it.size})" },isEnabled = {it.isNotEmpty()}) { prs ->
                 ClosePRDialogFactory.openCommitDialog(relativeComponent = focusComponent) { removeBranches, removeStaleForks ->
                     uiProtector.mapConcurrentWithProgress(
                         title = "Declining prs",
@@ -52,7 +52,7 @@ class PullRequestActionsMenu(
                 }
             },
 
-            MenuItem({ "Reword PRs (${it.size})" }, filter = { it.isNotEmpty() }) { prs ->
+            MenuItem({ "Reword PRs (${it.size})" }, isEnabled = { it.isNotEmpty() }) { prs ->
                 if (prs.isEmpty()) {
                     notificationsOperator.show(
                         "No PRs selected", "Please select at least one PR to use this", NotificationType.WARNING
@@ -74,7 +74,7 @@ class PullRequestActionsMenu(
                     }
                 }
             },
-            MenuItem({ "Add default reviewers (${it.size})" },filter = {it.isNotEmpty()}) { prs ->
+            MenuItem({ "Add default reviewers (${it.size})" },isEnabled = {it.isNotEmpty()}) { prs ->
                 dialogGenerator.showConfirm(
                     title = "Add default reviewers",
                     message = "Add default reviewers",
@@ -89,14 +89,14 @@ class PullRequestActionsMenu(
                     })
                 }
             },
-            MenuItem({ "Clone PRs (${it.size})" },filter = {it.isNotEmpty()}) { prs ->
+            MenuItem({ "Clone PRs (${it.size})" },isEnabled = {it.isNotEmpty()}) { prs ->
                 cloneDialogFactory.showCloneFromPrDialog(focusComponent) { sparseDef ->
                     uiProtector.uiProtectedOperation("Clone from PRs") {
                         cloneOperator.clone(prs, sparseDef = sparseDef)
                     }
                 }
             },
-            MenuItem({ "Open in browser (${it.size})" }, filter = { isBrowsingAllowed() && it.isNotEmpty() }) { prs ->
+            MenuItem({ "Open in browser (${it.size})" }, isEnabled = { isBrowsingAllowed() && it.isNotEmpty() }) { prs ->
                 val failed = mutableMapOf<PullRequestWrapper, String>()
                 prs.forEach { prWrapper ->
                     val browseUrl = prWrapper.browseUrl()
@@ -118,7 +118,7 @@ class PullRequestActionsMenu(
                 }
 
             },
-            MenuItem({ "Add comment (${it.size})" }, filter = { it.isNotEmpty() }) { prs ->
+            MenuItem({ "Add comment (${it.size})" }, isEnabled = { it.isNotEmpty() }) { prs ->
                 if (prs.isNotEmpty()) {
                     dialogGenerator.askForInput(
                         title = "Comment selected pull requests", message = "Comment", field = JBTextArea(8, 80), focusComponent = focusComponent, position = Balloon.Position.atLeft, prefill = PrefillString.COMMENT
@@ -132,7 +132,7 @@ class PullRequestActionsMenu(
                 }
 
             },
-            MenuItem({ "Mark Approved (${it.size})" }, filter = { it.isNotEmpty() }) { prs ->
+            MenuItem({ "Mark Approved (${it.size})" }, isEnabled = { it.isNotEmpty() }) { prs ->
                 dialogGenerator.showConfirm(
                     title = "Mark Approved",
                     message = "Mark the selected pull requests as Approved",
@@ -144,7 +144,7 @@ class PullRequestActionsMenu(
                 }
 
             },
-            MenuItem({ "Mark Needs work (${it.size})" }, filter = { it.isNotEmpty() }) { prs ->
+            MenuItem({ "Mark Needs work (${it.size})" }, isEnabled = { it.isNotEmpty() }) { prs ->
                 dialogGenerator.showConfirm(
                     title = "Mark Needs work",
                     message = "Mark the selected pull requests as Needs work",
@@ -156,7 +156,7 @@ class PullRequestActionsMenu(
                 }
 
             },
-            MenuItem({ "Merge (${it.size})" }, filter = { it.isNotEmpty() }) { prs ->
+            MenuItem({ "Merge (${it.size})" }, isEnabled = { it.isNotEmpty() }) { prs ->
                 dialogGenerator.showConfirm(
                     title = "Merge",
                     message = "Merge the selected pull requests",

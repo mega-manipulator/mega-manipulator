@@ -40,9 +40,9 @@ open class TableMenu<T>(
 
         constructor(
             header: (T) -> String,
-            filter: Predicate<T> = Predicate { true },
+            isEnabled: Predicate<T> = Predicate { true },
             onClick: (T) -> Unit,
-        ) : this(null, header, filter, onClick)
+        ) : this(null, header, isEnabled, onClick)
 
         companion object {
             private val logger = LoggerFactory.getLogger(MenuItem::class.java)

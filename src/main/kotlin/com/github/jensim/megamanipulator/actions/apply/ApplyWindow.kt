@@ -45,7 +45,7 @@ class ApplyWindow(private val project: Project) : ToolWindowTab {
         columns = listOf("Attempt" to { it.time.toString() }),
     ) { it.result.isEmpty() || it.result.any { it.exitCode != 0 } }
     private val attemptMenu = TableMenu<List<File>>(attemptList, listOf(
-        MenuItem(header = { "Retry failed (${it.size})" }, filter = {it.isNotEmpty()}) {
+        MenuItem(header = { "Retry failed (${it.size})" }, isEnabled = {it.isNotEmpty()}) {
             dialogGenerator.showConfirm(
                 title = "Rerun failed (${it.size})?",
                 message = "Rerun failed in selected attempt?",
@@ -65,7 +65,7 @@ class ApplyWindow(private val project: Project) : ToolWindowTab {
         )
     ) { it.exitCode != 0 }
     private val resultMenu = TableMenu<List<File>>(resultList, listOf(
-        MenuItem(header = { "Rerun selected (${it.size})" }, filter = {it.isNotEmpty()}) { selected ->
+        MenuItem(header = { "Rerun selected (${it.size})" }, isEnabled = {it.isNotEmpty()}) { selected ->
             dialogGenerator.showConfirm(
                 title = "Rerun selected (${selected.size})?",
                 message = "Rerun script for selected repos?",
