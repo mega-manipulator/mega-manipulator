@@ -4,6 +4,7 @@
 
 ## [Unreleased]
 
+## [1.0.0]
 ### Improvement
 - Default branch name will include timestamp, for unique branch names, and working with multiple batches at the same time
 
