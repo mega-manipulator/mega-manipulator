@@ -67,6 +67,7 @@ class SettingsWindow(project: Project) : ToolWindowTab {
         val username: String,
         val searchHost: String,
         val codeHost: String? = null,
+        var isValid: Boolean,
         var validationResult: String?,
     ) {
         override fun toString(): String = if (hostType == HostType.SEARCH) {
@@ -91,7 +92,7 @@ class SettingsWindow(project: Project) : ToolWindowTab {
         ),
         selectionMode = ListSelectionModel.SINGLE_SELECTION,
     ) {
-        it.validationResult != null
+        !it.isValid
     }
     private val tableMenu = TableMenu<ConfigHostHolder?>(
         hostConfigSelect,
@@ -136,6 +137,7 @@ class SettingsWindow(project: Project) : ToolWindowTab {
                     username = "?",
                     searchHost = "*",
                     codeHost = "*",
+                    isValid = false,
                     validationResult = "Not loaded yet, click the validate config button",
                 )
             )
@@ -271,11 +273,15 @@ class SettingsWindow(project: Project) : ToolWindowTab {
         passwordsOperator.promptForPassword(focusComponent = hostConfigSelect, authMethod = conf.authMethod, username = conf.username, baseUrl = conf.baseUrl) {
             hostConfigSelect.items.forEach { otherConf ->
                 if (otherConf !== conf && otherConf.validationResult == passwordNotSetString) {
-                    otherConf.validationResult = initialValidationText(otherConf)
+                    val (isValid, validationResult) = initialValidationText(otherConf)
+                    otherConf.validationResult = validationResult
+                    otherConf.isValid = isValid
                 }
             }
             hostConfigSelect.model.fireTableDataChanged()
-            conf.validationResult = initialValidationText(conf)
+            val (isValid, validationResult) = initialValidationText(conf)
+            conf.validationResult = validationResult
+            conf.isValid = isValid
         }
     }
 
@@ -296,16 +302,19 @@ class SettingsWindow(project: Project) : ToolWindowTab {
         if (settings != null && settingsFileOperator.validationIsOkay) {
             val arrayOf: List<ConfigHostHolder> = (
                 settings.searchHostSettings.map { (searchHostName, group) ->
+                    val (isValid, validationResult) = initialValidationText(group.value())
                     ConfigHostHolder(
                         hostType = HostType.SEARCH,
                         authMethod = group.value().authMethod,
                         baseUrl = group.value().baseUrl,
                         username = group.value().username,
                         searchHost = searchHostName,
-                        validationResult = initialValidationText(group.value()),
+                        isValid = isValid,
+                        validationResult = validationResult,
                     )
                 } + settings.searchHostSettings.flatMap { (searchHostName: String, searchHostSettingsGroup: SearchHostSettingsGroup) ->
                     searchHostSettingsGroup.value().codeHostSettings.map { (codeHostName, codeHostSettingsGroup) ->
+                        val (isValid, validationResult) = initialValidationText(codeHostSettingsGroup.value())
                         ConfigHostHolder(
                             hostType = HostType.CODE,
                             authMethod = codeHostSettingsGroup.value().authMethod,
@@ -313,7 +322,8 @@ class SettingsWindow(project: Project) : ToolWindowTab {
                             username = codeHostSettingsGroup.value().username ?: "token",
                             searchHost = searchHostName,
                             codeHost = codeHostName,
-                            validationResult = initialValidationText(codeHostSettingsGroup.value()),
+                            isValid = isValid,
+                            validationResult = validationResult,
                         )
                     }
                 }
@@ -329,6 +339,7 @@ class SettingsWindow(project: Project) : ToolWindowTab {
                         username = "error",
                         searchHost = "*",
                         codeHost = "*",
+                        isValid = false,
                         validationResult = settingsFileOperator.validationText
                     )
                 )
@@ -337,14 +348,14 @@ class SettingsWindow(project: Project) : ToolWindowTab {
         onboardingOperator.display(OnboardingId.WELCOME)
     }
 
-    private val passwordNotSetString = "Password is not set, CLICK HERE to set it"
-    private fun initialValidationText(configHostHolder: ConfigHostHolder): String = initialValidationText(configHostHolder.username, configHostHolder.baseUrl)
-    private fun initialValidationText(hostWithAuth: HostWithAuth?): String = initialValidationText(hostWithAuth?.username, hostWithAuth?.baseUrl)
-    private fun initialValidationText(username: String?, baseUrl: String?): String = if (username == null || baseUrl == null) {
-        "Unable to resolve settings"
+    private val passwordNotSetString = "<html>Password is not set, <u><b>right-click</b></u> to set it</html>"
+    private fun initialValidationText(configHostHolder: ConfigHostHolder): Pair<Boolean, String> = initialValidationText(configHostHolder.username, configHostHolder.baseUrl)
+    private fun initialValidationText(hostWithAuth: HostWithAuth?): Pair<Boolean, String> = initialValidationText(hostWithAuth?.username, hostWithAuth?.baseUrl)
+    private fun initialValidationText(username: String?, baseUrl: String?): Pair<Boolean, String> = if (username == null || baseUrl == null) {
+        false to "Unable to resolve settings ⚠️"
     } else if (passwordsOperator.isPasswordSet(username, baseUrl)) {
-        "Click the validate tokens button to validate"
+        true to "<html>Click the <u><b>validate tokens</b></u> button to validate<html>"
     } else {
-        passwordNotSetString
+        false to passwordNotSetString
     }
 }

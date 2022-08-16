@@ -31,7 +31,7 @@ object PasswordDialogFactory {
             val btnNo = JButton("Cancel")
             val content = panel {
                 row {
-                    label("Please provide credentials for $baseUrl")
+                    label("Please provide credentials for '$username' @ $baseUrl")
                 }
                 row {
                     when (authMethod) {

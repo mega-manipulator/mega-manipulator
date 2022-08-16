@@ -13,21 +13,21 @@ These tools are fantastic, when working in a single repo.
 To truly scale `search & replace` we need these 2 words to become aware of all your code.  
 How to find the right repos in the thousands? `SourceGraph` is my favourite. In their OSS solution, they offer search capabilities that are simply beyond what hound, or grok, have ever been able to offer.
 
-# Search
+## Search
 In the settings-file (generated here: `./config/mega-manipulator.json`), you can define search hosts.  
 A default one is preconfigured for you. And you can append to this list if you have on-prem instances of sourceGraph or hound.
 You are able to run your searches just as on your search host, just copy-paste in-between.
 
-# Replace
+## Replace
 In the batch-file (generated here: `./config/mega-manipulator.bash`), you can write the change set you want to be applied to each repo.  
 When you hit the `Apply`-button, it will execute the script on every cloned repo.
 
-# Version Control
+## Version Control
 We support `git`.  
 And we support `BitBucket server`, `GitHub` & `GitLab`.
 If you have changes you want applied to multiple codeHosts, that's not a problem.
 
-# With great power
+## With great power
 I take zero responsibility for what you do with this tool, or what this tool does to your system. :-)
 
 Sourcegraph has a Batch Change product, that is offered in their enterprice product, and I totally recommend that you check that out!  
@@ -39,3 +39,10 @@ Because, running in user mode allows you to test your scripts out rapidly in the
 
 ![Workflow abstract](https://raw.githubusercontent.com/mega-manipulator/mega-manipulator.github.io/docsrc/static/img/mega-manipulator-overall.svg)
 
+## Feedback?
+
+Got feedback or suggestions, please give them to me [here](https://github.com/mega-manipulator/mega-manipulator/issues)
+
+If you love the project, and want to promote it:  
+* [Star the project on GitHub ![GitHub Repo stars](https://img.shields.io/github/stars/mega-manipulator/mega-manipulator?style=social)](https://github.com/mega-manipulator/mega-manipulator)  
+* Leave me a 5-star review on [IntelliJ marketplace](https://plugins.jetbrains.com/plugin/16396-mega-manipulator/reviews)

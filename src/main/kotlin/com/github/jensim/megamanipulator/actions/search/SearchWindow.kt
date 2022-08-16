@@ -50,7 +50,7 @@ class SearchWindow(
     private val cloneDialogFactory: CloneDialogFactory by lazy { project.service() }
     private val tabSelectorService: TabSelectorService by lazy { project.service() }
 
-    private val EMPTY = "-" to HoundSettings("http://0.0.0.0", null, emptyMap())
+    private val empty = "-" to HoundSettings("http://0.0.0.0", null, emptyMap())
     private val searchHostSelect = ComboBox<Pair<String, SearchHostSettings>>()
     private val searchHostLink = JButton("SearchDocs", AllIcons.Toolwindows.Documentation)
     private val searchButton = JButton("Search", AllIcons.Actions.Search)
@@ -99,7 +99,7 @@ class SearchWindow(
     }
 
     init {
-        searchHostSelect.addItem(EMPTY)
+        searchHostSelect.addItem(empty)
         searchHostSelect.addCellRenderer { it.first }
         searchHostSelect.addActionListener {
             searchHostLink.isEnabled = searchHostSelect.selectedItem != null
@@ -182,7 +182,7 @@ class SearchWindow(
         }
         if (searchHostSelect.itemCount == 0) {
             searchButton.isEnabled = false
-            searchHostSelect.addItem(EMPTY)
+            searchHostSelect.addItem(empty)
         } else {
             searchButton.isEnabled = true
         }

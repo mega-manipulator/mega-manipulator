@@ -52,8 +52,7 @@ dependencies {
     val kotlinVersion = "1.7.10"
     val jacksonDatabindVersion = "2.13.3"
 
-    // These three are old, but work together -.-'
-    val ktorVersion = "2.0.3"
+    val ktorVersion = "2.1.0"
     val kotlinCoroutinesVersion = "1.6.4"
     val graphqlKotlinKtorVersion = "6.1.0"
 

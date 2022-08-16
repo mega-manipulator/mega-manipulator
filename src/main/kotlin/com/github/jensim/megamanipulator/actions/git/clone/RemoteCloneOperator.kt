@@ -1,5 +1,6 @@
 package com.github.jensim.megamanipulator.actions.git.clone
 
+import com.github.jensim.megamanipulator.MyBundle.message
 import com.github.jensim.megamanipulator.actions.ProcessOperator
 import com.github.jensim.megamanipulator.actions.apply.ApplyOutput
 import com.github.jensim.megamanipulator.actions.git.Action
@@ -9,6 +10,7 @@ import com.github.jensim.megamanipulator.project.lazyService
 import com.github.jensim.megamanipulator.settings.types.codehost.CodeHostSettings
 import com.intellij.openapi.project.Project
 import com.intellij.serviceContainer.NonInjectable
+import org.slf4j.LoggerFactory
 import java.io.File
 
 class RemoteCloneOperator @NonInjectable constructor(
@@ -22,6 +24,7 @@ class RemoteCloneOperator @NonInjectable constructor(
         processOperator = null,
     )
 
+    private val logger = LoggerFactory.getLogger(javaClass)
     private val localRepoOperator: LocalRepoOperator by lazyService(project, localRepoOperator)
     private val processOperator: ProcessOperator by lazyService(project, processOperator)
 
@@ -54,7 +57,8 @@ class RemoteCloneOperator @NonInjectable constructor(
         val actionTrace: MutableList<Action> = mutableListOf()
         dir.mkdirs()
         if (File(dir, ".git").exists()) {
-            actionTrace.add(Action("Repo already cloned", ApplyOutput.dummy(dir = dir.path, std = "Repo already cloned")))
+            val msg = message("gitRepoAlreadyCloned")
+            actionTrace.add(Action(msg, ApplyOutput.dummy(dir = dir.path, std = msg)))
             return actionTrace
         }
         val cloneCommandsResult = cloneCommands(shallow, cloneUrl, defaultBranch, dir)
@@ -66,10 +70,10 @@ class RemoteCloneOperator @NonInjectable constructor(
 
         if (defaultBranch != branch && actionTrace.isOkay()) {
             val p3 = processOperator.runCommandAsync(dir, listOf("git", "checkout", branch)).await()
-            actionTrace.add(Action("Switch branch", p3))
+            actionTrace.add(Action(message("switchBranch"), p3))
             if (p3.exitCode != 0) {
                 val p4 = processOperator.runCommandAsync(dir, listOf("git", "checkout", "-b", branch)).await()
-                actionTrace.add(Action("Create branch", p4))
+                actionTrace.add(Action(message("createBranch"), p4))
             }
         }
         return actionTrace
@@ -79,7 +83,7 @@ class RemoteCloneOperator @NonInjectable constructor(
 
     private suspend fun cloneCommands(shallow: Boolean, cloneUrl: String, defaultBranch: String, dir: File): List<Action> {
         val actionTrace = mutableListOf<Action>()
-        val cloneActionName = if (shallow) "Shallow clone" else "Clone"
+        val cloneActionName = if (shallow) message("shallowClone") else message("clone")
 
         val cloneArgs = if (shallow) {
             listOf("git", "clone", cloneUrl, "--depth", "1", "--no-checkout", "--branch", defaultBranch, dir.absolutePath)
@@ -95,14 +99,14 @@ class RemoteCloneOperator @NonInjectable constructor(
         val actionTrace = mutableListOf<Action>()
         if (sparseDef != null) {
             val p0 = processOperator.runCommandAsync(dir, listOf("git", "config", "core.sparseCheckout", "true")).await()
-            actionTrace.add(Action("Config sparse checkout", p0))
+            actionTrace.add(Action(message("sparseCheckoutConfig"), p0))
             if (p0.exitCode == 0) {
                 try {
                     val sparseFile = File(dir, ".git/info/sparse-checkout")
                     sparseFile.writeText(sparseDef)
                     actionTrace.add(
                         Action(
-                            "Setup sparse checkout config",
+                            message("sparseCheckoutWrite"),
                             ApplyOutput(
                                 dir = dir.absolutePath,
                                 std = "Setup successful",
@@ -111,10 +115,10 @@ class RemoteCloneOperator @NonInjectable constructor(
                         )
                     )
                 } catch (e: Exception) {
-                    // e.printStackTrace()
+                    logger.error("Failed writing sparse config file", e)
                     actionTrace.add(
                         Action(
-                            "Setup sparse checkout config",
+                            message("sparseCheckoutWrite"),
                             ApplyOutput(
                                 dir = dir.absolutePath,
                                 std = "Failed writing sparse config file\n${e.stackTraceToString()}",
@@ -131,10 +135,10 @@ class RemoteCloneOperator @NonInjectable constructor(
             } else {
                 processOperator.runCommandAsync(dir, listOf("git", "fetch", "origin", defaultBranch)).await()
             }
-            actionTrace.add(Action("Fetch", p1))
+            actionTrace.add(Action(message("gitFetch"), p1))
             if (p1.exitCode == 0) {
                 val p2 = processOperator.runCommandAsync(dir, listOf("git", "checkout", defaultBranch)).await()
-                actionTrace.add(Action("Checkout", p2))
+                actionTrace.add(Action(message("gitCheckout"), p2))
             }
         }
         return actionTrace
