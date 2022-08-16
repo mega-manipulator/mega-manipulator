@@ -1,5 +1,6 @@
 package com.github.jensim.megamanipulator.ui
 
+import com.github.jensim.megamanipulator.MyBundle.message
 import com.github.jensim.megamanipulator.project.PrefillString
 import com.github.jensim.megamanipulator.project.PrefillStringSuggestionOperator
 import com.intellij.openapi.components.service
@@ -58,7 +59,7 @@ class CloneDialogFactory(
         try {
             val popupFactory: JBPopupFactory = JBPopupFactory.getInstance()
             val location = popupFactory.guessBestPopupLocation(focusComponent)
-            val popup = popupFactory.createDialogBalloonBuilder(ui.panel, "Clone repos?")
+            val popup = popupFactory.createDialogBalloonBuilder(ui.panel, message("cloneDialogTitle"))
                 .setHideOnClickOutside(true)
                 .createBalloon()
 
@@ -76,11 +77,11 @@ class CloneDialogFactory(
     }
 
     private class CloneUi(fromPR: Boolean, project: Project) {
-        val cloneButton = JButton("Clone")
-        val cancelButton = JButton("Cancel")
+        val cloneButton = JButton(message("clone"))
+        val cancelButton = JButton(message("cancel"))
         val shallowBox = JBCheckBox(null, false)
         val branchTextField = JBTextField(45).apply {
-            toolTipText = "Branch"
+            toolTipText = message("branch")
         }
         val branchHistoryButton = PrefillHistoryButton(project, PrefillString.BRANCH, branchTextField) {
             branchTextField.text = it
@@ -88,7 +89,7 @@ class CloneDialogFactory(
         val sparseDefField = JBTextArea(3, 45).apply {
             isEnabled = false
             text = "README.md"
-            toolTipText = "Sparse checkout config"
+            toolTipText = message("sparseCheckoutConfig")
         }
         val sparseDefBox = JBCheckBox(null, false).apply {
             addActionListener {
@@ -100,19 +101,19 @@ class CloneDialogFactory(
         init {
             panel = panel {
                 if (!fromPR) {
-                    row(label = "Branch") {
+                    row(label = message("branch")) {
                         scrollCell(branchTextField)
                         cell(branchHistoryButton)
                     }
-                    row(label = "Shallow clone?") {
+                    row(label = "${message("shallowClone")}?") {
                         cell(shallowBox)
                     }
                 }
-                row(label = "Sparse clone?") {
+                row(label = "${message("sparseClone")}?") {
                     cell(sparseDefBox)
                     cell(
-                        JBLabel("https://git-scm.com/docs/git-sparse-checkout").apply {
-                            toolTipText = "Click to open in browser"
+                        JBLabel(@Suppress("DialogTitleCapitalization") "https://git-scm.com/docs/git-sparse-checkout").apply {
+                            toolTipText = message("clickToOpenInBrowser")
                             addMouseListener(object : MouseListener {
                                 override fun mouseClicked(e: MouseEvent?) = try {
                                     com.intellij.ide.BrowserUtil.browse("https://git-scm.com/docs/git-sparse-checkout")
@@ -128,7 +129,7 @@ class CloneDialogFactory(
                         }
                     )
                 }
-                row(label = "Sparse checkout config") {
+                row(label = message("sparseCheckoutConfig")) {
                     scrollCell(sparseDefField)
                 }
                 row {
