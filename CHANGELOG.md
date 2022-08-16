@@ -8,7 +8,6 @@
 - Default branch name will include timestamp, for unique branch names, and working with multiple batches at the same time
 
 ### Security
-- Upgrade gradle
 - Update ktor version
 
 ## [0.0.54]
