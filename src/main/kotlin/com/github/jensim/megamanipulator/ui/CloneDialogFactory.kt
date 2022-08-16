@@ -14,6 +14,8 @@ import com.intellij.ui.components.JBTextField
 import com.intellij.ui.dsl.builder.panel
 import java.awt.event.MouseEvent
 import java.awt.event.MouseListener
+import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
 import javax.swing.JButton
 import javax.swing.JComponent
 
@@ -21,18 +23,17 @@ class CloneDialogFactory(
     private val project: Project
 ) {
 
+    private val dataTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd_HH-mm-ss")
     private val prefillOperator: PrefillStringSuggestionOperator by lazy { project.service() }
 
     fun showCloneDialog(focusComponent: JComponent, onOk: (branch: String, shallow: Boolean, sparseDef: String?) -> Unit) {
         try {
             val ui = CloneUi(false, project)
-            prefillOperator.getPrefill(PrefillString.BRANCH)?.let {
-                ui.branchTextArea.text = it
-            }
+            ui.branchTextField.text = "feature/batch_${LocalDateTime.now().format(dataTimeFormatter)}"
             openDialog(focusComponent, ui)
             ui.cloneButton.addActionListener {
-                onOk(ui.branchTextArea.text, ui.shallowBox.isSelected, if (ui.sparseDefBox.isSelected) ui.sparseDefField.text else null)
-                prefillOperator.addPrefill(PrefillString.BRANCH, ui.branchTextArea.text)
+                onOk(ui.branchTextField.text, ui.shallowBox.isSelected, if (ui.sparseDefBox.isSelected) ui.sparseDefField.text else null)
+                prefillOperator.addPrefill(PrefillString.BRANCH, ui.branchTextField.text)
             }
         } catch (e: Exception) {
             e.printStackTrace()
@@ -46,7 +47,7 @@ class CloneDialogFactory(
             openDialog(focusComponent, ui)
             ui.cloneButton.addActionListener {
                 onOk(if (ui.sparseDefBox.isSelected) ui.sparseDefField.text else null)
-                prefillOperator.addPrefill(PrefillString.BRANCH, ui.branchTextArea.text)
+                prefillOperator.addPrefill(PrefillString.BRANCH, ui.branchTextField.text)
             }
         } catch (e: Exception) {
             e.printStackTrace()
@@ -78,11 +79,11 @@ class CloneDialogFactory(
         val cloneButton = JButton("Clone")
         val cancelButton = JButton("Cancel")
         val shallowBox = JBCheckBox(null, false)
-        val branchTextArea = JBTextField(45).apply {
+        val branchTextField = JBTextField(45).apply {
             toolTipText = "Branch"
         }
-        val branchHistoryButton = PrefillHistoryButton(project, PrefillString.BRANCH, branchTextArea) {
-            branchTextArea.text = it
+        val branchHistoryButton = PrefillHistoryButton(project, PrefillString.BRANCH, branchTextField) {
+            branchTextField.text = it
         }
         val sparseDefField = JBTextArea(3, 45).apply {
             isEnabled = false
@@ -100,7 +101,7 @@ class CloneDialogFactory(
             panel = panel {
                 if (!fromPR) {
                     row(label = "Branch") {
-                        scrollCell(branchTextArea)
+                        scrollCell(branchTextField)
                         cell(branchHistoryButton)
                     }
                     row(label = "Shallow clone?") {
