@@ -1,9 +1,11 @@
 package com.github.jensim.megamanipulator.ui
 
+import com.github.jensim.megamanipulator.actions.NotificationsOperator
 import com.github.jensim.megamanipulator.project.CoroutinesHolder.scope
 import com.github.jensim.megamanipulator.project.PrefillString
 import com.github.jensim.megamanipulator.project.PrefillStringSuggestionOperator
 import com.intellij.ide.DataManager
+import com.intellij.notification.NotificationType.ERROR
 import com.intellij.openapi.components.service
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.ui.popup.Balloon
@@ -17,6 +19,7 @@ import com.intellij.util.ui.UIUtil.ComponentStyle.SMALL
 import com.intellij.util.ui.UIUtil.FontColor.BRIGHTER
 import kotlinx.coroutines.launch
 import org.jetbrains.concurrency.await
+import org.slf4j.LoggerFactory
 import java.awt.event.KeyEvent
 import java.awt.event.KeyListener
 import javax.swing.JButton
@@ -25,7 +28,9 @@ import javax.swing.text.JTextComponent
 
 class DialogGenerator(private val project: Project) {
 
+    private val logger = LoggerFactory.getLogger(javaClass)
     private val prefillOperator: PrefillStringSuggestionOperator by lazy { project.service() }
+    private val notificationsOperator: NotificationsOperator by lazy { project.service() }
 
     fun showConfirm(
         title: String,
@@ -76,8 +81,14 @@ class DialogGenerator(private val project: Project) {
             popup.setDefaultButton(panel, yesBtn)
             yesBtn.requestFocus(true)
         } catch (e: Exception) {
-            e.printStackTrace()
+            val msg = "Failed creating dialog \"$title\""
+            reportBadStuff(msg, e)
         }
+    }
+
+    private fun reportBadStuff(msg: String, e: Exception) {
+        logger.error(msg, e)
+        notificationsOperator.show(msg, "Something failed horribly<br>${e.javaClass.simpleName}<br>${e.message}", ERROR)
     }
 
     private fun String.convertMultiLineToHtml() = "<html>${replace("\n", "<br>\n")}</html>"
@@ -170,7 +181,7 @@ class DialogGenerator(private val project: Project) {
             popup.setDefaultButton(panel, btnYes)
             field.requestFocus(true)
         } catch (e: Exception) {
-            e.printStackTrace()
+            reportBadStuff("Failed asking for input \"$title\"", e)
         }
     }
 }

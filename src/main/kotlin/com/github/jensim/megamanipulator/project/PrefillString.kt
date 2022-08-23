@@ -9,6 +9,10 @@ enum class PrefillString(val fallback: PrefillString? = null, val default: Strin
         default = "feature/bulk_change",
         maxHistory = 10,
     ),
+    SPARSE_HISTORY(
+        default = "README.md",
+        maxHistory = 10,
+    ),
     COMMIT_MESSAGE(
         default = "Bulk changes",
         maxHistory = 10,

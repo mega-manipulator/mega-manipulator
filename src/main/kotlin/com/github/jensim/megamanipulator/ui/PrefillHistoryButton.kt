@@ -10,6 +10,7 @@ import com.intellij.openapi.ui.popup.PopupStep
 import com.intellij.openapi.ui.popup.util.BaseListPopupStep
 import com.intellij.ui.awt.RelativePoint
 import com.intellij.ui.components.JBLabel
+import org.slf4j.LoggerFactory
 import java.awt.Dimension
 import java.awt.event.MouseEvent
 import java.awt.event.MouseListener
@@ -22,6 +23,7 @@ class PrefillHistoryButton(
     private val action: (String) -> Unit,
 ) : JBLabel(AllIcons.Actions.ToggleVisibility) {
 
+    private val logger = LoggerFactory.getLogger(javaClass)
     private val prefillStringSuggestionOperator: PrefillStringSuggestionOperator by lazy { project.service() }
 
     init {
@@ -38,7 +40,7 @@ class PrefillHistoryButton(
                     val location: RelativePoint = popupFactory.guessBestPopupLocation(focusComponent)
                     popup.show(location)
                 } catch (e: Exception) {
-                    e.printStackTrace()
+                    logger.error("Failed opening up the prefil suggestion popup for $prefillString", e)
                 }
             }
 

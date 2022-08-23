@@ -13,6 +13,7 @@ import com.intellij.ui.components.JBLabel
 import com.intellij.ui.components.JBTextArea
 import com.intellij.ui.components.JBTextField
 import com.intellij.ui.dsl.builder.panel
+import org.slf4j.LoggerFactory
 import java.awt.event.MouseEvent
 import java.awt.event.MouseListener
 import java.time.LocalDateTime
@@ -23,6 +24,8 @@ import javax.swing.JComponent
 class CloneDialogFactory(
     private val project: Project
 ) {
+
+    private val logger = LoggerFactory.getLogger(javaClass)
 
     private val dataTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd_HH-mm-ss")
     private val prefillOperator: PrefillStringSuggestionOperator by lazy { project.service() }
@@ -35,9 +38,12 @@ class CloneDialogFactory(
             ui.cloneButton.addActionListener {
                 onOk(ui.branchTextField.text, ui.shallowBox.isSelected, if (ui.sparseDefBox.isSelected) ui.sparseDefField.text else null)
                 prefillOperator.addPrefill(PrefillString.BRANCH, ui.branchTextField.text)
+                if (ui.sparseDefBox.isSelected){
+                    prefillOperator.addPrefill(PrefillString.SPARSE_HISTORY, ui.sparseDefField.text)
+                }
             }
         } catch (e: Exception) {
-            e.printStackTrace()
+            logger.error("Failed opening up the Clone UI", e)
         }
     }
 
@@ -51,7 +57,7 @@ class CloneDialogFactory(
                 prefillOperator.addPrefill(PrefillString.BRANCH, ui.branchTextField.text)
             }
         } catch (e: Exception) {
-            e.printStackTrace()
+            logger.error("Failed opeing the Clone UI popup for PRs", e)
         }
     }
 
@@ -72,11 +78,12 @@ class CloneDialogFactory(
             popup.show(location, Balloon.Position.above)
             popup.setDefaultButton(ui.panel, ui.cloneButton)
         } catch (e: Exception) {
-            e.printStackTrace()
+            logger.error("Failed creating the Clone UI popup window", e)
         }
     }
 
     private class CloneUi(fromPR: Boolean, project: Project) {
+        private val logger = LoggerFactory.getLogger(javaClass)
         val cloneButton = JButton(message("clone"))
         val cancelButton = JButton(message("cancel"))
         val shallowBox = JBCheckBox(null, false)
@@ -91,9 +98,14 @@ class CloneDialogFactory(
             text = "README.md"
             toolTipText = message("sparseCheckoutConfig")
         }
+        val sparseHistoryButton = PrefillHistoryButton(project, PrefillString.SPARSE_HISTORY, sparseDefField) {
+            sparseDefField.text = it
+        }
+
         val sparseDefBox = JBCheckBox(null, false).apply {
             addActionListener {
                 sparseDefField.isEnabled = isSelected
+                sparseHistoryButton.isEnabled = isSelected
             }
         }
         val panel: DialogPanel
@@ -118,7 +130,7 @@ class CloneDialogFactory(
                                 override fun mouseClicked(e: MouseEvent?) = try {
                                     com.intellij.ide.BrowserUtil.browse("https://git-scm.com/docs/git-sparse-checkout")
                                 } catch (e: Exception) {
-                                    e.printStackTrace()
+                                    logger.warn("Failed opening browser with sparse-checkout docs", e)
                                 }
 
                                 override fun mousePressed(e: MouseEvent?) = Unit
@@ -131,6 +143,7 @@ class CloneDialogFactory(
                 }
                 row(label = message("sparseCheckoutConfig")) {
                     scrollCell(sparseDefField)
+                    cell(sparseHistoryButton)
                 }
                 row {
                     cell(cloneButton)

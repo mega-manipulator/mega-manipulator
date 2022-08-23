@@ -92,7 +92,7 @@ class GeneralKtDataTable<T : Any>(
         val col = columnAtPoint(point)
         if (col < 0) return null
         return if (items.size > row) {
-            items[row]
+            items.getOrNull(row)
         } else {
             null
         }
@@ -103,8 +103,8 @@ class GeneralKtDataTable<T : Any>(
     override fun prepareRenderer(renderer: TableCellRenderer, row: Int, column: Int): Component {
         val c = super.prepareRenderer(renderer, row, column)
         if (colorizer != null) {
-            val rowItem = myModel.items[row]
-            if (colorizer.test(rowItem)) {
+            val rowItem = myModel.items.getOrNull(row)
+            if (rowItem != null && colorizer.test(rowItem)) {
                 if (isRowSelected(row)) {
                     selectionBackground
                     c.background = selectedProblemColor
@@ -157,7 +157,7 @@ class GeneralKtDataTable<T : Any>(
         get() {
             return selectedRows.map {
                 try {
-                    myModel.items[it]
+                    myModel.items.getOrNull(it)
                 } catch (e: Exception) {
                     null
                 }
@@ -182,9 +182,11 @@ class GeneralKtDataTable<T : Any>(
         override fun getColumnCount(): Int = columns.size
 
         override fun getValueAt(rowIndex: Int, columnIndex: Int): String? = try {
-            columns[columnIndex].second(items[rowIndex])
+            items.getOrNull(rowIndex)?.let {
+                columns.getOrNull(columnIndex)?.second?.invoke(it)
+            }
         } catch (e: Exception) {
-            logger.warn("Unable to get value at row:$rowIndex, column:$columnIndex, for type:${type.simpleName}, column:${columns[columnIndex]}, number of items:${items.size}")
+            logger.warn("Unable to get value at row:$rowIndex, column:$columnIndex, for type:${type.simpleName}, column:${columns.getOrNull(columnIndex)?.first}, number of items:${items.size}")
             null
         }
     }

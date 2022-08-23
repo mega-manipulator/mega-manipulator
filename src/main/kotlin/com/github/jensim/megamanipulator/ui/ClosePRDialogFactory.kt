@@ -4,10 +4,13 @@ import com.intellij.openapi.ui.popup.Balloon
 import com.intellij.openapi.ui.popup.JBPopupFactory
 import com.intellij.ui.components.JBCheckBox
 import com.intellij.ui.dsl.builder.panel
+import org.slf4j.LoggerFactory
 import javax.swing.JButton
 import javax.swing.JComponent
 
 object ClosePRDialogFactory {
+
+    private val logger = LoggerFactory.getLogger(javaClass)
 
     fun openCommitDialog(
         relativeComponent: JComponent,
@@ -53,7 +56,7 @@ object ClosePRDialogFactory {
             balloon.show(location, Balloon.Position.above)
             balloon.setDefaultButton(panel, cancelBtn)
         } catch (e: Exception) {
-            e.printStackTrace()
+            logger.error("Failed opening commit dialog popup", e)
         }
     }
 }

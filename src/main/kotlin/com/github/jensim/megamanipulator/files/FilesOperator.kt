@@ -9,6 +9,7 @@ import com.intellij.openapi.vfs.LocalFileSystem
 import com.intellij.serviceContainer.NonInjectable
 import com.intellij.util.io.inputStream
 import com.intellij.util.io.isDirectory
+import org.slf4j.LoggerFactory
 import java.io.BufferedInputStream
 import java.io.File
 import java.net.URI
@@ -23,6 +24,8 @@ class FilesOperator @NonInjectable constructor(
     notificationsOperator: NotificationsOperator?,
 ) {
     constructor(project: Project) : this(project, null)
+
+    private val logger = LoggerFactory.getLogger(javaClass)
 
     private val notificationsOperator: NotificationsOperator by lazyService(project, notificationsOperator)
 
@@ -65,10 +68,10 @@ class FilesOperator @NonInjectable constructor(
         } catch (e: Exception) {
             notificationsOperator.show(
                 title = "Failed reading base files",
-                body = e.stackTrace.joinToString("<br>"),
+                body = "Stack trace in the IDE logs. ${e.javaClass.simpleName}: ${e.message}",
                 type = NotificationType.WARNING
             )
-            e.printStackTrace()
+            logger.error("Failed reading base files", e)
         }
     }
 
@@ -85,12 +88,13 @@ class FilesOperator @NonInjectable constructor(
                 }
             } // else { println("file already exists ${file.path}") }
         } catch (e: Exception) {
+            val msg = "Failed creating file"
             notificationsOperator.show(
-                title = "Failed creating file",
-                body = "${file.path}\n${e.stackTrace.joinToString("<br>")}",
+                title = msg,
+                body = "Stack trace in the IDE logs. ${e.javaClass.simpleName}: ${e.message}",
                 type = NotificationType.WARNING
             )
-            e.printStackTrace()
+            logger.error(msg, e)
         }
     }
 

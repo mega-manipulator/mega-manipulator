@@ -1,6 +1,10 @@
 package com.github.jensim.megamanipulator.toolswindow
 
+import org.slf4j.LoggerFactory
+
 class TabSelectorService {
+
+    private val logger = LoggerFactory.getLogger(javaClass)
 
     private val listeners: MutableList<TabServiceListener> = mutableListOf()
 
@@ -13,7 +17,7 @@ class TabSelectorService {
             try {
                 it.tabSelectionRequested(tabKey)
             } catch (e: Exception) {
-                e.printStackTrace()
+                logger.error("Failed calling tabServiceListener ${it.javaClass.canonicalName}", e)
             }
         }
     }

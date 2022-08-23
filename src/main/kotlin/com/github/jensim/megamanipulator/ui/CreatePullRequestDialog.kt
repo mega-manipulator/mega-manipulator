@@ -11,6 +11,7 @@ import com.intellij.ui.components.JBScrollPane
 import com.intellij.ui.components.JBTextArea
 import com.intellij.ui.components.JBTextField
 import com.intellij.ui.dsl.builder.panel
+import org.slf4j.LoggerFactory
 import javax.swing.JButton
 import javax.swing.JComponent
 
@@ -19,6 +20,8 @@ open class CreatePullRequestDialog(
     private val title: String = "Create pull request",
     private val project: Project,
 ) {
+
+    private val logger = LoggerFactory.getLogger(javaClass)
     private val prefillOperator: PrefillStringSuggestionOperator by lazy { project.service() }
     private val titleField = JBTextField(30)
     private val titlePane = JBScrollPane(titleField)
@@ -110,7 +113,7 @@ open class CreatePullRequestDialog(
             val location = popupFactory.guessBestPopupLocation(focusComponent)
             popup.show(location, Balloon.Position.above)
         } catch (e: Exception) {
-            e.printStackTrace()
+            logger.error("Failed opening pull request creation dialog", e)
         }
     }
 }
