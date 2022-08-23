@@ -15,6 +15,7 @@ import kotlin.io.OnErrorAction.SKIP
 class LocalCloneOperator @NonInjectable constructor(
     private val project: Project,
     processOperator: ProcessOperator?,
+    sparseConfigSetupOperator: SparseConfigSetupOperator?,
 ) {
 
     private val logger = LoggerFactory.getLogger(javaClass)
@@ -22,9 +23,11 @@ class LocalCloneOperator @NonInjectable constructor(
     constructor(project: Project) : this(
         project = project,
         processOperator = null,
+        sparseConfigSetupOperator = null,
     )
 
     private val processOperator: ProcessOperator by lazyService(project, processOperator)
+    private val sparseConfigSetupOperator: SparseConfigSetupOperator by lazyService(project, sparseConfigSetupOperator)
 
     /**
      * If the repo is configured for local copy over remote clone, try to find the repo locally,
@@ -134,7 +137,7 @@ class LocalCloneOperator @NonInjectable constructor(
     /**
      * Save a copy of a clone after it has been pulled into the configured location
      */
-    suspend fun saveCopy(settings: CodeHostSettings, repo: SearchResult, defaultBranch: String): CloneAttemptResult {
+    suspend fun saveCopy(settings: CodeHostSettings, repo: SearchResult, defaultBranch: String, sparseDef: String?): CloneAttemptResult {
         val localRepoFile = File(project.basePath!!, "clones/${repo.asPathString()}/.git")
         if (!localRepoFile.exists()) {
             return CloneAttemptResult(actions = listOf(Action("Save Copy", ApplyOutput.dummy(std = "Repo doesn't exist", dir = repo.asPathString()))), success = false, repo = repo, branch = defaultBranch)
@@ -155,21 +158,7 @@ class LocalCloneOperator @NonInjectable constructor(
             logger.warn(message)
             SKIP
         }
-        File(keepLocalRepoFile, "info/sparse-checkout").delete().let { deletedSparse ->
-            history.add(
-                Action(
-                    "Delete sparse checkout settings",
-                    ApplyOutput(
-                        dir = repo.asPathString(),
-                        std = "Deleted: $deletedSparse",
-                        exitCode = 0,
-                    )
-                )
-            )
-        }
-        processOperator.runCommandAsync(keepLocalRepoFile.parentFile, listOf("git", "config", "core.sparseCheckout", "false")).await().let {
-            history.add(Action("disable sparseCheckout for local save", it))
-        }
+        sparseConfigSetupOperator.setupSparseDef(sparseDef, localRepoFile.parentFile)
 
         unshallowAndFetch(keepLocalRepoFile.parentFile, history)
         processOperator.runCommandAsync(keepLocalRepoFile.parentFile, listOf("git", "checkout", defaultBranch)).await().let {

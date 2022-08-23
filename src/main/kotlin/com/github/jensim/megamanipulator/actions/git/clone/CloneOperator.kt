@@ -134,7 +134,7 @@ class CloneOperator @NonInjectable constructor(
                     sparseDef = sparseDef
                 )
             )
-            history.addAll(localCloneOperator.saveCopy(codeSettings, repo, defaultBranch).actions)
+            history.addAll(localCloneOperator.saveCopy(codeSettings, repo, defaultBranch, sparseDef).actions)
         }
         return CloneAttemptResult(repo = repo, branch = branchName, actions = history)
     }

@@ -39,6 +39,7 @@ class RemoteCloneOperatorTest {
 
     private val localRepoOperator: LocalRepoOperator = mockk()
     private val processOperator: ProcessOperator = mockk()
+    private val sparseConfigSetupOperator: SparseConfigSetupOperator = mockk()
 
     private val project: Project = mockk()
     private val codeHostSettings = mockk<CodeHostSettings> {
@@ -56,6 +57,7 @@ class RemoteCloneOperatorTest {
         project = project,
         localRepoOperator = localRepoOperator,
         processOperator = processOperator,
+        sparseConfigSetupOperator = sparseConfigSetupOperator,
     )
 
     private val tempDirPath: Path = createTempDirectory(prefix = null, attributes = emptyArray())

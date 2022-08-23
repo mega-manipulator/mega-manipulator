@@ -4,7 +4,10 @@
   "searchHostSettings" : {
     "github": {
       "gitHub": {
-        "username": "jensim"
+        "username": "jensim",
+        "keepLocalRepos": {
+          "path": "/tmp/vcs"
+        }
       }
     },
     "sourcegraph_com" : {
@@ -13,7 +16,10 @@
         "codeHostSettings" : {
           "github.com" : {
             "gitHub" : {
-              "username" : "jensim"
+              "username" : "jensim",
+              "keepLocalRepos": {
+                "path": "/tmp/vcs"
+              }
             }
           }
         }
@@ -27,19 +33,28 @@
         "codeHostSettings" : {
           "github.com" : {
             "gitHub" : {
-              "username" : "jensim"
+              "username" : "jensim",
+              "keepLocalRepos": {
+                "path": "/tmp/vcs"
+              }
             }
           },
           "bitbucket" : {
             "bitBucket" : {
               "baseUrl" : "http://localhost:7081",
               "httpsOverride": "ALLOW_ANYTHING",
-              "username" : "jensim"
+              "username" : "jensim",
+              "keepLocalRepos": {
+                "path": "/tmp/vcs"
+              }
             }
           },
           "gitlab.com" : {
             "gitLab" : {
-              "username" : "jensim"
+              "username" : "jensim",
+              "keepLocalRepos": {
+                "path": "/tmp/vcs"
+              }
             }
           }
         }
