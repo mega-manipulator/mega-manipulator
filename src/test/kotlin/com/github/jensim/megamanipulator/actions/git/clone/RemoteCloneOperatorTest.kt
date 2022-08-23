@@ -7,9 +7,7 @@ import com.github.jensim.megamanipulator.actions.git.localrepo.LocalRepoOperator
 import com.github.jensim.megamanipulator.actions.search.SearchResult
 import com.github.jensim.megamanipulator.actions.vcs.PullRequestWrapper
 import com.github.jensim.megamanipulator.settings.types.CloneType.HTTPS
-import com.github.jensim.megamanipulator.settings.types.MegaManipulatorSettings
 import com.github.jensim.megamanipulator.settings.types.codehost.CodeHostSettings
-import com.github.jensim.megamanipulator.settings.types.searchhost.SearchHostSettings
 import com.intellij.openapi.project.Project
 import io.mockk.coEvery
 import io.mockk.coVerify
@@ -49,12 +47,6 @@ class RemoteCloneOperatorTest {
         every { cloneType } returns HTTPS
         every { baseUrl } returns "https://example"
     }
-    private val settings = mockk<MegaManipulatorSettings> {
-        every { resolveSettings(any(), any()) } returns (
-            mockk<SearchHostSettings>() to codeHostSettings
-            )
-    }
-
     private val remoteCloneOperator = RemoteCloneOperator(
         project = project,
         localRepoOperator = localRepoOperator,
