@@ -12,7 +12,7 @@ import java.util.concurrent.ConcurrentHashMap
 class ProcessOperatorImpl(private val project: Project) : ProcessOperator {
 
     private val log = LoggerFactory.getLogger(javaClass)
-    private val pidSet = ConcurrentHashMap<Long, String>()
+    private val pidMap = ConcurrentHashMap<Long, String>()
 
     override fun runCommandAsync(workingDir: File, command: List<String>): Deferred<ApplyOutput> {
         val builder = ProcessBuilder(command)
@@ -21,7 +21,7 @@ class ProcessOperatorImpl(private val project: Project) : ProcessOperator {
         val proc: Process = builder.start()
         addPid(proc.pid(), workingDir, command)
         return proc.onExit().thenApply {
-            pidSet.remove(it.pid())
+            pidMap.remove(it.pid())
             ApplyOutput(
                 command = command.joinToString(separator = " "),
                 std = it.inputStream.readAllBytes().decodeToString(),
@@ -32,12 +32,12 @@ class ProcessOperatorImpl(private val project: Project) : ProcessOperator {
     }
 
     private fun addPid(pid: Long, workingDir: File, command: List<String>) {
-        pidSet[pid] = "dir:'${workingDir.path}', command:$command"
+        pidMap[pid] = "dir:'${workingDir.path}', command:$command"
     }
 
-    override fun clearPids(): Unit = pidSet.clear()
+    override fun clearPids(): Unit = pidMap.clear()
     override fun stopAll() {
-        pidSet.forEach { (pid, description) ->
+        pidMap.forEach { (pid, description) ->
             ProcessHandle.of(pid).ifPresent { handle ->
                 if (handle.destroyForcibly()) {
                     log.warn("Killed process with pid:$pid $description")

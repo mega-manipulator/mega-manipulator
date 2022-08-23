@@ -9,6 +9,7 @@
 
 ### Fixed
 - Github search pagination was not working properly, so it was limiting search results to 30 repos
+- Catch possible null access when rendering table rows
 
 ## [1.0.0]
 ### Improvement
