@@ -5,6 +5,7 @@
 ## [Unreleased]
 ### Improvement
 - Sparse checkout is now possible from a locally kept repo
+- Upgrade all `Exception#printStackTrace` to use slf4j `Logger` for improved readability in the IDE logs
 
 ## [1.0.0]
 ### Improvement

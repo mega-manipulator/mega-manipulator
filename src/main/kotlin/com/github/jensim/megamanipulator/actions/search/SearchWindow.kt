@@ -1,5 +1,6 @@
 package com.github.jensim.megamanipulator.actions.search
 
+import com.github.jensim.megamanipulator.actions.NotificationsOperator
 import com.github.jensim.megamanipulator.actions.git.clone.CloneOperator
 import com.github.jensim.megamanipulator.onboarding.OnboardingButton
 import com.github.jensim.megamanipulator.onboarding.OnboardingId
@@ -22,6 +23,7 @@ import com.github.jensim.megamanipulator.ui.TableMenu
 import com.github.jensim.megamanipulator.ui.TableMenu.MenuItem
 import com.github.jensim.megamanipulator.ui.UiProtector
 import com.intellij.icons.AllIcons
+import com.intellij.notification.NotificationType.ERROR
 import com.intellij.openapi.components.service
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.ui.ComboBox
@@ -31,6 +33,7 @@ import com.intellij.ui.dsl.builder.panel
 import com.intellij.ui.dsl.gridLayout.HorizontalAlign.RIGHT
 import com.intellij.util.castSafelyTo
 import com.intellij.util.ui.components.BorderLayoutPanel
+import org.slf4j.LoggerFactory
 import java.awt.Dimension
 import java.awt.event.KeyEvent
 import java.awt.event.KeyListener
@@ -41,6 +44,8 @@ class SearchWindow(
     private val project: Project
 ) : ToolWindowTab {
 
+    private val logger = LoggerFactory.getLogger(javaClass)
+
     private val searchOperator: SearchOperator by lazy { project.service() }
     private val settingsFileOperator: SettingsFileOperator by lazy { project.service() }
     private val cloneOperator: CloneOperator by lazy { project.service() }
@@ -49,6 +54,7 @@ class SearchWindow(
     private val prefillOperator: PrefillStringSuggestionOperator by lazy { project.service() }
     private val cloneDialogFactory: CloneDialogFactory by lazy { project.service() }
     private val tabSelectorService: TabSelectorService by lazy { project.service() }
+    private val notificationsOperator: NotificationsOperator by lazy { project.service() }
 
     private val empty = "-" to HoundSettings("http://0.0.0.0", null, emptyMap())
     private val searchHostSelect = ComboBox<Pair<String, SearchHostSettings>>()
@@ -194,7 +200,9 @@ class SearchWindow(
                 }
             }
         } catch (e: Exception) {
-            e.printStackTrace()
+            val msg = "Failed setting initial prefill for search"
+            logger.error(msg)
+            notificationsOperator.show(msg, "Something failed horribly<br>${e.javaClass.simpleName}<br>${e.message}", ERROR)
         }
     }
 }

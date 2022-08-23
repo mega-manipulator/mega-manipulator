@@ -16,6 +16,7 @@ import kotlinx.coroutines.async
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.sync.Semaphore
 import kotlinx.coroutines.withTimeout
+import org.slf4j.LoggerFactory
 import java.util.concurrent.CancellationException
 import java.util.concurrent.atomic.AtomicBoolean
 import kotlin.coroutines.CoroutineContext
@@ -23,6 +24,8 @@ import kotlin.coroutines.CoroutineContext
 class UiProtectorImpl(
     private val project: Project,
 ) : UiProtector {
+
+    private val logger = LoggerFactory.getLogger(javaClass)
 
     private val notificationsOperator: NotificationsOperator by lazy { project.service() }
     private val processOperator: ProcessOperator by lazy { project.service() }
@@ -41,14 +44,11 @@ class UiProtectorImpl(
                         try {
                             action()
                         } catch (e: Exception) {
-                            e.printStackTrace()
+                            val msg = "Failed executing task $title"
+                            logger.error(msg, e)
                             notificationsOperator.show(
-                                title = "Failed executing task $title",
-                                body = "Exception caught executing task:<br>${e.message}<br>${
-                                e.stackTrace.joinToString(
-                                    "<br>"
-                                )
-                                }",
+                                title = msg,
+                                body = "Exception caught executing task:<br>${e.message}<br>Full stacktrace in IDE logs",
                                 type = NotificationType.ERROR
                             )
                             null
@@ -74,14 +74,16 @@ class UiProtectorImpl(
                         try {
                             deferred.cancel(cause = CancellationException("Action cancelled"))
                         } catch (e: Exception) {
-                            e.printStackTrace()
+                            logger.warn("Exception cancelling deferred action of \"$title\" ${e.javaClass.simpleName} ${e.message}")
                         }
                         throw e
                     }
                 } catch (e: Exception) {
+                    val msg = "Failed executing task $title"
+                    logger.error(msg, e)
                     notificationsOperator.show(
-                        title = "Failed executing task $title",
-                        body = "Exception caught executing task: ${e.message}<br>${e.stackTrace.joinToString("<br>")}",
+                        title = msg,
+                        body = "Exception caught executing task:<br>${e.message}<br>Full stacktrace in IDE logs",
                         type = NotificationType.ERROR
                     )
                     null
@@ -91,10 +93,11 @@ class UiProtectorImpl(
         return try {
             ProgressManager.getInstance().run(task)
         } catch (e: Exception) {
-            e.printStackTrace()
+            val msg = "Exception running task $title"
+            logger.error(msg, e)
             notificationsOperator.show(
-                title = "Exception running task $title",
-                body = "${e.message}\n${e.stackTrace.joinToString("<br>")}"
+                title = msg,
+                body = "Exception caught executing task:<br>${e.message}<br>Full stacktrace in IDE logs",
             )
             null
         }
@@ -134,9 +137,11 @@ class UiProtectorImpl(
                                     null
                                 }
                             } catch (e: Exception) {
+                                val msg = "Failed \"$title\" with index:[$index]"
+                                logger.error(msg, e)
                                 notificationsOperator.show(
-                                    title = "Failed with [$index]",
-                                    body = "${e.message}\n${e.stackTrace.joinToString("<br>")}",
+                                    title = msg,
+                                    body = "Exception caught of type ${e.javaClass.simpleName}<br>${e.message}<br>More info in IDE logs",
                                     type = NotificationType.ERROR
                                 )
                                 null
@@ -172,17 +177,17 @@ class UiProtectorImpl(
                                     it.second?.getCompleted()
                                 }
                             } catch (e: Exception) {
-                                e.printStackTrace()
+                                logger.warn("Exception caught completing task \"$title\" on last chance ${e.javaClass.simpleName} ${e.message}")
                                 try {
                                     it.second?.cancel(cause = CancellationException("Job not completed in time or cancelled"))
                                 } catch (e: Exception) {
-                                    e.printStackTrace()
+                                    logger.error("Exception caught cancelling task \"$title\" ${e.javaClass} ${e.message}")
                                 }
                                 null
                             }
                         }
                     } catch (e: Exception) {
-                        e.printStackTrace()
+                        logger.error("Exception occurred setting up concurrent execution", e)
                         data.map { it to null }
                     }
                 }
@@ -191,10 +196,11 @@ class UiProtectorImpl(
         return try {
             ProgressManager.getInstance().run(task)
         } catch (e: Exception) {
-            e.printStackTrace()
+            val msg = "Exception running task $title"
+            logger.error(msg, e)
             notificationsOperator.show(
-                title = "Exception running task $title",
-                body = "${e.message}\n${e.stackTrace.joinToString("<br>")}"
+                title = msg,
+                body = "Exception caught of type ${e.javaClass.simpleName}<br>${e.message}<br>More info in IDE logs",
             )
             data.map { it to null }
         }
