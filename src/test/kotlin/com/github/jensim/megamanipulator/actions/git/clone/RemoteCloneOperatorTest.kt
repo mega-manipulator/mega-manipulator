@@ -39,7 +39,9 @@ class RemoteCloneOperatorTest {
 
     private val localRepoOperator: LocalRepoOperator = mockk()
     private val processOperator: ProcessOperator = mockk()
-    private val sparseConfigSetupOperator: SparseConfigSetupOperator = mockk()
+    private val sparseConfigSetupOperator: SparseConfigSetupOperator = mockk {
+        coEvery { setupSparseDef(any(), any()) } returns emptyList()
+    }
 
     private val project: Project = mockk()
     private val codeHostSettings = mockk<CodeHostSettings> {
