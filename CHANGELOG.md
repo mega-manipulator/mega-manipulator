@@ -3,9 +3,11 @@
 # mega-manipulator Changelog
 
 ## [Unreleased]
+
+## [1.0.1]
 ### Improvement
 - Sparse checkout is now possible from a locally kept repo
-- Upgrade all `Exception#printStackTrace` to use slf4j `Logger` for improved readability in the IDE logs
+- Upgrade all  to use slf4j  for improved readability in the IDE logs
 
 ### Fixed
 - Github search pagination was not working properly, so it was limiting search results to 30 repos
