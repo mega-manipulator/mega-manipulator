@@ -3,6 +3,7 @@ package com.github.jensim.megamanipulator.settings
 import com.fasterxml.jackson.module.jsonSchema.JsonSchema
 import com.fasterxml.jackson.module.jsonSchema.JsonSchemaGenerator
 import com.github.jensim.megamanipulator.settings.types.HttpsOverride
+import com.github.jensim.megamanipulator.settings.types.KeepLocalRepos
 import com.github.jensim.megamanipulator.settings.types.MegaManipulatorSettings
 import com.github.jensim.megamanipulator.settings.types.codehost.BitBucketSettings
 import com.github.jensim.megamanipulator.settings.types.codehost.CodeHostSettingsGroup
@@ -26,7 +27,10 @@ class SettingsFileOperatorTest {
     private val testData = MegaManipulatorSettings(
         searchHostSettings = mapOf(
             "github" to SearchHostSettingsGroup(
-                gitHub = GithubSearchSettings(username = "jensim")
+                gitHub = GithubSearchSettings(
+                    username = "jensim",
+                    keepLocalRepos = KeepLocalRepos("/tmp/vcs"),
+                ),
             ),
             "sourcegraph_com" to SearchHostSettingsGroup(
                 sourceGraph = SourceGraphSettings(
@@ -36,6 +40,7 @@ class SettingsFileOperatorTest {
                         "github.com" to CodeHostSettingsGroup(
                             gitHub = GitHubSettings(
                                 username = "jensim",
+                                keepLocalRepos = KeepLocalRepos("/tmp/vcs"),
                             )
                         )
                     )
@@ -50,6 +55,7 @@ class SettingsFileOperatorTest {
                         "github.com" to CodeHostSettingsGroup(
                             gitHub = GitHubSettings(
                                 username = "jensim",
+                                keepLocalRepos = KeepLocalRepos("/tmp/vcs"),
                             )
                         ),
                         "bitbucket" to CodeHostSettingsGroup(
@@ -57,11 +63,13 @@ class SettingsFileOperatorTest {
                                 baseUrl = "http://localhost:7081",
                                 httpsOverride = HttpsOverride.ALLOW_ANYTHING,
                                 username = "jensim",
+                                keepLocalRepos = KeepLocalRepos("/tmp/vcs"),
                             )
                         ),
                         "gitlab.com" to CodeHostSettingsGroup(
                             gitLab = GitLabSettings(
                                 username = "jensim",
+                                keepLocalRepos = KeepLocalRepos("/tmp/vcs"),
                             )
                         )
                     )

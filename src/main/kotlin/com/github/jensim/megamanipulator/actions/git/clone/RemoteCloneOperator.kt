@@ -17,16 +17,19 @@ class RemoteCloneOperator @NonInjectable constructor(
     private val project: Project,
     localRepoOperator: LocalRepoOperator?,
     processOperator: ProcessOperator?,
+    sparseConfigSetupOperator: SparseConfigSetupOperator?
 ) {
     constructor(project: Project) : this(
         project = project,
         localRepoOperator = null,
         processOperator = null,
+        sparseConfigSetupOperator = null,
     )
 
     private val logger = LoggerFactory.getLogger(javaClass)
     private val localRepoOperator: LocalRepoOperator by lazyService(project, localRepoOperator)
     private val processOperator: ProcessOperator by lazyService(project, processOperator)
+    private val sparseConfigSetupOperator: SparseConfigSetupOperator by lazyService(project, sparseConfigSetupOperator)
 
     suspend fun cloneRepos(pullRequest: PullRequestWrapper, settings: CodeHostSettings, sparseDef: String?): List<Action> {
         val basePath = project.basePath!!
@@ -97,38 +100,7 @@ class RemoteCloneOperator @NonInjectable constructor(
 
     private suspend fun pullCommands(dir: File, sparseDef: String?, defaultBranch: String, shallow: Boolean): List<Action> {
         val actionTrace = mutableListOf<Action>()
-        if (sparseDef != null) {
-            val p0 = processOperator.runCommandAsync(dir, listOf("git", "config", "core.sparseCheckout", "true")).await()
-            actionTrace.add(Action(message("sparseCheckoutConfig"), p0))
-            if (p0.exitCode == 0) {
-                try {
-                    val sparseFile = File(dir, ".git/info/sparse-checkout")
-                    sparseFile.writeText(sparseDef)
-                    actionTrace.add(
-                        Action(
-                            message("sparseCheckoutWrite"),
-                            ApplyOutput(
-                                dir = dir.absolutePath,
-                                std = "Setup successful",
-                                exitCode = 0,
-                            )
-                        )
-                    )
-                } catch (e: Exception) {
-                    logger.error("Failed writing sparse config file", e)
-                    actionTrace.add(
-                        Action(
-                            message("sparseCheckoutWrite"),
-                            ApplyOutput(
-                                dir = dir.absolutePath,
-                                std = "Failed writing sparse config file\n${e.stackTraceToString()}",
-                                exitCode = 1,
-                            )
-                        )
-                    )
-                }
-            }
-        }
+        sparseConfigSetupOperator.setupSparseDef(sparseDef, dir)
         if (actionTrace.isOkay()) {
             val p1 = if (shallow) {
                 processOperator.runCommandAsync(dir, listOf("git", "fetch", "--depth", "1", "origin", defaultBranch)).await()

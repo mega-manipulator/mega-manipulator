@@ -8,6 +8,7 @@ import com.github.jensim.megamanipulator.actions.git.GitUrlHelper
 import com.github.jensim.megamanipulator.actions.git.clone.CloneOperator
 import com.github.jensim.megamanipulator.actions.git.clone.LocalCloneOperator
 import com.github.jensim.megamanipulator.actions.git.clone.RemoteCloneOperator
+import com.github.jensim.megamanipulator.actions.git.clone.SparseConfigSetupOperator
 import com.github.jensim.megamanipulator.actions.git.commit.CommitOperator
 import com.github.jensim.megamanipulator.actions.git.localrepo.LocalRepoOperator
 import com.github.jensim.megamanipulator.actions.vcs.PrRouter
@@ -107,14 +108,18 @@ open class TestApplicationWiring {
             notificationsOperator = notificationsOperator,
         )
     }
+    val sparseConfigSetupOperator: SparseConfigSetupOperator by lazy {
+        SparseConfigSetupOperator(project = mockProject, processOperator = processOperator)
+    }
     val localCloneOperator: LocalCloneOperator by lazy {
-        LocalCloneOperator(mockProject, processOperator)
+        LocalCloneOperator(mockProject, processOperator, sparseConfigSetupOperator)
     }
     val remoteCloneOperator: RemoteCloneOperator by lazy {
         RemoteCloneOperator(
             project = mockProject,
             localRepoOperator = localRepoOperator,
             processOperator = processOperator,
+            sparseConfigSetupOperator = sparseConfigSetupOperator,
         )
     }
     val megaManipulatorSettingsState: MegaManipulatorSettingsState by lazy { MegaManipulatorSettingsState() }

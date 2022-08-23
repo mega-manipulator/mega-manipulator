@@ -3,6 +3,8 @@
 # mega-manipulator Changelog
 
 ## [Unreleased]
+### Improvement
+- Sparse checkout is now possible from a locally kept repo
 
 ## [1.0.0]
 ### Improvement
