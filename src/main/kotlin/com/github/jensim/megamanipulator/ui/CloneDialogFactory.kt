@@ -38,6 +38,9 @@ class CloneDialogFactory(
             ui.cloneButton.addActionListener {
                 onOk(ui.branchTextField.text, ui.shallowBox.isSelected, if (ui.sparseDefBox.isSelected) ui.sparseDefField.text else null)
                 prefillOperator.addPrefill(PrefillString.BRANCH, ui.branchTextField.text)
+                if (ui.sparseDefBox.isSelected){
+                    prefillOperator.addPrefill(PrefillString.SPARSE_HISTORY, ui.sparseDefField.text)
+                }
             }
         } catch (e: Exception) {
             logger.error("Failed opening up the Clone UI", e)

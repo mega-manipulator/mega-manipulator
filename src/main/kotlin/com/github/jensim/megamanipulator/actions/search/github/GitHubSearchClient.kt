@@ -19,6 +19,7 @@ import io.ktor.client.statement.HttpResponse
 import io.ktor.http.ContentType
 import org.slf4j.LoggerFactory
 import java.net.URI
+import kotlin.math.min
 
 class GitHubSearchClient @NonInjectable constructor(
     project: Project,
@@ -70,14 +71,36 @@ class GitHubSearchClient @NonInjectable constructor(
         val accumulator = HashSet<SearchResult>()
         var page = 1
         while (true) {
-            val response: HttpResponse = client.get("${settings.baseUrl}/search/$type?q=$q&page=$page") {
+            val limit: Int = min(100, 1000 - accumulator.size)
+            if (limit < 1){
+                val msg = "Paginated search result accumulated to ${accumulator.size}, there is a cap at 1000 to protect you & your IDE from overflows. Try to limit your search a bit more."
+                logger.warn(msg)
+                notificationsOperator.show(
+                    title = "Search result capped",
+                    body = msg,
+                    type = WARNING,
+                )
+                break
+            }
+            val perPage = "per_page=$limit"
+            val urlString = "${settings.baseUrl}/search/$type?$perPage&q=$q&page=$page"
+            val response: HttpResponse = client.get(urlString) {
                 accept(ContentType.Application.Json)
             }
             if (gottaRetry(response)) continue
-            val searchResponse = response.unwrap<GithubSearchResponse<T>>()
+            val searchResponse = try {
+                response.unwrap<GithubSearchResponse<T>>()
+            } catch (e: Exception) {
+                logger.error("Failed searching for $urlString", e)
+                break
+            }
+
             val items = searchResponse.items.orEmpty().map { transformResult(it) }.toSet()
+            if (items.isEmpty()) {
+                logger.debug("No more items found")
+                break
+            }
             accumulator.addAll(items)
-            if (!searchResponse.incomplete_results) break
             page += 1
         }
         return accumulator

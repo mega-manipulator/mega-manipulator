@@ -7,6 +7,9 @@
 - Sparse checkout is now possible from a locally kept repo
 - Upgrade all `Exception#printStackTrace` to use slf4j `Logger` for improved readability in the IDE logs
 
+### Fixed
+- Github search pagination was not working properly, so it was limiting search results to 30 repos
+
 ## [1.0.0]
 ### Improvement
 - Default branch name will include timestamp, for unique branch names, and working with multiple batches at the same time
