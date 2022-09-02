@@ -6,6 +6,9 @@
 ### Fix
 - Tables returned the wrong index after being sorted
 
+### Security
+- Bump the versions
+
 ## [1.0.1]
 ### Improvement
 - Sparse checkout is now possible from a locally kept repo
