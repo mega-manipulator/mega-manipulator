@@ -163,6 +163,14 @@ tasks {
         schemaFile.set(file("${project.projectDir.absolutePath}/src/test/resources/graphql/github/github.graphql.schema"))
         serializer.set(GraphQLSerializer.JACKSON)
     }
+    withType(ProcessResources::class.java) {
+        // Generate a file on the classpath to be able to know your own version of the plugin and compare that against the latest version available
+        listOf("../src/main/resources/version", "resources/main/version").forEach { verFile ->
+            val versionFile = File(buildDir, verFile)
+            if (!versionFile.parentFile.exists()) versionFile.parentFile.mkdirs()
+            versionFile.writeText(project.version.toString())
+        }
+    }
 
     // Set the compatibility jvm versions
     withType<JavaCompile> {

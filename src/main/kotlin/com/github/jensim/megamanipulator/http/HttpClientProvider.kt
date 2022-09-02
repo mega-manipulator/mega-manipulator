@@ -196,7 +196,12 @@ class HttpClientProvider @NonInjectable constructor(
 
 suspend inline fun <reified T> HttpResponse.unwrap(): T {
     if (status.isSuccess()) {
-        return body()
+        try {
+            return body()
+        } catch (e: Exception) {
+            val body = bodyAsText()
+            throw RuntimeException("Failed deserializing body ${body.take(1000)}", e)
+        }
         // return receive()
     } else {
         val body: String = bodyAsText()

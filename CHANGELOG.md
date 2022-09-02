@@ -3,6 +3,8 @@
 # mega-manipulator Changelog
 
 ## [Unreleased]
+### Improvement
+- Notify users that there is a new plugin version available
 
 ## [1.0.2]
 ### Fix

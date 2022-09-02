@@ -4,3 +4,4 @@ build
 out
 .env
 .qodana
+src/main/resources/version

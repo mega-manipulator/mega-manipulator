@@ -7,10 +7,10 @@ import com.intellij.openapi.fileEditor.FileDocumentManager
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.vfs.LocalFileSystem
 import com.intellij.serviceContainer.NonInjectable
-import com.intellij.util.io.inputStream
 import com.intellij.util.io.isDirectory
+import com.intellij.util.io.readBytes
+import com.intellij.util.io.readText
 import org.slf4j.LoggerFactory
-import java.io.BufferedInputStream
 import java.io.File
 import java.net.URI
 import java.nio.file.FileSystem
@@ -99,6 +99,21 @@ class FilesOperator @NonInjectable constructor(
     }
 
     private fun findBaseFiles(category: String): List<VirtFile> = findAllClasspathFiles("base-files/$category")
+    fun getPluginVersion(): String? {
+        return try {
+            val uri: URI = FilesOperator::class.java.classLoader.getResource("version")?.toURI()!!
+            if (uri.scheme.equals("jar")) {
+                FileSystems.newFileSystem(uri, emptyMap<String, Any>()).use { fileSystem: FileSystem ->
+                    fileSystem.getPath("/version").readText()
+                }
+            } else {
+                Paths.get(uri).readText()
+            }
+        } catch (e: Exception) {
+            logger.error("Failed loading the version from file")
+            null
+        }
+    }
 
     private fun findAllClasspathFiles(dir: String): List<VirtFile> {
         val uri: URI = FilesOperator::class.java.classLoader.getResource(dir)?.toURI()!!
@@ -115,7 +130,7 @@ class FilesOperator @NonInjectable constructor(
         .iterator().asSequence()
         .filter { it.isDirectory().not() }
         .mapNotNull {
-            val content = BufferedInputStream(it.inputStream()).use { it.readAllBytes() }
+            val content = it.readBytes()
             if (content.isNotEmpty()) {
                 VirtFile("config/${it.fileName}", content)
             } else {
