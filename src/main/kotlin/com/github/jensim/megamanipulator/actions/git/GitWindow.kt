@@ -159,8 +159,8 @@ class GitWindow(private val project: Project) : ToolWindowTab {
                             extraText1 = title,
                             extraText2 = { it.asPathString() },
                             data = repos
-                        ) {
-                            prRouter.createPr(title, description, it)
+                        ) { repo ->
+                            prRouter.createPr(title, description, repo)
                         }
                     } else {
                         dialogGenerator.showConfirm(

@@ -157,7 +157,7 @@ class GeneralKtDataTable<T : Any>(
         get() {
             return selectedRows.map {
                 try {
-                    myModel.items.getOrNull(it)
+                    items.getOrNull(rowSorter.convertRowIndexToModel(it))
                 } catch (e: Exception) {
                     null
                 }

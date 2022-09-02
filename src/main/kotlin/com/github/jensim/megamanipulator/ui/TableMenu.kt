@@ -64,12 +64,5 @@ open class TableMenu<T>(
             }
             return menu
         }
-
-        private fun appendCountSuffix(filtered: Int, total: Int, baseHeader: String): String {
-            return when (filtered) {
-                total -> "$baseHeader ($total)"
-                else -> "$baseHeader ($filtered/$total)"
-            }
-        }
     }
 }

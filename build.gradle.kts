@@ -11,14 +11,14 @@ plugins {
     // Kotlin support
     kotlin("jvm") version "1.7.10"
     // gradle-intellij-plugin - read more: https://github.com/JetBrains/gradle-intellij-plugin
-    id("org.jetbrains.intellij") version "1.8.0"
+    id("org.jetbrains.intellij") version "1.9.0"
     // gradle-changelog-plugin - read more: https://github.com/JetBrains/gradle-changelog-plugin
     id("org.jetbrains.changelog") version "1.3.1"
 
-    id("org.jlleitschuh.gradle.ktlint") version "10.3.0"
+    id("org.jlleitschuh.gradle.ktlint") version "11.0.0"
     id("io.gitlab.arturbosch.detekt") version "1.21.0"
     id("com.github.ben-manes.versions") version "0.42.0"
-    id("com.expediagroup.graphql") version "6.1.0"
+    id("com.expediagroup.graphql") version "6.2.2"
     id("org.jetbrains.qodana") version "0.1.13"
 }
 
@@ -54,7 +54,7 @@ dependencies {
 
     val ktorVersion = "2.1.0"
     val kotlinCoroutinesVersion = "1.6.4"
-    val graphqlKotlinKtorVersion = "6.1.0"
+    val graphqlKotlinKtorVersion = "6.2.2"
 
     implementation(enforcedPlatform(kotlin("bom", kotlinVersion)))
     implementation(enforcedPlatform("org.jetbrains.kotlinx:kotlinx-coroutines-bom:$kotlinCoroutinesVersion"))
@@ -77,7 +77,7 @@ dependencies {
     implementation("com.fasterxml.jackson.datatype:jackson-datatype-jsr310:$jacksonDatabindVersion")
 
     implementation("org.eclipse.jgit:org.eclipse.jgit:6.2.0.202206071550-r")
-    implementation("ch.qos.logback:logback-classic:1.2.11")
+    implementation("ch.qos.logback:logback-classic:1.4.0")
     implementation("me.xdrop:fuzzywuzzy:1.4.0")
     implementation("com.expediagroup:graphql-kotlin-ktor-client:$graphqlKotlinKtorVersion") {
         exclude("com.expediagroup:graphql-kotlin-client-serialization")
@@ -94,7 +94,7 @@ dependencies {
     testImplementation("com.fasterxml.jackson.module:jackson-module-jsonSchema:$jacksonDatabindVersion")
     testImplementation("org.skyscreamer:jsonassert:1.5.1")
     testImplementation("org.awaitility:awaitility:4.2.0")
-    testImplementation("io.mockk:mockk:1.12.5")
+    testImplementation("io.mockk:mockk:1.12.7")
 
     testImplementation("org.hamcrest:hamcrest:$hamcrestVersion")
     testImplementation("org.hamcrest:hamcrest-library:$hamcrestVersion")
