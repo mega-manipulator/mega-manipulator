@@ -32,7 +32,7 @@ class GeneralKtDataTable<T : Any>(
     private val myModel = GeneralTableModel<T>(type, columns)
     private val selectListeners = mutableListOf<() -> Unit>()
     private val clickListeners = mutableListOf<(MouseEvent, T?) -> Unit>()
-    private val myRowSorter = TableRowSorter<GeneralTableModel<T>>(myModel)
+    private val myRowSorter: TableRowSorter<GeneralTableModel<T>>? = if (autoRowSorter) TableRowSorter<GeneralTableModel<T>>(myModel) else null
 
     override fun getModel(): GeneralTableModel<T> {
         return myModel
@@ -42,7 +42,7 @@ class GeneralKtDataTable<T : Any>(
 
     init {
         this.model = myModel
-        if (autoRowSorter) {
+        if (myRowSorter != null) {
             this.rowSorter = myRowSorter
         }
         this.minimumSize = minSize
@@ -78,6 +78,7 @@ class GeneralKtDataTable<T : Any>(
                     }
                 }
             }
+
             override fun mousePressed(e: MouseEvent?) = Unit
             override fun mouseReleased(e: MouseEvent?) = Unit
             override fun mouseEntered(e: MouseEvent?) = Unit
@@ -92,20 +93,23 @@ class GeneralKtDataTable<T : Any>(
         val col = columnAtPoint(point)
         if (col < 0) return null
         return if (items.size > row) {
-            val index = rowSorter.convertRowIndexToModel(row)
-            items.getOrNull(index)
+            itemAtRow(row)
         } else {
             null
         }
     }
 
+    private fun itemAtRow(row: Int): T? {
+        val idx = rowSorter?.convertRowIndexToModel(row) ?: row
+        return items.getOrNull(idx)
+    }
+
     private val selectedProblemColor = Color.RED
     private val notSelectedProblemColor = selectedProblemColor.darker()
     override fun prepareRenderer(renderer: TableCellRenderer, row: Int, column: Int): Component {
-        val index = rowSorter.convertRowIndexToModel(row)
         val c = super.prepareRenderer(renderer, row, column)
         if (colorizer != null) {
-            val rowItem = items.getOrNull(index)
+            val rowItem = itemAtRow(row)
             if (rowItem != null && colorizer.test(rowItem)) {
                 if (isRowSelected(row)) {
                     selectionBackground
@@ -136,7 +140,7 @@ class GeneralKtDataTable<T : Any>(
 
     fun selectFirst() {
         try {
-            val zero = rowSorter.convertRowIndexToModel(0)
+            val zero = rowSorter?.convertRowIndexToModel(0) ?: 0
             selectionModel.setSelectionInterval(zero, zero)
         } catch (e: Exception) {
             logger.warn("Unable to select first")
@@ -145,7 +149,8 @@ class GeneralKtDataTable<T : Any>(
 
     fun selectLast() {
         try {
-            val indexLast = rowSorter.convertRowIndexToModel(items.size - 1)
+            val maxIdx = items.size - 1
+            val indexLast = rowSorter?.convertRowIndexToModel(maxIdx) ?: maxIdx
             if (indexLast < 0) return
             selectionModel.setSelectionInterval(indexLast, indexLast)
         } catch (e: Exception) {
@@ -159,9 +164,9 @@ class GeneralKtDataTable<T : Any>(
 
     val selectedValuesList: List<T>
         get() {
-            return selectedRows.map {
+            return selectedRows.map { row ->
                 try {
-                    items.getOrNull(rowSorter.convertRowIndexToModel(it))
+                    itemAtRow(row)
                 } catch (e: Exception) {
                     null
                 }
