@@ -3,6 +3,10 @@
 # mega-manipulator Changelog
 
 ## [Unreleased]
+### Fix
+- Tables returned the wrong index after being sorted
+
+## [1.0.1]
 ### Improvement
 - Sparse checkout is now possible from a locally kept repo
 - Upgrade all `Exception#printStackTrace` to use slf4j `Logger` for improved readability in the IDE logs
