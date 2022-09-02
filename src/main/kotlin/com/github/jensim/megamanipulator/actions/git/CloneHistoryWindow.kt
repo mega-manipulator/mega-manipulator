@@ -82,6 +82,7 @@ class CloneHistoryWindow(val project: Project) : ToolWindowTab {
     )
     private val actionSelector = GeneralKtDataTable(
         type = Action::class,
+        autoRowSorter = false,
         columns = listOf("Action" to { it.what }),
         colorizer = { it.how.exitCode != 0 },
         minSize = Dimension(300, 200),

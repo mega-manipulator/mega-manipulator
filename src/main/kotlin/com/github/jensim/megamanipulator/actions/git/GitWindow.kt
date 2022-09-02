@@ -179,6 +179,7 @@ class GitWindow(private val project: Project) : ToolWindowTab {
     private val stepList = GeneralKtDataTable(
         type = StepResult::class,
         selectionMode = ListSelectionModel.SINGLE_SELECTION,
+        autoRowSorter = false,
         columns = listOf(
             "Step" to { it.step },
             "Output (last line)" to { it.result.lastLine },

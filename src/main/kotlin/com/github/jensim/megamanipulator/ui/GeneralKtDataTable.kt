@@ -102,19 +102,19 @@ class GeneralKtDataTable<T : Any>(
     private val selectedProblemColor = Color.RED
     private val notSelectedProblemColor = selectedProblemColor.darker()
     override fun prepareRenderer(renderer: TableCellRenderer, row: Int, column: Int): Component {
-        val c = super.prepareRenderer(renderer, row, column)
         val index = rowSorter.convertRowIndexToModel(row)
+        val c = super.prepareRenderer(renderer, row, column)
         if (colorizer != null) {
             val rowItem = items.getOrNull(index)
             if (rowItem != null && colorizer.test(rowItem)) {
-                if (isRowSelected(index)) {
+                if (isRowSelected(row)) {
                     selectionBackground
                     c.background = selectedProblemColor
                 } else {
                     c.background = notSelectedProblemColor
                 }
             } else {
-                if (isRowSelected(index)) {
+                if (isRowSelected(row)) {
                     c.background = selectionBackground
                 } else {
                     c.background = background
@@ -130,12 +130,14 @@ class GeneralKtDataTable<T : Any>(
 
     fun setListData(items: List<T>) {
         myModel.items = items
+        myModel.fireTableDataChanged()
         resizeAndRepaint()
     }
 
     fun selectFirst() {
         try {
-            selectionModel.setSelectionInterval(0, 0)
+            val zero = rowSorter.convertRowIndexToModel(0)
+            selectionModel.setSelectionInterval(zero, zero)
         } catch (e: Exception) {
             logger.warn("Unable to select first")
         }
@@ -143,7 +145,7 @@ class GeneralKtDataTable<T : Any>(
 
     fun selectLast() {
         try {
-            val indexLast = myModel.items.size - 1
+            val indexLast = rowSorter.convertRowIndexToModel(items.size - 1)
             if (indexLast < 0) return
             selectionModel.setSelectionInterval(indexLast, indexLast)
         } catch (e: Exception) {
