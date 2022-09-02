@@ -52,8 +52,7 @@ class LocalRepoOperator @NonInjectable constructor(
     }
 
     fun switchBranch(repos: List<File>, branch: String) {
-        val localRepoFiles = repos
-        uiProtector.mapConcurrentWithProgress(title = "Checkout branch $branch", data = localRepoFiles) { dir ->
+        uiProtector.mapConcurrentWithProgress(title = "Checkout branch $branch", data = repos) { dir ->
             switchBranch(dir, branch)
         }
     }
@@ -74,6 +73,9 @@ class LocalRepoOperator @NonInjectable constructor(
         return processOperator.runCommandAsync(repoDir, listOfNotNull("git", "push", forceFlag, "--set-upstream", upstream, branch)).await()
     }
 
+    /**
+     * user / repo
+     */
     suspend fun getForkProject(repo: SearchResult): Pair<String, String>? {
         val url = getGitUrl(repo, "fork")
         val parts = url?.removeSuffix(".git")?.split("/", ":")?.takeLast(2)
@@ -130,9 +132,15 @@ class LocalRepoOperator @NonInjectable constructor(
         val evalFile = evalPath.toFile()
         val gitDir = File(evalFile, ".git")
         if (gitDir.exists()) {
-            val relativePath = evalFile.absolutePath.removePrefix(clonesPath.toFile().absolutePath)
-            if (relativePath.count { it == File.separatorChar } == depth) {
-                return true
+            val prefix = clonesPath.toFile().absolutePath
+            val absolutePath = evalFile.absolutePath
+            if(absolutePath.startsWith(prefix)) {
+                // Are we in the clone path
+                val relativePath = absolutePath.removePrefix(prefix)
+                // Is it on the correct level in the hierarchy
+                if (relativePath.count { it == File.separatorChar } == depth) {
+                    return true
+                }
             }
         }
         return false
