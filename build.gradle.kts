@@ -165,8 +165,7 @@ tasks {
     }
     withType(ProcessResources::class.java) {
         // Generate a file on the classpath to be able to know your own version of the plugin and compare that against the latest version available
-        listOf("../src/main/resources/version", "resources/main/version").forEach { verFile ->
-            val versionFile = File(buildDir, verFile)
+        listOf(File(projectDir,"src/main/resources/version"), File(buildDir,"resources/main/version")).forEach { versionFile ->
             if (!versionFile.parentFile.exists()) versionFile.parentFile.mkdirs()
             versionFile.writeText(project.version.toString())
         }
