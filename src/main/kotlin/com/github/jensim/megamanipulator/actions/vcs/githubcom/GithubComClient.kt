@@ -27,6 +27,7 @@ import io.ktor.client.statement.HttpResponse
 import io.ktor.client.statement.bodyAsText
 import io.ktor.http.ContentType
 import io.ktor.http.contentType
+import io.ktor.http.isSuccess
 import kotlinx.coroutines.CoroutineStart.LAZY
 import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.Dispatchers
@@ -78,29 +79,35 @@ class GithubComClient @NonInjectable constructor(
         val client: HttpClient = httpClientProvider.getClient(repo.searchHostName, repo.codeHostName, settings)
         val fork: Pair<String, String>? = localRepoOperator.getForkProject(repo)
         val localBranch: String = localRepoOperator.getBranch(repo)!!
-        val headProject = fork?.first ?: repo.project
-        val ghRepo: GithubComRepo = client.get("${settings.baseUrl}/repos/${repo.project}/${repo.repo}").unwrap()
-        val response = client.post("${settings.baseUrl}/repos/${repo.project}/${repo.repo}/pulls") {
+        val headProject = fork?.first?.let { "$it:" } ?: ""
+        val repoUrlString = "${settings.baseUrl}/repos/${repo.project}/${repo.repo}"
+        val ghRepo: GithubComRepo = client.get(repoUrlString).unwrap()
+        val body = GithubPullRequestRequest(
+            title = title,
+            body = description,
+            head = "$headProject$localBranch",
+            base = ghRepo.default_branch,
+            draft = false,
+            maintainer_can_modify = true,
+        )
+        val prPostUrlString = "${settings.baseUrl}/repos/${repo.project}/${repo.repo}/pulls"
+        val response = client.post(prPostUrlString) {
             contentType(ContentType.Application.Json)
             accept(ContentType.Application.Json)
-            setBody(
-                GithubPullRequestRequest(
-                    title = title,
-                    body = description,
-                    head = "$headProject:$localBranch",
-                    base = ghRepo.default_branch,
-                    draft = false,
-                    maintainer_can_modify = true
-                )
-            )
+            setBody(body)
         }
-        val prString = response.bodyAsText()
-        val pr: GithubComPullRequest = objectMapper.readValue(prString)
+        val prResponse = response.bodyAsText()
+        if (!response.status.isSuccess()){
+            val msg = "Failed creating PR with request! $prResponse from request $prPostUrlString  $body"
+            logger.error(msg)
+            throw RuntimeException(msg)
+        }
+        val pr: GithubComPullRequest = objectMapper.readValue(prResponse)
         return GithubComPullRequestWrapper(
             searchHost = repo.searchHostName,
             codeHost = repo.codeHostName,
             pullRequest = pr,
-            raw = prString
+            raw = prResponse
         )
     }
 
