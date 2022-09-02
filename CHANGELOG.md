@@ -6,6 +6,9 @@
 ### Improvement
 - Notify users that there is a new plugin version available
 
+### Fix
+- Also fix the coloring (Tables returned the wrong index after being sorted)
+
 ## [1.0.2]
 ### Fix
 - Tables returned the wrong index after being sorted

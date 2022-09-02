@@ -92,7 +92,8 @@ class GeneralKtDataTable<T : Any>(
         val col = columnAtPoint(point)
         if (col < 0) return null
         return if (items.size > row) {
-            items.getOrNull(row)
+            val index = rowSorter.convertRowIndexToModel(row)
+            items.getOrNull(index)
         } else {
             null
         }
@@ -102,17 +103,18 @@ class GeneralKtDataTable<T : Any>(
     private val notSelectedProblemColor = selectedProblemColor.darker()
     override fun prepareRenderer(renderer: TableCellRenderer, row: Int, column: Int): Component {
         val c = super.prepareRenderer(renderer, row, column)
+        val index = rowSorter.convertRowIndexToModel(row)
         if (colorizer != null) {
-            val rowItem = myModel.items.getOrNull(row)
+            val rowItem = items.getOrNull(index)
             if (rowItem != null && colorizer.test(rowItem)) {
-                if (isRowSelected(row)) {
+                if (isRowSelected(index)) {
                     selectionBackground
                     c.background = selectedProblemColor
                 } else {
                     c.background = notSelectedProblemColor
                 }
             } else {
-                if (isRowSelected(row)) {
+                if (isRowSelected(index)) {
                     c.background = selectionBackground
                 } else {
                     c.background = background
