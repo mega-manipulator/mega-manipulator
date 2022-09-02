@@ -134,7 +134,7 @@ class LocalRepoOperator @NonInjectable constructor(
         if (gitDir.exists()) {
             val prefix = clonesPath.toFile().absolutePath
             val absolutePath = evalFile.absolutePath
-            if(absolutePath.startsWith(prefix)) {
+            if (absolutePath.startsWith(prefix)) {
                 // Are we in the clone path
                 val relativePath = absolutePath.removePrefix(prefix)
                 // Is it on the correct level in the hierarchy

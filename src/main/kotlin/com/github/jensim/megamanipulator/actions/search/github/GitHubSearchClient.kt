@@ -72,7 +72,7 @@ class GitHubSearchClient @NonInjectable constructor(
         var page = 1
         while (true) {
             val limit: Int = min(100, 1000 - accumulator.size)
-            if (limit < 1){
+            if (limit < 1) {
                 val msg = "Paginated search result accumulated to ${accumulator.size}, there is a cap at 1000 to protect you & your IDE from overflows. Try to limit your search a bit more."
                 logger.warn(msg)
                 notificationsOperator.show(

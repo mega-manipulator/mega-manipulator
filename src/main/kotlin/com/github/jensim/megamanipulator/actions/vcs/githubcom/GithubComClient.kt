@@ -97,7 +97,7 @@ class GithubComClient @NonInjectable constructor(
             setBody(body)
         }
         val prResponse = response.bodyAsText()
-        if (!response.status.isSuccess()){
+        if (!response.status.isSuccess()) {
             val msg = "Failed creating PR with request! $prResponse from request $prPostUrlString  $body"
             logger.error(msg)
             throw RuntimeException(msg)
