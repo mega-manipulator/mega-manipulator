@@ -3,6 +3,8 @@
 # mega-manipulator Changelog
 
 ## [Unreleased]
+
+## [1.0.2]
 ### Fix
 - Tables returned the wrong index after being sorted
 
