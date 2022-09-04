@@ -3,6 +3,9 @@
 # mega-manipulator Changelog
 
 ## [Unreleased]
+### Fixed
+- Sparse checkout from locally kept repo
+- Repo reset after local copy
 
 ## [1.0.3]
 ### Improvement
