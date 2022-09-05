@@ -4,6 +4,7 @@ import com.github.jensim.megamanipulator.actions.NotificationsOperator
 import com.github.jensim.megamanipulator.actions.search.SearchResult
 import com.github.jensim.megamanipulator.actions.vcs.githubcom.GitHubValidation
 import com.github.jensim.megamanipulator.actions.vcs.githubcom.GitHubValidation.delayIfRateLimit
+import com.github.jensim.megamanipulator.actions.vcs.githubcom.GitHubValidation.rateLimitRetry
 import com.github.jensim.megamanipulator.http.HttpClientProvider
 import com.github.jensim.megamanipulator.http.unwrap
 import com.github.jensim.megamanipulator.project.lazyService
@@ -84,8 +85,10 @@ class GitHubSearchClient @NonInjectable constructor(
             }
             val perPage = "per_page=$limit"
             val urlString = "${settings.baseUrl}/search/$type?$perPage&q=$q&page=$page"
-            val response: HttpResponse = client.get(urlString) {
-                accept(ContentType.Application.Json)
+            val response: HttpResponse = rateLimitRetry(false) {
+                client.get(urlString) {
+                    accept(ContentType.Application.Json)
+                }
             }
             if (gottaRetry(response)) continue
             val searchResponse = try {

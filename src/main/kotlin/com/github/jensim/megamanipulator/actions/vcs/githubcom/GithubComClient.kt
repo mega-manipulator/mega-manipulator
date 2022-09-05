@@ -6,6 +6,7 @@ import com.github.jensim.megamanipulator.actions.search.SearchResult
 import com.github.jensim.megamanipulator.actions.vcs.GithubComPullRequestWrapper
 import com.github.jensim.megamanipulator.actions.vcs.GithubComRepoWrapping
 import com.github.jensim.megamanipulator.actions.vcs.PrActionStatus
+import com.github.jensim.megamanipulator.actions.vcs.githubcom.GitHubValidation.rateLimitRetry
 import com.github.jensim.megamanipulator.http.HttpClientProvider
 import com.github.jensim.megamanipulator.http.unwrap
 import com.github.jensim.megamanipulator.project.CoroutinesHolder
@@ -91,10 +92,12 @@ class GithubComClient @NonInjectable constructor(
             maintainer_can_modify = true,
         )
         val prPostUrlString = "${settings.baseUrl}/repos/${repo.project}/${repo.repo}/pulls"
-        val response = client.post(prPostUrlString) {
-            contentType(ContentType.Application.Json)
-            accept(ContentType.Application.Json)
-            setBody(body)
+        val response = rateLimitRetry(true) {
+            client.post(prPostUrlString) {
+                contentType(ContentType.Application.Json)
+                accept(ContentType.Application.Json)
+                setBody(body)
+            }
         }
         val prResponse = response.bodyAsText()
         if (!response.status.isSuccess()) {
@@ -116,7 +119,9 @@ class GithubComClient @NonInjectable constructor(
         // According to github docs, the fork process can take up to 5 minutes
         // https://docs.github.com/en/rest/reference/repos#create-a-fork
         val ghrepo: GithubComRepo? = try {
-            val tmpRepo: GithubComRepo = client.get("${settings.baseUrl}/repos/${settings.username}/${repo.repo}").unwrap()
+            val tmpRepo: GithubComRepo = rateLimitRetry(false) {
+                client.get("${settings.baseUrl}/repos/${settings.username}/${repo.repo}")
+            }.unwrap()
             if (tmpRepo.fork && tmpRepo.parent?.owner?.login == repo.project) tmpRepo else null
         } catch (e: Exception) {
             null
@@ -124,10 +129,12 @@ class GithubComClient @NonInjectable constructor(
         // Recover or create fork
         return if (ghrepo == null) {
             // TODO fix fork repo name
-            val previewRepo: GithubComRepo = client.post("${settings.baseUrl}/repos/${repo.project}/${repo.repo}/forks") {
-                setBody(emptyMap<String, Any>())
-                accept(ContentType.Application.Json)
-                contentType(ContentType.Application.Json)
+            val previewRepo: GithubComRepo = rateLimitRetry(true) {
+                client.post("${settings.baseUrl}/repos/${repo.project}/${repo.repo}/forks") {
+                    setBody(emptyMap<String, Any>())
+                    accept(ContentType.Application.Json)
+                    contentType(ContentType.Application.Json)
+                }
             }.unwrap()
             when (settings.cloneType) {
                 CloneType.SSH -> previewRepo.ssh_url
@@ -148,9 +155,11 @@ class GithubComClient @NonInjectable constructor(
         pullRequest: GithubComPullRequestWrapper
     ): PrActionStatus {
         val client: HttpClient = httpClientProvider.getClient(pullRequest.searchHost, pullRequest.codeHost, settings)
-        val response: HttpResponse = client.patch(pullRequest.pullRequest.url) {
-            contentType(ContentType.Application.Json)
-            setBody(mapOf("title" to newTitle, "body" to newDescription))
+        val response: HttpResponse = rateLimitRetry(true) {
+            client.patch(pullRequest.pullRequest.url) {
+                contentType(ContentType.Application.Json)
+                setBody(mapOf("title" to newTitle, "body" to newDescription))
+            }
         }
         return if (response.status.value >= 300) {
             PrActionStatus(success = false, msg = "Failed updating PR due to: '${response.bodyAsText()}'")
@@ -173,7 +182,15 @@ class GithubComClient @NonInjectable constructor(
         val role: String = role?.let { "+$role%3A${settings.username}" } ?: ""
         val state: String = state?.let { "+state%3A$state" } ?: ""
 
-        val repoOwner: String = if (project != null && repo != null) { "+repo%3A$project/$repo" } else if (project == null && repo == null) { "" } else if (project != null) { "+user%3A$project" } else { throw IllegalArgumentException("Project cannot be undefined if repo is defined") }
+        val repoOwner: String = if (project != null && repo != null) {
+            "+repo%3A$project/$repo"
+        } else if (project == null && repo == null) {
+            ""
+        } else if (project != null) {
+            "+user%3A$project"
+        } else {
+            throw IllegalArgumentException("Project cannot be undefined if repo is defined")
+        }
 
         val client: HttpClient = httpClientProvider.getClient(searchHost, codeHost, settings)
         val seq: Flow<GithubComIssue> = flow {
@@ -181,7 +198,9 @@ class GithubComClient @NonInjectable constructor(
             var found = 0L
             val perPage = min(100, limit)
             while (true) {
-                val result: GithubComSearchResult<GithubComIssue> = client.get("${settings.baseUrl}/search/issues?per_page=$perPage&page=${page++}&q=type%3Apr${state}$role$repoOwner").unwrap()
+                val result: GithubComSearchResult<GithubComIssue> = rateLimitRetry(false) {
+                    client.get("${settings.baseUrl}/search/issues?per_page=$perPage&page=${page++}&q=type%3Apr${state}$role$repoOwner")
+                }.unwrap()
                 result.items.forEach { emit(it) }
                 if (result.items.isEmpty()) break
                 found += result.total_count
@@ -256,7 +275,9 @@ class GithubComClient @NonInjectable constructor(
 
             val pageCount = AtomicInteger(1)
             while (true) {
-                val response: HttpResponse = client.get("${settings.baseUrl}/users/${settings.username}/repos?page=${pageCount.getAndIncrement()}")
+                val response: HttpResponse = rateLimitRetry(false) {
+                    client.get("${settings.baseUrl}/users/${settings.username}/repos?page=${pageCount.getAndIncrement()}")
+                }
                 val page: List<GithubComRepo> = response.unwrap()
                 val asyncList: Sequence<List<Deferred<GithubComRepo>>> = page.asSequence()
                     .filter { it.fork }
@@ -264,7 +285,9 @@ class GithubComClient @NonInjectable constructor(
                     .map { chunk: List<GithubComRepo> ->
                         chunk.map {
                             CoroutinesHolder.scope.async(start = LAZY) {
-                                client.get("${settings.baseUrl}/repos/${settings.username}/${it.name}").unwrap()
+                                rateLimitRetry(false) {
+                                    client.get("${settings.baseUrl}/repos/${settings.username}/${it.name}")
+                                }.unwrap()
                             }
                         }
                     }
@@ -289,7 +312,9 @@ class GithubComClient @NonInjectable constructor(
     suspend fun getRepo(searchResult: SearchResult, settings: GitHubSettings): GithubComRepoWrapping {
         val client: HttpClient =
             httpClientProvider.getClient(searchResult.searchHostName, searchResult.codeHostName, settings)
-        val response: HttpResponse = client.get("${settings.baseUrl}/repos/${searchResult.project}/${searchResult.repo}")
+        val response: HttpResponse = rateLimitRetry(false) {
+            client.get("${settings.baseUrl}/repos/${searchResult.project}/${searchResult.repo}")
+        }
         val repo: GithubComRepo = response.unwrap()
         return GithubComRepoWrapping(searchResult.searchHostName, searchResult.codeHostName, repo)
     }
@@ -298,9 +323,11 @@ class GithubComClient @NonInjectable constructor(
         // https://docs.github.com/en/rest/reference/pulls#comments
         // https://docs.github.com/en/rest/reference/issues#create-an-issue-comment
         val client: HttpClient = httpClientProvider.getClient(pullRequest.searchHost, pullRequest.codeHost, settings)
-        client.post(pullRequest.pullRequest.comments_url) {
-            contentType(ContentType.Application.Json)
-            setBody(mapOf("body" to comment))
+        rateLimitRetry(true) {
+            client.post(pullRequest.pullRequest.comments_url) {
+                contentType(ContentType.Application.Json)
+                setBody(mapOf("body" to comment))
+            }
         }
     }
 
@@ -326,15 +353,17 @@ class GithubComClient @NonInjectable constructor(
         // POST /repos/{owner}/{repo}/pulls/{pull_number}/reviews
 
         val client: HttpClient = httpClientProvider.getClient(pullRequest.searchHostName(), pullRequest.codeHostName(), settings)
-        val response: HttpResponse = client.post("${settings.baseUrl}/repos/${pullRequest.pullRequest.base?.repo?.full_name}/pulls/${pullRequest.pullRequest.id}/reviews") {
-            contentType(ContentType.Application.Json)
-            accept(ContentType.Application.Json)
-            setBody(
-                mapOf(
-                    "event" to event.name,
-                    "body" to "Bulk ${event.name.lowercase()} using <a href=\"https://mega-manipulator.github.io/\">mega-manipulator</a>"
+        val response: HttpResponse = rateLimitRetry(true) {
+            client.post("${settings.baseUrl}/repos/${pullRequest.pullRequest.base?.repo?.full_name}/pulls/${pullRequest.pullRequest.id}/reviews") {
+                contentType(ContentType.Application.Json)
+                accept(ContentType.Application.Json)
+                setBody(
+                    mapOf(
+                        "event" to event.name,
+                        "body" to "Bulk ${event.name.lowercase()} using <a href=\"https://mega-manipulator.github.io/\">mega-manipulator</a>"
+                    )
                 )
-            )
+            }
         }
         return if (response.status.value >= 300) {
             PrActionStatus(success = false, msg = "Failed ${event.name.lowercase()} PR due to: '${response.bodyAsText()}'")
@@ -351,8 +380,10 @@ class GithubComClient @NonInjectable constructor(
         // https://docs.github.com/en/rest/reference/pulls#merge-a-pull-request
         // PUT /repos/{owner}/{repo}/pulls/{pull_number}/merge
         val client: HttpClient = httpClientProvider.getClient(pullRequest.searchHostName(), pullRequest.codeHostName(), settings)
-        val response: HttpResponse = client.put("${settings.baseUrl}/repos/${pullRequest.pullRequest.base?.repo?.full_name}/pulls/${pullRequest.pullRequest.id}/merge") {
-            accept(ContentType.Application.Json)
+        val response: HttpResponse = rateLimitRetry(true) {
+            client.put("${settings.baseUrl}/repos/${pullRequest.pullRequest.base?.repo?.full_name}/pulls/${pullRequest.pullRequest.id}/merge") {
+                accept(ContentType.Application.Json)
+            }
         }
         return if (response.status.value >= 300) {
             PrActionStatus(success = false, msg = "Failed merge PR due to: '${response.bodyAsText()}'")

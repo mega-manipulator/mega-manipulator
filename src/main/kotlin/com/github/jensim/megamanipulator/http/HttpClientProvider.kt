@@ -179,6 +179,11 @@ class HttpClientProvider @NonInjectable constructor(
                 HttpsOverride.ALLOW_SELF_SIGNED -> trustSelfSigned()
                 else -> {}
             }
+            defaultRequest {
+                auth.getDefaultHeaders().forEach {
+                    header(it.first, it.second)
+                }
+            }
             auth.getAuthHeaderValue(password)?.let {
                 installBasicAuth(it)
             }

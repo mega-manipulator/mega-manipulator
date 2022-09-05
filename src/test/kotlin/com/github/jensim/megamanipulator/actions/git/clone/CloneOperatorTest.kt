@@ -110,7 +110,7 @@ internal class CloneOperatorTest {
         // Given
         val repo = SearchResult(searchHostName = "search", codeHostName = "code", project = "project", repo = "repo")
         coEvery {
-            localCloneOperator.copyIf(codeHostSettings, repo, "main", "main")
+            localCloneOperator.copyIf(codeHostSettings, repo, "main", "main", null)
         } returns CloneAttemptResult(repo, "main", listOf(), false)
         coEvery {
             localCloneOperator.saveCopy(codeHostSettings, repo, "main", null)

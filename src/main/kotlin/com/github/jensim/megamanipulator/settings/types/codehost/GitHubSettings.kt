@@ -40,6 +40,10 @@ data class GitHubSettings(
         validate()
     }
 
+    override fun getDefaultHeaders(): List<Pair<String, String>> = listOf(
+        "User-Agent" to username,
+    )
+
     override fun getAuthHeaderValue(password: String?): String? = when {
         // https://docs.github.com/en/rest/guides/getting-started-with-the-rest-api#authentication
         password != null && authMethod == JUST_TOKEN -> "token $password"

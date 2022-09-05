@@ -3,6 +3,9 @@
 # mega-manipulator Changelog
 
 ## [Unreleased]
+### Improvement
+- Handle GitHub rate limits better, both primary and secondary
+
 ### Fixed
 - Sparse checkout from locally kept repo
 - Repo reset after local copy
