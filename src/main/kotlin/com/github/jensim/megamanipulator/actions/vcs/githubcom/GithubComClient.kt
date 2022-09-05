@@ -248,7 +248,7 @@ class GithubComClient @NonInjectable constructor(
             if (pullRequest.pullRequest.head?.repo != null) {
                 if (dropFork && pullRequest.pullRequest.head.repo.fork && pullRequest.pullRequest.head.repo.id != pullRequest.pullRequest.base?.repo?.id) {
                     if (pullRequest.pullRequest.head.repo.open_issues_count == 0L && pullRequest.pullRequest.head.repo.owner.login == settings.username) {
-                        rateLimitRetry(true){
+                        rateLimitRetry(true) {
                             client.delete("${settings.baseUrl}/repos/${settings.username}/${pullRequest.pullRequest.head.repo.name}")
                         }.let {
                             if (!it.status.isSuccess()) {
