@@ -161,7 +161,7 @@ class GithubComClient @NonInjectable constructor(
                 setBody(mapOf("title" to newTitle, "body" to newDescription))
             }
         }
-        return if (response.status.value >= 300) {
+        return if (!response.status.isSuccess()) {
             PrActionStatus(success = false, msg = "Failed updating PR due to: '${response.bodyAsText()}'")
         } else {
             PrActionStatus(success = true)
@@ -236,32 +236,45 @@ class GithubComClient @NonInjectable constructor(
         pullRequest: GithubComPullRequestWrapper
     ): PrActionStatus {
         val client: HttpClient = httpClientProvider.getClient(pullRequest.searchHost, pullRequest.codeHost, settings)
-        val response: HttpResponse = client.patch(pullRequest.pullRequest.url) {
-            contentType(ContentType.Application.Json)
-            setBody(mapOf<String, Any>("state" to "closed"))
+        val response: HttpResponse = rateLimitRetry(true) {
+            client.patch(pullRequest.pullRequest.url) {
+                contentType(ContentType.Application.Json)
+                setBody(mapOf<String, Any>("state" to "closed"))
+            }
         }
-        if (response.status.value >= 300) {
+        if (!response.status.isSuccess()) {
             return PrActionStatus(false, response.bodyAsText())
         } else {
             if (pullRequest.pullRequest.head?.repo != null) {
                 if (dropFork && pullRequest.pullRequest.head.repo.fork && pullRequest.pullRequest.head.repo.id != pullRequest.pullRequest.base?.repo?.id) {
                     if (pullRequest.pullRequest.head.repo.open_issues_count == 0L && pullRequest.pullRequest.head.repo.owner.login == settings.username) {
-                        client.delete("${settings.baseUrl}/repos/${settings.username}/${pullRequest.pullRequest.head.repo.name}").let {
-                            if (it.status.value >= 300) {
+                        rateLimitRetry(true){
+                            client.delete("${settings.baseUrl}/repos/${settings.username}/${pullRequest.pullRequest.head.repo.name}")
+                        }.let {
+                            if (!it.status.isSuccess()) {
                                 return PrActionStatus(false, "Failed dropFork due to ${it.bodyAsText()}")
                             }
                         }
                     }
                 } else if (dropBranch && pullRequest.pullRequest.head.repo.id == pullRequest.pullRequest.base?.repo?.id) {
                     // https://docs.github.com/en/rest/reference/git#delete-a-reference
-                    client.delete("${settings.baseUrl}/repos/${pullRequest.pullRequest.head.repo.owner.login}/${pullRequest.pullRequest.head.repo.name}/git/refs/heads/${pullRequest.pullRequest.head.ref}").let {
-                        if (it.status.value >= 300) {
+                    deleteBranch(settings, client, pullRequest)?.let {
+                        if (!it.status.isSuccess()) {
                             return PrActionStatus(false, "Failed dropBranch due to ${it.bodyAsText()}")
                         }
                     }
                 }
             }
             return PrActionStatus(true)
+        }
+    }
+
+    private suspend fun deleteBranch(settings: GitHubSettings, client: HttpClient, pullRequest: GithubComPullRequestWrapper): HttpResponse? {
+        val owner = pullRequest.pullRequest.head?.repo?.owner?.login ?: return null
+        val repoName = pullRequest.pullRequest.head.repo.name
+        val branch = pullRequest.pullRequest.head.ref ?: return null
+        return rateLimitRetry(true) {
+            client.delete("${settings.baseUrl}/repos/$owner/$repoName/git/refs/heads/$branch")
         }
     }
 
@@ -354,7 +367,7 @@ class GithubComClient @NonInjectable constructor(
 
         val client: HttpClient = httpClientProvider.getClient(pullRequest.searchHostName(), pullRequest.codeHostName(), settings)
         val response: HttpResponse = rateLimitRetry(true) {
-            client.post("${settings.baseUrl}/repos/${pullRequest.pullRequest.base?.repo?.full_name}/pulls/${pullRequest.pullRequest.id}/reviews") {
+            client.post("${settings.baseUrl}/repos/${pullRequest.pullRequest.base?.repo?.full_name}/pulls/${pullRequest.pullRequest.number}/reviews") {
                 contentType(ContentType.Application.Json)
                 accept(ContentType.Application.Json)
                 setBody(
@@ -365,7 +378,7 @@ class GithubComClient @NonInjectable constructor(
                 )
             }
         }
-        return if (response.status.value >= 300) {
+        return if (!response.status.isSuccess()) {
             PrActionStatus(success = false, msg = "Failed ${event.name.lowercase()} PR due to: '${response.bodyAsText()}'")
         } else {
             PrActionStatus(success = true)
@@ -380,15 +393,29 @@ class GithubComClient @NonInjectable constructor(
         // https://docs.github.com/en/rest/reference/pulls#merge-a-pull-request
         // PUT /repos/{owner}/{repo}/pulls/{pull_number}/merge
         val client: HttpClient = httpClientProvider.getClient(pullRequest.searchHostName(), pullRequest.codeHostName(), settings)
+        val urlString = "${settings.baseUrl}/repos/${pullRequest.pullRequest.base?.repo?.full_name}/pulls/${pullRequest.pullRequest.number}/merge"
         val response: HttpResponse = rateLimitRetry(true) {
-            client.put("${settings.baseUrl}/repos/${pullRequest.pullRequest.base?.repo?.full_name}/pulls/${pullRequest.pullRequest.id}/merge") {
+            client.put(urlString) {
                 accept(ContentType.Application.Json)
+                contentType(ContentType.Application.Json)
+                setBody(
+                    mapOf<String, String>(
+                        "merge_method" to "merge", // Can be one of: merge, squash, rebase
+                    )
+                )
             }
         }
-        return if (response.status.value >= 300) {
-            PrActionStatus(success = false, msg = "Failed merge PR due to: '${response.bodyAsText()}'")
+        val result = if (!response.status.isSuccess()) {
+            logger.warn("Failed merge PR on $urlString due to: '${response.bodyAsText()}'")
+            PrActionStatus(success = false, msg = "Failed merge PR due to: ${response.status} '${response.bodyAsText()}'")
         } else {
             PrActionStatus(success = true)
         }
+        deleteBranch(settings, client, pullRequest)?.let {
+            if (!it.status.isSuccess()) {
+                logger.warn("")
+            }
+        }
+        return result
     }
 }

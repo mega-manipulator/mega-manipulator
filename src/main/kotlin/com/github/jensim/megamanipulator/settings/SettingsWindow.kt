@@ -5,6 +5,7 @@ import com.github.jensim.megamanipulator.actions.vcs.PrRouter
 import com.github.jensim.megamanipulator.files.FilesOperator
 import com.github.jensim.megamanipulator.onboarding.OnboardingId
 import com.github.jensim.megamanipulator.onboarding.OnboardingOperator
+import com.github.jensim.megamanipulator.project.PrefillStringSuggestionOperator
 import com.github.jensim.megamanipulator.project.ProjectOperator
 import com.github.jensim.megamanipulator.settings.passwords.PasswordsOperator
 import com.github.jensim.megamanipulator.settings.types.AuthMethod
@@ -51,7 +52,7 @@ class SettingsWindow(project: Project) : ToolWindowTab {
     private val prRouter: PrRouter by lazy { project.service() }
     private val searchOperator: SearchOperator by lazy { project.service() }
     private val onboardingOperator: OnboardingOperator by lazy { project.service() }
-    private val megaManipulatorSettingsState: MegaManipulatorSettingsState by lazy { project.service() }
+    private val prefillStringSuggestionOperator: PrefillStringSuggestionOperator by lazy { project.service() }
     private val dialogGenerator: DialogGenerator by lazy { project.service() }
 
     private enum class HostType {
@@ -219,7 +220,7 @@ class SettingsWindow(project: Project) : ToolWindowTab {
                 """.trimIndent(),
                 focusComponent = resetOnboardingButton
             ) {
-                megaManipulatorSettingsState.resetOnBoarding()
+                onboardingOperator.resetOnBoarding()
                 refresh()
             }
         }
@@ -264,7 +265,7 @@ class SettingsWindow(project: Project) : ToolWindowTab {
                 """.trimIndent(),
                 focusComponent = resetPrefillButton,
             ) {
-                megaManipulatorSettingsState.resetPrefill()
+                prefillStringSuggestionOperator.resetPrefill()
             }
         }
     }

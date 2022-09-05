@@ -98,7 +98,7 @@ class GithubComClientTest {
         // then
         assertThat(prs, not(nullValue()))
         // No duplicates
-        val prIds = prs.map { it.pullRequest.id }
+        val prIds = prs.map { it.pullRequest.number }
         val uniquePrIds = prIds.toSet()
         assertEquals(prIds.size, uniquePrIds.size)
         assertThat(prs, everyItem(kMatch { it.state() == CodeHostSettingsType.GITHUB.prStateOpen }))

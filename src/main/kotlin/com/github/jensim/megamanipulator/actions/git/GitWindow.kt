@@ -176,7 +176,7 @@ class GitWindow(private val project: Project) : ToolWindowTab {
                     }
                 }
             },
-            MenuItem({"Delete local clones (${it?.size ?: 0})"}, isEnabled = {!it.isNullOrEmpty()}){
+            MenuItem({ "Delete local clones (${it?.size ?: 0})" }, isEnabled = { !it.isNullOrEmpty() }) {
                 val dirs = it?.map { File(project.basePath, it.dir) } ?: return@MenuItem
                 dialogGenerator.showConfirm(
                     title = "Delete selected clones (${dirs.size}/${repoList.items.size})",
@@ -188,8 +188,7 @@ class GitWindow(private val project: Project) : ToolWindowTab {
                         extraText2 = { "${it.parent}/${it.name}" },
                         data = dirs
                     ) {
-                        logger.info("Fake delete this!!")
-                            //it.deleteRecursively()
+                        it.deleteRecursively()
                     }
                 }
             }

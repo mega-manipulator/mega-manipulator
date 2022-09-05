@@ -162,7 +162,7 @@ class BitbucketServerClient @NonInjectable constructor(
             accept(ContentType.Application.Json)
             setBody(request)
         }
-        if (prResponse.status.value >= 300) {
+        if (!prResponse.status.isSuccess()) {
             logger.error("Not OK response creating Pull Request")
         }
         val prRaw: String = prResponse.bodyAsText()
@@ -197,7 +197,7 @@ class BitbucketServerClient @NonInjectable constructor(
             accept(ContentType.Application.Json)
             setBody(pullRequest.bitbucketPR.copy(author = null))
         }
-        return if (response.status.value >= 300) {
+        return if (!response.status.isSuccess()) {
             PrActionStatus(success = false, msg = "Failed updating PR due to: '${response.bodyAsText()}'")
         } else {
             PrActionStatus(success = true)
@@ -274,7 +274,7 @@ class BitbucketServerClient @NonInjectable constructor(
                 contentType(ContentType.Application.Json)
                 setBody(emptyMap<String, String>())
             }
-            if (response.status.value >= 300) {
+            if (!response.status.isSuccess()) {
                 logger.error("Failed declining PullRequest ${response.bodyAsText()}")
                 return PrActionStatus(false)
             }
@@ -318,7 +318,7 @@ class BitbucketServerClient @NonInjectable constructor(
             contentType(ContentType.Application.Json)
             setBody(BitBucketRemoveBranchRequest(name = pullRequest.bitbucketPR.fromRef.id, dryRun = false))
         }
-        return if (response.status.value >= 300) {
+        return if (!response.status.isSuccess()) {
             PrActionStatus(false, response.bodyAsText())
         } else {
             PrActionStatus(true)
@@ -413,7 +413,7 @@ class BitbucketServerClient @NonInjectable constructor(
                 accept(ContentType.Application.Json)
                 setBody(emptyMap<String, String>())
             }
-        return if (response.status.value >= 300) {
+        return if (!response.status.isSuccess()) {
             val msg = "Failed deleting private repo ${repo.asPathString()} due to: '${response.bodyAsText()}'"
             logger.error(msg)
             PrActionStatus(success = false, msg = msg)
@@ -431,7 +431,7 @@ class BitbucketServerClient @NonInjectable constructor(
             accept(ContentType.Application.Json)
             setBody(BitBucketComment(text = comment))
         }
-        if (response.status.value >= 300) {
+        if (!response.status.isSuccess()) {
             logger.error("Failed commenting due to: '${response.bodyAsText()}'")
         }
     }
@@ -485,7 +485,7 @@ class BitbucketServerClient @NonInjectable constructor(
                 )
             )
         }
-        return if (response.status.value >= 300) {
+        return if (!response.status.isSuccess()) {
             PrActionStatus(success = false, msg = "Failed setting pr status due to: '${response.bodyAsText()}'")
         } else {
             PrActionStatus(success = true)
@@ -505,7 +505,7 @@ class BitbucketServerClient @NonInjectable constructor(
             accept(ContentType.Application.Json)
             header("X-Atlassian-Token", "no-check")
         }
-        return if (response.status.value >= 300) {
+        return if (!response.status.isSuccess()) {
             PrActionStatus(success = false, msg = "Failed merging due to: '${response.bodyAsText()}'")
         } else {
             PrActionStatus(success = true)

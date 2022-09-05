@@ -183,13 +183,28 @@ class PullRequestActionsMenu(
     )
 
     private fun prFeedback(action: String, list: List<Pair<PullRequestWrapper, PrActionStatus?>>) {
-        val failed = list.filter { it.second?.success != true }.map {
+        val (failed, succeeded) = list.partition { it.second?.success != true }
+        val succeededNames = succeeded.joinToString("\n") { it.first.asPathString() }
+        if (succeeded.isNotEmpty()) {
+            notificationsOperator.show(
+                title = "${succeeded.size}/${list.size} $action succeeded", body = succeededNames, type = NotificationType.INFORMATION
+            )
+        }
+        val failInfo = failed.map {
             it.first.asPathString() to (it.second?.msg ?: "<NO_INFO>")
         }
         if (failed.isNotEmpty()) {
-            logger.error("${failed.size}/${list.size} failed. ${failed.joinToString()}")
+            logger.error("${failed.size}/${list.size} failed.")
+            failInfo.forEach {
+                logger.error("Failed PR $action: ${it.first} -> ${it.second}")
+            }
             notificationsOperator.show(
-                title = "${failed.size}/${list.size} $action failed", body = "Check log for more info", type = NotificationType.WARNING
+                title = "${failed.size}/${list.size} $action failed",
+                body = """
+Check log for more info
+${failInfo.joinToString("\n") { it.first }}
+""",
+                type = NotificationType.WARNING
             )
         }
     }

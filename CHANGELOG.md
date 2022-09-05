@@ -9,6 +9,7 @@
 ### Fixed
 - Sparse checkout from locally kept repo
 - Repo reset after local copy
+- Merge GitHub PRs
 
 ## [1.0.3]
 ### Improvement
