@@ -3,6 +3,8 @@
 # mega-manipulator Changelog
 
 ## [Unreleased]
+
+## [1.0.4]
 ### Improvement
 - Handle GitHub rate limits better, both primary and secondary
 
