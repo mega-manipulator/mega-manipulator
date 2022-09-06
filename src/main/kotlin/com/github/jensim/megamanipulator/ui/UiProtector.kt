@@ -8,7 +8,7 @@ interface UiProtector {
         title: String,
         extraText1: String? = null,
         extraText2: (T) -> String? = { null },
-        concurrent: Int = 5,
+        concurrent: Int = 1,
         data: Collection<T>,
         mappingFunction: suspend (T) -> U
     ): List<Pair<T, U?>>

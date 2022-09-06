@@ -45,7 +45,8 @@ data class GithubComLicence(
 )
 
 data class GithubComPullRequest(
-    val id: Long,
+    // val id: Long,
+    val number: Long,
     // https://api.github.com/repos/jensim/jensim.github.io/pulls/3
     val url: String,
     val html_url: String,

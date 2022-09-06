@@ -21,16 +21,10 @@ class MegaManipulatorSettingsState : PersistentStateComponent<MegaManipulatorSet
 
     var seenOnboarding: MutableMap<OnboardingId, Boolean> = mutableMapOf()
     var prefillStrings: MutableMap<PrefillString, MutableList<String>> = mutableMapOf()
-    var seenGlobalOnboarding: Boolean = false
     @OptionTag(converter = CloneAttemptConverter::class)
     var cloneHistory: MutableList<CloneAttempt>? = ArrayList()
     @OptionTag(converter = ApplyAttemptConverter::class)
     var applyHistory: MutableList<ApplyAttempt>? = ArrayList()
-
-    fun seenOnBoarding(id: OnboardingId): Boolean = seenOnboarding[id] ?: false
-    fun setOnBoardingSeen(id: OnboardingId) {
-        seenOnboarding[id] = true
-    }
 
     fun addCloneAttempt(cloneAttempt: CloneAttempt) {
         cloneHistory = ArrayList(cloneHistory.orEmpty().takeLast(9) + cloneAttempt)
@@ -38,18 +32,6 @@ class MegaManipulatorSettingsState : PersistentStateComponent<MegaManipulatorSet
 
     fun addApplyAttempt(applyAttempt: ApplyAttempt) {
         applyHistory = ArrayList(applyHistory.orEmpty().takeLast(9) + applyAttempt)
-    }
-
-    fun resetPrefill() {
-        prefillStrings.clear()
-    }
-    fun resetOnBoarding() {
-        seenOnboarding.clear()
-        seenGlobalOnboarding = false
-    }
-    fun resetOnBoarding(id: OnboardingId) {
-        seenOnboarding.remove(id)
-        seenGlobalOnboarding = false
     }
 
     override fun getState(): MegaManipulatorSettingsState = this

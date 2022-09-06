@@ -1,9 +1,11 @@
 package com.github.jensim.megamanipulator.onboarding
 
+import com.github.jensim.megamanipulator.settings.MegaManipulatorApplicationSettings
 import com.github.jensim.megamanipulator.settings.MegaManipulatorSettingsState
 import com.github.jensim.megamanipulator.toolswindow.TabKey
 import com.github.jensim.megamanipulator.toolswindow.TabSelectorService
 import com.github.jensim.megamanipulator.ui.setDefaultButton
+import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.components.service
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.ui.popup.Balloon
@@ -23,8 +25,33 @@ class OnboardingOperator(private val project: Project) {
     private val logger = LoggerFactory.getLogger(javaClass)
     private val tabSelectorService: TabSelectorService by lazy { project.service() }
     private val state: MegaManipulatorSettingsState by lazy { project.service() }
+    private val appState: MegaManipulatorApplicationSettings by lazy {
+        ApplicationManager.getApplication().getService(MegaManipulatorApplicationSettings::class.java)
+    }
 
     private val reg: MutableMap<OnboardingId, JComponent> = EnumMap(OnboardingId::class.java)
+
+    fun seenGlobalOnboarding(): Boolean {
+        return appState.seenGlobalOnboarding
+    }
+
+    fun setSeenGlobalOnboarding() {
+        appState.seenGlobalOnboarding = true
+    }
+
+    fun resetOnBoarding() {
+        state.seenOnboarding.clear()
+        appState.seenGlobalOnboarding = false
+    }
+    fun resetOnBoarding(id: OnboardingId) {
+        state.seenOnboarding.remove(id)
+        appState.seenGlobalOnboarding = false
+    }
+
+    fun seenOnBoarding(id: OnboardingId): Boolean = state.seenOnboarding[id] ?: false
+    fun setOnBoardingSeen(id: OnboardingId) {
+        state.seenOnboarding[id] = true
+    }
 
     fun registerTarget(id: OnboardingId, contentTarget: JComponent) {
         reg[id] = contentTarget
@@ -33,12 +60,12 @@ class OnboardingOperator(private val project: Project) {
     fun resetTab(tabKey: TabKey) {
         OnboardingId.values()
             .filter { it.tab == tabKey }
-            .forEach { state.resetOnBoarding(it) }
+            .forEach { resetOnBoarding(it) }
     }
 
     @SuppressWarnings("LongMethod")
     fun display(id: OnboardingId, extraOkAction: () -> Unit = {}) {
-        if (state.seenOnBoarding(id)) {
+        if (seenOnBoarding(id)) {
             id.next?.let { next ->
                 display(next)
             }
@@ -71,7 +98,7 @@ class OnboardingOperator(private val project: Project) {
         closeButton.addActionListener {
             balloon.hide(true)
             extraOkAction()
-            state.setOnBoardingSeen(id)
+            setOnBoardingSeen(id)
             id.next?.let { next ->
                 display(next)
             }
@@ -79,7 +106,7 @@ class OnboardingOperator(private val project: Project) {
         stopButton.addActionListener {
             balloon.hide()
             generateSequence(id) { it.next }.forEach {
-                state.setOnBoardingSeen(it)
+                setOnBoardingSeen(it)
             }
         }
         balloon.setAnimationEnabled(true)

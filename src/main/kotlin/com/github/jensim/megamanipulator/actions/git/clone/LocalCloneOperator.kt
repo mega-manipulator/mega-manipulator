@@ -33,7 +33,7 @@ class LocalCloneOperator @NonInjectable constructor(
      * If the repo is configured for local copy over remote clone, try to find the repo locally,
      * and create a clone from that.
      */
-    suspend fun copyIf(settings: CodeHostSettings, repo: SearchResult, defaultBranch: String, branch: String): CloneAttemptResult {
+    suspend fun copyIf(settings: CodeHostSettings, repo: SearchResult, defaultBranch: String, branch: String, sparseDef: String?): CloneAttemptResult {
         val localRepoFile = File(project.basePath!!, "clones/${repo.asPathString()}/.git")
         if (localRepoFile.exists()) {
             return CloneAttemptResult(
@@ -74,6 +74,7 @@ class LocalCloneOperator @NonInjectable constructor(
                     logger.warn(message)
                     SKIP
                 }
+                history.addAll(sparseConfigSetupOperator.setupSparseDef(sparseDef, localRepoFile.parentFile))
                 checkout(defaultBranch, branch, localRepoFile.parentFile, history)
                 history.add(
                     Action(
@@ -109,26 +110,22 @@ class LocalCloneOperator @NonInjectable constructor(
 
     private suspend fun checkout(defaultBranch: String, branch: String, repo: File, history: MutableList<Action>) {
         processOperator.runCommandAsync(repo, listOf("git", "checkout", "-f", defaultBranch)).await().let {
-            history.add(Action("git checkout default branch '$defaultBranch'", it))
+            history.add(Action("git checkout '$defaultBranch' (default) branch '$defaultBranch'", it))
         }
         processOperator.runCommandAsync(repo, listOf("git", "reset", "--hard", "origin/$defaultBranch")).await().let {
-            history.add(Action("git reset", it))
+            history.add(Action("git reset '$defaultBranch' (default) branch to origin", it))
         }
         if (defaultBranch != branch) {
             if (history.last().how.exitCode == 0) {
                 val p3 = processOperator.runCommandAsync(repo, listOf("git", "checkout", branch)).await()
-                history.add(Action("Switch branch '$branch'", p3))
-                if (p3.exitCode != 0) {
-                    val p4 = processOperator.runCommandAsync(repo, listOf("git", "checkout", "-b", branch, "--track", "origin/$branch")).await()
+                history.add(Action("Checkout existing branch '$branch'", p3))
+                if (p3.exitCode == 0) {
+                    processOperator.runCommandAsync(repo, listOf("git", "reset", "--hard", "origin/$branch")).await().let {
+                        history.add(Action("git reset '$branch' to origin", it))
+                    }
+                } else {
+                    val p4 = processOperator.runCommandAsync(repo, listOf("git", "checkout", "-b", branch)).await()
                     history.add(Action("Create branch '$branch'", p4))
-                }
-            }
-        }
-        processOperator.runCommandAsync(repo, listOf("git", "reset", "--hard", "origin/$branch")).await().let {
-            history.add(Action("git reset to origin", it))
-            if (it.exitCode == 128) {
-                processOperator.runCommandAsync(repo, listOf("git", "reset", "--hard", branch)).await().let {
-                    history.add(Action("git reset", it))
                 }
             }
         }

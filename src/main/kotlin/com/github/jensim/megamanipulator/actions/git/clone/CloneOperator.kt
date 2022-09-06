@@ -108,7 +108,7 @@ class CloneOperator @NonInjectable constructor(
         val dir = File(basePath, "clones/${repo.asPathString()}")
         val history = mutableListOf<Action>()
 
-        val copyIf = localCloneOperator.copyIf(codeSettings, repo, defaultBranch, branchName)
+        val copyIf = localCloneOperator.copyIf(codeSettings, repo, defaultBranch, branchName, sparseDef)
         history.addAll(copyIf.actions)
         if (!copyIf.success) {
             if (codeSettings.cloneSleepSeconds > 0) {
@@ -189,7 +189,7 @@ class CloneOperator @NonInjectable constructor(
             )
         val history = mutableListOf<Action>()
         if (pullRequest.isFork()) {
-            // TODO: Solve this 😬
+            // TODO: Solve this 😬 !!!FORKS!!!
             if (codeHostSettings.keepLocalRepos?.path != null) {
                 history.add(
                     Action(
@@ -215,7 +215,7 @@ class CloneOperator @NonInjectable constructor(
         val defaultBranch = prRouter.getRepo(repo)?.getDefaultBranch()
             ?: return listOf(Action("Resolve default branch", ApplyOutput(repo.asPathString(), "Could not resolve default branch name", 1, "prRouter.getRepo(repo)?.getDefaultBranch()")))
 
-        val copyIf = localCloneOperator.copyIf(codeHostSettings, repo, defaultBranch, pullRequest.fromBranch())
+        val copyIf = localCloneOperator.copyIf(codeHostSettings, repo, defaultBranch, pullRequest.fromBranch(), sparseDef)
         history.addAll(copyIf.actions)
         if (!copyIf.success) {
             history.addAll(

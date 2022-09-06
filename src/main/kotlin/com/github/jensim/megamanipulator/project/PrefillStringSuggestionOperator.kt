@@ -46,6 +46,10 @@ class PrefillStringSuggestionOperator(project: Project) {
         }
     }
 
+    fun resetPrefill() {
+        megaManipulatorSettingsState.prefillStrings.clear()
+    }
+
     fun removePrefill(prefillString: PrefillString, v: String) {
         megaManipulatorSettingsState.prefillStrings[prefillString]?.let { l ->
             l.removeIf { it == v }

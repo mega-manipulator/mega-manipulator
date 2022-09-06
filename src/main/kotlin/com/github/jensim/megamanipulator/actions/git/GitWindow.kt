@@ -34,6 +34,7 @@ import com.intellij.ui.components.JBTextArea
 import com.intellij.ui.dsl.builder.panel
 import com.intellij.ui.dsl.gridLayout.HorizontalAlign.RIGHT
 import com.intellij.util.ui.components.BorderLayoutPanel
+import org.slf4j.LoggerFactory
 import java.awt.Dimension
 import java.io.File
 import java.util.concurrent.ConcurrentHashMap
@@ -47,6 +48,7 @@ private data class DirResult(val dir: String, val steps: List<StepResult>)
 @SuppressWarnings("LongParameterList")
 class GitWindow(private val project: Project) : ToolWindowTab {
 
+    private val logger = LoggerFactory.getLogger(javaClass)
     private val branchNamePattern = "^[a-zA-Z][a-zA-Z0-9/_-]*[a-zA-Z0-9]$"
 
     private val localRepoOperator: LocalRepoOperator by lazy { project.service() }
@@ -107,6 +109,7 @@ class GitWindow(private val project: Project) : ToolWindowTab {
             },
             MenuItem({ "Commit & Push (${it?.size ?: 0})" }, isEnabled = { !it.isNullOrEmpty() }) {
                 val dirs = it?.map { File(project.basePath, it.dir) } ?: return@MenuItem
+
                 commitDialogFactory.openCommitDialog(
                     focusComponent = repoList,
                 ) { commitMessage: String, push: Boolean, force: Boolean ->
@@ -173,6 +176,22 @@ class GitWindow(private val project: Project) : ToolWindowTab {
                     }
                 }
             },
+            MenuItem({ "Delete local clones (${it?.size ?: 0})" }, isEnabled = { !it.isNullOrEmpty() }) {
+                val dirs = it?.map { File(project.basePath, it.dir) } ?: return@MenuItem
+                dialogGenerator.showConfirm(
+                    title = "Delete selected clones (${dirs.size}/${repoList.items.size})",
+                    message = "This action is non-reversible!!",
+                    focusComponent = repoList
+                ) {
+                    uiProtector.mapConcurrentWithProgress(
+                        title = "Deleting repos..",
+                        extraText2 = { "${it.parent}/${it.name}" },
+                        data = dirs
+                    ) {
+                        it.deleteRecursively()
+                    }
+                }
+            }
         )
     )
     private val scrollRepos = JBScrollPane(repoList)
