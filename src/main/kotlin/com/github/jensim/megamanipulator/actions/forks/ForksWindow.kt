@@ -20,8 +20,8 @@ import com.intellij.notification.NotificationType
 import com.intellij.openapi.components.service
 import com.intellij.openapi.project.Project
 import com.intellij.ui.components.JBScrollPane
+import com.intellij.ui.dsl.builder.AlignX
 import com.intellij.ui.dsl.builder.panel
-import com.intellij.ui.dsl.gridLayout.HorizontalAlign.RIGHT
 import com.intellij.util.ui.components.BorderLayoutPanel
 import javax.swing.JButton
 import javax.swing.JComponent
@@ -66,7 +66,7 @@ class ForksWindow(project: Project) : ToolWindowTab {
             cell(loadStaleForksButton)
             cell(deleteButton)
             cell(OnboardingButton(project, TabKey.tabTitleForks, OnboardingId.FORK_TAB))
-                .horizontalAlign(RIGHT)
+                .align(AlignX.RIGHT)
         }
     }
 

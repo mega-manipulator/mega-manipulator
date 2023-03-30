@@ -11,7 +11,7 @@ plugins {
     // Kotlin support
     kotlin("jvm") version "1.7.10"
     // gradle-intellij-plugin - read more: https://github.com/JetBrains/gradle-intellij-plugin
-    id("org.jetbrains.intellij") version "1.9.0"
+    id("org.jetbrains.intellij") version "1.13.3"
     // gradle-changelog-plugin - read more: https://github.com/JetBrains/gradle-changelog-plugin
     id("org.jetbrains.changelog") version "1.3.1"
 
@@ -50,7 +50,7 @@ configure<org.jlleitschuh.gradle.ktlint.KtlintExtension> {
 
 dependencies {
     val kotlinVersion = "1.7.10"
-    val jacksonDatabindVersion = "2.13.3"
+    val jacksonDatabindVersion = "2.14.2"
 
     val ktorVersion = "2.1.0"
     val kotlinCoroutinesVersion = "1.6.4"

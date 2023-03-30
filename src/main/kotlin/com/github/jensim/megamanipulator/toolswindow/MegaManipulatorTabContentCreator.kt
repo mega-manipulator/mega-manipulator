@@ -42,7 +42,7 @@ class MegaManipulatorTabContentCreator(
     fun createHelloContent() {
         ToolWindowManager.getInstance(project).getToolWindow("Mega Manipulator")?.let { toolWindow ->
             toolWindow.hide()
-            val contentFactory: ContentFactory = ContentFactory.SERVICE.getInstance()
+            val contentFactory: ContentFactory = ContentFactory.getInstance()
             // 2022.2 val contentFactory: ContentFactory = ContentFactory.getInstance()
 
             // Language=html
@@ -82,7 +82,7 @@ class MegaManipulatorTabContentCreator(
 
     fun createContentMegaManipulator() {
         val toolWindow = toolWindow ?: return
-        val contentFactory: ContentFactory = ContentFactory.SERVICE.getInstance()
+        val contentFactory: ContentFactory = ContentFactory.getInstance()
         // 2022.2 val contentFactory: ContentFactory = ContentFactory.getInstance()
 
         val tabs = listOf<Pair<TabKey, ToolWindowTab>>(

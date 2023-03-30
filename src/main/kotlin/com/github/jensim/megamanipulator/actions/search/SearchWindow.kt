@@ -29,9 +29,8 @@ import com.intellij.openapi.project.Project
 import com.intellij.openapi.ui.ComboBox
 import com.intellij.ui.components.JBScrollPane
 import com.intellij.ui.components.JBTextField
+import com.intellij.ui.dsl.builder.AlignX
 import com.intellij.ui.dsl.builder.panel
-import com.intellij.ui.dsl.gridLayout.HorizontalAlign.RIGHT
-import com.intellij.util.castSafelyTo
 import com.intellij.util.ui.components.BorderLayoutPanel
 import org.slf4j.LoggerFactory
 import java.awt.Dimension
@@ -95,7 +94,7 @@ class SearchWindow(
             cell(searchButton)
             cell(cloneButton)
             cell(OnboardingButton(project, TabKey.tabTitleSearch, OnboardingId.SEARCH_TAB))
-                .horizontalAlign(RIGHT)
+                .align(AlignX.RIGHT)
         }
     }
 
@@ -163,7 +162,7 @@ class SearchWindow(
         table.setListData(emptyList())
         val searchText = searchField.text
         val result: List<SearchResult> = searchHostSelect.selectedItem?.let { searchHost: Any ->
-            searchHost.castSafelyTo<Pair<String, SearchHostSettings>>()?.first?.let { searchHostName ->
+            (searchHost as? Pair<String, SearchHostSettings>)?.first?.let { searchHostName ->
                 uiProtector.uiProtectedOperation("Seraching") {
                     searchOperator.search(searchHostName, searchText)
                 }

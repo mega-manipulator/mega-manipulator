@@ -25,8 +25,8 @@ import com.intellij.openapi.project.Project
 import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.openapi.vfs.VirtualFileManager
 import com.intellij.ui.components.JBScrollPane
+import com.intellij.ui.dsl.builder.AlignX
 import com.intellij.ui.dsl.builder.panel
-import com.intellij.ui.dsl.gridLayout.HorizontalAlign
 import com.intellij.util.ui.components.BorderLayoutPanel
 import com.jetbrains.rd.util.firstOrNull
 import kotlinx.coroutines.Deferred
@@ -111,7 +111,7 @@ class SettingsWindow(project: Project) : ToolWindowTab {
             panel {
                 row {
                     label("<html>Set/unset passwords by <u>right-clicking</u> a config node in the table</html>")
-                        .horizontalAlign(HorizontalAlign.CENTER)
+                        .align(AlignX.CENTER)
                 }
             }
         )
@@ -302,33 +302,33 @@ class SettingsWindow(project: Project) : ToolWindowTab {
         validateConfigButton.isEnabled = true
         if (settings != null && settingsFileOperator.validationIsOkay) {
             val arrayOf: List<ConfigHostHolder> = (
-                settings.searchHostSettings.map { (searchHostName, group) ->
-                    val (isValid, validationResult) = initialValidationText(group.value())
-                    ConfigHostHolder(
-                        hostType = HostType.SEARCH,
-                        authMethod = group.value().authMethod,
-                        baseUrl = group.value().baseUrl,
-                        username = group.value().username,
-                        searchHost = searchHostName,
-                        isValid = isValid,
-                        validationResult = validationResult,
-                    )
-                } + settings.searchHostSettings.flatMap { (searchHostName: String, searchHostSettingsGroup: SearchHostSettingsGroup) ->
-                    searchHostSettingsGroup.value().codeHostSettings.map { (codeHostName, codeHostSettingsGroup) ->
-                        val (isValid, validationResult) = initialValidationText(codeHostSettingsGroup.value())
+                    settings.searchHostSettings.map { (searchHostName, group) ->
+                        val (isValid, validationResult) = initialValidationText(group.value())
                         ConfigHostHolder(
-                            hostType = HostType.CODE,
-                            authMethod = codeHostSettingsGroup.value().authMethod,
-                            baseUrl = codeHostSettingsGroup.value().baseUrl,
-                            username = codeHostSettingsGroup.value().username ?: "token",
+                            hostType = HostType.SEARCH,
+                            authMethod = group.value().authMethod,
+                            baseUrl = group.value().baseUrl,
+                            username = group.value().username,
                             searchHost = searchHostName,
-                            codeHost = codeHostName,
                             isValid = isValid,
                             validationResult = validationResult,
                         )
+                    } + settings.searchHostSettings.flatMap { (searchHostName: String, searchHostSettingsGroup: SearchHostSettingsGroup) ->
+                        searchHostSettingsGroup.value().codeHostSettings.map { (codeHostName, codeHostSettingsGroup) ->
+                            val (isValid, validationResult) = initialValidationText(codeHostSettingsGroup.value())
+                            ConfigHostHolder(
+                                hostType = HostType.CODE,
+                                authMethod = codeHostSettingsGroup.value().authMethod,
+                                baseUrl = codeHostSettingsGroup.value().baseUrl,
+                                username = codeHostSettingsGroup.value().username,
+                                searchHost = searchHostName,
+                                codeHost = codeHostName,
+                                isValid = isValid,
+                                validationResult = validationResult,
+                            )
+                        }
                     }
-                }
-                )
+                    )
             hostConfigSelect.setListData(arrayOf)
         } else {
             hostConfigSelect.setListData(

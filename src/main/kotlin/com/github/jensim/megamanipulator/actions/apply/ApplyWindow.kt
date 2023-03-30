@@ -21,8 +21,8 @@ import com.intellij.openapi.vfs.VirtualFileManager
 import com.intellij.ui.JBSplitter
 import com.intellij.ui.components.JBScrollPane
 import com.intellij.ui.components.JBTextArea
+import com.intellij.ui.dsl.builder.AlignX
 import com.intellij.ui.dsl.builder.panel
-import com.intellij.ui.dsl.gridLayout.HorizontalAlign.RIGHT
 import com.intellij.util.ui.components.BorderLayoutPanel
 import org.slf4j.LoggerFactory
 import java.io.File
@@ -104,7 +104,7 @@ class ApplyWindow(private val project: Project) : ToolWindowTab {
             cell(openScriptButton)
 
             cell(OnboardingButton(project, TabKey.tabTitleApply, OnboardingId.APPLY_TAB))
-                .horizontalAlign(RIGHT)
+                .align(AlignX.RIGHT)
         }
     }
     override val content = BorderLayoutPanel().apply {

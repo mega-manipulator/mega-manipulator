@@ -3,6 +3,9 @@
 # mega-manipulator Changelog
 
 ## [Unreleased]
+### Security
+- No longer maintained 😱
+- Bump platform version to 2023.1
 
 ## [1.0.4]
 ### Improvement

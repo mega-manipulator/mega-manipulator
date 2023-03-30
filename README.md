@@ -1,5 +1,11 @@
 # mega-manipulator
 
+## ⚠️ No longer actively maintained ⚠️
+If you want, try out the spin-off project that is a standalone desktop application with the same feature set as this plugin.  
+https://github.com/mega-manipulator/mega-manipulator-standalone/
+
+----
+
 [![Build](https://github.com/mega-manipulator/mega-manipulator/workflows/Build/badge.svg)](https://github.com/mega-manipulator/mega-manipulator/actions/workflows/build.yml)
 ![GitHub release (latest by date)](https://img.shields.io/github/v/release/mega-manipulator/mega-manipulator?label=GitHub%20Release&logo=GitHub)
 [![Version](https://img.shields.io/jetbrains/plugin/v/16396.svg)](https://plugins.jetbrains.com/plugin/16396)

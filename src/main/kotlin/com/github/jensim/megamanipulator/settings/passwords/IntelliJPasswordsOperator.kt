@@ -15,10 +15,8 @@ import com.intellij.remoteServer.util.CloudConfigurationUtil.createCredentialAtt
 import com.intellij.serviceContainer.NonInjectable
 import org.slf4j.LoggerFactory
 import java.util.concurrent.ConcurrentHashMap
-import javax.annotation.concurrent.NotThreadSafe
 import javax.swing.JComponent
 
-@NotThreadSafe
 class IntelliJPasswordsOperator @NonInjectable constructor(
     project: Project,
     notificationsOperator: NotificationsOperator?,
