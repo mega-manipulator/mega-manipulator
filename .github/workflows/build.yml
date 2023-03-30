@@ -100,7 +100,7 @@ jobs:
       - name: Setup Java
         uses: actions/setup-java@v2
         with:
-          distribution: corretto
+          distribution: adopt
           java-version: 17
           cache: gradle
 
@@ -176,7 +176,7 @@ jobs:
       - name: Setup Java
         uses: actions/setup-java@v2
         with:
-          distribution: corretto
+          distribution: adopt
           java-version: 17
           cache: gradle
 
